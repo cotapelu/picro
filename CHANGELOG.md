@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **User-Friendly Errors** – Actionable messages for file/network errors
 - **Components** – `InputBox` component for text entry
 - **BM25 Module** – `src/search/bm25.ts` for reusable ranking
-- **Tests** – Unit tests for DebugCollector, InputBox, BM25, ConfigValidation, ChatUI search
+- **Tests** – Unit tests for DebugCollector, InputBox, BM25, ConfigValidation, ChatUI search, memory UI, syntax highlighting, tool progress
 - **Security Hardening** – Input sanitization in CommandTools (blocked/allowed lists), path traversal protection in FileTools and SearchTools
 - **Performance Profiling** – Memory retrieval latency tracking (p95), configurable `maxCandidates` to bound latency (<50ms target)
 - **Context Truncation** – `maxContextCharsPerMemory` to reduce token usage
@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Command Palette Filter** – `Ctrl+P` opens command finder with type-ahead filtering
 - **Loading Spinners** – Visual feedback during async operations
 - **Syntax Highlighting** – Code block borders, language labels, copy button
+- **Search Recent Messages** – Date filter for chat history search (last 7 days)
+- **Memory Citation** – Assistant responses indicate number of retrieved memories used
+
+- **Bulk Session Rename** – Select multiple sessions and rename with a common prefix (Ctrl+Shift+R)
 
 ### Changed
 - **README** – Updated with new keybindings, palette commands, features

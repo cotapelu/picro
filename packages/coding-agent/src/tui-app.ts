@@ -460,6 +460,10 @@ export class ChatUI implements UIElement, InteractiveElement {
       this.insertAtCursor('\n');
       return;
     }
+    if (key.modifiers?.ctrl && key.modifiers?.shift && key.name === 'r') {
+      this.showBulkRenameSessions();
+      return;
+    }
 
     // Batch delete memories when memory panel open with multi-select
     if ((key.name === 'd' || key.name === 'D') && this.memoryPanelHandle && this.currentMemoryList?.isMultiSelect()) {
@@ -800,6 +804,7 @@ export class ChatUI implements UIElement, InteractiveElement {
     const cmds: SelectItem[] = [
       { value: 'provider-settings', label: 'Provider & Model', description: 'Change LLM provider and model' },
       { value: 'app-settings', label: 'App Settings', description: 'Max rounds, timeout, logging' },
+      { value: 'search-recent-messages', label: 'Search Recent Messages', description: 'Search chat history (last 7 days)' },
       { value: 'search-messages', label: 'Search Messages', description: 'Full-text search in chat history' },
       { value: 'save-session', label: 'Save Session', description: 'Save current conversation' },
       { value: 'load-session', label: 'Load Session', description: 'Restore a conversation' },
@@ -823,6 +828,7 @@ export class ChatUI implements UIElement, InteractiveElement {
     const allCmds: SelectItem[] = [
       { value: 'provider-settings', label: 'Provider & Model', description: 'Change LLM provider and model' },
       { value: 'app-settings', label: 'App Settings', description: 'Max rounds, timeout, logging' },
+      { value: 'search-recent-messages', label: 'Search Recent Messages', description: 'Search chat history (last 7 days)' },
       { value: 'search-messages', label: 'Search Messages', description: 'Full-text search in chat history' },
       { value: 'save-session', label: 'Save Session', description: 'Save current conversation' },
       { value: 'load-session', label: 'Load Session', description: 'Restore a saved conversation' },
@@ -913,7 +919,111 @@ export class ChatUI implements UIElement, InteractiveElement {
     this.searchPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
   }
 
+  private showRecentSearchPanel(days: number = 7): void {
+    if (this.searchPanelHandle) {
+      this.searchPanelHandle.close();
+      this.searchPanelHandle = null;
+      return;
+    }
+    const onSearch = (query: string) => {
+      this.searchPanelHandle?.close();
+      this.searchPanelHandle = null;
+      if (!query.trim()) return;
+      const docs: SearchDoc[] = this.messages.map((msg, idx) => ({
+        idx,
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp,
+      }));
+      const scored = computeBM25(query, docs);
+      const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+      const filtered = scored.filter(s => s.score > 0 && (s.doc.timestamp instanceof Date ? s.doc.timestamp.getTime() : s.doc.timestamp) >= cutoff).slice(0, 10);
+      if (filtered.length === 0) {
+        this.addMessage('system', `No recent messages (last ${days} days) match "${query}"`);
+        return;
+      }
+      const results: SelectItem[] = filtered.map(s => ({
+        value: s.doc.idx.toString(),
+        label: `[${s.doc.role}] ${s.doc.content.length > 60 ? s.doc.content.slice(0,60) + '...' : s.doc.content}`,
+        description: new Date(s.doc.timestamp).toLocaleTimeString() + ` (${s.score.toFixed(2)})`,
+      }));
+      const resultList = new SelectList(results, Math.min(results.length + 2, 10), {}, (sel: string) => {
+        const idx = parseInt(sel, 10);
+        if (!isNaN(idx) && this.messages[idx]) {
+          const msg = this.messages[idx];
+          this.addMessage('system', `Message #${idx} [${msg.role}]: ${msg.content.slice(0, 100)}...`);
+        }
+        this.sessionPanelHandle?.close();
+      }, () => { this.sessionPanelHandle?.close(); });
+      this.sessionPanelHandle = this.tui.showPanel(resultList, { anchor: 'center', offsetY: -5, panelHeight: Math.min(results.length + 4, 15), minWidth: 60 });
+    };
+    const onCancel = () => {
+      this.searchPanelHandle?.close();
+      this.searchPanelHandle = null;
+      this.announce('Search closed');
+    };
+    const input = new InputBox(`Search recent (last ${days} days): `, onSearch, onCancel, this.theme);
+    this.searchPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
+  }
+
   // Session Management: Rename and Tagging
+
+  private showBulkRenameSessions(): void {
+    const sessionDir = this.getSessionDir();
+    if (!fs.existsSync(sessionDir)) {
+      this.addMessage('system', 'No sessions to rename.');
+      return;
+    }
+    const files = fs.readdirSync(sessionDir).filter(f => f.endsWith('.json'));
+    if (files.length === 0) {
+      this.addMessage('system', 'No sessions to rename.');
+      return;
+    }
+    const list = files.map((f, i) => `${i + 1}. ${f.replace('.json', '')}`).join('\n');
+    this.addMessage('system', `Sessions:\n${list}\nEnter comma-separated numbers to rename (e.g., "1,2,3"):`);
+    const onEnterIndices = (indicesStr: string) => {
+      this.actionPanelHandle?.close();
+      this.actionPanelHandle = null;
+      const indices = indicesStr.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n) && n >= 1 && n <= files.length);
+      if (indices.length === 0) {
+        this.addMessage('system', 'No valid indices selected.');
+        return;
+      }
+      const onEnterBase = (base: string) => {
+        this.actionPanelHandle?.close();
+        this.actionPanelHandle = null;
+        if (!base.trim()) {
+          this.addMessage('system', 'Rename cancelled.');
+          return;
+        }
+        let successCount = 0;
+        for (let i = 0; i < indices.length; i++) {
+          const idx = indices[i] - 1;
+          const oldFile = files[idx];
+          const newName = `${base.trim()}-${i + 1}.json`;
+          try {
+            fs.renameSync(path.join(sessionDir, oldFile), path.join(sessionDir, newName));
+            successCount++;
+          } catch (e: any) {
+            this.addMessage('system', `Failed to rename ${oldFile}: ${e.message}`);
+          }
+        }
+        this.addMessage('system', `Bulk renamed ${successCount} session(s).`);
+      };
+      const onCancelBase = () => {
+        this.actionPanelHandle?.close();
+        this.actionPanelHandle = null;
+        this.addMessage('system', 'Bulk rename cancelled.');
+      };
+      this.actionPanelHandle = this.tui.showPanel(new InputBox('New base name for selected sessions: ', onEnterBase, onCancelBase, this.theme), { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
+    };
+    const onCancelIndices = () => {
+      this.actionPanelHandle?.close();
+      this.actionPanelHandle = null;
+      this.addMessage('system', 'Bulk rename cancelled.');
+    };
+    this.actionPanelHandle = this.tui.showPanel(new InputBox('Enter comma-separated session numbers: ', onEnterIndices, onCancelIndices, this.theme), { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
+  }
   private showManageSessionMenu(): void {
     if (this.sessionPanelHandle) {
       this.sessionPanelHandle.close();
@@ -1012,6 +1122,7 @@ export class ChatUI implements UIElement, InteractiveElement {
     switch (cmd) {
       case 'provider-settings': this.showProviderSettings(); break;
       case 'app-settings': this.showAppSettings(); break;
+      case 'search-recent-messages': this.showRecentSearchPanel(7); break;
       case 'search-messages': this.showSearchPanel(); break;
       case 'save-session': this.saveSession(); break;
       case 'load-session': this.loadSession(); break;
@@ -1325,8 +1436,11 @@ case 'export-config': this.exportConfig(); break;
       this.setStatus('Ready', 'green');
       this.lastError = null;
       this.pendingInput = null;
-      if (result.finalAnswer) this.addMessage('assistant', result.finalAnswer);
-      else this.addMessage('assistant', 'No response.');
+      if (result.finalAnswer) {
+        const memCount = this.retrievedMemories?.length || 0;
+        const answer = result.finalAnswer + (memCount > 0 ? `\n\n*${memCount} memory${memCount===1?'':'ies'} retrieved*` : '');
+        this.addMessage('assistant', answer);
+      } else this.addMessage('assistant', 'No response.');
       if (result.toolResults?.length) {
         for (const tr of result.toolResults) {
           const icon = tr.isError ? '❌' : '✅';

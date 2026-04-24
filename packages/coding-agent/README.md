@@ -80,6 +80,7 @@ node dist/src/main.js config set nvidia-nim mistralai/mistral-small-4-119b-2603
 | `F1` | Help overlay |
 | `F5` | Toggle debug panel |
 | `Ctrl+M` | Show memories |
+| `Ctrl+Shift+R` | Bulk rename sessions |
 | `c` | Copy last code block |
 | `Ctrl+A/E` | Line start/end |
 | `Ctrl+K` | Delete to end |

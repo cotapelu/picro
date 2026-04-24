@@ -58,7 +58,7 @@
 - [ ] BM25 filters (date, provider, tags) for search
 - [ ] Memory deduplication enhancement
 - [ ] Memory citation highlighting in assistant messages (which parts used which memories)
-- [ ] Session rename UI improvements (bulk rename)
+- [x] Session rename UI improvements (bulk rename)
 - [ ] Provider-specific streaming optimizations
 
 ---
