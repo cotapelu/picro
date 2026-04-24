@@ -31,7 +31,7 @@ AI-powered coding assistant with memory and multi-provider support.
 - **Markdown Rendering**: Syntax-highlighted code blocks with copy button
 - **Command Palette**: `Ctrl+P` with type-ahead filtering
 - **Settings Panel**: Change provider/model, maxRounds
-- **Real-time Progress**: Elapsed time during tool execution
+- **Real-time Progress**: Elapsed time and remaining countdown during tool execution
 - **Error Recovery**: Press `R` to retry failed requests
 - **History Navigation**: `↑`/`↓` when input empty
 - **Multiline Input**: `Ctrl+Enter` for newlines

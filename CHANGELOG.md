@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Tool Timeout Countdown** – Displays remaining time during tool execution
+
 ### Added
 - **Debug Mode** (F5) – Show metrics overlay; logs to `~/.picro/agent/debug.log`
 - **Tool Progress** – Elapsed time displayed during tool execution

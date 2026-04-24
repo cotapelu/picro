@@ -74,7 +74,7 @@ export class SearchTools {
   }
 
   // Tool handlers
-  private handleSearchFiles: ToolHandler = async (args: any, _context: any) => {
+  private handleSearchFiles: ToolHandler = async (_context: any, args: any) => {
     const pattern = args?.pattern || '*';
     const dirPath = args?.path || '.';
     const recursive = args?.recursive !== false;
@@ -93,7 +93,7 @@ export class SearchTools {
     }
 
     const results: string[] = [];
-    const regex = new RegExp(pattern, caseSensitive ? 'g' : 'gi');
+    const regex = new RegExp(pattern, caseSensitive ? '' : 'i');
 
     const searchDir = (dir: string) => {
       try {
@@ -132,7 +132,7 @@ export class SearchTools {
     return `Found ${results.length} files matching pattern "${pattern}" in ${dirPath}:\n${results.join('\n')}`;
   };
 
-  private handleSearchContent: ToolHandler = async (args: any, _context: any) => {
+  private handleSearchContent: ToolHandler = async (_context: any, args: any) => {
     const query = args?.query;
     const dirPath = args?.path || '.';
     const recursive = args?.recursive !== false;
@@ -153,7 +153,7 @@ export class SearchTools {
     }
 
     const results: any[] = [];
-    const regex = new RegExp(query, caseSensitive ? 'g' : 'gi');
+    const regex = new RegExp(query, caseSensitive ? '' : 'i');
 
     const searchInFile = (filePath: string) => {
       try {
@@ -230,7 +230,7 @@ export class SearchTools {
     return `Found ${results.length} matches for "${query}" in ${dirPath}:\n${results.map(r => `${r.file}:${r.line}: ${r.text}`).join('\n')}`;
   };
 
-  private handleGrep: ToolHandler = async (args: any, _context: any) => {
+  private handleGrep: ToolHandler = async (_context: any, args: any) => {
     const pattern = args?.pattern;
     const dirPath = args?.path || '.';
     const options = args?.options || '-rn';
@@ -259,7 +259,7 @@ export class SearchTools {
     });
   };
 
-  private handleFind: ToolHandler = async (args: any, _context: any) => {
+  private handleFind: ToolHandler = async (_context: any, args: any) => {
     const dirPath = args?.path || '.';
     const name = args?.name;
     const type = args?.type; // 'f' for file, 'd' for directory
@@ -291,6 +291,11 @@ export class SearchTools {
 
           const stats = fs.statSync(fullPath);
 
+          // Recurse first if directory
+          if (stats.isDirectory()) {
+            find(fullPath, depth + 1);
+          }
+
           // Filter by type
           if (type === 'f' && !stats.isFile()) continue;
           if (type === 'd' && !stats.isDirectory()) continue;
@@ -305,11 +310,6 @@ export class SearchTools {
             size: stats.size,
             modified: stats.mtime.toISOString(),
           });
-
-          // Recurse
-          if (stats.isDirectory()) {
-            find(fullPath, depth + 1);
-          }
         }
       } catch (error) {
         // Skip directories we can't read
@@ -332,7 +332,7 @@ export class SearchTools {
     }).join('\n')}`;
   };
 
-  private handleFindInFiles: ToolHandler = async (args: any, _context: any) => {
+  private handleFindInFiles: ToolHandler = async (_context: any, args: any) => {
     const extensions = args?.extensions || [];
     const dirPath = args?.path || '.';
 

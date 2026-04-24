@@ -30,7 +30,7 @@
 - [x] **Path traversal protection** - Restrict file tools to project directory
 
 ### UX Polish
-- [ ] **Tool execution timeout UI feedback** - Show countdown/progress for long-running tools
+- [x] **Tool execution timeout UI feedback** - Show countdown/progress for long-running tools
 - [x] **Copy code button in code blocks** - Inline copy per code block
 - [x] **Better error messages** - User-friendly, actionable errors
 - [x] **Loading spinners** - For memory init, LLM connection, etc.

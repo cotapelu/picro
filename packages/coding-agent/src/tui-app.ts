@@ -779,9 +779,13 @@ export class ChatUI implements UIElement, InteractiveElement {
     if (this.toolInterval) clearInterval(this.toolInterval);
     this.toolInterval = setInterval(() => {
       if (this.currentTool && this.toolStartTime) {
-        const elapsed = (Date.now() - this.toolStartTime) / 1000;
+        const config = ConfigManager.getInstance().getConfig();
+        const timeout = config.settings.toolTimeout; // ms
+        const elapsedMs = Date.now() - this.toolStartTime;
+        const elapsed = elapsedMs / 1000;
+        const remaining = (timeout - elapsedMs) / 1000;
         const partial = this.toolPartial ? ` - ${this.toolPartial}` : '';
-        this.toolProgress = `${elapsed.toFixed(1)}s${partial}`;
+        this.toolProgress = `${elapsed.toFixed(1)}s (${Math.max(0, remaining).toFixed(1)}s remaining)${partial}`;
         this.tui.requestRender(true);
       }
     }, 1000);
