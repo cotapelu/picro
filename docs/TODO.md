@@ -23,35 +23,35 @@
 ## 🎯 Current Priorities (Tier 2)
 
 ### Performance & Security
-- [ ] **Memory retrieval latency <50ms p95** - Profile and optimize engine queries
-- [ ] **Context token optimization** - Better truncation, reduce bloat
-- [ ] **Memory cache with TTL** - Cache retrieval results for repeated queries
-- [ ] **Input sanitization** - Validate tool arguments, prevent injection
-- [ ] **Path traversal protection** - Restrict file tools to project directory
+- [x] **Memory retrieval latency <50ms p95** - Profile and optimize engine queries
+- [x] **Context token optimization** - Better truncation, reduce bloat
+- [x] **Memory cache with TTL** - Cache retrieval results for repeated queries
+- [x] **Input sanitization** - Validate tool arguments, prevent injection
+- [x] **Path traversal protection** - Restrict file tools to project directory
 
 ### UX Polish
 - [ ] **Tool execution timeout UI feedback** - Show countdown/progress for long-running tools
-- [ ] **Copy code button in code blocks** - Inline copy per code block
-- [ ] **Better error messages** - User-friendly, actionable errors
-- [ ] **Loading spinners** - For memory init, LLM connection, etc.
-- [ ] **Command palette filter** - Type-ahead filtering of commands
-- [ ] **Color theme support** - Switchable color schemes
+- [x] **Copy code button in code blocks** - Inline copy per code block
+- [x] **Better error messages** - User-friendly, actionable errors
+- [x] **Loading spinners** - For memory init, LLM connection, etc.
+- [x] **Command palette filter** - Type-ahead filtering of commands
+- [x] **Color theme support** - Switchable color schemes
 
 ---
 
 ## 📋 Backlog
 
 ### Testing & Quality
-- [ ] Unit tests for DebugCollector, InputBox, BM25
-- [ ] Integration test for search panel and session management
-- [ ] E2E test for debug mode toggle
+- [x] Unit tests for DebugCollector, InputBox, BM25
+- [x] Integration test for search panel and session management
+- [x] E2E test for debug mode toggle
 - [ ] Coverage report >=80%
 
 ### Documentation & Deployment
-- [ ] Update README with all new features
+- [x] Update README with all new features
 - [ ] Architecture diagram (packages and data flow)
-- [ ] Auto-generate tool reference docs
-- [ ] Maintain CHANGELOG.md
+- [x] Auto-generate tool reference docs
+- [x] Maintain CHANGELOG.md
 - [ ] Release checklist and criteria
 
 ### Advanced Features
