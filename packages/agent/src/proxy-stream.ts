@@ -56,7 +56,9 @@ export function createProxyStream(
         let errorMsg = `Proxy error: ${response.status} ${response.statusText}`;
         try {
           const data = await response.json();
-          errorMsg = data.error || errorMsg;
+          if (typeof data === 'object' && data !== null && 'error' in data) {
+            errorMsg = (data as { error: string }).error || errorMsg;
+          }
         } catch {
           // ignore
         }
