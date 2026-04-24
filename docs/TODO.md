@@ -55,7 +55,7 @@
 - [x] Release checklist and criteria
 
 ### Advanced Features
-- [ ] BM25 filters (date, provider, tags) for search
+- [x] BM25 filters (date, provider, tags) for search
 - [ ] Memory deduplication enhancement
 - [ ] Memory citation highlighting in assistant messages (which parts used which memories)
 - [x] Session rename UI improvements (bulk rename)

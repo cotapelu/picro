@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Memory Citation** – Assistant responses indicate number of retrieved memories used
 
 - **Bulk Session Rename** – Select multiple sessions and rename with a common prefix (Ctrl+Shift+R)
+- **BM25 Filters** – Role and date range (since/until) filtering in message search (e.g., `role:assistant since:2025-01-01 until:2025-01-31`).
 
 ### Changed
 - **README** – Updated with new keybindings, palette commands, features

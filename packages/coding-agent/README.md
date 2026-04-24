@@ -18,7 +18,7 @@ AI-powered coding assistant with memory and multi-provider support.
 - **Tool Execution**: File ops, search, git, command execution
 - **Multi-Provider**: OpenAI, Anthropic, Google, NVIDIA, 25+ providers
 - **Session Management**: Save, load, rename, tag, list, delete conversations
-- **BM25 Search**: Relevance-ranked message search with filters (by tag, date)
+- **BM25 Search**: Relevance-ranked message search with filters (role, date range)
 - **Error Recovery**: Auto-retry on network failures (exponential backoff)
 - **Config Validation**: Auto-fixes invalid config on load
 - **Performance**: Memory retrieval <50ms p95 with candidate prefiltering; cache with TTL
@@ -94,7 +94,7 @@ node dist/src/main.js config set nvidia-nim mistralai/mistral-small-4-119b-2603
 
 - **Provider & Model** - Change LLM provider and model
 - **App Settings** - Set maxRounds (1,2,5,10,20,50)
-- **Search Messages** - Full-text search in chat history (BM25 ranked)
+- **Search Messages** - Full-text BM25 search with filters (role:user|assistant|tool, since:YYYY-MM-DD, until:YYYY-MM-DD)
 - **Save Session** - Save current conversation
 - **Load Session** - Restore a saved conversation
 - **Delete Session** - Remove a saved session (with confirmation)

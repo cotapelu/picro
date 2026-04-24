@@ -229,4 +229,39 @@ describe('ChatUI Search Panel', () => {
       expect(top.length).toBe(0);
     });
   });
+  describe('parseSearchFilters', () => {
+    it('should parse role filter', () => {
+      const chatUI = chat as any;
+      const result = (chatUI as any).parseSearchFilters('install role:assistant');
+      expect(result.query).toBe('install');
+      expect(result.role).toBe('assistant');
+      expect(result.since).toBeUndefined();
+      expect(result.until).toBeUndefined();
+    });
+
+    it('should parse since and until dates', () => {
+      const chatUI = chat as any;
+      const result = (chatUI as any).parseSearchFilters('test since:2025-01-01 until:2025-01-31');
+      expect(result.query).toBe('test');
+      expect(result.since?.getTime()).toBe(new Date('2025-01-01').getTime());
+      expect(result.until?.getTime()).toBe(new Date('2025-01-31').getTime());
+    });
+
+    it('should keep unknown parts in query', () => {
+      const chatUI = chat as any;
+      const result = (chatUI as any).parseSearchFilters('install role:unknown since:xyz');
+      expect(result.query).toBe('install role:unknown since:xyz');
+      expect(result.role).toBeUndefined();
+      expect(result.since).toBeUndefined();
+    });
+
+    it('should handle empty input', () => {
+      const chatUI = chat as any;
+      const result = (chatUI as any).parseSearchFilters('');
+      expect(result.query).toBe('');
+      expect(result.role).toBeUndefined();
+      expect(result.since).toBeUndefined();
+      expect(result.until).toBeUndefined();
+    });
+  });
 });

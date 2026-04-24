@@ -881,10 +881,11 @@ export class ChatUI implements UIElement, InteractiveElement {
       this.searchPanelHandle = null;
       return;
     }
-    const onSearch = (query: string) => {
+    const onSearch = (input: string) => {
       this.searchPanelHandle?.close();
       this.searchPanelHandle = null;
-      if (!query.trim()) return;
+      if (!input.trim()) return;
+      const { query: cleanQuery, role, since, until } = this.parseSearchFilters(input);
       // Prepare docs for BM25
       const docs: SearchDoc[] = this.messages.map((msg, idx) => ({
         idx,
@@ -892,10 +893,18 @@ export class ChatUI implements UIElement, InteractiveElement {
         content: msg.content,
         timestamp: msg.timestamp,
       }));
-      const scored = computeBM25(query, docs);
-      const top = scored.filter(s => s.score > 0).slice(0, 10);
+      let scored = computeBM25(cleanQuery, docs);
+      scored = scored.filter(s => {
+        if (s.score <= 0) return false;
+        if (role && s.doc.role !== role) return false;
+        const ts = s.doc.timestamp instanceof Date ? s.doc.timestamp.getTime() : s.doc.timestamp;
+        if (since && ts < since.getTime()) return false;
+        if (until && ts > until.getTime()) return false;
+        return true;
+      });
+      const top = scored.slice(0, 10);
       if (top.length === 0) {
-        this.addMessage('system', `No messages found for "${query}"`);
+        this.addMessage('system', `No messages found for "${cleanQuery}"`);
         return;
       }
       const results: SelectItem[] = top.map(s => ({
@@ -968,6 +977,43 @@ export class ChatUI implements UIElement, InteractiveElement {
     };
     const input = new InputBox(`Search recent (last ${days} days): `, onSearch, onCancel, this.theme);
     this.searchPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
+  }
+
+  private parseSearchFilters(input: string): { query: string; role?: string; since?: Date; until?: Date } {
+    const parts = input.trim().split(/\s+/);
+    const queryParts: string[] = [];
+    let role: string | undefined;
+    let since: Date | undefined;
+    let until: Date | undefined;
+    for (const part of parts) {
+      if (part.startsWith('role:')) {
+        const r = part.substring(5);
+        if (['user', 'assistant', 'tool'].includes(r)) {
+          role = r;
+        } else {
+          queryParts.push(part);
+        }
+      } else if (part.startsWith('since:')) {
+        const dateStr = part.substring(6);
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+          since = d;
+        } else {
+          queryParts.push(part);
+        }
+      } else if (part.startsWith('until:')) {
+        const dateStr = part.substring(6);
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+          until = d;
+        } else {
+          queryParts.push(part);
+        }
+      } else {
+        queryParts.push(part);
+      }
+    }
+    return { query: queryParts.join(' '), role, since, until };
   }
 
   // Session Management: Rename and Tagging
