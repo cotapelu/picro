@@ -264,4 +264,17 @@ describe('ChatUI Search Panel', () => {
       expect(result.until).toBeUndefined();
     });
   });
+  describe('UI helper methods', () => {
+    it('setStatus should update status and color', () => {
+      const chatUI = chat as any;
+      chatUI.setStatus('Working', 'yellow');
+      expect(chatUI.status).toBe('Working');
+      expect(chatUI.statusColor).toBe('yellow');
+    });
+    it('announce should update announcement', () => {
+      const chatUI = chat as any;
+      chatUI.announce('Hello');
+      expect(chatUI.announcement).toBe('Hello');
+    });
+  });
 });

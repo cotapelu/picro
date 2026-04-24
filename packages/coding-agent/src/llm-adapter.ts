@@ -55,7 +55,13 @@ export function createLLMInstance(model: Model): LLMInstance {
             
           case 'toolcall_start':
             // Bắt đầu một tool call mới
-            currentToolCall = event.toolCall ? { ...event.toolCall, arguments: { ...event.toolCall.arguments } } : null;
+            if (event.toolCall) {
+              const { id: rawId, name, arguments: args } = event.toolCall;
+              const id = rawId || `${name}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              currentToolCall = { id, name, arguments: { ...args } };
+            } else {
+              currentToolCall = null;
+            }
             break;
             
           case 'toolcall_delta':
