@@ -49,10 +49,10 @@
 
 ### Documentation & Deployment
 - [x] Update README with all new features
-- [ ] Architecture diagram (packages and data flow)
+- [x] Architecture diagram (packages and data flow)
 - [x] Auto-generate tool reference docs
 - [x] Maintain CHANGELOG.md
-- [ ] Release checklist and criteria
+- [x] Release checklist and criteria
 
 ### Advanced Features
 - [ ] BM25 filters (date, provider, tags) for search
