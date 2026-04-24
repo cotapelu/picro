@@ -4,6 +4,7 @@
  */
 
 import type { AgentAction } from './types.js';
+import { performance } from 'perf_hooks';
 
 export interface RetrievalOptions {
   project?: string;
@@ -270,6 +271,9 @@ export class MemoryRetriever {
   // metrics
   private cacheHits = 0;
   private cacheMisses = 0;
+  // Latency profiling
+  private retrievalTimes: number[] = []; // keep last N
+  private maxRetention = 1000;
 
   constructor() {
     this.cacheTTL = 300000; // default 5 minutes
@@ -287,6 +291,21 @@ export class MemoryRetriever {
       cacheHitRate: total > 0 ? this.cacheHits / total : 0,
       cacheSize: this.cache.size,
     };
+  }
+
+  /** Get latency stats for search calls */
+  getRetrievalStats(): { count: number; avgMs: number; p95Ms: number; maxMs: number } {
+    const times = this.retrievalTimes;
+    if (times.length === 0) {
+      return { count: 0, avgMs: 0, p95Ms: 0, maxMs: 0 };
+    }
+    const sum = times.reduce((a, b) => a + b, 0);
+    const avg = sum / times.length;
+    const max = Math.max(...times);
+    const sorted = [...times].sort((a, b) => a - b);
+    const p95Index = Math.floor(sorted.length * 0.95);
+    const p95 = sorted[p95Index] || max;
+    return { count: times.length, avgMs: avg, p95Ms: p95, maxMs: max };
   }
 
   /**
@@ -311,6 +330,8 @@ export class MemoryRetriever {
       return cached.memories;
     }
     this.cacheMisses++;
+
+    const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
 
     // Normalize query
     const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9\s./\-]/g, '');
@@ -346,6 +367,14 @@ export class MemoryRetriever {
 
     // Cache the result (full objects with scores)
     this.cache.set(cacheKey, { memories: topScored, timestamp: Date.now() });
+
+    // Record latency
+    const elapsed = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startTime;
+    this.retrievalTimes.push(elapsed);
+    if (this.retrievalTimes.length > this.maxRetention) {
+      this.retrievalTimes.shift();
+    }
+
     return topScored;
   }
 

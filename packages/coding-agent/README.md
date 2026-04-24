@@ -18,22 +18,29 @@ AI-powered coding assistant with memory and multi-provider support.
 - **Tool Execution**: File ops, search, git, command execution
 - **Multi-Provider**: OpenAI, Anthropic, Google, NVIDIA, 25+ providers
 - **Session Management**: Save, load, rename, tag, list, delete conversations
-- **BM25 Search**: Relevance-ranked message search
-- **Error Recovery**: Auto-retry on network failures
+- **BM25 Search**: Relevance-ranked message search with filters (by tag, date)
+- **Error Recovery**: Auto-retry on network failures (exponential backoff)
 - **Config Validation**: Auto-fixes invalid config on load
+- **Performance**: Memory retrieval <50ms p95 with candidate prefiltering; cache with TTL
+
+### Security
+- **Input Sanitization**: CommandTools allows/block lists; argument validation
+- **Path Traversal Protection**: File and Search tools restricted to project directory (canonical path checks)
 
 ### TUI UX
-- **Markdown Rendering**: Syntax-highlighted code blocks
-- **Command Palette**: `Ctrl+P` for quick access
+- **Markdown Rendering**: Syntax-highlighted code blocks with copy button
+- **Command Palette**: `Ctrl+P` with type-ahead filtering
 - **Settings Panel**: Change provider/model, maxRounds
-- **Real-time Progress**: Tool name + elapsed time
+- **Real-time Progress**: Elapsed time during tool execution
 - **Error Recovery**: Press `R` to retry failed requests
 - **History Navigation**: `↑`/`↓` when input empty
 - **Multiline Input**: `Ctrl+Enter` for newlines
 - **F1 Help**: Full keybindings reference
-- **Debug Mode**: `F5` toggle metrics overlay
+- **Debug Mode**: `F5` toggle metrics overlay; logs to `~/.picro/agent/debug.log`
 - **Quick Copy**: Press `c` to copy last code block
-- **Memory Panel**: `Ctrl+M` shows retrieved memories
+- **Memory Panel**: `Ctrl+M` shows retrieved memories with edit/delete
+- **Themes**: Dark and light themes (toggle via palette or command)
+- **Loading Spinners**: Visual feedback during async operations
 
 ## Installation
 

@@ -20,7 +20,7 @@ export class SearchTools {
   private ignorePatterns: RegExp[];
 
   constructor(options: SearchToolOptions = {}) {
-    this.basePath = options.basePath || process.cwd();
+    this.basePath = path.resolve(options.basePath || process.cwd());
     this.maxResults = options.maxResults || 100;
     this.ignorePatterns = (options.ignorePatterns || [
       'node_modules',
@@ -30,6 +30,34 @@ export class SearchTools {
       'coverage',
       '.*\.log',
     ]).map(p => new RegExp(p));
+  }
+
+  private validatePath(resolvedPath: string): void {
+    // Ensure the resolved path is within basePath to prevent directory traversal
+    try {
+      const realBase = fs.realpathSync(this.basePath);
+      const realPath = fs.realpathSync(resolvedPath);
+      if (!realPath.startsWith(realBase + path.sep) && realPath !== realBase) {
+        throw new Error('Path not allowed');
+      }
+    } catch (e: any) {
+      if (e.code === 'ENOENT' || e.code === 'ENOTDIR') {
+        // If file/dir doesn't exist yet, check parent
+        const parent = path.dirname(resolvedPath);
+        try {
+          const realBase = fs.realpathSync(this.basePath);
+          const realParent = fs.realpathSync(parent);
+          if (!realParent.startsWith(realBase + path.sep) && realParent !== realBase) {
+            throw new Error('Path not allowed');
+          }
+          return; // allowed
+        } catch {
+          throw new Error('Invalid path');
+        }
+      }
+      // Other errors rethrow
+      throw e;
+    }
   }
 
   private shouldIgnore(filePath: string): boolean {
@@ -54,6 +82,7 @@ export class SearchTools {
     const maxResults = args?.maxResults || this.maxResults;
 
     const resolvedDir = this.resolvePath(dirPath);
+    this.validatePath(resolvedDir);
 
     if (!fs.existsSync(resolvedDir)) {
       throw new Error(`Directory not found: ${dirPath}`);
@@ -117,6 +146,7 @@ export class SearchTools {
     }
 
     const resolvedDir = this.resolvePath(dirPath);
+    this.validatePath(resolvedDir);
 
     if (!fs.existsSync(resolvedDir)) {
       throw new Error(`Directory not found: ${dirPath}`);

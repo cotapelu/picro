@@ -8,6 +8,7 @@ import { MemoryStore, MemoryStorage, memoryHash } from './storage.js';
 import type { AgentAction, AgentMemoryMetadata, MemoryEntry, RetrievalResult } from './types.js';
 import { MemoryRetriever } from './retrieval.js';
 import { MemoryEventLog } from './events.js';
+import { performance } from 'perf_hooks';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -22,7 +23,8 @@ export interface MemoryEngineConfig {
   // Retrieval tuning
   minScore?: number; // default 5
   cacheTTL?: number; // ms, default 300000 (5min)
-  prefilterMinCandidates?: number; // default 100
+  prefilterMinCandidates?: number; // default topK*2
+  maxCandidates?: number; // max memories to score (default 500)
   adaptiveThresholds?: number[]; // default [5,3,1,0]
   // Context optimization
   maxContextCharsPerMemory?: number; // truncate memory content for context
@@ -41,6 +43,7 @@ export class MemoryEngine {
   private forgettingDays: number;
   private minScore: number;
   private prefilterMinCandidates: number;
+  private maxCandidates: number;
   private adaptiveThresholds: number[];
   private maxContextCharsPerMemory?: number;
 
@@ -54,6 +57,8 @@ export class MemoryEngine {
   // Performance metrics (not persisted)
   private queryCount = 0;
   private queryLatencySum = 0;
+  private queryLatencies: number[] = []; // for p95
+  private maxLatencyRetention = 1000;
   private totalResultScores = 0;
   private resultCount = 0;
 
@@ -70,6 +75,7 @@ export class MemoryEngine {
     this.forgettingDays = config.forgettingDays || 7;
     this.minScore = config.minScore ?? 5;
     this.prefilterMinCandidates = config.prefilterMinCandidates ?? (this.topK * 2);
+    this.maxCandidates = config.maxCandidates ?? 500; // cap candidate memories for performance
     this.adaptiveThresholds = config.adaptiveThresholds || [5, 3, 1, 0];
     this.maxContextCharsPerMemory = config.maxContextCharsPerMemory ?? 500; // default truncate to 500 chars
   }
@@ -142,6 +148,13 @@ export class MemoryEngine {
       }
     }
 
+    // Apply maxCandidates limit to bound latency (take most recent)
+    if (candidateMemories.length > this.maxCandidates) {
+      candidateMemories = candidateMemories
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, this.maxCandidates);
+    }
+
     // Use both exact search and fuzzy search (scores computed in retriever)
     const exactResults = this.retriever.search(candidateMemories, query, this.currentProject, this.topK);
     const fuzzyResults = this.retriever.fuzzySearch(candidateMemories, query, this.currentProject, Math.floor(this.topK / 2));
@@ -180,6 +193,8 @@ export class MemoryEngine {
     const latency = performance.now() - startTime;
     this.queryCount++;
     this.queryLatencySum += latency;
+    this.queryLatencies.push(latency);
+    if (this.queryLatencies.length > this.maxLatencyRetention) this.queryLatencies.shift();
     const scoreSum = filtered.reduce((sum, item) => sum + item.score, 0);
     this.totalResultScores = (this.totalResultScores || 0) + scoreSum;
     this.resultCount = (this.resultCount || 0) + memories.length;
@@ -445,18 +460,29 @@ export class MemoryEngine {
   async getMetrics(): Promise<Record<string, number>> {
     const retrieverMetrics = this.retriever.getMetrics();
     const avgLatency = this.queryCount > 0 ? this.queryLatencySum / this.queryCount : 0;
+    const p95Latency = this.computeP95Latency();
     const avgScore = this.resultCount > 0 ? this.totalResultScores / this.resultCount : 0;
     return {
       ...this.stats,
       memoryCount: await this.count(),
       queryCount: this.queryCount,
       avgQueryLatencyMs: avgLatency,
+      p95QueryLatencyMs: p95Latency,
       avgResultScore: avgScore,
       cacheHitRate: retrieverMetrics.cacheHitRate,
       cacheHits: retrieverMetrics.cacheHits,
       cacheMisses: retrieverMetrics.cacheMisses,
       cacheSize: retrieverMetrics.cacheSize,
     };
+  }
+
+  /** Compute p95 latency from recent samples */
+  private computeP95Latency(): number {
+    const times = this.queryLatencies;
+    if (times.length === 0) return 0;
+    const sorted = [...times].sort((a, b) => a - b);
+    const idx = Math.floor(sorted.length * 0.95);
+    return sorted[idx] || sorted[sorted.length - 1];
   }
 
   /** Get underlying storage for advanced operations */

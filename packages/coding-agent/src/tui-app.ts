@@ -524,7 +524,7 @@ export class ChatUI implements UIElement, InteractiveElement {
       this.insertAtCursor(d);
       return;
     }
-    if (key.modifiers?.ctrl && key.name === 'p') { this.showCommandPalette(); return; }
+    if (key.modifiers?.ctrl && key.name === 'p') { this.showCommandFinder(); return; }
     if (key.modifiers?.ctrl && key.name === 'm') { this.toggleMemoryPanel(); return; }
     if (key.name === 'F1') { this.showHelpOverlay(); return; }
     if (key.name === 'F5') { this.toggleDebugPanel(); return; }

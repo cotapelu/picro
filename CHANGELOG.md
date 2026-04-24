@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Components** – `InputBox` component for text entry
 - **BM25 Module** – `src/search/bm25.ts` for reusable ranking
 - **Tests** – Unit tests for DebugCollector, InputBox, BM25, ConfigValidation, ChatUI search
+- **Security Hardening** – Input sanitization in CommandTools (blocked/allowed lists), path traversal protection in FileTools and SearchTools
+- **Performance Profiling** – Memory retrieval latency tracking (p95), configurable `maxCandidates` to bound latency (<50ms target)
+- **Context Truncation** – `maxContextCharsPerMemory` to reduce token usage
+- **Theme Support** – Light/dark theme toggle (`toggle-theme` command)
+- **Command Palette Filter** – `Ctrl+P` opens command finder with type-ahead filtering
+- **Loading Spinners** – Visual feedback during async operations
+- **Syntax Highlighting** – Code block borders, language labels, copy button
 
 ### Changed
 - **README** – Updated with new keybindings, palette commands, features
