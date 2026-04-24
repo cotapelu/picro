@@ -1,0 +1,44 @@
+{
+  "name": "@picro/monorepo",
+  "version": "0.0.1",
+  "description": "Monorepo for AI agent packages",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build:llm && npm run build:memory && npm run build:agent && npm run build:tui && npm run build:coding-agent",
+    "build:llm": "cd packages/llm && npm run build",
+    "build:agent": "cd packages/agent && npm run build",
+    "build:memory": "cd packages/memory && npm run build",
+    "build:tui": "cd packages/tui && npm run build",
+    "build:coding-agent": "cd packages/coding-agent && npm run build",
+    "clean": "cd packages/llm && npm run clean && cd ../agent && npm run clean && cd ../memory && npm run clean && cd ../tui && rm -rf dist && cd ../coding-agent && rm -rf dist",
+    "dev": "npm run dev:llm",
+    "dev:llm": "cd packages/llm && npm run dev",
+    "dev:agent": "cd packages/agent && npm run dev",
+    "dev:memory": "cd packages/memory && npm run dev",
+    "dev:tui": "cd packages/tui && npm run dev",
+    "dev:coding-agent": "cd packages/coding-agent && npm run dev",
+    "test": "npm run test:llm && npm run test:agent && npm run test:memory && npm run test:coding-agent",
+    "test:llm": "cd packages/llm && npm run test",
+    "test:agent": "cd packages/agent && npm run test",
+    "test:memory": "cd packages/memory && npm run test",
+    "test:coding-agent": "cd packages/coding-agent && npm run test",
+    "test:tui": "cd packages/tui && npm run test"
+  },
+  "keywords": [
+    "monorepo",
+    "ai",
+    "agent",
+    "llm"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

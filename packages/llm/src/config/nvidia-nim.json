@@ -1,0 +1,113 @@
+{
+  "provider": "nvidia-nim",
+  "baseUrl": "https://integrate.api.nvidia.com/v1",
+  "api": "openai-completions",
+  "compat": {
+    "supportsDeveloperRole": false,
+    "maxTokensField": "max_tokens",
+    "supportsUsageInStreaming": true,
+    "supportsStrictMode": true,
+    "thinkingFormat": "openai"
+  },
+  "models": [
+    {
+      "id": "stepfun-ai/step-3.5-flash",
+      "name": "Step 3.5 Flash (NVIDIA)",
+      "reasoning": false,
+      "input": ["text"],
+      "contextWindow": 250000,
+      "maxTokens": 16384,
+      "cost": { "input": 0.0003, "output": 0.0006 }
+    },
+    {
+      "id": "moonshotai/kimi-k2.5",
+      "name": "Kimi K2.5 (NVIDIA)",
+      "reasoning": true,
+      "input": ["text"],
+      "contextWindow": 200000,
+      "maxTokens": 16384,
+      "cost": { "input": 0.002, "output": 0.006 }
+    },
+    {
+      "id": "mistralai/mistral-small-4-119b-2603",
+      "name": "Mistral small 4 (NVIDIA)",
+      "reasoning": true,
+      "input": ["text"],
+      "contextWindow": 256000,
+      "maxTokens": 16384,
+      "cost": { "input": 0.0001, "output": 0.0001 }
+    },
+    {
+      "id": "nvidia/nemotron-3-super-120b-a12b",
+      "name": "Nemotron 3 Super (NVIDIA)",
+      "reasoning": true,
+      "input": ["text"],
+      "contextWindow": 1000000,
+      "maxTokens": 16384,
+      "cost": { "input": 0.0001, "output": 0.0001 }
+    },
+    {
+      "id": "qwen/qwen3-next-80b-a3b-thinking",
+      "name": "Qwen3 Next 80B Thinking (NVIDIA)",
+      "reasoning": true,
+      "input": ["text"],
+      "contextWindow": 200000,
+      "maxTokens": 16384,
+      "cost": { "input": 0.0001, "output": 0.0001 }
+    },
+    {
+      "id": "qwen/qwen3.5-122b-a10b",
+      "name": "Qwen3.5 122B A10B (NVIDIA)",
+      "reasoning": true,
+      "input": ["text"],
+      "contextWindow": 250000,
+      "maxTokens": 16384,
+      "cost": { "input": 0.0001, "output": 0.0001 }
+    },
+    {
+      "id": "qwen/qwen3.5-397b-a17b",
+      "name": "Qwen3.5 397B A17B (NVIDIA)",
+      "reasoning": false,
+      "input": ["text"],
+      "contextWindow": 250000,
+      "maxTokens": 16384,
+      "cost": { "input": 0.0001, "output": 0.0001 }
+    },
+    {
+      "id": "z-ai/glm4.7",
+      "name": "GLM-4.7 (NVIDIA)",
+      "reasoning": true,
+      "input": ["text"],
+      "contextWindow": 200000,
+      "maxTokens": 16384,
+      "cost": { "input": 0.0001, "output": 0.0001 }
+    },
+    {
+      "id": "z-ai/glm5",
+      "name": "GLM-5 (NVIDIA)",
+      "reasoning": true,
+      "input": ["text"],
+      "contextWindow": 200000,
+      "maxTokens": 16384,
+      "cost": { "input": 0.0001, "output": 0.0001 }
+    },
+    {
+      "id": "minimaxai/minimax-m2.5",
+      "name": "Minimax-m2.5 (NVIDIA)",
+      "reasoning": true,
+      "input": ["text"],
+      "contextWindow": 200000,
+      "maxTokens": 8192,
+      "cost": { "input": 0.0001, "output": 0.0001 }
+    },
+    {
+      "id": "minimaxai/minimax-m2.1",
+      "name": "Minimax-m2.1 (NVIDIA)",
+      "reasoning": false,
+      "input": ["text"],
+      "contextWindow": 1000000,
+      "maxTokens": 8192,
+      "cost": { "input": 0.0001, "output": 0.0001 }
+    }
+  ]
+}

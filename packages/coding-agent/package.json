@@ -1,0 +1,46 @@
+{
+  "name": "@picro/coding-agent",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "dist/src/main.js",
+  "types": "dist/src/main.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/src/main.js",
+      "types": "./dist/src/main.d.ts"
+    }
+  },
+  "bin": {
+    "picro": "./dist/src/main.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/src/cli.js",
+    "dev": "npx tsx src/cli.ts",
+    "cli": "npx tsx src/cli.ts",
+    "interactive": "npx tsx src/cli.ts interactive",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@picro/agent": "file:../agent",
+    "@picro/llm": "file:../llm",
+    "@picro/memory": "file:../memory",
+    "@picro/tui": "file:../tui",
+    "clipboardy": "^5.3.1",
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

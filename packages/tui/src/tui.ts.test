@@ -1,0 +1,710 @@
+/**
+ * TUI - Terminal User Interface
+ * 
+ * A minimal TUI implementation with differential rendering
+ * Following pi-tui-legacy architecture
+ */
+
+import type { Terminal } from './terminal.js';
+import { visibleWidth, extractAnsiCode } from './utils.js';
+
+/**
+ * Component interface - all components must implement this
+ */
+export interface Component {
+	/**
+	 * Render the component to lines for the given viewport width
+	 * @param width - Current viewport width
+	 * @returns Array of strings, each representing a line
+	 */
+	render(width: number): string[];
+
+	/**
+	 * Optional handler for keyboard input when component has focus
+	 */
+	handleInput?(data: string): void;
+
+	/**
+	 * If true, component receives key release events.
+	 * Default is false - release events are filtered out.
+	 */
+	wantsKeyRelease?: boolean;
+
+	/**
+	 * Invalidate any cached rendering state.
+	 * Called when theme changes or when component needs to re-render from scratch.
+	 */
+	invalidate(): void;
+}
+
+/**
+ * Interface for components that can receive focus and display a hardware cursor.
+ * When focused, the component should emit CURSOR_MARKER at the cursor position
+ * in its render output. TUI will find this marker and position the hardware
+ * cursor there for proper IME candidate window positioning.
+ */
+export interface Focusable {
+	/** Set by TUI when focus changes. Component should emit CURSOR_MARKER when true. */
+	focused: boolean;
+}
+
+/** Type guard to check if a component implements Focusable */
+export function isFocusable(component: Component | null): component is Component & Focusable {
+	return component !== null && 'focused' in component;
+}
+
+/**
+ * Cursor position marker - APC (Application Program Command) sequence.
+ * This is a zero-width escape sequence that terminals ignore.
+ * Components emit this at the cursor position when focused.
+ * TUI finds and strips this marker, then positions the hardware cursor there.
+ */
+export const CURSOR_MARKER = '\x1b_pi:c\x07';
+
+/** Value that can be absolute (number) or percentage (string like "50%") */
+export type SizeValue = number | `${number}%`;
+export type InputListenerResult = { consume?: boolean; data?: string } | undefined;
+export type InputListener = (data: string) => InputListenerResult;
+
+
+/** Parse a SizeValue into absolute value given a reference size */
+export function parseSizeValue(value: SizeValue | undefined, referenceSize: number): number | undefined {
+	if (value === undefined) return undefined;
+	if (typeof value === 'number') return value;
+	if (typeof value === 'string' && value.endsWith('%')) {
+		const percent = parseFloat(value.slice(0, -1));
+		return Math.floor((percent / 100) * referenceSize);
+	}
+	return undefined;
+}
+
+/** Anchor position for overlays */
+export type OverlayAnchor =
+	| 'center'
+	| 'top-left'
+	| 'top-right'
+	| 'bottom-left'
+	| 'bottom-right'
+	| 'top-center'
+	| 'bottom-center'
+	| 'left-center'
+	| 'right-center';
+
+/** Margin configuration for overlays */
+export interface OverlayMargin {
+	top?: number;
+	right?: number;
+	bottom?: number;
+	left?: number;
+}
+
+/** Options for overlay positioning */
+export interface OverlayOptions {
+	anchor?: OverlayAnchor;
+
+	/** Minimum width in columns */
+	minWidth?: number;
+
+	/** Height in rows, or percentage of terminal height (e.g., "50%") */
+	height?: SizeValue;
+
+	/** Maximum height in rows, or percentage of terminal height (e.g., "50%") */
+	maxHeight?: SizeValue;
+
+	/** Horizontal offset from anchor position (positive = right) */
+	offsetX?: number;
+
+	/** Vertical offset from anchor position (positive = down) */
+	offsetY?: number;
+
+	/** Margin from terminal edges. Number applies to all sides. */
+	margin?: OverlayMargin | number;
+
+	/** Control overlay visibility based on terminal dimensions. */
+	visible?: (termWidth: number, termHeight: number) => boolean;
+
+	/** If true, don't capture keyboard focus when shown */
+	nonCapturing?: boolean;
+	width?: SizeValue;
+	height?: SizeValue;
+	margin?: OverlayMargin;
+}
+
+
+/** Handle returned by showOverlay for controlling the overlay */
+export interface OverlayHandle {
+	/** Permanently remove the overlay (cannot be shown again) */
+	hide(): void;
+
+	/** Temporarily hide or show the overlay */
+	setHidden(hidden: boolean): void;
+
+	/** Check if overlay is temporarily hidden */
+	isHidden(): boolean;
+
+	/** Focus this overlay and bring it to the visual front */
+	focus(): void;
+
+	/** Release focus to the previous target */
+	unfocus(): void;
+
+	/** Check if this overlay currently has focus */
+	isFocused(): boolean;
+}
+
+/**
+ * Container component that holds child components
+ */
+export class Container implements Component {
+	public children: Component[] = [];
+
+	/** Render all children components */
+	render(width: number): string[] {
+		const lines: string[] = [];
+		for (const child of this.children) {
+			const childLines = child.render(width);
+			for (const line of childLines) {
+				lines.push(line);
+			}
+		}
+		return lines;
+	}
+
+	/** Add a child component */
+	addChild(component: Component): void {
+		this.children.push(component);
+	}
+
+	/** Remove a child component */
+	removeChild(component: Component): void {
+		const index = this.children.indexOf(component);
+		if (index !== -1) {
+			this.children.splice(index, 1);
+		}
+	}
+
+	/** Remove all child components */
+	clear(): void {
+		this.children = [];
+	}
+		}
+	}
+
+/**
+ * TUI - Main class for managing terminal UI with differential rendering
+ */
+export class TUI extends Container {
+	public terminal: Terminal;
+	private previousLines: string[] = [];
+	private previousWidth = 0;
+	private previousHeight = 0;
+	private focusedComponent: Component | null = null;
+	private renderRequested = false;
+	private renderTimer: NodeJS.Timeout | undefined;
+	private lastRenderAt = 0;
+	private static readonly MIN_RENDER_INTERVAL_MS = 16;
+	private cursorRow = 0;
+	private hardwareCursorRow = 0;
+	private showHardwareCursor = false;
+	private clearOnShrink = false;
+	private maxLinesRendered = 0;
+	private previousViewportTop = 0;
+	private fullRedrawCount = 0;
+	private stopped = false;
+
+	// Overlay stack for modal components rendered on top of base content
+	private focusOrderCounter = 0;
+
+	private inputListeners = new Set<InputListener>;
+
+	public onDebug?: () => void;
+
+
+	/** Add an input listener */
+	addInputListener(listener: InputListener): void {
+		this.inputListeners.add(listener);
+	}
+
+	/** Remove an input listener */
+	removeInputListener(listener: InputListener): void {
+		this.inputListeners.delete(listener);
+	}
+	private overlayStack: {
+		component: Component;
+		options?: OverlayOptions;
+		preFocus: Component | null;
+		hidden: boolean;
+		focusOrder: number;
+	}[] = [];
+
+constructor(terminal: Terminal, showHardwareCursor?: boolean) {
+	super();
+	this.terminal = terminal;
+	this.showHardwareCursor = showHardwareCursor ?? (process.env.PI_HARDWARE_CURSOR === "1");
+	this.clearOnShrink = process.env.PI_CLEAR_ON_SHRINK === "1";
+}
+
+	get fullRedraws(): number {
+		return this.fullRedrawCount;
+	}
+
+	getShowHardwareCursor(): boolean {
+		return this.showHardwareCursor;
+	}
+
+	setShowHardwareCursor(enabled: boolean): void {
+		if (this.showHardwareCursor === enabled) return;
+		this.showHardwareCursor = enabled;
+		if (!enabled) {
+			this.terminal.hideCursor();
+		}
+		this.requestRender();
+	}
+
+	getClearOnShrink(): boolean {
+		return this.clearOnShrink;
+	}
+
+	setClearOnShrink(enabled: boolean): void {
+		this.clearOnShrink = enabled;
+	}
+
+	setFocus(component: Component | null): void {
+		// Clear focused flag on old component
+		if (isFocusable(this.focusedComponent)) {
+			this.focusedComponent.focused = false;
+		}
+
+		this.focusedComponent = component;
+
+		// Set focused flag on new component
+		if (isFocusable(component)) {
+			component.focused = true;
+		}
+
+		this.requestRender();
+	}
+
+	getFocusedComponent(): Component | null {
+		return this.focusedComponent;
+	}
+
+	/**
+	 * Add an overlay component to the stack
+	 */
+	addOverlay(component: Component, options?: OverlayOptions): OverlayHandle {
+		const preFocus = this.focusedComponent;
+		const handle = {
+			hide: () => {
+				this.removeOverlay(component);
+			},
+			setHidden: (hidden: boolean) => {
+				const overlay = this.overlayStack.find(o => o.component === component);
+				if (overlay) {
+					overlay.hidden = hidden;
+					if (!hidden && isFocusable(component)) {
+						this.setFocus(component);
+					}
+					this.requestRender();
+				}
+			},
+			isHidden: () => {
+				const overlay = this.overlayStack.find(o => o.component === component);
+				return overlay?.hidden ?? true;
+			},
+			focus: () => {
+				if (isFocusable(component)) {
+					this.setFocus(component);
+				}
+			},
+			unfocus: () => {
+				if (isFocusable(this.focusedComponent) && this.focusedComponent === component) {
+					this.setFocus(null);
+				}
+			},
+			isFocused: () => {
+				return isFocusable(this.focusedComponent) && this.focusedComponent === component;
+			},
+		};
+
+	this.overlayStack.push({
+		component,
+		options,
+		preFocus,
+		hidden: false,
+		focusOrder: ++this.focusOrderCounter,
+	});
+
+	// Focus the overlay if it's focusable
+	if (isFocusable(component)) {
+		this.setFocus(component);
+	}
+
+	this.requestRender();
+	return handle;
+
+	/**
+	 * Remove an overlay component from the stack
+	 */
+	removeOverlay(component: Component): void {
+		const index = this.overlayStack.findIndex(o => o.component === component);
+		if (index === -1) return;
+
+		const overlay = this.overlayStack[index];
+		this.overlayStack.splice(index, 1);
+
+		// Restore focus to previous component
+		if (overlay.preFocus) {
+			this.setFocus(overlay.preFocus);
+		}
+
+		this.requestRender();
+	}
+
+	/**
+	 * Clear all overlays
+	 */
+	clearOverlays(): void {
+		this.overlayStack = [];
+		this.requestRender();
+	}
+
+	/**
+	 * Request a render (throttled)
+	 */
+	requestRender(): void {
+		this.renderRequested = true;
+		this.scheduleRender();
+	}
+
+	private scheduleRender(): void {
+		if (this.renderTimer) return;
+
+		const now = Date.now();
+		const elapsed = now - this.lastRenderAt;
+
+		if (elapsed >= TUI.MIN_RENDER_INTERVAL_MS) {
+			this.renderInternal();
+		} else {
+			const delay = TUI.MIN_RENDER_INTERVAL_MS - elapsed;
+			this.renderTimer = setTimeout(() => {
+				this.renderTimer = undefined;
+				this.renderInternal();
+			}, delay);
+		}
+	}
+
+	/**
+	 * Override render to call internal render and return lines
+	 */
+	override render(width: number): string[] {
+		// Trigger internal render if needed
+		if (this.previousLines.length === 0 || this.renderRequested) {
+			this.renderInternal();
+		}
+		// Return cached lines from last render
+		return this.previousLines;
+	}
+
+	/**
+	 * Main render method with differential rendering
+	 */
+	private renderInternal(): void {
+		if (this.stopped) return;
+
+		const now = Date.now();
+		this.lastRenderAt = now;
+
+		const size = { cols: this.terminal.columns, rows: this.terminal.rows };
+		const width = size.cols;
+		const height = size.rows;
+
+		// Check if viewport size changed
+		const sizeChanged = width !== this.previousWidth || height !== this.previousHeight;
+
+		if (sizeChanged) {
+			this.previousWidth = width;
+			this.previousHeight = height;
+			this.fullRedrawCount++;
+		}
+
+		// Render base content
+		const baseLines = this.renderBaseContent(width, height);
+
+		// Render overlays
+		const overlayLines = this.renderOverlays(width, height);
+
+		// Merge overlays into base content
+		const finalLines = this.mergeOverlays(baseLines, overlayLines, width, height);
+
+		// Differential rendering
+		this.differentialRender(finalLines, sizeChanged);
+
+		// Update tracking
+		this.previousLines = finalLines;
+		this.maxLinesRendered = Math.max(this.maxLinesRendered, finalLines.length);
+		this.renderRequested = false;
+	}
+
+	/**
+	 * Render base content (root component)
+	 */
+	private renderBaseContent(width: number, height: number): string[] {
+		const lines = this.children.length > 0 ? this.children[0].render(width) : [];
+		return lines;
+	}
+
+	/**
+	 * Render all overlays
+	 */
+private renderOverlays(width: number, height: number): Map<Component, string[]> {
+	const overlayMap = new Map<Component, string[]>();
+
+	for (const overlay of this.overlayStack) {
+		// Skip if overlay is hidden
+		if (overlay.hidden) continue;
+
+		// Check visibility condition if provided
+		if (overlay.options?.visible && !overlay.options.visible(this.terminal.columns, this.terminal.rows)) {
+			continue;
+		}
+
+		// Calculate overlay dimensions
+		const overlayWidth = parseSizeValue(overlay.options?.width, width) || width;
+		const overlayHeight = parseSizeValue(overlay.options?.height, height) || height;
+
+		// Apply minWidth and maxHeight constraints
+		const finalWidth = Math.max(overlayWidth, overlay.options?.minWidth ?? 0);
+		const finalHeight = Math.min(overlayHeight, overlay.options?.maxHeight ?? Number.POSITIVE_INFINITY);
+
+		// Render component with calculated width
+		const lines = overlay.component.render(finalWidth).slice(0, finalHeight);
+		overlayMap.set(overlay.component, lines);
+	}
+
+	return overlayMap;
+	}
+
+	/**
+	 * Merge overlays into base content
+	 */
+	private mergeOverlays(baseLines: string[], overlayMap: Map<Component, string[]>, width: number, height: number): string[] {
+		const result = [...baseLines];
+
+		// Fill remaining space
+		while (result.length < height) {
+			result.push('');
+		}
+
+		// Merge overlays
+		for (const [component, overlayLines] of overlayMap) {
+			const overlay = this.overlayStack.find(o => o.component === component);
+			if (!overlay) continue;
+
+			const overlayWidth = parseSizeValue(overlay.options?.width, width) || width;
+			const overlayHeight = overlayLines.length;
+
+			let startRow = 0;
+			let startCol = 0;
+
+			// Calculate position based on anchor
+			switch (overlay.options?.anchor || 'center') {
+				case 'center':
+					startRow = Math.floor((height - overlayHeight) / 2);
+					startCol = Math.floor((width - overlayWidth) / 2);
+					break;
+				case 'top-left':
+					startRow = overlay.options?.margin?.top || 0;
+					startCol = overlay.options?.margin?.left || 0;
+					break;
+				case 'top-right':
+					startRow = overlay.options?.margin?.top || 0;
+					startCol = width - overlayWidth - (overlay.options?.margin?.right || 0);
+					break;
+				case 'bottom-left':
+					startRow = height - overlayHeight - (overlay.options?.margin?.bottom || 0);
+					startCol = overlay.options?.margin?.left || 0;
+					break;
+				case 'bottom-right':
+					startRow = height - overlayHeight - (overlay.options?.margin?.bottom || 0);
+					startCol = width - overlayWidth - (overlay.options?.margin?.right || 0);
+					break;
+				case 'top-center':
+					startRow = overlay.options?.margin?.top || 0;
+					startCol = Math.floor((width - overlayWidth) / 2);
+					break;
+				case 'bottom-center':
+					startRow = height - overlayHeight - (overlay.options?.margin?.bottom || 0);
+					startCol = Math.floor((width - overlayWidth) / 2);
+					break;
+				case 'left-center':
+					startRow = Math.floor((height - overlayHeight) / 2);
+					startCol = overlay.options?.margin?.left || 0;
+					break;
+				case 'right-center':
+					startRow = Math.floor((height - overlayHeight) / 2);
+					startCol = width - overlayWidth - (overlay.options?.margin?.right || 0);
+					break;
+			}
+
+			// Merge overlay lines
+			for (let i = 0; i < overlayHeight; i++) {
+				const outputRow = startRow + i;
+				if (outputRow >= 0 && outputRow < result.length) {
+					const outputLine = result[outputRow];
+					const overlayLine = overlayLines[i];
+
+					// Pad overlay line to full width
+					const paddedOverlay = overlayLine.padEnd(overlayWidth);
+
+					// Merge into output line
+					const before = outputLine.substring(0, startCol);
+					const after = outputLine.substring(startCol + overlayWidth);
+					result[outputRow] = before + paddedOverlay + after;
+				}
+			}
+		}
+
+		return result;
+	}
+
+	/**
+	 * Differential rendering - only update changed lines
+	 */
+	private differentialRender(newLines: string[], sizeChanged: boolean): void {
+		// Move cursor to top
+		this.terminal.moveBy(-this.cursorRow);
+
+		// Find cursor marker position
+		let cursorRow = 0;
+		let cursorCol = 0;
+
+		for (let i = 0; i < newLines.length; i++) {
+			const line = newLines[i];
+			const markerIndex = line.indexOf(CURSOR_MARKER);
+
+			if (markerIndex !== -1) {
+				cursorRow = i;
+				cursorCol = markerIndex;
+				// Remove marker from line
+				newLines[i] = line.replace(CURSOR_MARKER, '');
+				break;
+			}
+		}
+
+		// Update lines
+		for (let i = 0; i < newLines.length; i++) {
+			const newLine = newLines[i];
+			const oldLine = this.previousLines[i] || '';
+
+			if (newLine !== oldLine || sizeChanged) {
+				this.terminal.moveBy(i - this.cursorRow);
+				this.terminal.clearLine();
+				this.terminal.write(newLine);
+				this.cursorRow = i;
+			}
+		}
+
+		// Clear remaining lines if content shrank
+		if (this.clearOnShrink && newLines.length < this.previousLines.length) {
+			for (let i = newLines.length; i < this.previousLines.length; i++) {
+				this.terminal.moveBy(i - this.cursorRow);
+				this.terminal.clearLine();
+				this.cursorRow = i;
+			}
+		}
+
+		// Position hardware cursor
+		if (this.showHardwareCursor) {
+			this.terminal.moveBy(cursorRow - this.cursorRow);
+			this.terminal.showCursor();
+		} else {
+			this.terminal.hideCursor();
+		}
+
+		this.cursorRow = cursorRow;
+		this.hardwareCursorRow = cursorRow;
+	}
+
+	/**
+	 * Start the TUI
+	 */
+	start(): void {
+		if (this.stopped) return;
+
+		this.terminal.start(
+			(data) => this.handleInput(data),
+			() => this.requestRender()
+		);
+
+		this.terminal.hideCursor();
+
+		// Initial render
+		this.requestRender();
+	}
+
+	/**
+	 * Stop the TUI
+	 */
+	stop(): void {
+		this.stopped = true;
+		this.terminal.showCursor();
+		this.terminal.stop();
+	}
+
+	/**
+	 * Handle keyboard input
+	 */
+private handleInput(data: string): void {
+	// Handle Ctrl+C
+	if (data === '\x03') {
+		this.stop();
+		process.exit(0);
+		return;
+	}
+
+	// Handle debug key (Shift+Ctrl+D)
+	if (data === '\x04' && this.onDebug) {
+		this.onDebug();
+		return;
+	}
+
+	// Notify input listeners
+	let shouldConsume = false;
+	let modifiedData = data;
+	for (const listener of this.inputListeners) {
+		const result = listener(data);
+		if (result) {
+			if (result.consume) shouldConsume = true;
+			if (result.data !== undefined) modifiedData = result.data;
+		}
+	}
+
+	// If not consumed by listeners, pass to focused component
+	if (!shouldConsume) {
+		const focused = this.getFocusedComponent();
+		if (focused && focused.handleInput) {
+			focused.handleInput(modifiedData);
+			this.requestRender();
+		}
+	}
+
+	/**
+	 * Get terminal size
+	 */
+	getSize(): { rows: number; cols: number } {
+		return { rows: this.terminal.rows, cols: this.terminal.columns };
+	}
+
+	/**
+	 * Check if TUI is running
+	 */
+	isActive(): boolean {
+		return !this.stopped;
+	}
+}
+
+/** Check if running in Termux session */
+export function isTermuxSession(): boolean {
+	return Boolean(process.env.TERMUX_VERSION);
+}
