@@ -32,7 +32,7 @@ export interface ImageRenderOptions {
 let cachedCapabilities: TerminalCapabilities | null = null;
 let cellDimensions: CellDimensions = { widthPx: 9, heightPx: 18 };
 
-// Protocol prefixes for fast detection
+// Protocol prefixes
 const KITTY_PREFIX = '\x1b_G';
 const ITERM2_PREFIX = '\x1b]1337;File=';
 
@@ -188,11 +188,9 @@ export function getPngDimensions(base64Data: string): ImageDimensions | null {
   try {
     const buffer = Buffer.from(base64Data, 'base64');
     if (buffer.length < 24) return null;
-    
     if (buffer[0] !== 0x89 || buffer[1] !== 0x50 || buffer[2] !== 0x4e || buffer[3] !== 0x47) {
       return null;
     }
-    
     const width = buffer.readUInt32BE(16);
     const height = buffer.readUInt32BE(20);
     return { widthPx: width, heightPx: height };
@@ -213,14 +211,12 @@ export function getJpegDimensions(base64Data: string): ImageDimensions | null {
         offset++;
         continue;
       }
-      
-      const marker = buffer[offset + 1];
+      const marker = buffer[offset + 1]!;
       if (marker >= 0xc0 && marker <= 0xc2) {
         const height = buffer.readUInt16BE(offset + 5);
         const width = buffer.readUInt16BE(offset + 7);
         return { widthPx: width, heightPx: height };
       }
-      
       if (offset + 3 >= buffer.length) return null;
       const length = buffer.readUInt16BE(offset + 2);
       if (length < 2) return null;
@@ -236,10 +232,8 @@ export function getGifDimensions(base64Data: string): ImageDimensions | null {
   try {
     const buffer = Buffer.from(base64Data, 'base64');
     if (buffer.length < 10) return null;
-    
     const sig = buffer.slice(0, 6).toString('ascii');
     if (sig !== 'GIF87a' && sig !== 'GIF89a') return null;
-    
     const width = buffer.readUInt16LE(6);
     const height = buffer.readUInt16LE(8);
     return { widthPx: width, heightPx: height };
@@ -252,14 +246,76 @@ export function getWebpDimensions(base64Data: string): ImageDimensions | null {
   try {
     const buffer = Buffer.from(base64Data, 'base64');
     if (buffer.length < 30) return null;
-    
     const riff = buffer.slice(0, 4).toString('ascii');
     const webp = buffer.slice(8, 12).toString('ascii');
     if (riff !== 'RIFF' || webp !== 'WEBP') return null;
-    
     const chunk = buffer.slice(12, 16).toString('ascii');
     if (chunk === 'VP8 ') {
       if (buffer.length < 30) return null;
       const width = buffer.readUInt16LE(26) & 0x3fff;
       const height = buffer.readUInt16LE(28) & 0x3fff;
-      return { widthPx: width, heightPx:
+      return { widthPx: width, heightPx: height };
+    }
+    if (chunk === 'VP8L') {
+      if (buffer.length < 25) return null;
+      const bits = buffer.readUInt32LE(21);
+      const width = (bits & 0x3fff) + 1;
+      const height = ((bits >> 14) & 0x3fff) + 1;
+      return { widthPx: width, heightPx: height };
+    }
+    if (chunk === 'VP8X') {
+      if (buffer.length < 30) return null;
+      const width = ((buffer[24] ?? 0) | ((buffer[25] ?? 0) << 8) | ((buffer[26] ?? 0) << 16)) + 1;
+      const height = ((buffer[27] ?? 0) | ((buffer[28] ?? 0) << 8) | ((buffer[29] ?? 0) << 16)) + 1;
+      return { widthPx: width, heightPx: height };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function getImageDimensions(base64Data: string, mimeType: string): ImageDimensions | null {
+  if (mimeType === 'image/png') return getPngDimensions(base64Data);
+  if (mimeType === 'image/jpeg') return getJpegDimensions(base64Data);
+  if (mimeType === 'image/gif') return getGifDimensions(base64Data);
+  if (mimeType === 'image/webp') return getWebpDimensions(base64Data);
+  return null;
+}
+
+export function renderImage(
+  base64Data: string,
+  imageDimensions: ImageDimensions,
+  options: ImageRenderOptions = {}
+): { sequence: string; rows: number; imageId?: number } | null {
+  const caps = getCapabilities();
+  if (!caps.images) return null;
+
+  const maxWidth = options.maxWidthCells ?? 80;
+  const rows = calculateImageRows(imageDimensions, maxWidth);
+
+  if (caps.images === 'kitty') {
+    const imageId = options.imageId ?? allocateImageId();
+    const sequence = encodeKitty(base64Data, { columns: maxWidth, rows, imageId });
+    return { sequence, rows, imageId };
+  }
+
+  if (caps.images === 'iterm2') {
+    const sequence = encodeITerm2(base64Data, {
+      width: maxWidth,
+      height: 'auto',
+      preserveAspectRatio: options.preserveAspectRatio ?? true,
+    });
+    return { sequence, rows };
+  }
+
+  return null;
+}
+
+export function imageFallback(mimeType: string, dimensions?: ImageDimensions, filename?: string): string {
+  const parts: string[] = [];
+  if (filename) parts.push(filename);
+  parts.push(`[${mimeType}]`);
+  if (dimensions) parts.push(`${dimensions.widthPx}x${dimensions.heightPx}`);
+  return `[Image: ${parts.join(' ')}]`;
+}

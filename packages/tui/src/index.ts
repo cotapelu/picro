@@ -64,3 +64,77 @@ export {
 	hasAnsi,
 	getSegmenter,
 } from './utils.js';
+
+// Terminal Image Support
+export {
+  getCapabilities,
+  detectCapabilities,
+  getCellDimensions,
+  setCellDimensions,
+  getPngDimensions,
+  getJpegDimensions,
+  getGifDimensions,
+  getWebpDimensions,
+  getImageDimensions,
+  renderImage,
+  imageFallback,
+  isImageLine,
+  encodeKitty,
+  deleteKittyImage,
+  deleteAllKittyImages,
+  encodeITerm2,
+  calculateImageRows,
+  type ImageProtocol,
+  type TerminalCapabilities,
+  type CellDimensions,
+  type ImageDimensions,
+  type ImageRenderOptions,
+} from './terminal-image.js';
+
+// Kill Ring (Clipboard)
+export { KillRing, defaultKillRing, type PushOptions } from './kill-ring.js';
+
+// Undo Stack
+export { UndoStack, UndoRedoManager } from './undo-stack.js';
+
+// Diff
+export { Diff, renderDiff, type DiffOptions, type DiffTheme, type DiffLine, type DiffLineType } from './components/diff.js';
+
+// Footer
+export { Footer, type FooterOptions, type FooterItem, type FooterTheme } from './components/footer.js';
+
+// ContextMenu
+export { ContextMenu, createMenuItem, menuSeparator, type ContextMenuOptions, type ContextMenuTheme, type MenuItem } from './components/context-menu.js';
+
+// CommandPalette
+export { CommandPalette, type CommandPaletteOptions, type CommandPaletteTheme, type Command } from './components/command-palette.js';
+
+// ModelSelector  
+export { ModelSelector, type ModelSelectorOptions, type ModelSelectorTheme, type ModelInfo } from './components/model-selector.js';
+
+// FileBrowser
+export { FileBrowser, type FileBrowserOptions, type FileBrowserTheme, type FileItem } from './components/file-browser.js';
+
+// Toast
+export { Toast, ToastManager, createToast, successToast, errorToast, warningToast, infoToast, type ToastType, type ToastOptions, type ToastTheme } from './components/toast.js';
+
+// Modal/Dialog
+export { Modal, confirmDialog, alertDialog, type ModalType, type ModalOptions, type ModalTheme, type ModalButton } from './components/modal.js';
+
+// ProgressBar
+export { ProgressBar, StepperProgress, createProgressBar, type ProgressBarOptions, type ProgressBarTheme } from './components/progress-bar.js';
+
+// Badge
+export { Badge, BadgeGroup, createBadge, statusBadge, type BadgeVariant, type BadgeOptions, type BadgeTheme } from './components/badge.js';
+
+// Divider
+export { Divider, horizontalDivider, verticalDivider, sectionDivider, doubleDivider, type DividerStyle, type DividerOptions, type DividerTheme } from './components/divider.js';
+
+// Breadcrumbs
+export { Breadcrumbs, type BreadcrumbItem, type BreadcrumbsOptions, type BreadcrumbsTheme } from './components/breadcrumbs.js';
+
+// Stepper/Wizard
+export { Stepper, type Step, type StepperOptions, type StepperTheme } from './components/stepper.js';
+
+// Rating
+export { Rating, createRating, type RatingOptions, type RatingTheme } from './components/rating.js';

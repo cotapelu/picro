@@ -6,7 +6,14 @@ import { spawn } from 'node:child_process';
 interface Suite { name: string; file: string; }
 const suites: Suite[] = [
   { name: 'Utils', file: './test/utils.test.ts' },
+  { name: 'KillRing', file: './test/kill-ring.test.ts' },
+  { name: 'UndoStack', file: './test/undo-stack.test.ts' },
   { name: 'Components', file: './test/components.test.ts' },
+  { name: 'Spacer', file: './test/spacer.test.ts' },
+  { name: 'TruncatedText', file: './test/truncated-text.test.ts' },
+  { name: 'Diff', file: './test/diff.test.ts' },
+  { name: 'CommandPalette', file: './test/command-palette.test.ts' },
+  { name: 'Round4', file: './test/round4.test.ts' },
   { name: 'Terminal', file: './test/terminal.test.ts' },
   { name: 'TUI', file: './test/tui.test.ts' },
 ];
