@@ -30,6 +30,10 @@ export type {
 // Provider APIs
 export { stream, complete } from './providers/openai-compatible.js';
 
+// Stream optimization
+export { StreamBuffer, getProviderBufferConfig, createStreamBuffer, providerBufferConfigs } from './utils/stream-buffer.js';
+export type { BufferConfig } from './utils/stream-buffer.js';
+
 // Default export
 import { MODELS, getModel, getProviders, getModels } from './models.js';
 import { stream, complete } from './providers/openai-compatible.js';
