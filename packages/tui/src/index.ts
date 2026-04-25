@@ -6,6 +6,10 @@
 export { TerminalUI, ElementContainer, isInteractive, CURSOR_MARKER, resolveDimension, isTermuxSession } from './tui.js';
 export type { UIElement, InteractiveElement, Dimension, PanelOptions, PanelAnchor, PanelMargin, RenderContext, KeyEvent, KeyHandler, KeyHandlerResult, PanelHandle, UITheme } from './tui.js';
 
+// Theme exports
+export { themeManager, getThemeById, themePresets, darkTheme, lightTheme, highContrastTheme } from './themes.js';
+export type { ThemePreset } from './themes.js';
+
 // Keyboard handling
 export {
 	Key, parseKey, matchesKey, isKeyRelease, isKeyRepeat,
