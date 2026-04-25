@@ -20,10 +20,10 @@
   ],
   "scripts": {
     "build": "tsc",
-    "start": "node dist/src/cli.js",
-    "dev": "npx tsx src/cli.ts",
-    "cli": "npx tsx src/cli.ts",
-    "interactive": "npx tsx src/cli.ts interactive",
+    "start": "node dist/src/main.js",
+    "dev": "npx tsx src/main.ts",
+    "cli": "npx tsx src/main.ts",
+    "interactive": "npx tsx src/main.ts interactive",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

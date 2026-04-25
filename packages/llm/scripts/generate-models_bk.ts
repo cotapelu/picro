@@ -66,66 +66,6 @@ function loadNvidiaConfig(): ProviderConfig | null {
   }
 }
 
-// ==================== Provider Config ====================
-
-// Base URLs for known providers
-const PROVIDER_BASE_URLS: Record<string, string> = {
-  'amazon-bedrock': 'https://bedrock-runtime.us-east-1.amazonaws.com',
-  'anthropic': 'https://api.anthropic.com',
-  'google': 'https://generativelanguage.googleapis.com/v1beta',
-  'openai': 'https://api.openai.com/v1',
-  'groq': 'https://api.groq.com/openai/v1',
-  'cerebras': 'https://api.cerebras.ai/v1',
-  'xai': 'https://api.x.ai/v1',
-  'mistral': 'https://api.mistral.ai',
-  'huggingface': 'https://router.huggingface.co/v1',
-  'zai-coding-plan': 'https://api.z.ai/api/coding/paas/v4',
-  'kilo': 'https://api.kilo.ai/v1',
-  'nvidia': 'https://integrate.api.nvidia.com/v1',
-  'opencode': 'https://opencode.ai/zen',
-  'opencode-go': 'https://opencode.ai/zen/go',
-  'github-copilot': 'https://api.individual.githubcopilot.com',
-  'minimax': 'https://api.minimax.io/anthropic',
-  'minimax-cn': 'https://api.minimaxi.com/anthropic',
-  'kimi-for-coding': 'https://api.kimi.com/coding',
-  'fireworks-ai': 'https://api.fireworks.ai/inference/v1',
-};
-
-// API types for known providers (OpenAI-compatible = openai-completions/responses)
-const PROVIDER_API_TYPES: Record<string, string> = {
-  'amazon-bedrock': 'bedrock-converse-stream',
-  'anthropic': 'anthropic-messages',
-  'google': 'google-generative-ai',
-  'openai': 'openai-responses',
-  'groq': 'openai-completions',
-  'cerebras': 'openai-completions',
-  'xai': 'openai-completions',
-  'mistral': 'mistral-conversations',
-  'huggingface': 'openai-completions',
-  'zai-coding-plan': 'openai-completions',
-  'kilo': 'openai-completions',
-  'nvidia': 'openai-completions',
-  'opencode': 'anthropic-messages',
-  'opencode-go': 'anthropic-messages',
-  'github-copilot': 'openai-completions',
-  'minimax': 'anthropic-messages',
-  'minimax-cn': 'anthropic-messages',
-  'kimi-for-coding': 'anthropic-messages',
-  'fireworks-ai': 'anthropic-messages',
-};
-
-// Providers requiring special handling (custom transforms or filters)
-const SPECIAL_PROVIDERS = new Set([
-  'huggingface',
-  'zai-coding-plan',
-  'opencode',
-  'opencode-go',
-  'github-copilot',
-  'minimax',
-  'minimax-cn',
-  'kimi-for-coding',
-]);
-
 // ==================== Fetch from External APIs ====================
 
 async function fetchModelsDev(): Promise<ModelConfig[]> {
@@ -174,58 +114,48 @@ async function fetchModelsDev(): Promise<ModelConfig[]> {
       }
     };
 
-    // Auto-fetch providers that have /v1 endpoint (OpenAI-compatible from models.dev)
-    for (const [providerName, providerData] of Object.entries(data)) {
-      // Skip if no models
-      if (!(providerData as any)?.models) continue;
+    // Process each provider
+    addModels(data['amazon-bedrock'], 'amazon-bedrock', 'bedrock-converse-stream', 'https://bedrock-runtime.us-east-1.amazonaws.com');
+    addModels(data.anthropic, 'anthropic', 'anthropic-messages', 'https://api.anthropic.com');
+    addModels(data.google, 'google', 'google-generative-ai', 'https://generativelanguage.googleapis.com/v1beta');
+    addModels(data.openai, 'openai', 'openai-responses', 'https://api.openai.com/v1');
+    addModels(data.groq, 'groq', 'openai-completions', 'https://api.groq.com/openai/v1');
+    addModels(data.cerebras, 'cerebras', 'openai-completions', 'https://api.cerebras.ai/v1');
+    addModels(data.xai, 'xai', 'openai-completions', 'https://api.x.ai/v1');
+    addModels(data.mistral, 'mistral', 'mistral-conversations', 'https://api.mistral.ai');
+    addModels(data.huggingface, 'huggingface', 'openai-completions', 'https://router.huggingface.co/v1', (m) => {
+      if (m.tool_call !== true) return null;
+      return {
+        id: m.id || '',
+        name: m.name || '',
+        reasoning: m.reasoning === true,
+        input: ['text'], // HuggingFace mostly text
+        contextWindow: m.limit?.context || 4096,
+        maxTokens: m.limit?.output || 4096,
+        cost: { input: m.cost?.input || 0, output: m.cost?.output || 0 },
+      };
+    });
+    addModels(data['zai-coding-plan'], 'zai', 'openai-completions', 'https://api.z.ai/api/coding/paas/v4', (m) => {
+      if (m.tool_call !== true) return null;
+      return {
+        id: m.id || '',
+        name: m.name || '',
+        reasoning: m.reasoning === true,
+        input: ['text'],
+        contextWindow: m.limit?.context || 4096,
+        maxTokens: m.limit?.output || 4096,
+        compat: { supportsDeveloperRole: false, thinkingFormat: 'zai' },
+        cost: { input: m.cost?.input || 0, output: m.cost?.output || 0 },
+      };
+    });
 
-      // Skip special providers - handle separately below
-      if (SPECIAL_PROVIDERS.has(providerName)) continue;
+    // Kilo provider
+    addModels(data.kilo, 'kilo', 'openai-completions', 'https://api.kilo.ai/v1');
 
-      // Get API endpoint from models.dev (skip providers with NONE)
-      const apiEndpoint = (providerData as any).api;
-      if (!apiEndpoint) continue;
+    // NVIDIA NIM (from models.dev)
+    addModels(data.nvidia, 'nvidia', 'openai-completions', 'https://integrate.api.nvidia.com/v1');
 
-      const baseUrl = apiEndpoint;
-      const api = 'openai-completions';
-
-      addModels(providerData, providerName, api, baseUrl);
-    }
-
-    // Process HuggingFace with custom transform
-    if (data.huggingface?.models) {
-      addModels(data.huggingface, 'huggingface', 'openai-completions', PROVIDER_BASE_URLS['huggingface'], (m) => {
-        if (m.tool_call !== true) return null;
-        return {
-          id: m.id || '',
-          name: m.name || '',
-          reasoning: m.reasoning === true,
-          input: ['text'],
-          contextWindow: m.limit?.context || 4096,
-          maxTokens: m.limit?.output || 4096,
-          cost: { input: m.cost?.input || 0, output: m.cost?.output || 0 },
-        };
-      });
-    }
-
-    // Process zAI with custom transform
-    if (data['zai-coding-plan']?.models) {
-      addModels(data['zai-coding-plan'], 'zai', 'openai-completions', PROVIDER_BASE_URLS['zai-coding-plan'], (m) => {
-        if (m.tool_call !== true) return null;
-        return {
-          id: m.id || '',
-          name: m.name || '',
-          reasoning: m.reasoning === true,
-          input: ['text'],
-          contextWindow: m.limit?.context || 4096,
-          maxTokens: m.limit?.output || 4096,
-          compat: { supportsDeveloperRole: false, thinkingFormat: 'zai' },
-          cost: { input: m.cost?.input || 0, output: m.cost?.output || 0 },
-        };
-      });
-    }
-
-    // Process OpenCode variants
+    // OpenCode variants
     const opencodeVariants = [
       { key: 'opencode', provider: 'opencode', baseUrl: 'https://opencode.ai/zen' },
       { key: 'opencode-go', provider: 'opencode-go', baseUrl: 'https://opencode.ai/zen/go' },
@@ -252,7 +182,7 @@ async function fetchModelsDev(): Promise<ModelConfig[]> {
       }
     }
 
-    // GitHub Copilot with mixed API types
+    // GitHub Copilot
     if (data['github-copilot']?.models) {
       for (const [modelId, model] of Object.entries(data['github-copilot'].models)) {
         const m = model as any;
@@ -273,7 +203,6 @@ async function fetchModelsDev(): Promise<ModelConfig[]> {
           input: ['text', 'image'],
           contextWindow: m.limit?.context || 128000,
           maxTokens: m.limit?.output || 8192,
-          cost: { input: m.cost?.input || 0, output: m.cost?.output || 0 },
         });
       }
     }
@@ -323,8 +252,6 @@ async function fetchModelsDev(): Promise<ModelConfig[]> {
         });
       }
     }
-
-    console.log(`Fetched ${models.length} models from ${Object.keys(data).length} providers in models.dev`);
   } catch (error) {
     console.error('Failed to fetch models.dev:', error);
   }

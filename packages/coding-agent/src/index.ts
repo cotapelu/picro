@@ -27,3 +27,6 @@ export * from './branch/index.js';
 
 /* Export templates */
 export * from './templates/index.js';
+
+/* Export help system */
+export * from './help/index.js';

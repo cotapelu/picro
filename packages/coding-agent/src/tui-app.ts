@@ -282,10 +282,12 @@ export class ChatUI implements UIElement, InteractiveElement {
   private searchPanelHandle: any = null;
   private debugCollector: DebugCollector;
   private retrievedMemories: any[] = [];
+  private memoryCount: number = 0; // Cached memory count for sync display
   private memoryEventListener: (() => void) | null = null;
   private toolProgressListener: (() => void) | null = null;
   private commandHistory: string[] = [];
   getCommandHistory(): string[] { return this.commandHistory; }
+  setMemoryCount(count: number): void { this.memoryCount = count; }
   private currentTool: string | null = null;
   private toolProgress: string = '';  // for progress bar display
   private historyIndex = -1;
@@ -380,7 +382,7 @@ export class ChatUI implements UIElement, InteractiveElement {
 
   draw(context: RenderContext): string[] {
     const lines: string[] = [];
-    const memCount = this.memory.getMemoryCount();
+    const memCount = this.memoryCount;
     lines.push(this.theme.accent + `🤖 Coding Agent | ${this.messages.length} msgs | ${memCount} memories` + this.theme.reset);
     if (this.announcement) {
       lines.push(this.theme.dim + this.announcement + this.theme.reset);
@@ -1575,12 +1577,9 @@ export async function startTUIMode() {
     ...new SearchTools().getTools(),
   ];
 
-  // Setup TUI early with a loading spinner
+  // Setup TUI
   const tui = new TerminalUI(new ProcessTerminal(), false);
   const loaderTheme = getTheme(config.getSetting('theme') as 'dark' | 'light');
-  const loader = new BorderedLoader(tui, loaderTheme, 'Loading memory...');
-  const loaderHandle = tui.showPanel(loader, { anchor: 'center', offsetY: -5 });
-  tui.append(loader);
 
   // History persistence and graceful exit
   let chat: ChatUI | null = null;
@@ -1595,14 +1594,12 @@ export async function startTUIMode() {
   process.on('SIGTERM', exitCallback);
 
   try {
-    console.log('\n Starting TUI...');
-    tui.start();
-
-    // Initialize memory while TUI displays loading spinner
+    // Initialize memory before starting TUI to avoid async blocking issues
+    console.log('Loading memory...');
     await memory.init();
-
-    // Close loader
-    loaderHandle.close();
+    
+    console.log('Starting TUI...');
+    tui.start();
 
     // Create agent and chat UI after memory is ready
     const settings = config.getSettings();
@@ -1637,6 +1634,9 @@ export async function startTUIMode() {
     });
 
     chat = new ChatUI(agent, memory, tui, loaderTheme, commandHistory, exitCallback);
+    // Fetch initial memory count (sync workaround for display)
+    const memCount = await memory.count();
+    chat.setMemoryCount(memCount);
     tui.append(chat);
     const welcomeMessage = [
       `Welcome to pi-micro! 🤖`,
@@ -1661,7 +1661,6 @@ export async function startTUIMode() {
       }
     });
   } catch (err) {
-    loaderHandle.close();
     tui.stop();
     console.error('Failed to start:', err);
     process.exit(1);
