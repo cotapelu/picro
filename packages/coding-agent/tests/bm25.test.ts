@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeBM25, type SearchDoc } from '../src/search/bm25.js';
+import { computeBM25, type SearchDoc } from '../src/search/bm25.ts';
 
 describe('BM25 Ranking', () => {
   const docs: SearchDoc[] = [

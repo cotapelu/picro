@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { TerminalUI, KeyEvent } from '@picro/tui';
-import { MessageList } from '../src/tui-app.js';
+import { MessageList } from '../src/tui-app.ts';
 
 // Minimal mock of TerminalUI with just required methods
 function createMockTUI(): TerminalUI {

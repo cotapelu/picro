@@ -1,4 +1,4 @@
-import { getTools } from '../src/main.js';
+import { getTools } from '../src/main.ts';
 
 describe('main', () => {
   it('getTools should return an array of tool definitions from all tool classes', () => {

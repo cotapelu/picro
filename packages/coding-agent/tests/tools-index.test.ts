@@ -1,4 +1,4 @@
-import { FileTools, CodeTools, CommandTools, SearchTools } from '../src/tools/index.js';
+import { FileTools, CodeTools, CommandTools, SearchTools } from '../src/tools/index.ts';
 
 describe('Tools index', () => {
   it('should export FileTools class', () => {

@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { FileTools } from '../src/tools/file-tools.js';
+import { FileTools } from '../src/tools/file-tools.ts';
 import type { ToolDefinition } from '@picro/agent';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

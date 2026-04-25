@@ -1,4 +1,4 @@
-import { createMemoryTools, MemoryToolState } from '../src/tools/memory-tools.js';
+import { createMemoryTools, MemoryToolState } from '../src/tools/memory-tools.ts';
 import type { AgentMemoryApp } from '@picro/memory';
 
 // Mock the @picro/memory module

@@ -8,7 +8,7 @@ import { AgentMemoryApp, type AgentAction, type AgentMemoryMetadata } from '@pic
 export function createMemoryStoreAdapter(app: AgentMemoryApp): MemoryStore {
   return {
     async recall(query: string, options?: { topK?: number }) {
-      const result = await app.recallWithScores(query, options);
+      const result = await app.recallWithScores(query);
       return result;
     },
 

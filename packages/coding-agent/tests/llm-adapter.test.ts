@@ -1,4 +1,4 @@
-import { createLLMInstance } from '../src/llm-adapter.js';
+import { createLLMInstance } from '../src/llm-adapter.ts';
 import type { Model } from '@picro/llm';
 import * as streamModule from '@picro/llm';
 

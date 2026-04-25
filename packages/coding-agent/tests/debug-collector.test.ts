@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { DebugCollector } from '../src/debug.js';
+import { DebugCollector } from '../src/debug.ts';
 import type { EventEmitter } from '@picro/agent';
 
 // Mock EventEmitter

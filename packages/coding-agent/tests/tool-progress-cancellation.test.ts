@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { EventEmitter } from 'events';
-import { ChatUI } from '../src/tui-app.js';
+import { ChatUI } from '../src/tui-app.ts';
 import { MemoryStore } from '@picro/memory';
 import type { ToolCallStartEvent, ToolProgressEvent, ToolCallEndEvent } from '@picro/agent';
 

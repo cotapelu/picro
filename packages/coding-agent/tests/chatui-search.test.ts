@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ChatUI } from '../src/tui-app.js';
+import { ChatUI } from '../src/tui-app.ts';
 import type { BaseAgent } from '@picro/agent';
 import { AgentMemoryApp } from '@picro/memory';
 import { TerminalUI, SelectList } from '@picro/tui';
-import { computeBM25 } from '../src/search/bm25.js';
+import { computeBM25 } from '../src/search/bm25.ts';
 
 // Mock TerminalUI
 function createMockTUI(): TerminalUI {

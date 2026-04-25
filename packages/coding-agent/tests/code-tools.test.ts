@@ -1,4 +1,4 @@
-import { CodeTools } from '../src/tools/code-tools.js';
+import { CodeTools } from '../src/tools/code-tools.ts';
 import * as fs from 'fs';
 import * as path from 'path';
 

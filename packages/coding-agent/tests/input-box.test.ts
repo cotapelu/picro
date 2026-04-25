@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { InputBox } from '../src/input-box.js';
+import { InputBox } from '../src/input-box.ts';
 import type { RenderContext } from '@picro/tui';
 
 // Mock theme

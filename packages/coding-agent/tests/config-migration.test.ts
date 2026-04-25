@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { migrateConfig } from '../src/config/config.js';
-import type { AppConfig } from '../src/config/config.js';
+import { migrateConfig } from '../src/config/config.ts';
+import type { AppConfig } from '../src/config/config.ts';
 
 describe('Config Migration', () => {
   it('should upgrade config lacking version to version 1', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DebugCollector } from '../src/debug.js';
+import { DebugCollector } from '../src/debug.ts';
 import type { EventEmitter } from '@picro/agent';
 
 // Integration-style test: verify collector can be enabled/disabled and collects metrics

@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { ConfigManager } from '../src/config/config.js';
+import { ConfigManager } from '../src/config/config.ts';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';

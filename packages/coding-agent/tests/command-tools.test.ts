@@ -1,4 +1,4 @@
-import { CommandTools } from '../src/tools/command-tools.js';
+import { CommandTools } from '../src/tools/command-tools.ts';
 import type { ToolDefinition } from '@picro/agent';
 
 describe('CommandTools', () => {

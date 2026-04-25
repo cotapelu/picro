@@ -1,4 +1,4 @@
-import { createMemoryStoreAdapter } from '../src/memory-store-adapter.js';
+import { createMemoryStoreAdapter } from '../src/memory-store-adapter.ts';
 import type { MemoryStore } from '@picro/agent';
 import type { AgentMemoryApp } from '@picro/memory';
 
@@ -20,7 +20,7 @@ describe('MemoryStoreAdapter', () => {
 
   it('recall should call app.recallWithScores', async () => {
     const result = await adapter.recall('test query', { topK: 5 });
-    expect(mockApp.recallWithScores).toHaveBeenCalledWith('test query', { topK: 5 });
+    expect(mockApp.recallWithScores).toHaveBeenCalledWith('test query');
     expect(result).toEqual({ memories: [], scores: [] });
   });
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ConfigValidator } from '../src/config/validation.js';
-import type { AppConfig, ProviderInfo } from '../src/config/config.js';
+import { ConfigValidator } from '../src/config/validation.ts';
+import type { AppConfig, ProviderInfo } from '../src/config/config.ts';
 
 function createValidConfig(overrides?: Partial<AppConfig>): AppConfig {
   return {

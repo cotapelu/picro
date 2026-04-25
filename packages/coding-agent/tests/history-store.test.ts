@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { HistoryStore } from '../src/history-store.js';
+import { HistoryStore } from '../src/history-store.ts';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';

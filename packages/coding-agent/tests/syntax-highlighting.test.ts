@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Markdown as TuiMarkdown } from '@picro/tui';
 import clipboard from 'clipboardy';
-import { ChatUI } from '../src/tui-app.js';
+import { ChatUI } from '../src/tui-app.ts';
 import type { BaseAgent } from '@picro/agent';
 import { AgentMemoryApp } from '@picro/memory';
 import type { TerminalUI } from '@picro/tui';
@@ -84,6 +84,7 @@ describe('Copy Code Functionality', () => {
   let chat: ChatUI;
 
   beforeEach(() => {
+    vi.restoreAllMocks();
     const tui = createMockTUI();
     const agent = createMockAgent();
     const memory = createMockMemory();

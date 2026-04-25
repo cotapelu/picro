@@ -1,4 +1,4 @@
-import { SearchTools } from '../src/tools/search-tools.js';
+import { SearchTools } from '../src/tools/search-tools.ts';
 import * as fs from 'fs';
 import * as path from 'path';
 

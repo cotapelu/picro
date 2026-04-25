@@ -1,4 +1,4 @@
-import { ConfigManager, createMemoryStoreAdapter } from '../src/index.js';
+import { ConfigManager, createMemoryStoreAdapter } from '../src/index.ts';
 
 describe('index.ts exports', () => {
   it('should export ConfigManager class', () => {

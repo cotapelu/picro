@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ChatUI } from '../src/tui-app.js';
+import { ChatUI } from '../src/tui-app.ts';
 import type { BaseAgent } from '@picro/agent';
 import { AgentMemoryApp } from '@picro/memory';
 import { TerminalUI } from '@picro/tui';
-import { ConfigManager } from '../src/config/config.js';
+import { ConfigManager } from '../src/config/config.ts';
 import * as fs from 'fs';
 import * as path from 'path';
 

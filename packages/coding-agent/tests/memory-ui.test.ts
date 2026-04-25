@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ChatUI } from '../src/tui-app.js';
+import { ChatUI } from '../src/tui-app.ts';
 import type { AgentMemoryApp } from '@picro/memory';
 import type { TerminalUI } from '@picro/tui';
 import { EventEmitter } from 'events';

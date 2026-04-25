@@ -1,4 +1,4 @@
-import { ProviderSelector, DEFAULT_PROVIDERS, type ProviderConfig } from '../src/config/provider-config.js';
+import { ProviderSelector, DEFAULT_PROVIDERS, type ProviderConfig } from '../src/config/provider-config.ts';
 
 describe('ProviderConfig', () => {
   it('should have DEFAULT_PROVIDERS array with three entries', () => {
