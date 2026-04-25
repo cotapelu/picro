@@ -166,6 +166,45 @@ program
     await startInteractiveMode();
   });
 
+
+// ============================================================================
+// Profile Mode
+// ============================================================================
+program
+  .command('profile')
+  .description('Run performance profiling')
+  .option('--duration <seconds>', 'Profile duration', '10')
+  .action(async (options) => {
+    const { profiler } = await import('./performance/index.js');
+    const duration = parseInt(options.duration) * 1000;
+    
+    console.log('📊 Starting performance profiling...');
+    console.log(`Duration: ${options.duration}s`);
+    
+    // Warm up
+    profiler.snapshot();
+    
+    // Profile loop
+    const interval = setInterval(() => {
+      profiler.snapshot();
+    }, 1000);
+    
+    // Profile operations
+    profiler.time('warmup', () => {
+      for (let i = 0; i < 1000; i++) {}
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, duration));
+    clearInterval(interval);
+    
+    // Final snapshot
+    profiler.snapshot();
+    
+    // Print report
+    console.log(profiler.generateReport());
+    process.exit(0);
+  });
+
 // Config commands removed - will be reimplemented in TUI settings.
 
 
