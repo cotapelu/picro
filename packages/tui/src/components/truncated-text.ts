@@ -3,8 +3,8 @@
  * Text component that truncates content to fit viewport width
  * Supports ANSI codes and optional padding
  */
-import type { UIElement, RenderContext } from '../tui.js';
-import { stripAnsi, truncateText, visibleWidth, wrapText } from '../utils.js';
+import type { UIElement, RenderContext } from './base.js';
+import { stripAnsi, truncateText, visibleWidth, wrapText } from './internal-utils.js';
 
 export interface TruncatedTextOptions {
   /** Text content (can contain ANSI codes) */

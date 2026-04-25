@@ -2,8 +2,8 @@
  * Diff Component
  * Renders git diff output with syntax highlighting
  */
-import type { UIElement, RenderContext } from '../tui.js';
-import { visibleWidth, stripAnsi } from '../utils.js';
+import type { UIElement, RenderContext } from './base.js';
+import { visibleWidth, stripAnsi } from './internal-utils.js';
 
 // Diff line types
 export type DiffLineType = 'added' | 'removed' | 'context' | 'header' | 'hunk';

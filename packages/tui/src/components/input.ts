@@ -5,8 +5,8 @@
  * Supports editing, navigation, and optional single-line mode.
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../tui.js';
-import { visibleWidth, sliceByColumn } from '../utils.js';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from './base.js';
+import { visibleWidth, sliceByColumn } from './internal-utils.js';
 import { parseKey, Key, matchesKey, isKeyRelease } from '../keys.js';
 
 /**

@@ -2,8 +2,8 @@
  * Badge Component
  * Status labels and tags
  */
-import type { UIElement, RenderContext } from '../tui.js';
-import { visibleWidth } from '../utils.js';
+import type { UIElement, RenderContext } from './base.js';
+import { visibleWidth } from './internal-utils.js';
 
 export type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
 

@@ -2,7 +2,7 @@
  * Spacer Component
  * Renders empty lines as spacing between elements
  */
-import type { UIElement, RenderContext } from '../tui.js';
+import type { UIElement, RenderContext } from './base.js';
 
 export interface SpacerOptions {
   lines?: number;

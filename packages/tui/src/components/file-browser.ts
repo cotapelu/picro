@@ -2,9 +2,9 @@
  * FileBrowser Component
  * Browse and select files/directories
  */
-import type { UIElement, RenderContext, KeyEvent, InteractiveElement, PanelHandle } from '../tui.js';
+import type { UIElement, RenderContext, KeyEvent, InteractiveElement, PanelHandle } from './base.js';
 import type { TerminalUI } from '../tui.js';
-import { visibleWidth, truncateText } from '../utils.js';
+import { visibleWidth, truncateText } from './internal-utils.js';
 
 export interface FileItem {
   name: string;

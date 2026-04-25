@@ -2,8 +2,8 @@
  * Toast Component
  * Popup notification messages (auto-dismiss)
  */
-import type { UIElement, RenderContext } from '../tui.js';
-import { visibleWidth, truncateText } from '../utils.js';
+import type { UIElement, RenderContext } from './base.js';
+import { visibleWidth, truncateText } from './internal-utils.js';
 
 export type ToastType = 'info' | 'success' | 'warning' | 'error';
 

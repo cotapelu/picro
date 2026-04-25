@@ -2,8 +2,8 @@
  * ModelSelector Component
  * Select AI model with info display
  */
-import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../tui.js';
-import { visibleWidth, truncateText } from '../utils.js';
+import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from './base.js';
+import { visibleWidth, truncateText } from './internal-utils.js';
 import { SelectList, type SelectItem } from './select-list.js';
 import { Box } from './box.js';
 import { Spacer } from './spacer.js';

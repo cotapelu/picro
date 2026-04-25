@@ -1,231 +1,76 @@
 /**
  * Terminal UI Library for Coding Agent
+ * 
+ * This module re-exports all base types from components/base.ts
+ * for backward compatibility, and provides the TerminalUI class.
+ * New code should import directly from './components/base.js'.
  */
+
+// Re-export all base types from components
+export type {
+  UIElement,
+  RenderContext,
+  InteractiveElement,
+  KeyEvent,
+  KeyHandler,
+  KeyHandlerResult,
+  Dimension,
+  PanelAnchor,
+  PanelMargin,
+  PanelOptions,
+  PanelHandle,
+  UITheme,
+  BorderStyle,
+  TextAlignment,
+  VerticalAlignment,
+} from './components/base.js';
+
+export {
+  isInteractive,
+  CURSOR_MARKER,
+  resolveDimension,
+  ElementContainer,
+} from './components/base.js';
+
+// Import base types for internal use
+import type {
+  UIElement,
+  RenderContext,
+  InteractiveElement,
+  KeyEvent,
+  KeyHandler,
+  KeyHandlerResult,
+  Dimension,
+  PanelAnchor,
+  PanelMargin,
+  PanelOptions,
+  PanelHandle,
+  UITheme,
+} from './components/base.js';
+
+import {
+  isInteractive,
+  CURSOR_MARKER,
+  resolveDimension,
+  ElementContainer,
+} from './components/base.js';
+
+// Re-export internal utilities for backward compatibility
+export {
+  visibleWidth,
+  truncateText,
+  wrapText,
+} from './components/internal-utils.js';
+
+// Import utilities for internal use
+import {
+  visibleWidth,
+  truncateText,
+  wrapText,
+} from './components/internal-utils.js';
 
 import type { Terminal } from './terminal.js';
 import { parseKey, isKeyRelease } from './keys.js';
-
-/**
- * Base interface for all UI elements
- * Each element can draw itself to a list of text lines
- */
-export interface UIElement {
-	/**
-	 * Draw the element to lines for the given viewport width
-	 * @param context - Rendering context with width and other info
-	 * @returns Array of strings, each representing a line
-	 */
-	draw(context: RenderContext): string[];
-
-	/**
-	 * Optional handler for keyboard input when element has focus
-	 */
-	handleKey?(key: KeyEvent): void;
-
-	/**
-	 * If true, element receives key release events.
-	 * Default is false - release events are filtered out.
-	 */
-	wantsKeyRelease?: boolean;
-
-	/**
-	 * Clear any cached rendering state.
-	 * Called when theme changes or when element needs to redraw from scratch.
-	 */
-	clearCache(): void;
-}
-
-/**
- * Rendering context passed to draw methods
- */
-export interface RenderContext {
-	/** Available width for rendering */
-	width: number;
-	/** Available height for rendering */
-	height: number;
-	/** Current theme for styling */
-	theme?: UITheme;
-}
-
-/**
- * Interface for elements that can receive focus and display a cursor.
- * When focused, the element should emit CURSOR_MARKER at the cursor position
- * in its draw output. TerminalUI will find this marker and position the cursor there.
- */
-export interface InteractiveElement {
-	/** Set by TerminalUI when focus changes. Element should emit CURSOR_MARKER when true. */
-	isFocused: boolean;
-}
-
-/** Type guard to check if an element implements InteractiveElement */
-export function isInteractive(element: UIElement | null): element is UIElement & InteractiveElement {
-	return element !== null && 'isFocused' in element;
-}
-
-/**
- * Cursor position marker - APC (Application Program Command) sequence.
- * This is a zero-width escape sequence that terminals ignore.
- * Elements emit this at the cursor position when focused.
- * TerminalUI finds and strips this marker, then positions the cursor there.
- */
-export const CURSOR_MARKER = '\x1b_pi:c\x07';
-
-/** Value that can be absolute (number) or percentage (string like "50%") */
-export type Dimension = number | `${number}%`;
-
-/** Result of key event handling */
-export type KeyHandlerResult = { consume?: boolean; data?: string } | undefined;
-
-/** Handler for keyboard events */
-export type KeyHandler = (key: KeyEvent) => KeyHandlerResult;
-
-/** Keyboard event data */
-export interface KeyEvent {
-	/** Raw key data from terminal */
-	raw: string;
-	/** Key name if recognized (e.g., 'Enter', 'Escape') */
-	name?: string;
-	/** Modifier keys */
-	modifiers?: {
-		ctrl?: boolean;
-		alt?: boolean;
-		shift?: boolean;
-		meta?: boolean;
-	};
-}
-
-/**
- * Parse a Dimension into absolute value given a reference size
- */
-export function resolveDimension(value: Dimension | undefined, referenceSize: number): number | undefined {
-	if (value === undefined) return undefined;
-	if (typeof value === 'number') return value;
-	if (typeof value === 'string' && value.endsWith('%')) {
-		const percent = parseFloat(value.slice(0, -1));
-		return Math.floor((percent / 100) * referenceSize);
-	}
-	return undefined;
-}
-
-/** Anchor position for floating panels */
-export type PanelAnchor =
-	| 'center'
-	| 'top-left'
-	| 'top-right'
-	| 'bottom-left'
-	| 'bottom-right'
-	| 'top-center'
-	| 'bottom-center'
-	| 'left-center'
-	| 'right-center';
-
-/** Margin configuration for panels */
-export interface PanelMargin {
-	top?: number;
-	right?: number;
-	bottom?: number;
-	left?: number;
-}
-
-/** Options for panel positioning */
-export interface PanelOptions {
-	anchor?: PanelAnchor;
-
-	/** Minimum width in columns */
-	minWidth?: number;
-
-	/** Height in rows, or percentage of terminal height (e.g., "50%") */
-	panelHeight?: Dimension;
-
-	/** Maximum height in rows, or percentage of terminal height (e.g., "50%") */
-	maxHeight?: Dimension;
-
-	/** Horizontal offset from anchor position (positive = right) */
-	offsetX?: number;
-
-	/** Vertical offset from anchor position (positive = down) */
-	offsetY?: number;
-
-	/** Margin from terminal edges. Number applies to all sides. */
-	padding?: PanelMargin | number;
-
-	/** Control panel visibility based on terminal dimensions. */
-	visible?: (termWidth: number, termHeight: number) => boolean;
-
-	/** If true, don't capture keyboard focus when shown */
-	nonCapturing?: boolean;
-	/** Row position: absolute number, or percentage (e.g., "25%" = 25% from top) */
-	row?: Dimension;
-	/** Column position: absolute number, or percentage (e.g., "50%" = centered horizontally) */
-	col?: Dimension;
-	width?: Dimension;
-	height?: Dimension;
-}
-
-/** Handle returned by showPanel for controlling the panel */
-export interface PanelHandle {
-	/** Permanently remove the panel (cannot be shown again) */
-	close(): void;
-
-	/** Temporarily hide or show the panel */
-	setHidden(hidden: boolean): void;
-
-	/** Check if panel is temporarily hidden */
-	isHidden(): boolean;
-
-	/** Focus this panel and bring it to the visual front */
-	focus(): void;
-
-	/** Release focus to the previous target */
-	unfocus(): void;
-
-	/** Check if this panel currently has focus */
-	isFocused(): boolean;
-}
-
-/**
- * Container element that holds child elements
- */
-export class ElementContainer implements UIElement {
-	public children: UIElement[] = [];
-
-	/** Draw all child elements */
-	draw(context: RenderContext): string[] {
-		const lines: string[] = [];
-		for (const child of this.children) {
-			const childLines = child.draw(context);
-			for (const line of childLines) {
-				lines.push(line);
-			}
-		}
-		return lines;
-	}
-
-	/** Add a child element */
-	append(element: UIElement): void {
-		this.children.push(element);
-	}
-
-	/** Remove a child element */
-	remove(element: UIElement): void {
-		const index = this.children.indexOf(element);
-		if (index !== -1) {
-			this.children.splice(index, 1);
-		}
-	}
-
-	/** Remove all child elements */
-	clear(): void {
-		this.children = [];
-	}
-
-	/** Clear cache for all child elements */
-	clearCache(): void {
-		for (const child of this.children) {
-			child.clearCache?.();
-		}
-	}
-}
 
 /**
  * TerminalUI - Main class for managing terminal UI with incremental rendering
@@ -985,19 +830,3 @@ export function isTermuxSession(): boolean {
 /**
  * UI Theme interface for styling
  */
-export interface UITheme {
-	/** Default text color */
-	textColor?: string;
-	/** Default background color */
-	bgColor?: string;
-	/** Border color */
-	borderColor?: string;
-	/** Accent color */
-	accentColor?: string;
-	/** Error color */
-	errorColor?: string;
-	/** Warning color */
-	warningColor?: string;
-	/** Success color */
-	successColor?: string;
-}

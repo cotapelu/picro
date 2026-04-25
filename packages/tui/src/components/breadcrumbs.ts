@@ -2,8 +2,8 @@
  * Breadcrumbs Component
  * Navigation path display
  */
-import type { UIElement, RenderContext } from '../tui.js';
-import { visibleWidth, truncateText } from '../utils.js';
+import type { UIElement, RenderContext } from './base.js';
+import { visibleWidth, truncateText } from './internal-utils.js';
 
 export interface BreadcrumbItem {
   label: string;

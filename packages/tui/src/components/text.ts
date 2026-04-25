@@ -4,8 +4,8 @@
  * Simple text display component with styling support
  */
 
-import type { UIElement, RenderContext } from '../tui.js';
-import { visibleWidth, wrapText, truncateText } from '../utils.js';
+import type { UIElement, RenderContext } from './base.js';
+import { visibleWidth, wrapText, truncateText } from './internal-utils.js';
 
 type TextCache = {
 	width: number;

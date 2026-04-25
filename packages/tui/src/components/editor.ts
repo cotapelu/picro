@@ -3,9 +3,9 @@
  * 
  * Multi-line text editor using KillRing and UndoStack modules.
  */
-import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../tui.js';
-import { CURSOR_MARKER } from '../tui.js';
-import { visibleWidth, wrapText, truncateText } from '../utils.js';
+import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from './base.js';
+import { CURSOR_MARKER } from './base.js';
+import { visibleWidth, wrapText, truncateText } from './internal-utils.js';
 import { KillRing, defaultKillRing } from '../kill-ring.js';
 import { UndoRedoManager } from '../undo-stack.js';
 import { getKeybindings } from '../keybindings.js';

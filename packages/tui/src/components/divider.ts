@@ -2,8 +2,8 @@
  * Divider Component
  * Visual separation with optional label
  */
-import type { UIElement, RenderContext } from '../tui.js';
-import { visibleWidth, truncateText } from '../utils.js';
+import type { UIElement, RenderContext } from './base.js';
+import { visibleWidth, truncateText } from './internal-utils.js';
 
 export type DividerStyle = 'single' | 'double' | 'thick' | 'dashed' | 'hidden';
 

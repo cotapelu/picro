@@ -2,8 +2,8 @@
  * Footer Component
  * Status bar at bottom of terminal
  */
-import type { UIElement, RenderContext } from '../tui.js';
-import { visibleWidth } from '../utils.js';
+import type { UIElement, RenderContext } from './base.js';
+import { visibleWidth } from './internal-utils.js';
 
 export interface FooterItem {
   /** Key/shortcut hint */

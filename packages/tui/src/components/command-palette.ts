@@ -2,9 +2,8 @@
  * CommandPalette Component
  * Quick command launcher (CMD+Shift+P style)
  */
-import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../tui.js';
-import { CURSOR_MARKER } from '../tui.js';
-import { visibleWidth, truncateText } from '../utils.js';
+import { CURSOR_MARKER, type UIElement, type RenderContext, type KeyEvent, type InteractiveElement } from './base.js';
+import { visibleWidth, truncateText } from './internal-utils.js';
 import { fuzzyFilter } from '../fuzzy.js';
 import { Input } from './input.js';
 

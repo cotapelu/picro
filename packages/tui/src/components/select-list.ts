@@ -3,9 +3,9 @@
  * Interactive list for selecting items
  */
 
-import { CURSOR_MARKER } from '../tui.js';
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../tui.js';
-import { visibleWidth, truncateText } from '../utils.js';
+import { CURSOR_MARKER } from './base.js';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from './base.js';
+import { visibleWidth, truncateText } from './internal-utils.js';
 import { getKeybindings } from '../keybindings.js';
 
 export interface SelectItem {

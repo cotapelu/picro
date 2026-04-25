@@ -2,9 +2,9 @@
  * ContextMenu Component
  * Popup menu for contextual actions
  */
-import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../tui.js';
-import { CURSOR_MARKER } from '../tui.js';
-import { visibleWidth, truncateText } from '../utils.js';
+import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from './base.js';
+import { CURSOR_MARKER } from './base.js';
+import { visibleWidth, truncateText } from './internal-utils.js';
 
 export interface MenuItem {
   /** Unique ID */

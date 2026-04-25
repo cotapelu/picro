@@ -3,7 +3,7 @@
  * Decorative border around content
  */
 
-import type { UIElement, RenderContext } from '../tui.js';
+import type { UIElement, RenderContext } from './base.js';
 
 /**
  * DynamicBorder - draws a rounded border around child content

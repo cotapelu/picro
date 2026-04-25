@@ -4,8 +4,8 @@
  * Container component with padding and background
  */
 
-import type { UIElement, RenderContext } from '../tui.js';
-import { visibleWidth } from '../utils.js';
+import type { UIElement, RenderContext } from './base.js';
+import { visibleWidth } from './internal-utils.js';
 
 type RenderCache = {
 	childLines: string[];

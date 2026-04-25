@@ -3,8 +3,8 @@
  * Renders markdown with optional syntax highlighting
  */
 
-import type { UIElement, RenderContext } from '../tui.js';
-import { visibleWidth, wrapText } from '../utils.js';
+import type { UIElement, RenderContext } from './base.js';
+import { visibleWidth, wrapText } from './internal-utils.js';
 import hljs from 'highlight.js';
 
 type MarkdownCache = {

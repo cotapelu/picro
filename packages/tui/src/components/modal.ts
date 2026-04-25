@@ -2,8 +2,8 @@
  * Modal/Dialog Component
  * Modal dialog for confirmations and forms
  */
-import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../tui.js';
-import { visibleWidth, truncateText, wrapText } from '../utils.js';
+import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from './base.js';
+import { visibleWidth, truncateText, wrapText } from './internal-utils.js';
 
 export type ModalType = 'confirm' | 'info' | 'warning' | 'error' | 'custom';
 

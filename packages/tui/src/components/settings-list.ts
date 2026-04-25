@@ -3,9 +3,8 @@
  * List for toggling settings
  */
 
-import { CURSOR_MARKER } from '../tui.js';
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../tui.js';
-import { truncateText, visibleWidth } from '../utils.js';
+import { CURSOR_MARKER, type UIElement, type InteractiveElement, type RenderContext, type KeyEvent } from './base.js';
+import { truncateText, visibleWidth } from './internal-utils.js';
 import { getKeybindings } from '../keybindings.js';
 
 export interface SettingItem {

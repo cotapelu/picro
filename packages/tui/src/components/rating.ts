@@ -2,8 +2,8 @@
  * Rating Component
  * Star rating display
  */
-import type { UIElement, RenderContext } from '../tui.js';
-import { visibleWidth } from '../utils.js';
+import type { UIElement, RenderContext } from './base.js';
+import { visibleWidth } from './internal-utils.js';
 
 export interface RatingTheme {
   filledStar: (s: string) => string;

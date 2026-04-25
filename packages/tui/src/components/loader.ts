@@ -3,9 +3,9 @@
  * Shows a loading spinner with message and ability to cancel
  */
 
-import { CURSOR_MARKER } from '../tui.js';
-import type { UIElement, KeyEvent, RenderContext, InteractiveElement } from '../tui.js';
-import { visibleWidth } from '../utils.js';
+import { CURSOR_MARKER } from './base.js';
+import type { UIElement, KeyEvent, RenderContext, InteractiveElement } from './base.js';
+import { visibleWidth } from './internal-utils.js';
 
 const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 let spinnerFrame = 0;
