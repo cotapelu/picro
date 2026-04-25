@@ -24,3 +24,6 @@ export * from './watch/index.js';
 
 /* Export conversation branching */
 export * from './branch/index.js';
+
+/* Export templates */
+export * from './templates/index.js';
