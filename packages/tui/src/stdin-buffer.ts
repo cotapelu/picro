@@ -1,11 +1,18 @@
 /**
- * Stdin Buffer
+ * StdinBuffer
  * 
  * Buffers stdin data and splits into individual sequences.
  * Helps handle batched input (e.g., from paste) correctly.
+ * 
+ * Legacy style: use process() method to feed data, rather than
+ * auto-attaching to stdin which can cause conflicts.
  */
 
 import { EventEmitter } from 'node:events';
+
+const ESC = "\x1b";
+const BRACKETED_PASTE_START = "\x1b[200~";
+const BRACKETED_PASTE_END = "\x1b[201~";
 
 export interface StdinBufferEventMap {
 	data: [sequence: string];
@@ -19,227 +26,347 @@ export interface StdinBufferOptions {
 	pasteThreshold?: number;
 }
 
-const DEFAULT_Options: StdinBufferOptions = {
+const DEFAULT_OPTIONS: StdinBufferOptions = {
 	timeout: 10,
 	pasteThreshold: 1024,
 };
 
 /**
+ * Check if a string is a complete escape sequence or needs more data
+ */
+function isCompleteSequence(data: string): 'complete' | 'incomplete' | 'not-escape' {
+	if (!data.startsWith(ESC)) {
+		return 'not-escape';
+	}
+
+	if (data.length === 1) {
+		return 'incomplete';
+	}
+
+	const afterEsc = data.slice(1);
+
+	// CSI sequences: ESC [
+	if (afterEsc.startsWith('[')) {
+		// Check for old-style mouse sequence: ESC[M + 3 bytes = 6 total
+		if (afterEsc.startsWith('[M')) {
+			return data.length >= 6 ? 'complete' : 'incomplete';
+		}
+		return isCompleteCsiSequence(data);
+	}
+
+	// OSC sequences: ESC ]
+	if (afterEsc.startsWith(']')) {
+		return isCompleteOscSequence(data);
+	}
+
+	// DCS sequences: ESC P ... ESC \
+	if (afterEsc.startsWith('P')) {
+		return isCompleteDcsSequence(data);
+	}
+
+	// APC sequences: ESC _ ... ESC \
+	if (afterEsc.startsWith('_')) {
+		return isCompleteApcSequence(data);
+	}
+
+	// SS3 sequences: ESC O
+	if (afterEsc.startsWith('O')) {
+		return afterEsc.length >= 2 ? 'complete' : 'incomplete';
+	}
+
+	// Meta key: ESC + single char
+	if (afterEsc.length === 1) {
+		return 'complete';
+	}
+
+	return 'complete';
+}
+
+function isCompleteCsiSequence(data: string): 'complete' | 'incomplete' {
+	if (!data.startsWith(`${ESC}[`)) {
+		return 'complete';
+	}
+
+	if (data.length < 3) {
+		return 'incomplete';
+	}
+
+	const payload = data.slice(2);
+	const lastChar = payload[payload.length - 1];
+	const lastCharCode = lastChar.charCodeAt(0);
+
+	if (lastCharCode >= 0x40 && lastCharCode <= 0x7e) {
+		// Special handling for SGR mouse sequences
+		if (payload.startsWith('<')) {
+			const mouseMatch = /^<\d+;\d+;\d+[Mm]$/.test(payload);
+			if (mouseMatch) {
+				return 'complete';
+			}
+			if (lastChar === 'M' || lastChar === 'm') {
+				const parts = payload.slice(1, -1).split(';');
+				if (parts.length === 3 && parts.every((p) => /^\d+$/.test(p))) {
+					return 'complete';
+				}
+			}
+			return 'incomplete';
+		}
+		return 'complete';
+	}
+
+	return 'incomplete';
+}
+
+function isCompleteOscSequence(data: string): 'complete' | 'incomplete' {
+	if (!data.startsWith(`${ESC}]`)) {
+		return 'complete';
+	}
+
+	if (data.endsWith(`${ESC}\\`) || data.endsWith('\x07')) {
+		return 'complete';
+	}
+
+	return 'incomplete';
+}
+
+function isCompleteDcsSequence(data: string): 'complete' | 'incomplete' {
+	if (!data.startsWith(`${ESC}P`)) {
+		return 'complete';
+	}
+
+	if (data.endsWith(`${ESC}\\`)) {
+		return 'complete';
+	}
+
+	return 'incomplete';
+}
+
+function isCompleteApcSequence(data: string): 'complete' | 'incomplete' {
+	if (!data.startsWith(`${ESC}_`)) {
+		return 'complete';
+	}
+
+	if (data.endsWith(`${ESC}\\`)) {
+		return 'complete';
+	}
+
+	return 'incomplete';
+}
+
+/**
+ * Split accumulated buffer into complete sequences
+ */
+function extractCompleteSequences(buffer: string): { sequences: string[]; remainder: string } {
+	const sequences: string[] = [];
+	let pos = 0;
+
+	while (pos < buffer.length) {
+		const remaining = buffer.slice(pos);
+
+		if (remaining.startsWith(ESC)) {
+			let seqEnd = 1;
+			while (seqEnd <= remaining.length) {
+				const candidate = remaining.slice(0, seqEnd);
+				const status = isCompleteSequence(candidate);
+
+				if (status === 'complete') {
+					sequences.push(candidate);
+					pos += seqEnd;
+					break;
+				} else if (status === 'incomplete') {
+					seqEnd++;
+				} else {
+					sequences.push(candidate);
+					pos += seqEnd;
+					break;
+				}
+			}
+
+			if (seqEnd > remaining.length) {
+				return { sequences, remainder: remaining };
+			}
+		} else {
+			sequences.push(remaining[0]!);
+			pos++;
+		}
+	}
+
+	return { sequences, remainder: '' };
+}
+
+/**
  * StdinBuffer - processes raw stdin data and emits individual sequences.
  * 
- * Usage:
- *   const buffer = new StdinBuffer({ timeout: 10 });
+ * Usage (legacy style):
+ *   const buffer = new StdinBuffer();
  *   buffer.on('data', (seq) => { ... });
- *   buffer.on('paste', (content) => { ... });
- *   buffer.start();
+ *   process.stdin.on('data', (data) => buffer.process(data));
  */
-export class StdinBuffer extends EventEmitter {
-	private options: Required<StdinBufferOptions>;
+export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {
 	private buffer = '';
-	private timeoutId: any = null;
-	private started = false;
+	private timeoutId: ReturnType<typeof setTimeout> | null = null;
+	private readonly options: Required<StdinBufferOptions>;
+	private pasteMode = false;
+	private pasteBuffer = '';
 
 	constructor(options: StdinBufferOptions = {}) {
 		super();
-		this.options = { ...DEFAULT_Options, ...options } as Required<StdinBufferOptions>;
+		this.options = { ...DEFAULT_OPTIONS, ...options } as Required<StdinBufferOptions>;
 	}
 
 	/**
-	 * Start listening to stdin and buffering data.
+	 * Feed input data to the buffer.
+	 * Called by terminal with process.stdin.on('data').
 	 */
-	start(): void {
-		if (this.started) return;
-		this.started = true;
-		process.stdin.on('data', this.onData);
-	}
-
-	/**
-	 * Stop listening and cleanup.
-	 */
-	stop(): void {
-		if (!this.started) return;
-		process.stdin.removeListener('data', this.onData);
-		this.started = false;
-		this.clearBuffer();
-	}
-
-	/**
-	 * Destroy the buffer, cleanup all resources.
-	 */
-	destroy(): void {
-		this.stop();
-		this.removeAllListeners();
-	}
-
-	/**
-	 * Process incoming data.
-	 */
-	private onData = (data: Buffer | string): void => {
-		const str = typeof data === 'string' ? data : data.toString('utf8');
-		this.buffer += str;
-
-		// If buffer is very large, treat as paste
-		if (this.buffer.length > this.options.pasteThreshold) {
-			this.emit('paste', this.buffer);
-			this.buffer = '';
-			this.clearTimeout();
-			return;
-		}
-
-		// Reset timeout
-		this.clearTimeout();
-		this.timeoutId = setTimeout(() => {
-			this.processBuffer();
-		}, this.options.timeout);
-	};
-
-	/**
-	 * Process the current buffer, emitting individual sequences.
-	 */
-	private processBuffer(): void {
-		if (this.buffer.length === 0) return;
-
-		const sequences = this.splitIntoSequences(this.buffer);
-		this.buffer = ''; // Clear buffer after splitting
-
-		for (const seq of sequences) {
-			// Check if it's a paste (too long?) - but we already checked threshold
-			// Emit each sequence
-			this.emit('data', seq);
-		}
-	}
-
-	/**
-	 * Split buffer into individual key sequences.
-	 * Handles common escape sequences: CSI, SS3, OSC, etc.
-	 */
-	private splitIntoSequences(buffer: string): string[] {
-		const sequences: string[] = [];
-		let i = 0;
-
-		while (i < buffer.length) {
-			const char = buffer[i];
-
-			// Escape sequence
-			if (char === '\x1b') {
-				const remaining = buffer.slice(i);
-				const seqLength = this.parseEscapeSequenceLength(remaining);
-				if (seqLength > 0) {
-					sequences.push(buffer.slice(i, i + seqLength));
-					i += seqLength;
-				} else {
-					// Incomplete escape sequence - keep in buffer for later
-					// But since we already cleared buffer, we'll just emit what we have
-					// and assume the rest will come later (though we already cleared)
-					// This is simplified; for robustness, we shouldn't clear buffer until complete.
-					// However, our processBuffer is called after timeout, assuming buffer is complete.
-					// So we'll just take the rest as a sequence.
-					sequences.push(remaining);
-					break;
-				}
-				continue;
-			}
-
-			// Mouse event (X10 protocol) - special handling
-			if (i + 5 < buffer.length && char === '\x1b' && buffer[i+1] === '[' && buffer[i+2] === 'M') {
-				// Mouse sequence is 6 characters: ESC [ M <button> <x> <y>
-				if (i + 5 < buffer.length) {
-					sequences.push(buffer.slice(i, i + 6));
-					i += 6;
-					continue;
-				}
-			}
-
-			// Normal character (including multi-byte UTF-8)
-			// For simplicity, we'll treat each character as a sequence.
-			// But we can group normal characters? Not needed; they'll be emitted individually.
-			// However, for pasted text, we might want to group. We already have paste detection.
-			// Emit single character
-			sequences.push(char);
-			i++;
-		}
-
-		return sequences;
-	}
-
-	/**
-	 * Try to parse an escape sequence from the start of the string.
-	 * Returns the length of the sequence if recognized, 0 otherwise.
-	 */
-	private parseEscapeSequenceLength(str: string): number {
-		if (str.length === 0 || str[0] !== '\x1b') return 0;
-
-		if (str.length < 2) return 0; // Need at least ESC + something
-
-		const second = str[1];
-
-		// CSI sequence: ESC [
-		if (second === '[') {
-			// Find the final byte (0x40 - 0x7e)
-			for (let i = 2; i < str.length; i++) {
-				const code = str.charCodeAt(i);
-				if (code >= 0x40 && code <= 0x7e) {
-					return i + 1; // Include the final byte
-				}
-			}
-			// Incomplete CSI sequence
-			return 0;
-		}
-
-		// SS3 sequence: ESC O
-		if (second === 'O') {
-			// Usually followed by one character (F1-F4, arrow keys in some modes)
-			if (str.length >= 3) {
-				return 3; // ESC O <char>
-			}
-			return 0; // Incomplete
-		}
-
-		// OSC sequence: ESC ]
-		if (second === ']') {
-			// OSC ends with BEL (0x07) or ESC \ (ST)
-			for (let i = 2; i < str.length; i++) {
-				if (str[i] === '\x07') {
-					return i + 1; // Include BEL
-				}
-				// Check for ESC \ (ST)
-				if (str[i] === '\x1b' && i + 1 < str.length && str[i+1] === '\\') {
-					return i + 2;
-				}
-			}
-			return 0; // Incomplete
-		}
-
-		// APC sequence: ESC _
-		if (second === '_') {
-			// APC ends with BEL or ESC \
-			for (let i = 2; i < str.length; i++) {
-				if (str[i] === '\x07') {
-					return i + 1;
-				}
-				if (str[i] === '\x1b' && i + 1 < str.length && str[i+1] === '\\') {
-					return i + 2;
-				}
-			}
-			return 0;
-		}
-
-		// Two-character escape: ESC <char> (e.g., ESC \\, ESC ], etc.)
-		// Most are two characters.
-		return 2; // Assume ESC + one character
-	}
-
-	/**
-	 * Clear the buffer and timeout.
-	 */
-	private clearBuffer(): void {
-		this.buffer = '';
-	}
-
-	private clearTimeout(): void {
+	public process(data: string | Buffer): void {
+		// Clear any pending timeout
 		if (this.timeoutId) {
 			clearTimeout(this.timeoutId);
 			this.timeoutId = null;
 		}
+
+		// Handle high-byte conversion
+		let str: string;
+		if (Buffer.isBuffer(data)) {
+			if (data.length === 1 && data[0]! > 127) {
+				const byte = data[0]! - 128;
+				str = `\x1b${String.fromCharCode(byte)}`;
+			} else {
+				str = data.toString('utf8');
+			}
+		} else {
+			str = data;
+		}
+
+		if (str.length === 0 && this.buffer.length === 0) {
+			this.emit('data', '');
+			return;
+		}
+
+		this.buffer += str;
+
+		// Handle bracketed paste
+		if (this.pasteMode) {
+			this.handlePasteData();
+			return;
+		}
+
+		const startIndex = this.buffer.indexOf(BRACKETED_PASTE_START);
+		if (startIndex !== -1) {
+			this.handlePasteStart(startIndex);
+			return;
+		}
+
+		// Process normal buffer
+		const result = extractCompleteSequences(this.buffer);
+		this.buffer = result.remainder;
+
+		for (const sequence of result.sequences) {
+			this.emit('data', sequence);
+		}
+
+		if (this.buffer.length > 0) {
+			this.timeoutId = setTimeout(() => {
+				const flushed = this.flush();
+				for (const sequence of flushed) {
+					this.emit('data', sequence);
+				}
+			}, this.options.timeout);
+		}
+	}
+
+	private handlePasteStart(startIndex: number): void {
+		if (startIndex > 0) {
+			const beforePaste = this.buffer.slice(0, startIndex);
+			const result = extractCompleteSequences(beforePaste);
+			for (const sequence of result.sequences) {
+				this.emit('data', sequence);
+			}
+		}
+
+		this.buffer = this.buffer.slice(startIndex + BRACKETED_PASTE_START.length);
+		this.pasteMode = true;
+		this.pasteBuffer = this.buffer;
+		this.buffer = '';
+
+		const endIndex = this.pasteBuffer.indexOf(BRACKETED_PASTE_END);
+		if (endIndex !== -1) {
+			const pastedContent = this.pasteBuffer.slice(0, endIndex);
+			const remaining = this.pasteBuffer.slice(endIndex + BRACKETED_PASTE_END.length);
+
+			this.pasteMode = false;
+			this.pasteBuffer = '';
+
+			this.emit('paste', pastedContent);
+
+			if (remaining.length > 0) {
+				this.process(remaining);
+			}
+		}
+	}
+
+	private handlePasteData(): void {
+		this.pasteBuffer += this.buffer;
+		this.buffer = '';
+
+		const endIndex = this.pasteBuffer.indexOf(BRACKETED_PASTE_END);
+		if (endIndex !== -1) {
+			const pastedContent = this.pasteBuffer.slice(0, endIndex);
+			const remaining = this.pasteBuffer.slice(endIndex + BRACKETED_PASTE_END.length);
+
+			this.pasteMode = false;
+			this.pasteBuffer = '';
+
+			this.emit('paste', pastedContent);
+
+			if (remaining.length > 0) {
+				this.process(remaining);
+			}
+		}
+	}
+
+	/**
+	 * Flush any buffered data
+	 */
+	flush(): string[] {
+		if (this.timeoutId) {
+			clearTimeout(this.timeoutId);
+			this.timeoutId = null;
+		}
+
+		if (this.buffer.length === 0) {
+			return [];
+		}
+
+		const sequences = [this.buffer];
+		this.buffer = '';
+		return sequences;
+	}
+
+	/**
+	 * Clear the buffer
+	 */
+	clear(): void {
+		if (this.timeoutId) {
+			clearTimeout(this.timeoutId);
+			this.timeoutId = null;
+		}
+		this.buffer = '';
+		this.pasteMode = false;
+		this.pasteBuffer = '';
+	}
+
+	/**
+	 * Get current buffer content
+	 */
+	getBuffer(): string {
+		return this.buffer;
+	}
+
+	/**
+	 * Destroy and cleanup
+	 */
+	destroy(): void {
+		this.clear();
+		this.removeAllListeners();
 	}
 }

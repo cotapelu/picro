@@ -25721,6 +25721,23 @@ export const MODELS = {
 			contextWindow: 163840,
 			maxTokens: 65536,
 		} satisfies Model,
+		"deepseek-ai/deepseek-v4-pro": {
+			id: "deepseek-ai/deepseek-v4-pro",
+			name: "DeepSeek V4 Pro",
+			api: "openai-completions",
+			provider: "nvidia",
+			baseUrl: "https://integrate.api.nvidia.com/v1",
+			reasoning: true,
+			input: ["text"],
+			cost: {
+				input: 1.74,
+				output: 3.48,
+				cacheRead: 0.145,
+				cacheWrite: 0,
+			},
+			contextWindow: 1048576,
+			maxTokens: 393216,
+		} satisfies Model,
 		"google/gemma-2-27b-it": {
 			id: "google/gemma-2-27b-it",
 			name: "Gemma 2 27b It",
@@ -31475,7 +31492,7 @@ export const MODELS = {
 		} satisfies Model,
 		"openai/gpt-5.5": {
 			id: "openai/gpt-5.5",
-			name: "OpenAI: GPT-5.5",
+			name: "GPT-5.5",
 			api: "openai-completions",
 			provider: "openrouter",
 			baseUrl: "https://openrouter.ai/api/v1",
@@ -31488,7 +31505,7 @@ export const MODELS = {
 				cacheWrite: 0,
 			},
 			contextWindow: 1050000,
-			maxTokens: 128000,
+			maxTokens: 130000,
 		} satisfies Model,
 		"openai/gpt-5.5-pro": {
 			id: "openai/gpt-5.5-pro",

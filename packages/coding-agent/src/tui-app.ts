@@ -443,7 +443,8 @@ export class ChatUI implements UIElement, InteractiveElement {
       return;
     }
 
-    if ((key.name === 'Enter' || d === '\r') && !key.modifiers?.ctrl && !key.modifiers?.alt && !key.modifiers?.shift) {
+    // Enter: send message
+    if (key.name === 'Enter' || d === '\r') {
       if (this.inputBuffer.trim()) {
         const input = this.inputBuffer.trim();
         this.commandHistory.push(input);
@@ -1459,6 +1460,7 @@ case 'export-config': this.exportConfig(); break;
     let offToolResult: (() => void) | null = null;
     let offToolError: (() => void) | null = null;
 
+    console.error('[DEBUG] processAgentResponse: START, input=', userInput.slice(0, 50));
     this.setStatus('Thinking...', 'yellow');
     this.isAgentRunning = true;
     try {
@@ -1479,11 +1481,14 @@ case 'export-config': this.exportConfig(); break;
         });
       }
 
+      console.error('[DEBUG] Calling agent.run()...');
       const result = await this.agent.run(userInput);
+      console.error('[DEBUG] agent.run() DONE, result=', JSON.stringify(result).slice(0, 200));
 
       // Cleanup event listeners
       offToolCall?.(); offToolResult?.(); offToolError?.();
       loaderHandle?.close();
+      console.error('[DEBUG] Loader closed');
 
       this.setStatus('Ready', 'green');
       this.lastError = null;
@@ -1501,6 +1506,7 @@ case 'export-config': this.exportConfig(); break;
         }
       }
     } catch (e: any) {
+      console.error('[DEBUG] ERROR in processAgentResponse:', e.message);
       offToolCall?.(); offToolResult?.(); offToolError?.();
       loaderHandle?.close();
       // If aborted, don't treat as error
@@ -1517,6 +1523,7 @@ case 'export-config': this.exportConfig(); break;
       }
     } finally {
       this.isAgentRunning = false;
+      console.error('[DEBUG] processAgentResponse: FINISHED');
     }
   }
 

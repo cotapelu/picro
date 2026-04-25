@@ -53,6 +53,7 @@ pi-ai-legacy/
 pi-agent-legacy/
 pi-tui-legacy/
 claudecode-legacy/
+coding-agent-legacy/
 
 # Config files
 auth.json

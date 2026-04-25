@@ -22,8 +22,6 @@
     "test": "npm run build && node --experimental-specifier-resolution=node dist/test/runner.js"
   },
   "dependencies": {
-    "@picro/agent": "file:../agent",
-    "@picro/memory": "file:../memory",
     "highlight.js": "^11.11.1"
   },
   "devDependencies": {

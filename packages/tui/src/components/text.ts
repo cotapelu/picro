@@ -110,7 +110,8 @@ export class Text implements UIElement {
 				return ' '.repeat(width - lineWidth) + styled;
 			case 'left':
 			default:
-				return styled + ' '.repeat(width - lineWidth);
+				// No trailing padding - let the line be its natural width
+					return styled;
 		}
 	}
 

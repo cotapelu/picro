@@ -2,48 +2,32 @@
  * Terminal Interface
  * 
  * Minimal terminal interface for TUI
+ * Follows legacy style from pi-tui-legacy
  */
 
 import { StdinBuffer } from './stdin-buffer.js';
+import { setKittyProtocolActive } from './keys.js';
 
 export interface Terminal {
-	// Start the terminal with input and resize handlers
 	start(onInput: (data: string) => void, onResize: () => void): void;
-
-	// Stop the terminal and restore state
 	stop(): void;
-
-	// Drain stdin before exiting
 	drainInput(maxMs?: number, idleMs?: number): Promise<void>;
-
-	// Write output to terminal
 	write(data: string): void;
-
-	// Get terminal dimensions
 	get columns(): number;
 	get rows(): number;
-
-	// Whether Kitty keyboard protocol is active
 	get kittyProtocolActive(): boolean;
-
-	// Cursor positioning (relative to current position)
 	moveBy(lines: number): void;
-
-	// Cursor visibility
 	hideCursor(): void;
 	showCursor(): void;
-
-	// Clear operations
 	clearLine(): void;
 	clearFromCursor(): void;
 	clearScreen(): void;
-
-	// Title operations
 	setTitle(title: string): void;
 }
 
 /**
  * Real terminal using process.stdin/stdout
+ * Follows legacy style from pi-tui-legacy
  */
 export class ProcessTerminal implements Terminal {
 	private wasRaw = false;
@@ -51,8 +35,9 @@ export class ProcessTerminal implements Terminal {
 	private resizeHandler?: () => void;
 	private _kittyProtocolActive = false;
 	private _modifyOtherKeysActive = false;
-	private stopped = false;
 	private stdinBuffer?: StdinBuffer;
+	private stdinDataHandler?: (data: string) => void;
+	private stopped = false;
 
 	get kittyProtocolActive(): boolean {
 		return this._kittyProtocolActive;
@@ -73,7 +58,7 @@ export class ProcessTerminal implements Terminal {
 		// Enable bracketed paste mode
 		process.stdout.write('\x1b[?2004h');
 
-		// Set up resize handler
+		// Set up resize handler immediately
 		process.stdout.on('resize', this.resizeHandler);
 
 		// Refresh terminal dimensions
@@ -84,69 +69,63 @@ export class ProcessTerminal implements Terminal {
 		// Enable Windows VT input
 		this.enableWindowsVTInput();
 
-		// Create StdinBuffer for better input handling
-		this.stdinBuffer = new StdinBuffer({ timeout: 10 });
-		this.stdinBuffer.on('paste', (content: string) => {
-			if (this.inputHandler) {
-				// Wrap pasted content with bracketed paste markers
-				this.inputHandler('\x1b[200~' + content + '\x1b[201~');
-			}
-		});
-		// Normal data forwarding
-		this.stdinBuffer.on('data', (seq: string) => {
-			if (this.inputHandler) this.inputHandler(seq);
-		});
-		this.stdinBuffer.start();
+		// Setup StdinBuffer to split batched input
+		this.setupStdinBuffer();
 
 		// Query and enable Kitty keyboard protocol
 		this.queryAndEnableKittyProtocol();
-
-		// Global SIGINT handler for Ctrl+C
-		process.once('SIGINT', () => this.handleSigint());
 	}
 
 	/**
-	 * Query terminal for Kitty keyboard protocol support
+	 * Set up StdinBuffer to split batched input into individual sequences.
+	 * Follows legacy style - feed data through process() method.
+	 */
+	private setupStdinBuffer(): void {
+		this.stdinBuffer = new StdinBuffer({ timeout: 10 });
+
+		// Forward individual sequences to the input handler
+		this.stdinBuffer.on('data', (sequence: string) => {
+			// Check for Kitty protocol response (only if not already enabled)
+			if (!this._kittyProtocolActive) {
+				const match = sequence.match(/^\x1b\[\?(\d+)u$/);
+				if (match) {
+					this._kittyProtocolActive = true;
+					setKittyProtocolActive(true);
+
+					// Enable Kitty keyboard protocol (push flags)
+					// Flag 1 = disambiguate escape codes
+					// Flag 2 = report event types (press/repeat/release)
+					// Flag 4 = report alternate keys
+					process.stdout.write('\x1b[>7u');
+					return;
+				}
+			}
+
+			if (this.inputHandler) {
+				this.inputHandler(sequence);
+			}
+		});
+
+		// Handle paste content
+		this.stdinBuffer.on('paste', (content: string) => {
+			if (this.inputHandler) {
+				this.inputHandler(`\x1b[200~${content}\x1b[201~`);
+			}
+		});
+
+		// Handler that pipes stdin data through the buffer
+		this.stdinDataHandler = (data: string) => {
+			this.stdinBuffer?.process(data);
+		};
+	}
+
+	/**
+	 * Query terminal for Kitty keyboard protocol support and enable if available.
 	 */
 	private queryAndEnableKittyProtocol(): void {
-		// Send query
+		process.stdin.on('data', this.stdinDataHandler!);
 		process.stdout.write('\x1b[?u');
-
-		let responseReceived = false;
-
-		const responseHandler = (data: string) => {
-			// Check for Kitty protocol response: \x1b[?<flags>u
-			const match = data.match(/^\x1b\[\?(\d+)u$/);
-			if (match && !responseReceived) {
-				this._kittyProtocolActive = true;
-				responseReceived = true;
-
-				// Enable Kitty keyboard protocol
-				process.stdout.write('\x1b[>7u');
-
-				// Remove temporary listener from stdinBuffer
-				if (this.stdinBuffer) {
-					this.stdinBuffer.removeListener('data', responseHandler);
-				}
-				return;
-			}
-
-			// Forward to normal input handler
-			if (this.inputHandler) {
-				this.inputHandler(data);
-			}
-		};
-
-		// Install temporary handler on stdinBuffer
-		if (this.stdinBuffer) {
-			this.stdinBuffer.on('data', responseHandler);
-		}
-
-		// After timeout, remove temporary listener and enable modifyOtherKeys if needed
 		setTimeout(() => {
-			if (this.stdinBuffer) {
-				this.stdinBuffer.removeListener('data', responseHandler);
-			}
 			if (!this._kittyProtocolActive && !this._modifyOtherKeysActive) {
 				process.stdout.write('\x1b[>4;2m');
 				this._modifyOtherKeysActive = true;
@@ -155,13 +134,11 @@ export class ProcessTerminal implements Terminal {
 	}
 
 	/**
-	 * Enable Windows VT input
+	 * On Windows, add ENABLE_VIRTUAL_TERMINAL_INPUT
 	 */
 	private enableWindowsVTInput(): void {
 		if (process.platform !== 'win32') return;
-
 		try {
-			// Dynamic require for koffi
 			const cjsRequire = require('module').createRequire(__filename);
 			const koffi = cjsRequire('koffi');
 			const k32 = koffi.load('kernel32.dll');
@@ -183,10 +160,11 @@ export class ProcessTerminal implements Terminal {
 	}
 
 	async drainInput(maxMs = 1000, idleMs = 50): Promise<void> {
-		// Disable Kitty keyboard protocol
+		// Disable Kitty keyboard protocol first
 		if (this._kittyProtocolActive) {
 			process.stdout.write('\x1b[<u');
 			this._kittyProtocolActive = false;
+			setKittyProtocolActive(false);
 		}
 		if (this._modifyOtherKeysActive) {
 			process.stdout.write('\x1b[>4;0m');
@@ -219,6 +197,8 @@ export class ProcessTerminal implements Terminal {
 	}
 
 	stop(): void {
+		this.stopped = true;
+
 		// Disable bracketed paste mode
 		process.stdout.write('\x1b[?2004l');
 
@@ -226,34 +206,37 @@ export class ProcessTerminal implements Terminal {
 		if (this._kittyProtocolActive) {
 			process.stdout.write('\x1b[<u');
 			this._kittyProtocolActive = false;
+			setKittyProtocolActive(false);
 		}
 		if (this._modifyOtherKeysActive) {
 			process.stdout.write('\x1b[>4;0m');
 			this._modifyOtherKeysActive = false;
 		}
 
-		// Remove event handlers
+		// Clean up StdinBuffer
+		if (this.stdinBuffer) {
+			this.stdinBuffer.destroy();
+			this.stdinBuffer = undefined;
+		}
+
+		// Remove stdin data handler
+		if (this.stdinDataHandler) {
+			process.stdin.removeListener('data', this.stdinDataHandler);
+			this.stdinDataHandler = undefined;
+		}
+
+		this.inputHandler = undefined;
 		if (this.resizeHandler) {
 			process.stdout.removeListener('resize', this.resizeHandler);
 			this.resizeHandler = undefined;
 		}
 
-		// Pause stdin
+		// Pause stdin to prevent buffered input being re-interpreted
 		process.stdin.pause();
 
 		// Restore raw mode state
 		if (process.stdin.setRawMode) {
 			process.stdin.setRawMode(this.wasRaw);
-		}
-	}
-
-	private handleSigint(): void {
-		try {
-			console.error('SIGINT received, stopping...');
-			if (!this.stopped) this.stop();
-			setTimeout(() => process.exit(0), 100);
-		} catch (e) {
-			process.exit(1);
 		}
 	}
 

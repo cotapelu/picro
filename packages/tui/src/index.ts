@@ -34,6 +34,7 @@ export { SettingsList, type SettingItem, type SettingsListTheme } from './compon
 export { BorderedLoader } from './components/loader.js';
 export { DynamicBorder } from './components/dynamic-border.js';
 export { Input, type InputOptions } from './components/input.js';
+export { Editor, type EditorOptions } from './components/editor.js';
 
 // Terminal
 export { ProcessTerminal } from './terminal.js';
