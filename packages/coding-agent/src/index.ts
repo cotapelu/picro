@@ -1,4 +1,4 @@
-/*
+/**
  * Coding Agent - Index
  * Main exports
  */
@@ -12,3 +12,15 @@ export { createMemoryStoreAdapter } from './memory-store-adapter.js';
 
 /* Export plugin system */
 export * from './plugins/index.js';
+
+/* Export performance monitoring */
+export * from './performance/index.js';
+
+/* Export budget management */
+export * from './budget/index.js';
+
+/* Export file watching */
+export * from './watch/index.js';
+
+/* Export conversation branching */
+export * from './branch/index.js';

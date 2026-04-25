@@ -12876,6 +12876,23 @@ export const MODELS = {
 			contextWindow: 131072,
 			maxTokens: 16384,
 		} satisfies Model,
+		"google/gemma-3-27b-it": {
+			id: "google/gemma-3-27b-it",
+			name: "Google: Gemma 3 27B",
+			api: "openai-completions",
+			provider: "openrouter",
+			baseUrl: "https://openrouter.ai/api/v1",
+			reasoning: false,
+			input: ["text", "image"],
+			cost: {
+				input: 0.08,
+				output: 0.16,
+				cacheRead: 0,
+				cacheWrite: 0,
+			},
+			contextWindow: 131072,
+			maxTokens: 16384,
+		} satisfies Model,
 		"google/gemma-4-26b-a4b-it": {
 			id: "google/gemma-4-26b-a4b-it",
 			name: "Google: Gemma 4 26B A4B ",
