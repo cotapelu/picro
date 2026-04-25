@@ -1638,7 +1638,21 @@ export async function startTUIMode() {
 
     chat = new ChatUI(agent, memory, tui, loaderTheme, commandHistory, exitCallback);
     tui.append(chat);
-    chat.addMessage('system', `Welcome! Provider: ${config.getCurrentProvider()}/${config.getCurrentModel()}`);
+    const welcomeMessage = [
+      `Welcome to pi-micro! 🤖`,
+      ``,
+      `Provider: ${config.getCurrentProvider()}/${config.getCurrentModel()}`,
+      ``,
+      `Quick Actions:`,
+      `  Ctrl+P  - Command palette`,
+      `  Ctrl+S  - Search messages`,
+      `  Ctrl+M  - Memory panel`,
+      `  Ctrl+C  - Cancel/Close panel`,
+      `  ↑/↓     - Navigate history`,
+      ``,
+      `Type your message below or use Ctrl+P for more options.`,
+    ].join('\n');
+    chat.addMessage('system', welcomeMessage);
     tui.setFocus(chat);
     tui.addKeyHandler((key) => {
       if (key.raw === '\x03') {
