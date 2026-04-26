@@ -383,6 +383,8 @@ export class Markdown implements UIElement {
 		result = result.replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '\x1b[3m$1\x1b[23m');
 		// Code `text`
 		result = result.replace(/`(.*?)`/g, '\x1b[32m$1\x1b[39m'); // green
+		// Memory citations [digits]
+		result = result.replace(/\[(\d+)\]/g, '\x1b[33m[$1]\x1b[0m'); // yellow
 		return result;
 	}
 }
