@@ -63,18 +63,25 @@ export class Text implements UIElement {
 			return this.cache.lines;
 		}
 
+		// Split content by newlines first
+		let rawLines = this.content.split('\n');
+
 		let lines: string[];
 
 		if (this.wrap) {
-			// Wrap text
-			lines = wrapText(this.content, width);
+			// Wrap each line
+			lines = rawLines.flatMap(line => wrapText(line, width));
 		} else if (this.truncate) {
-			// Truncate text
-			const truncated = truncateText(this.content, width);
-			lines = [truncated];
+			// Truncate each line
+			lines = rawLines.map(line => truncateText(line, width));
 		} else {
-			// Single line
-			lines = [this.content];
+			// Keep lines as-is
+			lines = rawLines;
+		}
+
+		// Filter out empty lines if content is empty
+		if (this.content === '') {
+			lines = [];
 		}
 
 		// Apply styling and alignment

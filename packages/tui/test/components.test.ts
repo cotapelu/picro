@@ -39,7 +39,7 @@ test('color', () => { const t = new Text('hi', { color: 'red' }); assertTrue(t.d
 test('bold', () => { const t = new Text('hi', { bold: true }); assertTrue(t.draw(ctx(10))[0].includes('\x1b[')); });
 test('setContent', () => { const t = new Text('a'); t.setContent('b'); assertTrue(t.draw(ctx(10))[0].includes('b')); });
 test('clearCache', () => { const t = new Text('hi'); t.draw(ctx(10)); t.clearCache(); t.draw(ctx(10)); assertTrue(true); });
-test('empty', () => { const t = new Text(''); assertEqual(t.draw(ctx(10)).length, 1); });
+test('empty', () => { const t = new Text(''); assertEqual(t.draw(ctx(10)).length, 0); });
 
 // Box
 console.log('\n📦 Box');

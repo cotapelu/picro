@@ -87,27 +87,30 @@ export class Markdown implements UIElement {
 		// Apply padding
 		const paddedLines: string[] = [];
 
-		// Top padding
-		for (let i = 0; i < this.paddingY; i++) {
-			paddedLines.push(' '.repeat(width));
-		}
-
-		// Content with side padding; also offset copy row indices by paddingY
-		for (let i = 0; i < lines.length; i++) {
-			const padded = ' '.repeat(this.paddingX) + lines[i] + ' '.repeat(this.paddingX);
-			paddedLines.push(padded);
-			if (codeCopyRows.has(i)) {
-			  const paddedRow = i + this.paddingY;
-			  codeCopyRows.delete(i);
-			  codeCopyRows.add(paddedRow);
-			  const code = codeRowToCode.get(i);
-			  if (code) codeRowToCode.set(paddedRow, code);
+		// Only add padding if there's content
+		if (rawLines.length > 0) {
+			// Top padding
+			for (let i = 0; i < this.paddingY; i++) {
+				paddedLines.push(' '.repeat(width));
 			}
-		}
 
-		// Bottom padding
-		for (let i = 0; i < this.paddingY; i++) {
-			paddedLines.push(' '.repeat(width));
+			// Content with side padding; also offset copy row indices by paddingY
+			for (let i = 0; i < lines.length; i++) {
+				const padded = ' '.repeat(this.paddingX) + lines[i] + ' '.repeat(this.paddingX);
+				paddedLines.push(padded);
+				if (codeCopyRows.has(i)) {
+				  const paddedRow = i + this.paddingY;
+				  codeCopyRows.delete(i);
+				  codeCopyRows.add(paddedRow);
+				  const code = codeRowToCode.get(i);
+				  if (code) codeRowToCode.set(paddedRow, code);
+				}
+			}
+
+			// Bottom padding
+			for (let i = 0; i < this.paddingY; i++) {
+				paddedLines.push(' '.repeat(width));
+			}
 		}
 
 		this.cache = {

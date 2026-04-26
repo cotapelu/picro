@@ -21,23 +21,42 @@ export function getSegmenter(): Intl.Segmenter {
 export function visibleWidth(str: string): number {
   let width = 0;
   let inAnsi = false;
+  let inCsi = false; // CSI sequence (ESC [)
   for (let i = 0; i < str.length; i++) {
     const char = str[i];
+    const code = str.charCodeAt(i);
+    
     if (char === '\x1b') {
       inAnsi = true;
+      inCsi = false;
       continue;
     }
+    
     if (inAnsi) {
-      if (char === 'm' || char === '[') {
-        // ANSI sequence end
-        if (i > 0 && str.charCodeAt(i - 1) >= 0x40 && str.charCodeAt(i - 1) <= 0x5f) {
+      // Check for CSI sequence start
+      if (char === '[') {
+        inCsi = true;
+        continue;
+      }
+      
+      // CSI sequence ends with final character (0x40-0x7e)
+      if (inCsi) {
+        if (code >= 0x40 && code <= 0x7e) {
           inAnsi = false;
+          inCsi = false;
         }
+        continue;
+      }
+      
+      // Other ANSI sequences end with BEL (0x07) or ST (ESC \)
+      if (code === 0x07 || (char === '\\' && i > 0 && str[i - 1] === '\x1b')) {
+        inAnsi = false;
+        inCsi = false;
       }
       continue;
     }
+    
     // Check for wide characters (CJK, emojis, etc.)
-    const code = str.charCodeAt(i);
     if (code >= 0x1100 && (
       (code <= 0x115f) || // Hangul Jamo
       (code >= 0x2e80 && code <= 0xa4cf) || // CJK

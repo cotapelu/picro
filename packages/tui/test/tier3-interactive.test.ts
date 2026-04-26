@@ -67,7 +67,8 @@ test('SelectList: Respects visibleRows', () => {
   ];
   const list = new SelectList(items, 3); // Only show 3 rows
   const lines = list.draw(context);
-  return lines.length === 3;
+  // SelectList shows visibleRows items + 1 scroll info line
+  return lines.length === 4;
 });
 
 test('SelectList: handleKey method exists', () => {
@@ -137,7 +138,8 @@ test('SettingsList: Respects visibleRows', () => {
   ];
   const list = new SettingsList(opts, 2); // Only show 2 rows
   const lines = list.draw(context);
-  return lines.length === 2;
+  // SettingsList shows visibleRows settings + 1 scroll info line
+  return lines.length === 3;
 });
 
 test('SettingsList: handleKey method exists', () => {

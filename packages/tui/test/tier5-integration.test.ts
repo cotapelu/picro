@@ -229,7 +229,7 @@ test('Integration: Different width contexts', () => {
   const term = new ProcessTerminal();
   const ui = new TerminalUI(term);
 
-  const text = new Text('A very long text that should wrap in narrow contexts');
+  const text = new Text('A very long text that should wrap in narrow contexts', { wrap: true });
   const container = new TestContainer([text]);
   ui.children.push(container);
 

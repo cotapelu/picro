@@ -3,7 +3,8 @@
  * Simple TUI Demo - Test basic functionality without interactive terminal
  */
 
-import { Text, Markdown, visibleWidth, wrapText, truncateText } from './index.js';
+import { Text, Markdown } from './index.js';
+import { visibleWidth, wrapText, truncateText } from './components/internal-utils.js';
 
 console.log('🚀 TUI Simple Demo - Testing Components\n');
 console.log('='.repeat(60));
@@ -35,7 +36,7 @@ const x = 42;
 const mdLines = md.draw(context);
 console.log('Markdown lines count:', mdLines.length);
 console.log('First 5 lines:');
-mdLines.slice(0, 5).forEach((line, i) => console.log(`  ${i}: ${line.substring(0, 60)}...`));
+mdLines.slice(0, 5).forEach((line: string, i: number) => console.log(`  ${i}: ${line.substring(0, 60)}...`));
 
 // Test 3: Utility functions
 console.log('\n📝 Test 3: Utility Functions');

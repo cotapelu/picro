@@ -126,7 +126,7 @@ test('Markdown: clearCache method exists', () => {
 
 // Test width constraints
 test('Text: Respects width constraint', () => {
-  const text = new Text('A very long text that should be wrapped');
+  const text = new Text('A very long text that should be wrapped', { wrap: true });
   const narrowContext = { width: 20, height: 24 };
   const lines = text.draw(narrowContext);
   return lines.length > 1; // Should wrap
