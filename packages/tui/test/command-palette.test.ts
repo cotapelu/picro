@@ -87,7 +87,7 @@ test('shows category prefix', () => {
 test('accepts custom theme', () => {
   const palette = new CommandPalette({
     commands,
-    theme: { borderColor: (s) => s }
+    theme: { borderColor: (s: any) => s }
   });
   const lines = palette.draw({ width: 80, height: 24 });
   assertTrue(lines.length > 0);

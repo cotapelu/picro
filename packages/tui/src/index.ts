@@ -21,6 +21,11 @@ export { SettingsList, type SettingItem } from './components/settings-list.js';
 export { BorderedLoader } from './components/loader.js';
 export { CancellableLoader } from './components/cancellable-loader.js';
 export { Markdown } from './components/markdown.js';
+export { MemoryPanel, type MemoryEntry } from './components/memory-panel.js';
+export { DebugPanel, type DebugRoundEvent, type DebugRunEvent } from './components/debug-panel.js';
+export { ProgressBar, StepperProgress } from './components/progress-bar.js';
+export { Stepper } from './components/stepper.js';
+export { CommandPalette, type Command } from './components/command-palette.js';
 export { ModelSelector, type ModelInfo } from './components/model-selector.js';
 export { SessionSelector, type SessionInfo } from './components/session-selector.js';
 
