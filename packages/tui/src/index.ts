@@ -26,6 +26,8 @@ export { DebugPanel, type DebugRoundEvent, type DebugRunEvent } from './componen
 export { ProgressBar, StepperProgress } from './components/progress-bar.js';
 export { Stepper } from './components/stepper.js';
 export { CommandPalette, type Command } from './components/command-palette.js';
+export { KeybindingHints, type KeyBinding } from './components/keybinding-hints.js';
+export { FileBrowser, type FileEntry } from './components/file-browser.js';
 export { ModelSelector, type ModelInfo } from './components/model-selector.js';
 export { SessionSelector, type SessionInfo } from './components/session-selector.js';
 

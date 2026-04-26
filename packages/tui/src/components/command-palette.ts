@@ -1,4 +1,4 @@
-import type { RenderContext } from './base.js';
+import type { RenderContext, KeyEvent } from './base.js';
 import { SelectList, type SelectItem } from './select-list.js';
 
 /**
@@ -28,18 +28,13 @@ export class CommandPalette {
     this.onSelect = opts.onSelect;
     this.onCancel = opts.onCancel;
     const items = this.formatItems(opts.commands);
+    // Use dummy callbacks; we handle Enter/Escape in handleKey directly
     this.selectList = new SelectList(
       items,
       opts.visibleRows ?? 10,
       opts.theme ?? {},
-      (value) => {
-        const cmd = opts.commands.find(c => c.id === value);
-        if (cmd) {
-          this.onSelect?.(cmd);
-          cmd.onExecute();
-        }
-      },
-      () => { this.onCancel?.(); }
+      () => {},
+      () => {}
     );
   }
 
@@ -98,8 +93,21 @@ export class CommandPalette {
 
   clearCache(): void {}
 
-  // Delegate key handling to SelectList
-  handleKey(key: any): void {
-    this.selectList.handleKey?.(key);
+  // Direct key handling for reliable behavior
+  handleKey(key: KeyEvent): void {
+    const name = key.name;
+    if (name === 'Escape') {
+      this.onCancel?.();
+    } else if (name === 'Enter' || name === 'Return') {
+      const sl = this.selectList as any;
+      const idx = sl.selectedIndex;
+      if (idx >= 0 && idx < this.commands.length) {
+        const cmd = this.commands[idx];
+        this.onSelect?.(cmd);
+        cmd.onExecute();
+      }
+    } else {
+      this.selectList.handleKey?.(key);
+    }
   }
 }
