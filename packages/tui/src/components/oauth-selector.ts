@@ -1,33 +1,35 @@
 /**
- * Model Selector Component
- * Interactive list for selecting LLM models
+ * OAuth Selector Component
+ * OAuth provider selection for authentication
  */
 
 import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from './base.js';
-import { visibleWidth, truncateText } from './internal-utils.js';
+import { visibleWidth } from './internal-utils.js';
 
-export interface ModelInfo {
+export interface OAuthProvider {
   id: string;
   name: string;
-  provider: string;
-  contextWindow: number;
 }
 
-export interface ModelSelectorOptions {
-  models: ModelInfo[];
-  onSelect?: (model: ModelInfo) => void;
+export interface OAuthSelectorOptions {
+  providers?: OAuthProvider[];
+  onSelect?: (provider: OAuthProvider) => void;
   onCancel?: () => void;
 }
 
-export class ModelSelector implements UIElement, InteractiveElement {
-  private models: ModelInfo[];
+export class OAuthSelector implements UIElement, InteractiveElement {
+  private providers: OAuthProvider[];
   private selectedIndex: number = 0;
-  private onSelect?: (model: ModelInfo) => void;
+  private onSelect?: (provider: OAuthProvider) => void;
   private onCancel?: () => void;
   public isFocused = false;
 
-  constructor(options: ModelSelectorOptions) {
-    this.models = options.models;
+  constructor(options: OAuthSelectorOptions = {}) {
+    this.providers = options.providers || [
+      { id: 'anthropic', name: 'Anthropic' },
+      { id: 'openai', name: 'OpenAI' },
+      { id: 'google', name: 'Google' },
+    ];
     this.onSelect = options.onSelect;
     this.onCancel = options.onCancel;
   }
@@ -38,18 +40,17 @@ export class ModelSelector implements UIElement, InteractiveElement {
     const lines: string[] = [];
 
     lines.push('┌' + '─'.repeat(borderWidth) + '┐');
-    const title = ' Select Model ';
+    const title = ' Select OAuth Provider ';
     const titlePad = ' '.repeat(Math.max(0, Math.floor((borderWidth - title.length) / 2)));
     lines.push('│' + titlePad + title + titlePad + '│');
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
 
-    for (let i = 0; i < this.models.length && i < context.height - 6; i++) {
-      const model = this.models[i]!;
+    for (let i = 0; i < this.providers.length && i < context.height - 6; i++) {
+      const provider = this.providers[i]!;
       const isSelected = i === this.selectedIndex;
       const prefix = isSelected ? '▶ ' : '  ';
-      const ctxStr = model.contextWindow >= 1000000 ? (model.contextWindow / 1000000) + 'M' : (model.contextWindow / 1000) + 'K';
-      const line = prefix + model.name + ' [' + model.provider + '] ' + ctxStr;
-      lines.push('│' + truncateText(line, borderWidth) + ' '.repeat(Math.max(0, borderWidth - visibleWidth(line))) + '│');
+      const line = prefix + provider.name;
+      lines.push('│' + line + ' '.repeat(borderWidth - line.length) + '│');
     }
 
     while (lines.length < context.height - 3) {
@@ -73,8 +74,8 @@ export class ModelSelector implements UIElement, InteractiveElement {
     }
 
     if (data === '\r' || data === '\n') {
-      const model = this.models[this.selectedIndex];
-      if (model) this.onSelect?.(model);
+      const provider = this.providers[this.selectedIndex];
+      if (provider) this.onSelect?.(provider);
       return;
     }
 
@@ -84,7 +85,7 @@ export class ModelSelector implements UIElement, InteractiveElement {
     }
 
     if (data === '\x1b[B' || data === 'down') {
-      this.selectedIndex = Math.min(this.models.length - 1, this.selectedIndex + 1);
+      this.selectedIndex = Math.min(this.providers.length - 1, this.selectedIndex + 1);
       return;
     }
   }

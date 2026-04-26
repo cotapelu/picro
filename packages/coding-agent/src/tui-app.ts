@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import * as fs from 'fs';
 import * as path from 'path';
-import { TerminalUI, ProcessTerminal, Text, SelectList, SettingsList, BorderedLoader, Markdown, CURSOR_MARKER, MemoryPanel, type MemoryEntry as TUIMemoryEntry } from '@picro/tui';
+import { TerminalUI, ProcessTerminal, SelectList, SettingsList, MemoryPanel, type MemoryEntry as TUIMemoryEntry, Input, Modal, confirmDialog, alertDialog, Text, Markdown, BorderedLoader } from '@picro/tui';
 import type { UIElement, InteractiveElement, KeyEvent, RenderContext, SelectItem, SettingItem } from '@picro/tui';
 import { AgentMemoryApp, MemoryStore, type MemoryEntry } from '@picro/memory';
 import { Agent, type ToolDefinition, type AIModel, type MemoryRetrievalEvent, type ToolCallStartEvent, type ToolProgressEvent, type ToolCallEndEvent, type ToolErrorEvent } from '@picro/agent';
@@ -18,7 +18,6 @@ import { CommandTools } from './tools/command-tools.js';
 import { SearchTools } from './tools/search-tools.js';
 import { createMemoryStoreAdapter } from './memory-store-adapter.js';
 import { DebugCollector } from './debug.js';
-import { InputBox } from './input-box.js';
 import { computeBM25, type SearchDoc, type ScoredDoc } from './search/bm25.js';
 import { pushConfig as remotePushConfig, pullConfig as remotePullConfig } from './config-remote.js';
 
@@ -235,37 +234,12 @@ export class MessageList implements UIElement, InteractiveElement {
   }
 }
 
-export class HelpOverlay implements UIElement, InteractiveElement {
-  public isFocused = false;
-  private text: string;
-  private onClose: () => void;
-  constructor(text: string, onClose: () => void) {
-    this.text = text;
-    this.onClose = onClose;
-  }
-  draw(context: RenderContext): string[] {
-    const w = context.width;
-    const lines = this.text.split('\n');
-    const pad = Math.max(0, Math.floor((context.height - lines.length) / 2));
-    const result: string[] = [];
-    for (let i = 0; i < pad; i++) result.push('');
-    for (const line of lines) {
-      result.push(line.padEnd(w).slice(0, w));
-    }
-    return result;
-  }
-  handleKey?(key: KeyEvent): void {
-    this.onClose();
-  }
-  clearCache(): void {}
-}
-
 export class ChatUI implements UIElement, InteractiveElement {
   private messages: ChatMessage[] = [];
   private inputBuffer = '';
   private cursorPos = 0;
   private messageList!: MessageList;
-  private inputText!: Text;
+  private input!: Input;
   private tui: TerminalUI;
   private theme: Theme;
   private onExit: () => void;
@@ -307,7 +281,24 @@ export class ChatUI implements UIElement, InteractiveElement {
 
   constructor(agent: Agent, memory: AgentMemoryApp, tui: TerminalUI, theme: Theme, commandHistory: string[] = [], onExit: () => void) {
     this.agent = agent; this.memory = memory; this.tui = tui; this.theme = theme; this.commandHistory = commandHistory; this.onExit = onExit;
-    this.inputText = new Text('', { wrap: true });
+    this.input = new Input({
+      value: this.inputBuffer,
+      onSubmit: (value) => {
+        if (value.trim()) {
+          this.commandHistory.push(value);
+          this.historyIndex = this.commandHistory.length;
+          this.inputBuffer = ''; this.cursorPos = 0;
+          this.addMessage('user', value);
+          this.processAgentResponse(value);
+        } else {
+          // No input: copy last code block
+          this.copyLastCodeBlock();
+        }
+      },
+      onCancel: () => {
+        this.onExit();
+      },
+    });
     this.messageList = new MessageList(tui, theme, 10);
     // Listen for memory retrieval events
     const emitter = this.agent.getEmitter();
@@ -398,14 +389,10 @@ export class ChatUI implements UIElement, InteractiveElement {
     }
 
     lines.push('─'.repeat(context.width));
-    const prompt = this.theme.accent + '❯ ' + this.theme.reset;
-    this.inputText.setContent(prompt + this.inputBuffer);
-    const inputLines = this.inputText.draw({ width: context.width, height: 1 });
-    // Add cursor marker to last input line if focused
-    if (this.isFocused && inputLines.length > 0) {
-      const lastIdx = inputLines.length - 1;
-      inputLines[lastIdx] = inputLines[lastIdx] + CURSOR_MARKER;
-    }
+    // Update input value
+    this.input.setValue(this.inputBuffer);
+    this.input.isFocused = this.isFocused;
+    const inputLines = this.input.draw({ width: context.width, height: 1 });
     lines.push(...inputLines);
     // Tool progress bar
     if (this.currentTool) {
@@ -577,11 +564,11 @@ export class ChatUI implements UIElement, InteractiveElement {
     `  • Clear Memory, Stats, Exit\n` +
     `\nPress any key to close...`;
 
-    const overlay = new HelpOverlay(helpText, () => {
+    const modal = alertDialog('Help', helpText, () => {
       this.helpHandle?.close();
       this.helpHandle = null;
     });
-    this.helpHandle = this.tui.showPanel(overlay, { anchor: 'center', offsetY: -5, width: 70, minWidth: 50 });
+    this.helpHandle = this.tui.showPanel(modal, { anchor: 'center', offsetY: -5, width: 70, minWidth: 50 });
   }
 
   showMemoryPanel(): void {
@@ -681,17 +668,17 @@ export class ChatUI implements UIElement, InteractiveElement {
   private editMemoryContent(memIdx: number): void {
     const mem = this.retrievedMemories[memIdx];
     if (!mem) return;
-    const onEnter = async (newContent: string) => {
+    const onEnter = async (value: string) => {
       this.actionPanelHandle?.close();
       this.actionPanelHandle = null;
-      if (!newContent.trim()) {
+      if (!value.trim()) {
         this.addMessage('system', 'Edit cancelled.');
         return;
       }
-      const success = await this.memory.updateMemory(mem.id, newContent, undefined);
+      const success = await this.memory.updateMemory(mem.id, value, undefined);
       if (success) {
         this.addMessage('system', `Memory #${memIdx + 1} updated.`);
-        this.retrievedMemories[memIdx].content = newContent;
+        this.retrievedMemories[memIdx].content = value;
       } else {
         this.addMessage('system', `Failed to update memory #${memIdx + 1}.`);
       }
@@ -701,7 +688,12 @@ export class ChatUI implements UIElement, InteractiveElement {
       this.actionPanelHandle = null;
       this.addMessage('system', 'Edit cancelled.');
     };
-    const input = new InputBox(`Edit memory #${memIdx + 1}: `, onEnter, onCancel, this.theme);
+    const input = new Input({
+      placeholder: `Edit memory #${memIdx + 1}: ${mem.content.slice(0, 30)}...`,
+      value: mem.content,
+      onSubmit: onEnter,
+      onCancel,
+    });
     this.actionPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
   }
 
@@ -779,7 +771,7 @@ export class ChatUI implements UIElement, InteractiveElement {
     this.addMessage('system', 'No code block found in recent messages.');
   }
 
-  clearCache(): void { this.messageList.clearCache(); this.inputText.clearCache(); }
+  clearCache(): void { this.messageList.clearCache(); }
 
   private startToolInterval(): void {
     if (this.toolInterval) clearInterval(this.toolInterval);
@@ -877,7 +869,11 @@ export class ChatUI implements UIElement, InteractiveElement {
       this.commandPanelHandle = null;
       this.announce('Command finder closed');
     };
-    const input = new InputBox('Search commands: ', onSearch, onCancel, this.theme);
+    const input = new Input({
+      placeholder: 'Search commands: ',
+      onSubmit: onSearch,
+      onCancel,
+    });
     this.commandPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 50, minWidth: 30 });
     this.announce('Command finder opened');
   }
@@ -935,7 +931,11 @@ export class ChatUI implements UIElement, InteractiveElement {
       this.searchPanelHandle = null;
       this.announce('Search closed');
     };
-    const input = new InputBox('Search: ', onSearch, onCancel, this.theme);
+    const input = new Input({
+      placeholder: 'Search: ',
+      onSubmit: onSearch,
+      onCancel,
+    });
     this.searchPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
   }
 
@@ -982,7 +982,11 @@ export class ChatUI implements UIElement, InteractiveElement {
       this.searchPanelHandle = null;
       this.announce('Search closed');
     };
-    const input = new InputBox(`Search recent (last ${days} days): `, onSearch, onCancel, this.theme);
+    const input = new Input({
+      placeholder: `Search recent (last ${days} days): `,
+      onSubmit: onSearch,
+      onCancel,
+    });
     this.searchPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
   }
 
@@ -1072,14 +1076,22 @@ export class ChatUI implements UIElement, InteractiveElement {
         this.actionPanelHandle = null;
         this.addMessage('system', 'Bulk rename cancelled.');
       };
-      this.actionPanelHandle = this.tui.showPanel(new InputBox('New base name for selected sessions: ', onEnterBase, onCancelBase, this.theme), { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
+      this.actionPanelHandle = this.tui.showPanel(new Input({
+        placeholder: 'New base name for selected sessions: ',
+        onSubmit: onEnterBase,
+        onCancel: onCancelBase,
+      }), { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
     };
     const onCancelIndices = () => {
       this.actionPanelHandle?.close();
       this.actionPanelHandle = null;
       this.addMessage('system', 'Bulk rename cancelled.');
     };
-    this.actionPanelHandle = this.tui.showPanel(new InputBox('Enter comma-separated session numbers: ', onEnterIndices, onCancelIndices, this.theme), { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
+    this.actionPanelHandle = this.tui.showPanel(new Input({
+      placeholder: 'Enter comma-separated session numbers: ',
+      onSubmit: onEnterIndices,
+      onCancel: onCancelIndices,
+    }), { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
   }
   private showManageSessionMenu(): void {
     if (this.sessionPanelHandle) {
@@ -1142,7 +1154,11 @@ export class ChatUI implements UIElement, InteractiveElement {
         this.addMessage('system', `Session renamed to: ${newName}`);
       };
       const onCancel = () => { this.addMessage('system', 'Rename cancelled.'); };
-      const input = new InputBox(`Rename "${currentName}" to: `, onEnter, onCancel, this.theme);
+      const input = new Input({
+        placeholder: `Rename "${currentName}" to: `,
+        onSubmit: onEnter,
+        onCancel,
+      });
       this.sessionPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
     } catch (e: any) {
       this.addMessage('system', `Error: ${e.message}`);
@@ -1164,7 +1180,11 @@ export class ChatUI implements UIElement, InteractiveElement {
         this.addMessage('system', `Tags set: ${newTags.join(', ')}`);
       };
       const onCancel = () => { this.addMessage('system', 'Tags unchanged.'); };
-      const input = new InputBox(`Tags (comma-separated) [${tagStr}]: `, onEnter, onCancel, this.theme);
+      const input = new Input({
+        placeholder: `Tags (comma-separated) [${tagStr}]: `,
+        onSubmit: onEnter,
+        onCancel,
+      });
       this.sessionPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
     } catch (e: any) {
       this.addMessage('system', `Error: ${e.message}`);
@@ -1222,7 +1242,11 @@ case 'export-config': this.exportConfig(); break;
       }
     };
     const onCancel = () => { this.commandPanelHandle?.close(); };
-    const input = new InputBox('Push config to URL (PUT): ', onEnter, onCancel, this.theme);
+    const input = new Input({
+      placeholder: 'Push config to URL (PUT): ',
+      onSubmit: onEnter,
+      onCancel,
+    });
     this.commandPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
   }
 
@@ -1238,7 +1262,11 @@ case 'export-config': this.exportConfig(); break;
       }
     };
     const onCancel = () => { this.commandPanelHandle?.close(); };
-    const input = new InputBox('Pull config from URL (GET): ', onEnter, onCancel, this.theme);
+    const input = new Input({
+      placeholder: 'Pull config from URL (GET): ',
+      onSubmit: onEnter,
+      onCancel,
+    });
     this.commandPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
   }
 
@@ -1256,7 +1284,11 @@ case 'export-config': this.exportConfig(); break;
       }
     };
     const onCancel = () => { this.commandPanelHandle?.close(); };
-    const input = new InputBox('Export config to file: ', onEnter, onCancel, this.theme);
+    const input = new Input({
+      placeholder: 'Export config to file: ',
+      onSubmit: onEnter,
+      onCancel,
+    });
     this.commandPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
   }
 
@@ -1280,7 +1312,11 @@ case 'export-config': this.exportConfig(); break;
       }
     };
     const onCancel = () => { this.commandPanelHandle?.close(); };
-    const input = new InputBox('Import config from file: ', onEnter, onCancel, this.theme);
+    const input = new Input({
+      placeholder: 'Import config from file: ',
+      onSubmit: onEnter,
+      onCancel,
+    });
     this.commandPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
   }
 
@@ -1406,7 +1442,11 @@ case 'export-config': this.exportConfig(); break;
       this.sessionPanelHandle?.close();
       this.sessionPanelHandle = null;
     };
-    const input = new InputBox('Filter sessions by tag (optional): ', onEnter, onCancel, this.theme);
+    const input = new Input({
+      placeholder: 'Filter sessions by tag (optional): ',
+      onSubmit: onEnter,
+      onCancel,
+    });
     this.sessionPanelHandle = this.tui.showPanel(input, { anchor: 'center', offsetY: -5, width: 60, minWidth: 30 });
   }
 

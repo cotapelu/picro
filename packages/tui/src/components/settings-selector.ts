@@ -1,34 +1,34 @@
 /**
- * Model Selector Component
- * Interactive list for selecting LLM models
+ * Settings Selector Component
+ * Interactive list for modifying settings
  */
 
 import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from './base.js';
-import { visibleWidth, truncateText } from './internal-utils.js';
+import { visibleWidth } from './internal-utils.js';
 
-export interface ModelInfo {
+export interface SettingItem {
   id: string;
   name: string;
-  provider: string;
-  contextWindow: number;
+  type: 'boolean' | 'string' | 'number';
+  value: any;
 }
 
-export interface ModelSelectorOptions {
-  models: ModelInfo[];
-  onSelect?: (model: ModelInfo) => void;
+export interface SettingsSelectorOptions {
+  settings: SettingItem[];
+  onChange?: (setting: SettingItem) => void;
   onCancel?: () => void;
 }
 
-export class ModelSelector implements UIElement, InteractiveElement {
-  private models: ModelInfo[];
+export class SettingsSelector implements UIElement, InteractiveElement {
+  private settings: SettingItem[];
   private selectedIndex: number = 0;
-  private onSelect?: (model: ModelInfo) => void;
+  private onChange?: (setting: SettingItem) => void;
   private onCancel?: () => void;
   public isFocused = false;
 
-  constructor(options: ModelSelectorOptions) {
-    this.models = options.models;
-    this.onSelect = options.onSelect;
+  constructor(options: SettingsSelectorOptions) {
+    this.settings = options.settings;
+    this.onChange = options.onChange;
     this.onCancel = options.onCancel;
   }
 
@@ -38,18 +38,18 @@ export class ModelSelector implements UIElement, InteractiveElement {
     const lines: string[] = [];
 
     lines.push('┌' + '─'.repeat(borderWidth) + '┐');
-    const title = ' Select Model ';
+    const title = ' Settings ';
     const titlePad = ' '.repeat(Math.max(0, Math.floor((borderWidth - title.length) / 2)));
     lines.push('│' + titlePad + title + titlePad + '│');
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
 
-    for (let i = 0; i < this.models.length && i < context.height - 6; i++) {
-      const model = this.models[i]!;
+    for (let i = 0; i < this.settings.length && i < context.height - 6; i++) {
+      const setting = this.settings[i]!;
       const isSelected = i === this.selectedIndex;
       const prefix = isSelected ? '▶ ' : '  ';
-      const ctxStr = model.contextWindow >= 1000000 ? (model.contextWindow / 1000000) + 'M' : (model.contextWindow / 1000) + 'K';
-      const line = prefix + model.name + ' [' + model.provider + '] ' + ctxStr;
-      lines.push('│' + truncateText(line, borderWidth) + ' '.repeat(Math.max(0, borderWidth - visibleWidth(line))) + '│');
+      const valueStr = String(setting.value);
+      const line = prefix + setting.name + ' = ' + valueStr;
+      lines.push('│' + line + ' '.repeat(borderWidth - line.length) + '│');
     }
 
     while (lines.length < context.height - 3) {
@@ -57,7 +57,7 @@ export class ModelSelector implements UIElement, InteractiveElement {
     }
 
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
-    const help = '↑↓ navigate  Enter select  Esc cancel';
+    const help = '↑↓ navigate  Space toggle  Esc cancel';
     lines.push('│ ' + help + ' '.repeat(borderWidth - help.length - 2) + '│');
     lines.push('└' + '─'.repeat(borderWidth) + '┘');
 
@@ -72,20 +72,22 @@ export class ModelSelector implements UIElement, InteractiveElement {
       return;
     }
 
-    if (data === '\r' || data === '\n') {
-      const model = this.models[this.selectedIndex];
-      if (model) this.onSelect?.(model);
-      return;
-    }
-
     if (data === '\x1b[A' || data === 'up') {
       this.selectedIndex = Math.max(0, this.selectedIndex - 1);
       return;
     }
 
     if (data === '\x1b[B' || data === 'down') {
-      this.selectedIndex = Math.min(this.models.length - 1, this.selectedIndex + 1);
+      this.selectedIndex = Math.min(this.settings.length - 1, this.selectedIndex + 1);
       return;
+    }
+
+    if (data === ' ') {
+      const setting = this.settings[this.selectedIndex];
+      if (setting && setting.type === 'boolean') {
+        setting.value = !setting.value;
+        this.onChange?.(setting);
+      }
     }
   }
 

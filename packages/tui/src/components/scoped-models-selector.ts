@@ -1,32 +1,32 @@
 /**
- * Model Selector Component
- * Interactive list for selecting LLM models
+ * Scoped Models Selector Component
+ * Select models with scope restrictions
  */
 
 import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from './base.js';
 import { visibleWidth, truncateText } from './internal-utils.js';
 
-export interface ModelInfo {
+export interface ScopedModelInfo {
   id: string;
   name: string;
   provider: string;
-  contextWindow: number;
+  scope: 'user' | 'project' | 'global';
 }
 
-export interface ModelSelectorOptions {
-  models: ModelInfo[];
-  onSelect?: (model: ModelInfo) => void;
+export interface ScopedModelsSelectorOptions {
+  models: ScopedModelInfo[];
+  onSelect?: (model: ScopedModelInfo) => void;
   onCancel?: () => void;
 }
 
-export class ModelSelector implements UIElement, InteractiveElement {
-  private models: ModelInfo[];
+export class ScopedModelsSelector implements UIElement, InteractiveElement {
+  private models: ScopedModelInfo[];
   private selectedIndex: number = 0;
-  private onSelect?: (model: ModelInfo) => void;
+  private onSelect?: (model: ScopedModelInfo) => void;
   private onCancel?: () => void;
   public isFocused = false;
 
-  constructor(options: ModelSelectorOptions) {
+  constructor(options: ScopedModelsSelectorOptions) {
     this.models = options.models;
     this.onSelect = options.onSelect;
     this.onCancel = options.onCancel;
@@ -38,7 +38,7 @@ export class ModelSelector implements UIElement, InteractiveElement {
     const lines: string[] = [];
 
     lines.push('┌' + '─'.repeat(borderWidth) + '┐');
-    const title = ' Select Model ';
+    const title = ' Scoped Models ';
     const titlePad = ' '.repeat(Math.max(0, Math.floor((borderWidth - title.length) / 2)));
     lines.push('│' + titlePad + title + titlePad + '│');
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
@@ -47,9 +47,9 @@ export class ModelSelector implements UIElement, InteractiveElement {
       const model = this.models[i]!;
       const isSelected = i === this.selectedIndex;
       const prefix = isSelected ? '▶ ' : '  ';
-      const ctxStr = model.contextWindow >= 1000000 ? (model.contextWindow / 1000000) + 'M' : (model.contextWindow / 1000) + 'K';
-      const line = prefix + model.name + ' [' + model.provider + '] ' + ctxStr;
-      lines.push('│' + truncateText(line, borderWidth) + ' '.repeat(Math.max(0, borderWidth - visibleWidth(line))) + '│');
+      const scope = '[' + model.scope + ']';
+      const line = prefix + scope + ' ' + truncateText(model.name, 25);
+      lines.push('│' + line + ' '.repeat(borderWidth - line.length) + '│');
     }
 
     while (lines.length < context.height - 3) {
@@ -57,7 +57,7 @@ export class ModelSelector implements UIElement, InteractiveElement {
     }
 
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
-    const help = '↑↓ navigate  Enter select  Esc cancel';
+    const help = '↑↓ select  Enter select  Esc cancel';
     lines.push('│ ' + help + ' '.repeat(borderWidth - help.length - 2) + '│');
     lines.push('└' + '─'.repeat(borderWidth) + '┘');
 

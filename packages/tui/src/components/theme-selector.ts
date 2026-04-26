@@ -1,33 +1,41 @@
 /**
- * Model Selector Component
- * Interactive list for selecting LLM models
+ * Theme Selector Component
+ * Interactive list for selecting themes
  */
 
 import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from './base.js';
 import { visibleWidth, truncateText } from './internal-utils.js';
 
-export interface ModelInfo {
+export interface ThemeInfo {
   id: string;
   name: string;
-  provider: string;
-  contextWindow: number;
+  background: string;
+  foreground: string;
 }
 
-export interface ModelSelectorOptions {
-  models: ModelInfo[];
-  onSelect?: (model: ModelInfo) => void;
+export interface ThemeSelectorOptions {
+  themes?: ThemeInfo[];
+  currentThemeId?: string;
+  onSelect?: (theme: ThemeInfo) => void;
   onCancel?: () => void;
 }
 
-export class ModelSelector implements UIElement, InteractiveElement {
-  private models: ModelInfo[];
+export class ThemeSelector implements UIElement, InteractiveElement {
+  private themes: ThemeInfo[];
+  private currentThemeId: string;
   private selectedIndex: number = 0;
-  private onSelect?: (model: ModelInfo) => void;
+  private onSelect?: (theme: ThemeInfo) => void;
   private onCancel?: () => void;
   public isFocused = false;
 
-  constructor(options: ModelSelectorOptions) {
-    this.models = options.models;
+  constructor(options: ThemeSelectorOptions) {
+    this.themes = options.themes || [
+      { id: 'dark', name: 'Dark', background: '#1e1e1e', foreground: '#ffffff' },
+      { id: 'light', name: 'Light', background: '#ffffff', foreground: '#000000' },
+    ];
+    this.currentThemeId = options.currentThemeId || 'dark';
+    this.selectedIndex = this.themes.findIndex(t => t.id === this.currentThemeId);
+    if (this.selectedIndex < 0) this.selectedIndex = 0;
     this.onSelect = options.onSelect;
     this.onCancel = options.onCancel;
   }
@@ -38,18 +46,19 @@ export class ModelSelector implements UIElement, InteractiveElement {
     const lines: string[] = [];
 
     lines.push('┌' + '─'.repeat(borderWidth) + '┐');
-    const title = ' Select Model ';
+    const title = ' Select Theme ';
     const titlePad = ' '.repeat(Math.max(0, Math.floor((borderWidth - title.length) / 2)));
     lines.push('│' + titlePad + title + titlePad + '│');
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
 
-    for (let i = 0; i < this.models.length && i < context.height - 6; i++) {
-      const model = this.models[i]!;
+    for (let i = 0; i < this.themes.length && i < context.height - 6; i++) {
+      const theme = this.themes[i]!;
       const isSelected = i === this.selectedIndex;
+      const isCurrent = theme.id === this.currentThemeId;
       const prefix = isSelected ? '▶ ' : '  ';
-      const ctxStr = model.contextWindow >= 1000000 ? (model.contextWindow / 1000000) + 'M' : (model.contextWindow / 1000) + 'K';
-      const line = prefix + model.name + ' [' + model.provider + '] ' + ctxStr;
-      lines.push('│' + truncateText(line, borderWidth) + ' '.repeat(Math.max(0, borderWidth - visibleWidth(line))) + '│');
+      const currentMark = isCurrent ? ' ●' : '';
+      const line = prefix + theme.name + currentMark;
+      lines.push('│' + line + ' '.repeat(borderWidth - line.length) + '│');
     }
 
     while (lines.length < context.height - 3) {
@@ -57,7 +66,7 @@ export class ModelSelector implements UIElement, InteractiveElement {
     }
 
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
-    const help = '↑↓ navigate  Enter select  Esc cancel';
+    const help = '↑↓ select  Enter apply  Esc cancel';
     lines.push('│ ' + help + ' '.repeat(borderWidth - help.length - 2) + '│');
     lines.push('└' + '─'.repeat(borderWidth) + '┘');
 
@@ -73,8 +82,8 @@ export class ModelSelector implements UIElement, InteractiveElement {
     }
 
     if (data === '\r' || data === '\n') {
-      const model = this.models[this.selectedIndex];
-      if (model) this.onSelect?.(model);
+      const theme = this.themes[this.selectedIndex];
+      if (theme) this.onSelect?.(theme);
       return;
     }
 
@@ -84,7 +93,7 @@ export class ModelSelector implements UIElement, InteractiveElement {
     }
 
     if (data === '\x1b[B' || data === 'down') {
-      this.selectedIndex = Math.min(this.models.length - 1, this.selectedIndex + 1);
+      this.selectedIndex = Math.min(this.themes.length - 1, this.selectedIndex + 1);
       return;
     }
   }
