@@ -12,6 +12,7 @@
 
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { homedir } from 'os';
 
 const ENV_VAR_MAP: Record<string, string> = {
   // NVIDIA
@@ -106,9 +107,17 @@ function loadSecrets(): Record<string, string> | null {
 function loadAuth(): Record<string, { type: string; key: string }> | null {
   if (authCache !== null) return authCache;
   try {
-    const path = join(process.cwd(), 'auth.json');
-    if (existsSync(path)) {
-      authCache = JSON.parse(readFileSync(path, 'utf-8'));
+    // 1. Try ~/.picro/agent/auth.json first (new unified location)
+    const homePath = join(homedir(), '.picro', 'agent', 'auth.json');
+    if (existsSync(homePath)) {
+      authCache = JSON.parse(readFileSync(homePath, 'utf-8'));
+      return authCache;
+    }
+
+    // 2. Fallback to process.cwd()/auth.json (legacy location)
+    const cwdPath = join(process.cwd(), 'auth.json');
+    if (existsSync(cwdPath)) {
+      authCache = JSON.parse(readFileSync(cwdPath, 'utf-8'));
       return authCache;
     }
   } catch (e) {

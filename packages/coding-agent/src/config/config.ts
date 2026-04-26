@@ -84,10 +84,12 @@ const CONFIG_FILE = process.env.PICRO_CONFIG_PATH || path.join(CONFIG_DIR, 'conf
 export class ConfigManager {
   private static instance: ConfigManager;
   private config: AppConfig = DEFAULT_CONFIG;
+  private providerConfigs: Record<string, ProviderInfo> = {}; // Full provider configs từ models.json
 
   private constructor() {
     this.ensureConfigDir();
     this.loadConfig();
+    this.loadProviderConfigs(); // Load models.json
   }
 
   static getInstance(): ConfigManager {
@@ -162,7 +164,57 @@ export class ConfigManager {
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(this.config, null, 2));
   }
 
-  // Provider management
+  // ============ PROVIDER CONFIGS (from models.json) ============
+  private loadProviderConfigs(): void {
+    // 1. Try ~/.picro/agent/models.json first
+    try {
+      const modelsPath = path.join(CONFIG_DIR, 'models.json');
+      if (fs.existsSync(modelsPath)) {
+        const data = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'));
+        if (data.providers) {
+          for (const [provider, info] of Object.entries(data.providers)) {
+            const p = info as any;
+            this.providerConfigs[provider] = {
+              baseUrl: p.baseUrl || '',
+              api: p.api || 'openai-completions',
+              apiKey: p.apiKey || '',
+              authHeader: p.authHeader !== false, // default true
+              models: Array.isArray(p.models) ? p.models : [],
+            };
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load ~/.picro/agent/models.json:', e);
+    }
+
+    // 2. Fallback to process.cwd()/models.json
+    try {
+      const cwdModelsPath = path.join(process.cwd(), 'models.json');
+      if (fs.existsSync(cwdModelsPath)) {
+        const data = JSON.parse(fs.readFileSync(cwdModelsPath, 'utf-8'));
+        if (data.providers) {
+          for (const [provider, info] of Object.entries(data.providers)) {
+            // Don't override if already have from home
+            if (!this.providerConfigs[provider]) {
+              const p = info as any;
+              this.providerConfigs[provider] = {
+                baseUrl: p.baseUrl || '',
+                api: p.api || 'openai-completions',
+                apiKey: p.apiKey || '',
+                authHeader: p.authHeader !== false,
+                models: Array.isArray(p.models) ? p.models : [],
+              };
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  // Provider management (from config.json only)
   getCurrentProvider(): string {
     return this.config.currentProvider;
   }
@@ -171,25 +223,75 @@ export class ConfigManager {
     return this.config.currentModel;
   }
 
+  /**
+   * Get all providers: merge providerConfigs (models.json) + config.providers
+   */
   getProviders(): Record<string, ProviderInfo> {
-    return { ...this.config.providers };
+    const all: Record<string, ProviderInfo> = { ...this.providerConfigs };
+    // Override with config.providers if any (for flexibility)
+    for (const [p, info] of Object.entries(this.config.providers)) {
+      all[p] = info;
+    }
+    return all;
   }
 
+  /**
+   * Get provider metadata. Priority: providerConfigs > config.providers
+   */
   getProviderInfo(provider: string): ProviderInfo | undefined {
-    return this.getProviders()[provider];
+    return this.providerConfigs[provider] || this.config.providers[provider];
   }
 
   /**
    * Get API key for provider.
-   * Checks environment variable first (PROVIDER_API_KEY), then config.
+   * Priority: 1) env var, 2) auth.json (unified & legacy),
+   * 3) models.json (cwd), 4) providerConfigs (from home models.json),
+   * 5) config.providers (legacy in config.json)
    */
   getApiKey(provider: string): string | undefined {
-    // env var: e.g., NVIDIA_NIM_API_KEY, OPENAI_API_KEY
+    // 1. env var
     const envVar = `${provider.toUpperCase()}_API_KEY`;
     const envKey = process.env[envVar];
     if (envKey) return envKey;
-    // Fallback to stored key (if any)
-    return this.config.providers[provider]?.apiKey;
+
+    // 2. From ~/.picro/agent/auth.json
+    try {
+      const authPath = path.join(CONFIG_DIR, 'auth.json');
+      if (fs.existsSync(authPath)) {
+        const auth = JSON.parse(fs.readFileSync(authPath, 'utf-8'));
+        if (auth[provider]?.key) return auth[provider].key;
+      }
+    } catch (e) {}
+
+    // 3. From process.cwd()/auth.json
+    try {
+      const authCwdPath = path.join(process.cwd(), 'auth.json');
+      if (fs.existsSync(authCwdPath)) {
+        const auth = JSON.parse(fs.readFileSync(authCwdPath, 'utf-8'));
+        if (auth[provider]?.key) return auth[provider].key;
+      }
+    } catch (e) {}
+
+    // 4. From process.cwd()/models.json
+    try {
+      const modelsPath = path.join(process.cwd(), 'models.json');
+      if (fs.existsSync(modelsPath)) {
+        const data = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'));
+        if (data.providers?.[provider]?.apiKey) {
+          return data.providers[provider].apiKey;
+        }
+      }
+    } catch (e) {}
+
+    // 5. From providerConfigs (loaded from ~/.picro/agent/models.json)
+    const providerConfigKey = this.providerConfigs[provider]?.apiKey;
+    if (providerConfigKey) return providerConfigKey;
+
+    // 6. From config.providers (config.json)
+    const configKey = this.config.providers[provider]?.apiKey;
+    if (configKey) return configKey;
+
+    return undefined;
   }
 
   setProvider(provider: string, model?: string): void {
