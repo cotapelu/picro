@@ -118,6 +118,12 @@ export type KeyHandlerResult = { consume?: boolean; data?: string } | undefined;
 export type KeyHandler = (key: KeyEvent) => KeyHandlerResult;
 
 /**
+ * Input listener for preprocessing raw data
+ * Can modify or consume input before key parsing
+ */
+export type InputListener = (data: string) => { consume?: boolean; data?: string } | undefined;
+
+/**
  * Anchor position for floating panels
  */
 export type PanelAnchor =

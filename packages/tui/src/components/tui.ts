@@ -31,6 +31,7 @@ import {
 import { visibleWidth, truncateText, wrapText } from './internal-utils.js';
 import type { Terminal } from './terminal.js';
 import { parseKey, isKeyRelease } from './keys.js';
+import * as fs from 'fs';
 
 /**
  * TerminalUI - Main class for managing terminal UI with incremental rendering
@@ -53,6 +54,7 @@ export class TerminalUI extends ElementContainer {
 	private previousViewportTop = 0;
 	private fullRedrawCount = 0;
 	private stopped = false;
+	private debugLogPath?: string;
 
 	// Panel stack for modal elements rendered on top of base content
 	private focusOrderCounter = 0;
@@ -87,6 +89,16 @@ export class TerminalUI extends ElementContainer {
 		this.terminal = terminal;
 		this.showHardwareCursor = showHardwareCursor ?? (process.env.PI_HARDWARE_CURSOR === "1");
 		this.clearOnShrink = process.env.PI_CLEAR_ON_SHRINK === "1";
+	}
+
+	/** Debug logging for redraw events */
+	private logRender(msg: string): void {
+		if (!this.debugLogPath) return;
+		try {
+			const line = `[${new Date().toISOString()}] ${msg}\n`;
+			fs.appendFileSync(this.debugLogPath, line);
+			 // eslint-disable-next-line no-empty
+		} catch (e) {}
 	}
 
 	get fullRedraws(): number {
@@ -666,47 +678,126 @@ export class TerminalUI extends ElementContainer {
 	 * Incremental rendering - only update changed lines
 	 */
 	private incrementalRender(newLines: string[], sizeChanged: boolean): void {
-		// Move cursor to top
+		// Start synchronized output
+		this.terminal.write('\x1b[?2026h');
+
+		// Move cursor to top-left initially
 		this.terminal.moveBy(-this.cursorRow);
 
-		// Find cursor marker position
+		// Find cursor marker position and remove markers
 		let cursorRow = 0;
 		let cursorCol = 0;
 
 		for (let i = 0; i < newLines.length; i++) {
 			const line = newLines[i];
 			const markerIndex = line.indexOf(CURSOR_MARKER);
-
 			if (markerIndex !== -1) {
 				cursorRow = i;
 				cursorCol = markerIndex;
-				// Remove marker from line
 				newLines[i] = line.replace(CURSOR_MARKER, '');
 				break;
 			}
 		}
 
-		// Update lines
-		for (let i = 0; i < newLines.length; i++) {
-			const newLine = newLines[i];
-			const oldLine = this.previousLines[i] || '';
+		// Get previous lines (empty if first render)
+		const oldLines = this.previousLines;
 
-			if (newLine !== oldLine || sizeChanged) {
-				this.terminal.moveBy(i - this.cursorRow);
+		// Compute diff: find first and last changed indices
+		let firstDiff = -1;
+		let lastDiff = -1;
+		const commonLength = Math.min(newLines.length, oldLines.length);
+
+		for (let i = 0; i < commonLength; i++) {
+			if (newLines[i] !== oldLines[i]) {
+				if (firstDiff === -1) firstDiff = i;
+				lastDiff = i;
+			}
+		}
+
+		// Check for append-only (prefix unchanged, new longer)
+		const appendOnly = firstDiff === -1 && newLines.length > oldLines.length;
+		// Check for delete-only (prefix unchanged, new shorter)
+		const deleteOnly = firstDiff === -1 && newLines.length < oldLines.length;
+
+		// If no changes and not appending/deleting, done
+		if (firstDiff === -1 && !appendOnly && !deleteOnly && !sizeChanged) {
+			// End synchronized output
+			this.terminal.write('\x1b[?2026l');
+			// Still need to position hardware cursor
+			if (this.showHardwareCursor) {
+				this.terminal.moveBy(cursorRow - this.cursorRow);
+				this.terminal.showCursor();
+			} else {
+				this.terminal.hideCursor();
+			}
+			return;
+		}
+
+		// Determine rendering range
+		let renderStart: number;
+		let renderEnd: number;
+
+		if (appendOnly) {
+			renderStart = oldLines.length;
+			renderEnd = newLines.length - 1;
+		} else if (deleteOnly) {
+			renderStart = newLines.length;
+			renderEnd = oldLines.length - 1;
+		} else {
+			renderStart = firstDiff === -1 ? 0 : firstDiff;
+			// If lines were removed before lastDiff, we need to clear until old end
+			if (newLines.length < oldLines.length) {
+				lastDiff = Math.max(lastDiff, oldLines.length - 1);
+			} else {
+				lastDiff = Math.max(lastDiff, newLines.length - 1);
+			}
+			renderEnd = lastDiff;
+		}
+
+		// Debug logging for incremental mode
+		const mode = appendOnly ? 'append-only' : deleteOnly ? 'delete-only' : 'diff';
+		this.logRender(`incremental: ${mode}, range=[${renderStart}-${renderEnd}], oldLen=${oldLines.length}, newLen=${newLines.length}`);
+
+		// Perform rendering
+		if (appendOnly) {
+			// Move to end of old content
+			this.terminal.moveBy(oldLines.length - this.cursorRow);
+			for (let i = renderStart; i <= renderEnd; i++) {
+				this.terminal.write(newLines[i] + '\x1b[0m\x1b]8;;\x07');
+				if (i < renderEnd) this.terminal.moveBy(1);
+			}
+			this.cursorRow = renderEnd;
+		} else if (deleteOnly) {
+			// Move to start of deletion region
+			this.terminal.moveBy(renderStart - this.cursorRow);
+			for (let i = renderStart; i <= renderEnd; i++) {
 				this.terminal.clearLine();
-				this.terminal.write(newLine);
+				if (i < renderEnd) this.terminal.moveBy(1);
+			}
+			this.cursorRow = renderEnd;
+		} else {
+			// Diff range: move to firstDiff
+			this.terminal.moveBy(renderStart - this.cursorRow);
+			for (let i = renderStart; i <= renderEnd; i++) {
+				const line = i < newLines.length ? newLines[i] : '';
+				this.terminal.clearLine();
+				this.terminal.write(line + '\x1b[0m\x1b]8;;\x07');
+				if (i < renderEnd) this.terminal.moveBy(1);
+			}
+			this.cursorRow = renderEnd;
+		}
+
+		// Clear remaining lines if content shrank (handle trailing clearance)
+		if (this.clearOnShrink && newLines.length < oldLines.length) {
+			for (let i = newLines.length; i < oldLines.length; i++) {
+				this.terminal.moveBy(1);
+				this.terminal.clearLine();
 				this.cursorRow = i;
 			}
 		}
 
-		// Clear remaining lines if content shrank
-		if (this.clearOnShrink && newLines.length < this.previousLines.length) {
-			for (let i = newLines.length; i < this.previousLines.length; i++) {
-				this.terminal.moveBy(i - this.cursorRow);
-				this.terminal.clearLine();
-				this.cursorRow = i;
-			}
-		}
+		// End synchronized output
+		this.terminal.write('\x1b[?2026l');
 
 		// Position hardware cursor
 		if (this.showHardwareCursor) {
