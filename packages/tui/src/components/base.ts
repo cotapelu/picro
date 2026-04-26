@@ -158,6 +158,8 @@ export interface PanelOptions {
   offsetY?: number;
   /** Margin from terminal edges. Number applies to all sides. */
   padding?: PanelMargin | number;
+	/** Alias for padding (legacy API compatibility) */
+	margin?: PanelMargin | number;
   /** Control panel visibility based on terminal dimensions. */
   visible?: (termWidth: number, termHeight: number) => boolean;
   /** If true, don't capture keyboard focus when shown */

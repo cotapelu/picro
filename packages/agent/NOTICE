@@ -1,7 +1,0 @@
-This package contains code under two different licenses:
-
-- src/ (new clean-room implementation): Apache License 2.0
-- pi-agent-legacy/ (original code by Mario Zechner): MIT License
-
-Apache-2.0 code is the new implementation written from scratch.
-MIT-licensed legacy code is included for reference only.

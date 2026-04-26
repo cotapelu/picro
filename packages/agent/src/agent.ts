@@ -60,14 +60,15 @@ export class Agent {
       ? this.createLogger(this.config.verbose)
       : new EventEmitter();
 
-    this.toolExecutor = new ToolExecutor({
-      timeout: this.config.toolTimeout,
-      cacheEnabled: this.config.cacheResults,
-      toolExecutionStrategy: this.config.toolExecutionStrategy,
-      emitter: this.emitter,
-      beforeToolCall: this.config.executor.beforeToolCall,
-      afterToolCall: this.config.executor.afterToolCall,
-    });
+     this.toolExecutor = new ToolExecutor({
+       timeout: this.config.toolTimeout,
+       cacheEnabled: this.config.cacheResults,
+       toolExecutionStrategy: this.config.toolExecutionStrategy,
+       emitter: this.emitter,
+       beforeToolCall: this.config.executor.beforeToolCall,
+       afterToolCall: this.config.executor.afterToolCall,
+       emitProgressUpdates: this.config.debug, // Emit progress updates in debug mode
+     });
 
     this.contextBuilder = new ContextBuilder({
       maxTokens: this.config.contextBuilder.maxTokens,
@@ -363,37 +364,38 @@ export class Agent {
     return result;
   }
 
-  private resolveConfig(config?: Partial<AgentConfig>): AgentConfig {
-    return {
-      maxRounds: config?.maxRounds ?? 10,
-      verbose: config?.verbose ?? false,
-      toolTimeout: config?.toolTimeout ?? 30000,
-      cacheResults: config?.cacheResults ?? false,
-      toolExecutionStrategy: config?.toolExecutionStrategy ?? 'parallel',
-      loopStrategy: config?.loopStrategy,
-      contextBuilder: {
-        maxTokens: config?.contextBuilder?.maxTokens ?? 128000,
-        reservedTokens: config?.contextBuilder?.reservedTokens ?? 4096,
-        minMessages: config?.contextBuilder?.minMessages ?? 5,
-        enableMemoryInjection: config?.contextBuilder?.enableMemoryInjection ?? true,
-      },
-      executor: {
-        timeout: config?.executor?.timeout ?? 30000,
-        cacheEnabled: config?.executor?.cacheEnabled ?? false,
-        toolExecutionStrategy: config?.executor?.toolExecutionStrategy ?? 'parallel',
-        beforeToolCall: config?.executor?.beforeToolCall,
-        afterToolCall: config?.executor?.afterToolCall,
-      },
-      enableLogging: config?.enableLogging ?? true,
-      sessionId: config?.sessionId,
-      thinkingBudgets: config?.thinkingBudgets,
-      reasoningLevel: config?.reasoningLevel,
-      transformContext: config?.transformContext,
-      steeringMode: config?.steeringMode ?? 'dequeue-one',
-      followUpMode: config?.followUpMode ?? 'dequeue-one',
-      autoSaveMemories: config?.autoSaveMemories,
-    };
-  }
+   private resolveConfig(config?: Partial<AgentConfig>): AgentConfig {
+     return {
+       maxRounds: config?.maxRounds ?? 10,
+       verbose: config?.verbose ?? false,
+       toolTimeout: config?.toolTimeout ?? 30000,
+       cacheResults: config?.cacheResults ?? false,
+       toolExecutionStrategy: config?.toolExecutionStrategy ?? 'parallel',
+       loopStrategy: config?.loopStrategy,
+       contextBuilder: {
+         maxTokens: config?.contextBuilder?.maxTokens ?? 128000,
+         reservedTokens: config?.contextBuilder?.reservedTokens ?? 4096,
+         minMessages: config?.contextBuilder?.minMessages ?? 5,
+         enableMemoryInjection: config?.contextBuilder?.enableMemoryInjection ?? true,
+       },
+       executor: {
+         timeout: config?.executor?.timeout ?? 30000,
+         cacheEnabled: config?.executor?.cacheEnabled ?? false,
+         toolExecutionStrategy: config?.executor?.toolExecutionStrategy ?? 'parallel',
+         beforeToolCall: config?.executor?.beforeToolCall,
+         afterToolCall: config?.executor?.afterToolCall,
+       },
+       enableLogging: config?.enableLogging ?? true,
+       sessionId: config?.sessionId,
+       thinkingBudgets: config?.thinkingBudgets,
+       reasoningLevel: config?.reasoningLevel,
+       transformContext: config?.transformContext,
+       steeringMode: config?.steeringMode ?? 'dequeue-one',
+       followUpMode: config?.followUpMode ?? 'dequeue-one',
+       autoSaveMemories: config?.autoSaveMemories,
+       debug: config?.debug ?? false,
+     };
+   }
 
   private createLogger(verbose: boolean): EventEmitter {
     const emitter = new EventEmitter();

@@ -9,7 +9,7 @@ export { CURSOR_MARKER } from './components/base.js';
 export type { UIElement, InteractiveElement, KeyEvent, RenderContext } from './components/base.js';
 
 // Main TerminalUI (from tui.ts)
-export { TerminalUI } from './components/tui.js';
+export { TerminalUI, type InputListener } from './components/tui.js';
 
 // Terminal (from terminal.ts)
 export { ProcessTerminal } from './components/terminal.js';

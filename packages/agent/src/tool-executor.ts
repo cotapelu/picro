@@ -31,17 +31,18 @@ export class ToolExecutor {
   private cache: Map<string, ToolResult> = new Map();
   private emitter?: EventEmitter;
 
-  constructor(config?: Partial<ToolExecutorConfig>) {
-    this.config = {
-      timeout: config?.timeout ?? 30000,
-      cacheEnabled: config?.cacheEnabled ?? false,
-      toolExecutionStrategy: config?.toolExecutionStrategy ?? 'parallel',
-      emitter: config?.emitter,
-      beforeToolCall: config?.beforeToolCall,
-      afterToolCall: config?.afterToolCall,
-    };
-    this.emitter = config?.emitter;
-  }
+   constructor(config?: Partial<ToolExecutorConfig>) {
+     this.config = {
+       timeout: config?.timeout ?? 30000,
+       cacheEnabled: config?.cacheEnabled ?? false,
+       toolExecutionStrategy: config?.toolExecutionStrategy ?? 'parallel',
+       emitter: config?.emitter,
+       beforeToolCall: config?.beforeToolCall,
+       afterToolCall: config?.afterToolCall,
+       emitProgressUpdates: config?.emitProgressUpdates ?? false,
+     };
+     this.emitter = config?.emitter;
+   }
 
   /**
    * Register a single tool.
@@ -121,146 +122,164 @@ export class ToolExecutor {
     return this.getDefinition(name);
   }
 
-  /**
-   * Execute a single tool call.
-   */
-  async execute(
-    toolCall: ToolCallData,
-    context: ToolContext,
-    signal?: AbortSignal
-  ): Promise<ToolResult> {
-    const startTime = Date.now();
-    const tool = this.tools.get(toolCall.name);
+   /**
+    * Execute a single tool call.
+    */
+   async execute(
+     toolCall: ToolCallData,
+     context: ToolContext,
+     signal?: AbortSignal
+   ): Promise<ToolResult> {
+     const startTime = Date.now();
+     const tool = this.tools.get(toolCall.name);
 
-    if (!tool) {
-      return this.createErrorResult(toolCall, `Tool '${toolCall.name}' not found`, startTime);
-    }
+     if (!tool) {
+       return this.createErrorResult(toolCall, `Tool '${toolCall.name}' not found`, startTime);
+     }
 
-    // Build metadata
-    const metadata: ToolExecutionMetadata = {
-      toolName: toolCall.name,
-      toolCallId: toolCall.id,
-      arguments: toolCall.arguments,
-    };
+     // Build metadata
+     const metadata: ToolExecutionMetadata = {
+       toolName: toolCall.name,
+       toolCallId: toolCall.id,
+       arguments: toolCall.arguments,
+     };
 
-    // Before hook
-    if (this.config.beforeToolCall) {
-      const before = await this.config.beforeToolCall(
-        {
-          toolCall: toolCall,
-          args: toolCall.arguments,
-          round: context.round,
-        },
-        signal
-      );
-      if (before?.block) {
-        return this.createErrorResult(
-          toolCall,
-          before.reason ?? 'Tool execution blocked by before hook',
-          startTime
-        );
-      }
-    }
+     // Before hook
+     if (this.config.beforeToolCall) {
+       const before = await this.config.beforeToolCall(
+         {
+           toolCall: toolCall,
+           args: toolCall.arguments,
+           round: context.round,
+         },
+         signal
+       );
+       if (before?.block) {
+         return this.createErrorResult(
+           toolCall,
+           before.reason ?? 'Tool execution blocked by before hook',
+           startTime
+         );
+       }
+     }
 
-    // Cache check
-    if (this.config.cacheEnabled) {
-      const cacheKey = this.buildCacheKey(toolCall);
-      const cached = this.cache.get(cacheKey);
-      if (cached) {
-        return cached;
-      }
-    }
+     // Cache check
+     if (this.config.cacheEnabled) {
+       const cacheKey = this.buildCacheKey(toolCall);
+       const cached = this.cache.get(cacheKey);
+       if (cached) {
+         return cached;
+       }
+     }
 
-    try {
-      // Emit tool call start
-      await this.emitToolCallStart(metadata);
+     try {
+       // Emit tool call start
+       await this.emitToolCallStart(metadata);
 
-      // Execute with timeout and signal
-      const rawResult = await this.executeWithTimeout(
-        async () => await tool.handler(toolCall.arguments, context),
-        this.config.timeout,
-        signal
-      );
+       // Execute with timeout and signal
+       const rawResult = await this.executeWithTimeout(
+         async () => {
+           // Check if the tool handler accepts an onProgress callback
+           if (tool.handler.length > 2) {
+             // Create a wrapper for onProgress that emits events
+             const onProgressWrapper = (update: ToolProgressUpdate) => {
+               if (this.config.emitProgressUpdates !== false) {
+                 this.emitProgress(metadata, update);
+               }
+               // Call original onProgress if provided, but don't return its value
+               // We just call it for side effects
+               return;
+             };
+             
+             return await tool.handler(toolCall.arguments, context, onProgressWrapper);
+           } else {
+             // Tool handler doesn't accept onProgress, call it normally
+             return await tool.handler(toolCall.arguments, context);
+           }
+         },
+         this.config.timeout,
+         signal
+       );
 
-      // Normalize result to string
-      const resultString = this.normalizeResult(rawResult);
+       // Normalize result to string
+       const resultString = this.normalizeResult(rawResult);
 
-      let result: SuccessfulToolResult = {
-        toolCallId: toolCall.id,
-        toolName: toolCall.name,
-        result: resultString,
-        executionTime: Date.now() - startTime,
-        isError: false,
-        metadata,
-      };
+       let result: SuccessfulToolResult = {
+         toolCallId: toolCall.id,
+         toolName: toolCall.name,
+         result: resultString,
+         executionTime: Date.now() - startTime,
+         isError: false,
+         metadata,
+       };
 
-      // After hook (success)
-      if (this.config.afterToolCall) {
-        const after = await this.config.afterToolCall(
-          {
-            toolCall: toolCall,
-            args: toolCall.arguments,
-            result,
-            isError: false,
-            round: context.round,
-          },
-          signal
-        );
-        if (after) {
-          if (after.content !== undefined) result.result = after.content;
-          if (after.isError) {
-            result = {
-              ...result,
-              isError: true,
-              error: after.errorMessage ?? 'Tool marked as error by after hook',
-            } as any;
-          }
-          if (after.details) result.metadata = { ...metadata, ...after.details };
-        }
-      }
+       // After hook (success)
+       if (this.config.afterToolCall) {
+         const after = await this.config.afterToolCall(
+           {
+             toolCall: toolCall,
+             args: toolCall.arguments,
+             result,
+             isError: false,
+             round: context.round,
+           },
+           signal
+         );
+         if (after) {
+           if (after.content !== undefined) result.result = after.content;
+           if (after.isError) {
+             result = {
+               ...result,
+               isError: true,
+               error: after.errorMessage ?? 'Tool marked as error by after hook',
+             } as any;
+           }
+           if (after.details) result.metadata = { ...metadata, ...after.details };
+         }
+       }
 
-      // Cache if enabled
-      if (this.config.cacheEnabled) {
-        const cacheKey = this.buildCacheKey(toolCall);
-        this.cache.set(cacheKey, result);
-      }
+       // Cache if enabled
+       if (this.config.cacheEnabled) {
+         const cacheKey = this.buildCacheKey(toolCall);
+         this.cache.set(cacheKey, result);
+       }
 
-      await this.emitToolCallEnd(metadata, result, false);
-      return result;
-    } catch (error: any) {
-      const errorMessage = error?.message ?? String(error);
-      const result: FailedToolResult = {
-        toolCallId: toolCall.id,
-        toolName: toolCall.name,
-        error: errorMessage,
-        executionTime: Date.now() - startTime,
-        isError: true,
-        metadata,
-      };
+       await this.emitToolCallEnd(metadata, result, false);
+       return result;
+     } catch (error: any) {
+       const errorMessage = error?.message ?? String(error);
+       const result: FailedToolResult = {
+         toolCallId: toolCall.id,
+         toolName: toolCall.name,
+         error: errorMessage,
+         executionTime: Date.now() - startTime,
+         isError: true,
+         metadata,
+       };
 
-      // After hook (error)
-      if (this.config.afterToolCall) {
-        const after = await this.config.afterToolCall(
-          {
-            toolCall: toolCall,
-            args: toolCall.arguments,
-            result,
-            isError: true,
-            round: context.round,
-          },
-          signal
-        );
-        if (after) {
-          if (after.content !== undefined) (result as any).result = after.content;
-          if (after.errorMessage !== undefined) (result as any).error = after.errorMessage;
-          if (after.details) result.metadata = { ...metadata, ...after.details };
-        }
-      }
+       // After hook (error)
+       if (this.config.afterToolCall) {
+         const after = await this.config.afterToolCall(
+           {
+             toolCall: toolCall,
+             args: toolCall.arguments,
+             result,
+             isError: true,
+             round: context.round,
+           },
+           signal
+         );
+         if (after) {
+           if (after.content !== undefined) (result as any).result = after.content;
+           if (after.errorMessage !== undefined) (result as any).error = after.errorMessage;
+           if (after.details) result.metadata = { ...metadata, ...after.details };
+         }
+       }
 
-      await this.emitToolError(metadata, errorMessage);
-      return result;
-    }
-  }
+       await this.emitToolError(metadata, errorMessage);
+       return result;
+     }
+   }
 
   /**
    * Execute multiple tool calls.

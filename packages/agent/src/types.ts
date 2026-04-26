@@ -250,9 +250,28 @@ export interface MemoryRetrievalEvent extends BaseAgentEvent {
 }
 
 export interface ErrorEvent extends BaseAgentEvent {
-  type: 'error';
-  message: string;
-  stack?: string;
+   type: 'error';
+   message: string;
+   stack?: string;
+}
+
+export interface DebugRoundTimingEvent extends BaseAgentEvent {
+   type: 'debug:round:timing';
+   round: number;
+   contextBuildingTime: number;
+   memoryRetrievalTime: number;
+   llmRequestTime: number;
+   toolExecutionTime: number;
+   totalRoundTime: number;
+}
+
+export interface DebugRunTimingEvent extends BaseAgentEvent {
+   type: 'debug:run:timing';
+   totalRunTime: number;
+   totalContextBuildingTime: number;
+   totalMemoryRetrievalTime: number;
+   totalLLMRequestTime: number;
+   totalToolExecutionTime: number;
 }
 
 export type AgentEvent =
@@ -312,13 +331,15 @@ export interface AgentRunResult {
 // ============================================================================
 
 export interface ToolExecutorConfig {
-  timeout: number;
-  cacheEnabled: boolean;
-  toolExecutionStrategy: ToolExecutionStrategy;
-  emitter?: EventEmitter;
-  beforeToolCall?: BeforeToolHook;
-  afterToolCall?: AfterToolHook;
-}
+   timeout: number;
+   cacheEnabled: boolean;
+   toolExecutionStrategy: ToolExecutionStrategy;
+   emitter?: EventEmitter;
+   beforeToolCall?: BeforeToolHook;
+   afterToolCall?: AfterToolHook;
+   /** Whether to emit progress updates during tool execution */
+   emitProgressUpdates?: boolean;
+ }
 
 export interface BeforeToolHook {
   (context: {
@@ -382,25 +403,27 @@ export interface LoopStrategy {
 }
 
 export interface AgentConfig {
-  maxRounds: number;
-  verbose: boolean;
-  toolTimeout: number;
-  cacheResults: boolean;
-  toolExecutionStrategy: ToolExecutionStrategy;
-  contextBuilder: ContextBuilderConfig;
-  executor: ToolExecutorConfig;
-  enableLogging: boolean;
-  sessionId?: string;
-  thinkingBudgets?: Record<ThinkingLevel, number>;
-  reasoningLevel?: ThinkingLevel;
-  transformContext?: (turns: ConversationTurn[], signal?: AbortSignal) => Promise<ConversationTurn[]>;
-  steeringMode: QueueMode;
-  followUpMode: QueueMode;
-  autoSaveMemories?: boolean;
-  memoryStore?: MemoryStore;
-  /** Loop strategy to use (react, plan-solve, reflection, simple, self-refine) */
-  loopStrategy?: 'react' | 'plan-solve' | 'reflection' | 'simple' | 'self-refine';
-}
+   maxRounds: number;
+   verbose: boolean;
+   toolTimeout: number;
+   cacheResults: boolean;
+   toolExecutionStrategy: ToolExecutionStrategy;
+   contextBuilder: ContextBuilderConfig;
+   executor: ToolExecutorConfig;
+   enableLogging: boolean;
+   sessionId?: string;
+   thinkingBudgets?: Record<ThinkingLevel, number>;
+   reasoningLevel?: ThinkingLevel;
+   transformContext?: (turns: ConversationTurn[], signal?: AbortSignal) => Promise<ConversationTurn[]>;
+   steeringMode: QueueMode;
+   followUpMode: QueueMode;
+   autoSaveMemories?: boolean;
+   memoryStore?: MemoryStore;
+   /** Loop strategy to use (react, plan-solve, reflection, simple, self-refine) */
+   loopStrategy?: 'react' | 'plan-solve' | 'reflection' | 'simple' | 'self-refine';
+   /** Enable debug mode with detailed timing and metrics */
+   debug?: boolean;
+ }
 
 export interface StreamOptions {
   temperature?: number;
