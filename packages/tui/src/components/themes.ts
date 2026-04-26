@@ -1,182 +1,213 @@
-/**
- * Theme presets for Terminal UI
- * Supports dark (default), light, and high-contrast themes
- */
-import type { UITheme } from './base.js';
-
-// ANSI color codes
-export const colors = {
-  // Standard colors
-  black: '\x1b[30m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m',
-  white: '\x1b[37m',
-  gray: '\x1b[90m',
-  // Extended colors
-  brightRed: '\x1b[91m',
-  brightGreen: '\x1b[92m',
-  brightYellow: '\x1b[93m',
-  brightBlue: '\x1b[94m',
-  brightMagenta: '\x1b[95m',
-  brightCyan: '\x1b[96m',
-  brightWhite: '\x1b[97m',
-  // Backgrounds
-  bgBlack: '\x1b[40m',
-  bgWhite: '\x1b[47m',
-  bgGray: '\x1b[100m',
-};
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
- * Dark theme (default) - easy on the eyes
+ * Semantic color roles
  */
-export const darkTheme: UITheme = {
-  textColor: colors.white,
-  bgColor: colors.black,
-  borderColor: colors.gray,
-  accentColor: colors.cyan,
-  errorColor: colors.red,
-  warningColor: colors.yellow,
-  successColor: colors.green,
-};
-
-/**
- * Light theme - for bright environments
- */
-export const lightTheme: UITheme = {
-  textColor: colors.black,
-  bgColor: colors.white,
-  borderColor: colors.gray,
-  accentColor: colors.blue,
-  errorColor: colors.brightRed,
-  warningColor: colors.brightYellow,
-  successColor: colors.green,
-};
-
-/**
- * High contrast theme - accessibility focused
- */
-export const highContrastTheme: UITheme = {
-  textColor: colors.brightWhite,
-  bgColor: colors.black,
-  borderColor: colors.white,
-  accentColor: colors.brightCyan,
-  errorColor: colors.brightRed,
-  warningColor: colors.brightYellow,
-  successColor: colors.brightGreen,
-};
-
-// Complete theme interface with metadata
-export interface ThemePreset {
-  id: string;
-  name: string;
-  description: string;
-  theme: UITheme;
+export interface Theme {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  foreground: string;
+  success: string;
+  warning: string;
+  error: string;
+  border: string;
+  selected: string;
+  highlighted: string;
+  dim: string;
 }
 
 /**
- * Available theme presets
+ * Default dark theme
  */
-export const themePresets: ThemePreset[] = [
-  {
-    id: 'dark',
-    name: 'Dark',
-    description: 'Default dark theme - easy on the eyes',
-    theme: darkTheme,
-  },
-  {
-    id: 'light',
-    name: 'Light',
-    description: 'Light theme for bright environments',
-    theme: lightTheme,
-  },
-  {
-    id: 'high-contrast',
-    name: 'High Contrast',
-    description: 'High contrast theme for accessibility',
-    theme: highContrastTheme,
-  },
-];
+export const darkTheme: Theme = {
+  primary: '\x1b[38;5;111m', // purple
+  secondary: '\x1b[38;5;109m', // gray
+  accent: '\x1b[38;5;221m', // yellow
+  background: '\x1b[48;5;235m', // dark gray
+  foreground: '\x1b[38;5;255m', // white
+  success: '\x1b[38;5;84m', // green
+  warning: '\x1b[38;5;214m', // orange
+  error: '\x1b[38;5;203m', // red
+  border: '\x1b[38;5;239m', // dark border
+  selected: '\x1b[48;5;24m', // dark blue bg
+  highlighted: '\x1b[48;5;237m', // slightly lighter bg
+  dim: '\x1b[38;5;240m', // dim text
+};
 
 /**
- * Get theme by ID
+ * Light theme
  */
-export function getThemeById(id: string): UITheme {
-  const preset = themePresets.find(t => t.id === id);
-  return preset?.theme ?? darkTheme;
-}
+export const lightTheme: Theme = {
+  primary: '\x1b[38;5;25m',
+  secondary: '\x1b[38;5;60m',
+  accent: '\x1b[38;5;178m',
+  background: '\x1b[48;5;255m',
+  foreground: '\x1b[38;5;16m',
+  success: '\x1b[38;5;34m',
+  warning: '\x1b[38;5;202m',
+  error: '\x1b[38;5;196m',
+  border: '\x1b[38;5;188m',
+  selected: '\x1b[48;5;189m',
+  highlighted: '\x1b[48;5;254m',
+  dim: '\x1b[38;5;145m',
+};
 
 /**
- * Theme manager for runtime theme switching
+ * High contrast theme
+ */
+export const highContrastTheme: Theme = {
+  primary: '\x1b[38;5;15m\x1b[1m',
+  secondary: '\x1b[38;5;15m',
+  accent: '\x1b[38;5;11m',
+  background: '\x1b[48;5;0m',
+  foreground: '\x1b[38;5;15m',
+  success: '\x1b[38;5;84m',
+  warning: '\x1b[38;5;214m',
+  error: '\x1b[38;5;203m',
+  border: '\x1b[38;5;15m',
+  selected: '\x1b[48;5;60m\x1b[38;5;15m',
+  highlighted: '\x1b[48;5;8m',
+  dim: '\x1b[38;5;8m',
+};
+
+/**
+ * Theme manager singleton
  */
 export class ThemeManager {
-  private currentThemeId: string = 'dark';
-  private customThemes: Map<string, UITheme> = new Map();
+  private static instance: ThemeManager;
+  private currentTheme: Theme = darkTheme;
+  private listeners: Set<(theme: Theme) => void> = new Set();
+  private configPath: string;
+  private watcher?: fs.FSWatcher;
+
+  private constructor() {
+    this.configPath = path.join(process.env.HOME || process.env.USERPROFILE || '', '.config', 'picro', 'tui', 'theme.json');
+    this.loadFromFile();
+    // Start file watcher for live reload
+    try {
+      if (fs.existsSync(this.configPath)) {
+        this.watcher = fs.watch(this.configPath, () => {
+          this.loadFromFile();
+        });
+      }
+    } catch {
+      // ignore watcher errors
+    }
+  }
+
+  static getInstance(): ThemeManager {
+    if (!ThemeManager.instance) {
+      ThemeManager.instance = new ThemeManager();
+    }
+    return ThemeManager.instance;
+  }
 
   /**
    * Get current theme
    */
-  getCurrentTheme(): UITheme {
-    return getThemeById(this.currentThemeId);
+  getTheme(): Theme {
+    return this.currentTheme;
   }
 
   /**
-   * Get current theme ID
+   * Set theme (by name: 'dark', 'light', 'high-contrast', or custom object)
    */
-  getCurrentThemeId(): string {
-    return this.currentThemeId;
-  }
+  setTheme(theme: string | Partial<Theme>): void {
+    let newTheme: Theme;
 
-  /**
-   * Set theme by ID
-   */
-  setTheme(themeId: string): boolean {
-    if (themePresets.some(t => t.id === themeId) || this.customThemes.has(themeId)) {
-      this.currentThemeId = themeId;
-      return true;
+    if (typeof theme === 'string') {
+      switch (theme) {
+        case 'dark':
+          newTheme = darkTheme;
+          break;
+        case 'light':
+          newTheme = lightTheme;
+          break;
+        case 'high-contrast':
+          newTheme = highContrastTheme;
+          break;
+        default:
+          console.warn(`Unknown theme: ${theme}, falling back to dark`);
+          newTheme = darkTheme;
+      }
+    } else {
+      // Merge with current to preserve unprovided roles
+      newTheme = { ...this.currentTheme, ...theme };
     }
-    return false;
+
+    this.currentTheme = newTheme;
+    this.saveToFile();
+    this.notifyListeners();
   }
 
   /**
-   * List available themes
+   * Subscribe to theme changes
    */
-  listThemes(): Omit<ThemePreset, 'theme'>[] {
-    const presetList = themePresets.map(({ id, name, description }) => ({ id, name, description }));
-    const customList = Array.from(this.customThemes.keys()).map(id => ({
-      id,
-      name: `Custom: ${id}`,
-      description: 'Custom theme',
-    }));
-    return [...presetList, ...customList];
+  onChange(listener: (theme: Theme) => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
   }
 
   /**
-   * Register custom theme
+   * Apply theme to text (foreground)
    */
-  registerCustomTheme(id: string, theme: UITheme): void {
-    this.customThemes.set(id, theme);
+  fg(role: keyof Theme, text: string): string {
+    const ansi = this.currentTheme[role];
+    if (!ansi) return text;
+    return ansi + text + '\x1b[0m';
   }
 
   /**
-   * Save theme preference to storage
+   * Apply theme to text (background)
    */
-  savePreference(): { themeId: string } {
-    return { themeId: this.currentThemeId };
+  bg(role: keyof Theme, text: string): string {
+    // Extract background codes: for now just replace 3[89] with 4[89] in the ansi sequence
+    const fgAnsi = this.currentTheme[role];
+    if (!fgAnsi) return text;
+    // Convert SGR 30-37 (fg) to 40-47 (bg) for simple 8-color codes.
+    // For 256-color codes, we assume format \x1b[38;5;Xm for fg -> \x1b[48;5;Xm for bg.
+    const bgAnsi = fgAnsi.replace(/\[38;5;(\d+)m/g, '\x1b[48;5;$1m').replace(/\[38;2;(\d+);(\d+);(\d+)m/g, '\x1b[48;2;$1;$2;$3m');
+    return bgAnsi + text + '\x1b[0m';
   }
 
-  /**
-   * Load theme preference from storage
-   */
-  loadPreference(preference: { themeId: string }): void {
-    if (preference.themeId) {
-      this.setTheme(preference.themeId);
+  private loadFromFile(): void {
+    try {
+      if (!fs.existsSync(this.configPath)) return;
+      const data = fs.readFileSync(this.configPath, 'utf8');
+      const json = JSON.parse(data);
+      if (json.theme) {
+        this.setTheme(json.theme);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  private saveToFile(): void {
+    try {
+      const dir = path.dirname(this.configPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(this.configPath, JSON.stringify({ theme: this.currentTheme }), 'utf8');
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  private notifyListeners(): void {
+    for (const l of this.listeners) {
+      try {
+        l(this.currentTheme);
+      } catch {
+        // ignore
+      }
     }
   }
 }
 
-// Global theme manager instance
-export const themeManager = new ThemeManager();
+// Convenience singleton access
+export const themeManager = ThemeManager.getInstance();

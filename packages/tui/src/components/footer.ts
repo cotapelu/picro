@@ -10,6 +10,8 @@ export interface FooterItem {
   key?: string;
   /** Display text */
   label: string;
+  /** Optional explicit ANSI color for label (overrides theme.fgColor) */
+  colorAnsi?: string;
   /** Handler when item is activated */
   onActivate?: () => void;
 }
@@ -102,7 +104,7 @@ export class Footer implements UIElement {
     const leftParts: string[] = [];
     for (const item of this.leftItems) {
       const keyPart = item.key ? this.theme.keyColor(item.key) : '';
-      const labelPart = this.theme.fgColor(item.label);
+      const labelPart = item.colorAnsi ? (item.colorAnsi + item.label + '\x1b[0m') : this.theme.fgColor(item.label);
       if (keyPart) {
         leftParts.push(`${keyPart}${this.theme.separator}${labelPart}`);
       } else {
@@ -115,7 +117,7 @@ export class Footer implements UIElement {
     const rightParts: string[] = [];
     for (const item of this.rightItems) {
       const keyPart = item.key ? this.theme.keyColor(item.key) : '';
-      const labelPart = this.theme.fgColor(item.label);
+      const labelPart = item.colorAnsi ? (item.colorAnsi + item.label + '\x1b[0m') : this.theme.fgColor(item.label);
       if (keyPart) {
         rightParts.push(`${keyPart}${this.theme.separator}${labelPart}`);
       } else {
