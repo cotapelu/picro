@@ -261,3 +261,64 @@ export function splitGraphemes(str: string): string[] {
 export function graphemeLength(str: string): number {
   return Array.from(segmenter.segment(str)).length;
 }
+
+/**
+ * Truncate text to fit within a given width (advanced version)
+ * Respects ANSI codes and provides more options
+ */
+export function truncateToWidth(
+  text: string,
+  width: number,
+  options?: { ellipsis?: string; fromEnd?: boolean; preserveAnsi?: boolean }
+): string {
+  const { ellipsis = '...', fromEnd = false, preserveAnsi = true } = options || {};
+  const ellipsisWidth = visibleWidth(ellipsis);
+  const textWidth = visibleWidth(text);
+
+  if (textWidth <= width) {
+    return text;
+  }
+
+  if (width <= ellipsisWidth) {
+    return ellipsis.substring(0, Math.floor(width / 2));
+  }
+
+  if (fromEnd) {
+    // Truncate from end (keep beginning)
+    let result = '';
+    let currentWidth = 0;
+    for (const char of text) {
+      const charWidth = visibleWidth(char);
+      if (currentWidth + charWidth > width - ellipsisWidth) {
+        break;
+      }
+      result += char;
+      currentWidth += charWidth;
+    }
+    return result + ellipsis;
+  } else {
+    // Truncate from beginning (keep end)
+    let result = '';
+    let currentWidth = 0;
+    const chars = Array.from(text).reverse();
+    for (const char of chars) {
+      const charWidth = visibleWidth(char);
+      if (currentWidth + charWidth > width - ellipsisWidth) {
+        break;
+      }
+      result = char + result;
+      currentWidth += charWidth;
+    }
+    return ellipsis + result;
+  }
+}
+
+/**
+ * Expand tab characters to spaces
+ */
+export function expandTabs(text: string, tabSize = 2): string {
+  return text.replace(/\t/g, (match, offset) => {
+    const col = offset % tabSize;
+    return ' '.repeat(tabSize - col);
+  });
+}

@@ -30,11 +30,22 @@ export const KITTY_PROTOCOL_ACTIVE = Symbol('kitty-active');
  * Enable/disable Kitty keyboard protocol
  */
 export function setKittyProtocolActive(active: boolean): void {
-	if (active) {
-		(KITTY_PROTOCOL_ACTIVE as any).active = true;
-	} else {
-		(KITTY_PROTOCOL_ACTIVE as any).active = false;
-	}
+	(KITTY_PROTOCOL_ACTIVE as any).active = active;
+}
+
+/**
+ * Check if Kitty keyboard protocol is active
+ */
+export function isKittyProtocolActive(): boolean {
+	return (KITTY_PROTOCOL_ACTIVE as any).active === true;
+}
+
+/**
+ * Check if a key event is a key repeat
+ */
+export function isKeyRepeat(key: ParsedKey | string): boolean {
+	if (typeof key === 'string') return false;
+	return key.type === 'repeat';
 }
 
 /**

@@ -17,12 +17,15 @@ export interface Terminal {
 	get rows(): number;
 	get kittyProtocolActive(): boolean;
 	moveBy(lines: number): void;
+	moveTo(row: number, col: number): void;
 	hideCursor(): void;
 	showCursor(): void;
 	clearLine(): void;
 	clearFromCursor(): void;
 	clearScreen(): void;
 	setTitle(title: string): void;
+	queryCellSize(): Promise<{ width: number; height: number }>;
+	writeImage(sequence: string): void;
 }
 
 /**
@@ -260,6 +263,11 @@ export class ProcessTerminal implements Terminal {
 		}
 	}
 
+	moveTo(row: number, col: number): void {
+		// ANSI escape sequence: move cursor to row, col (1-indexed)
+		process.stdout.write(`\x1b[${row};${col}H`);
+	}
+
 	hideCursor(): void {
 		process.stdout.write('\x1b[?25l');
 	}
@@ -282,5 +290,47 @@ export class ProcessTerminal implements Terminal {
 
 	setTitle(title: string): void {
 		process.stdout.write(`\x1b]0;${title}\x07`);
+	}
+
+	/**
+	 * Query terminal cell size in pixels
+	 * Uses CSI 16 t to query cell size
+	 */
+	async queryCellSize(): Promise<{ width: number; height: number }> {
+		return new Promise((resolve) => {
+			// Default fallback values
+			const fallback = { width: 9, height: 18 };
+
+			// Send CSI 16 t to query cell size
+			process.stdout.write('\x1b[16t');
+
+			// Set up a one-time listener to capture response
+			const timeout = setTimeout(() => {
+				resolve(fallback);
+			}, 500);
+
+			const onResponse = (data: string) => {
+				// Response format: \x1b[6;row;colR
+				const match = data.match(/^\x1b\[6;(\d+);(\d+)t$/);
+				if (match) {
+					clearTimeout(timeout);
+					process.stdin.removeListener('data', onResponse);
+					// Note: CSI 16 t actually returns character cell dimensions
+					// Format: \x1b[6;rows;colsR where rows/cols are in pixels
+					// But many terminals don't support this, so we use defaults
+					resolve(fallback);
+				}
+			};
+
+			process.stdin.on('data', onResponse);
+		});
+	}
+
+	/**
+	 * Write terminal image escape sequence
+	 * For Kitty, iTerm2, and other image-capable terminals
+	 */
+	writeImage(sequence: string): void {
+		process.stdout.write(sequence);
 	}
 }

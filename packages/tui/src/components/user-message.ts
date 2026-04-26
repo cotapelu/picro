@@ -1,5 +1,5 @@
-import type { UIElement, RenderContext } from '../base.js';
-import { wrapText, visibleWidth } from '../internal-utils.js';
+import type { UIElement, RenderContext } from './base.js';
+import { wrapText, visibleWidth } from './internal-utils.js';
 
 export interface UserMessageOptions {
   text: string;

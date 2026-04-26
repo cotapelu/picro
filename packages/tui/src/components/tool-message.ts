@@ -1,5 +1,5 @@
-import type { UIElement, RenderContext } from '../base.js';
-import { Text } from '../text.js';
+import type { UIElement, RenderContext } from './base.js';
+import { Text } from './text.js';
 
 export interface ToolMessageOptions {
   toolName: string;

@@ -1,5 +1,5 @@
-import type { UIElement, RenderContext } from '../base.js';
-import { Markdown } from '../markdown.js';
+import type { UIElement, RenderContext } from './base.js';
+import { Markdown } from './markdown.js';
 
 export interface AssistantMessageOptions {
   content?: string; // markdown string

@@ -32,9 +32,9 @@ export { ModelSelector, type ModelInfo } from './components/model-selector.js';
 export { SessionSelector, type SessionInfo } from './components/session-selector.js';
 
 // Message components
-export { UserMessage, type UserMessageOptions } from './components/messages/user-message.js';
-export { AssistantMessage, type AssistantMessageOptions } from './components/messages/assistant-message.js';
-export { ToolMessage, type ToolMessageOptions } from './components/messages/tool-message.js';
+export { UserMessage, type UserMessageOptions } from './components/user-message.js';
+export { AssistantMessage, type AssistantMessageOptions } from './components/assistant-message.js';
+export { ToolMessage, type ToolMessageOptions } from './components/tool-message.js';
 
 // Theme system
 export { ThemeManager, themeManager, darkTheme, lightTheme, highContrastTheme, type Theme } from './components/themes.js';
