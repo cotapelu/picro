@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import * as fs from 'fs';
 import * as path from 'path';
-import { TerminalUI, ProcessTerminal, Text, SelectList, SettingsList, BorderedLoader, Markdown, CURSOR_MARKER } from '@picro/tui';
+import { TerminalUI, ProcessTerminal, Text, SelectList, SettingsList, BorderedLoader, Markdown, CURSOR_MARKER, MemoryPanel, type MemoryEntry as TUIMemoryEntry } from '@picro/tui';
 import type { UIElement, InteractiveElement, KeyEvent, RenderContext, SelectItem, SettingItem } from '@picro/tui';
 import { AgentMemoryApp, MemoryStore, type MemoryEntry } from '@picro/memory';
 import { Agent, type ToolDefinition, type AIModel, type MemoryRetrievalEvent, type ToolCallStartEvent, type ToolProgressEvent, type ToolCallEndEvent, type ToolErrorEvent } from '@picro/agent';
@@ -596,40 +596,43 @@ export class ChatUI implements UIElement, InteractiveElement {
       this.memoryPanelHandle = this.tui.showPanel(empty, { anchor: 'right-center', offsetY: -5, width: 40, minWidth: 20 });
       return;
     }
-    const items: SelectItem[] = memories.map((mem, idx) => ({
-      value: idx.toString(),
-      label: mem.content.slice(0, 50) + (mem.content.length > 50 ? '...' : ''),
-      description: `Retrieved memory #${idx + 1}`,
+    // Convert to TUI MemoryEntry format
+    const memEntries: TUIMemoryEntry[] = memories.map((m, idx) => ({
+      id: idx.toString(),
+      content: m.content,
+      score: m.score,
+      metadata: {
+        source: m.source,
+        timestamp: m.timestamp,
+        tags: m.tags,
+      },
     }));
-    const list = new SelectList(items, Math.min(memories.length + 2, 10), {}, (v: string) => {
-      // In multi-select mode, Enter toggles selection instead of closing
-      if (this.currentMemoryList?.isMultiSelect()) {
-        const idx = parseInt(v, 10);
-        if (!isNaN(idx)) this.currentMemoryList?.toggleSelection(idx);
-        return;
-      }
-      // Single-select mode: open actions
-      this.memoryPanelHandle?.close();
-      this.memoryPanelHandle = null;
-      this.currentMemoryList = null;
-      const idx = parseInt(v, 10);
-      if (!isNaN(idx)) {
-        this.showMemoryActions(idx);
-      }
-    }, () => {
-      this.memoryPanelHandle?.close();
-      this.memoryPanelHandle = null;
-      this.currentMemoryList = null;
+    const panel = new MemoryPanel({
+      memories: memEntries,
+      maxDisplay: 12,
+      onSelect: (mem) => {
+        const idx = parseInt(mem.id, 10);
+        if (!isNaN(idx)) this.showMemoryActions(idx);
+      },
+      onDelete: (id) => {
+        const idx = parseInt(id, 10);
+        if (!isNaN(idx)) this.handleMemoryAction(idx, 'delete');
+      },
     });
-    list.setMultiSelect(true);
-    this.currentMemoryList = list;
-    this.memoryPanelHandle = this.tui.showPanel(list, { anchor: 'right-center', offsetY: -5, panelHeight: Math.min(memories.length + 4, 15), minWidth: 30, width: 50 });
-    // When panel is closed via other means, clear currentMemoryList
+    this.currentMemoryList = null;
+    this.memoryPanelHandle = this.tui.showPanel(panel, {
+      anchor: 'right-center',
+      offsetY: -5,
+      panelHeight: Math.min(memories.length + 4, 15),
+      minWidth: 30,
+      width: 50,
+    });
+    // Focus override
     this.memoryPanelHandle.focus = () => {};
-    // override close to also clear reference
+    // Override close to clear reference
     const originalClose = this.memoryPanelHandle.close.bind(this.memoryPanelHandle);
     this.memoryPanelHandle.close = () => {
-      this.currentMemoryList = null;
+      this.memoryPanelHandle = null;
       originalClose();
     };
   }
@@ -845,6 +848,7 @@ export class ChatUI implements UIElement, InteractiveElement {
       { value: 'find-command', label: 'Find Command', description: 'Search commands by keyword' },
       { value: 'clear-memory', label: 'Clear Memory', description: 'Remove all memories' },
       { value: 'memory-stats', label: 'Memory Stats', description: 'Show memory statistics' },
+      { value: 'view-memories', label: 'View Memories', description: 'Show retrieved memories panel' },
 { value: 'config-push', label: 'Push Config', description: 'Upload config to URL' },      { value: 'config-pull', label: 'Pull Config', description: 'Download config from URL' },
 { value: 'config-push', label: 'Push Config', description: 'Upload config to URL' },      { value: 'config-pull', label: 'Pull Config', description: 'Download config from URL' },
 { value: 'export-config', label: 'Export Config', description: 'Save config to file' },      { value: 'import-config', label: 'Import Config', description: 'Load config from file' },
@@ -1185,6 +1189,7 @@ export class ChatUI implements UIElement, InteractiveElement {
       case 'find-command': this.showCommandFinder(); break;
       case 'clear-memory': this.memory.clear(); this.addMessage('system', 'Memory cleared.'); break;
       case 'memory-stats': const s = this.memory.getStats(); this.addMessage('system', `Stats: ${JSON.stringify(s)}`); break;
+      case 'view-memories': this.toggleMemoryPanel(); break;
 case 'export-config': this.exportConfig(); break;
       case 'import-config': this.importConfig(); break;
       case 'toggle-theme': this.toggleTheme(); break;
