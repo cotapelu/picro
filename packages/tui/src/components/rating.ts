@@ -13,7 +13,7 @@ export interface RatingTheme {
   dimColor: (s: string) => string;
 }
 
-const defaultTheme: RatingTheme = {
+export const defaultTheme: RatingTheme = {
   filledStar: (s) => `\x1b[33m${s}\x1b[0m`,    // Yellow
   emptyStar: (s) => `\x1b[90m${s}\x1b[0m`,     // Gray
   halfStar: (s) => `\x1b[33m${s}\x1b[0m`,      // Yellow

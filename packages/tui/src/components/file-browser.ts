@@ -3,7 +3,7 @@
  * Browse and select files/directories
  */
 import type { UIElement, RenderContext, KeyEvent, InteractiveElement, PanelHandle } from './base.js';
-import type { TerminalUI } from '../tui.js';
+import type { TerminalUI } from './tui.js';
 import { visibleWidth, truncateText } from './internal-utils.js';
 
 export interface FileItem {
@@ -30,7 +30,7 @@ export interface FileBrowserTheme {
   accentColor: (s: string) => string;
 }
 
-const defaultTheme: FileBrowserTheme = {
+export const defaultTheme: FileBrowserTheme = {
   bgColor: (s) => `\x1b[48;5;234m${s}\x1b[0m`,
   fgColor: (s) => `\x1b[37m${s}\x1b[0m`,
   borderColor: (s) => `\x1b[90m${s}\x1b[0m`,
@@ -43,7 +43,7 @@ const defaultTheme: FileBrowserTheme = {
   accentColor: (s) => `\x1b[33m${s}\x1b[0m`,
 };
 
-const SEPARATOR: FileItem = {
+export const SEPARATOR: FileItem = {
   name: '',
   displayName: '─'.repeat(40),
   type: 'file',

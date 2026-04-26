@@ -20,7 +20,7 @@ export interface ToastTheme {
   borderColor: (s: string) => string;
 }
 
-const defaultTheme: ToastTheme = {
+export const defaultTheme: ToastTheme = {
   infoBg: (s) => `\x1b[48;5;25m${s}\x1b[0m`,
   infoFg: (s) => `\x1b[97m${s}\x1b[0m`,
   successBg: (s) => `\x1b[48;5;28m${s}\x1b[0m`,
@@ -33,7 +33,7 @@ const defaultTheme: ToastTheme = {
   borderColor: (s) => `\x1b[90m${s}\x1b[0m`,
 };
 
-const icons: Record<ToastType, string> = {
+export const icons: Record<ToastType, string> = {
   info: 'ℹ️',
   success: '✅',
   warning: '⚠️',

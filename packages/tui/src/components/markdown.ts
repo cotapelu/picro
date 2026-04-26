@@ -7,7 +7,7 @@ import type { UIElement, RenderContext } from './base.js';
 import { visibleWidth, wrapText } from './internal-utils.js';
 import hljs from 'highlight.js';
 
-type MarkdownCache = {
+export type MarkdownCache = {
 	width: number;
 	height: number;
 	lines: string[];
@@ -16,7 +16,7 @@ type MarkdownCache = {
 };
 
 /** Token color mapping for syntax highlighting */
-const defaultTokenColors: Record<string, string> = {
+export const defaultTokenColors: Record<string, string> = {
 	keyword: '\x1b[35m', // magenta
 	string: '\x1b[32m', // green
 	comment: '\x1b[2;33m', // dim yellow

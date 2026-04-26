@@ -13,13 +13,13 @@ export interface DividerTheme {
   dimColor: (s: string) => string;
 }
 
-const defaultTheme: DividerTheme = {
+export const defaultTheme: DividerTheme = {
   lineColor: (s) => `\x1b[90m${s}\x1b[0m`,
   labelColor: (s) => `\x1b[37m${s}\x1b[0m`,
   dimColor: (s) => `\x1b[90m${s}\x1b[0m`,
 };
 
-const chars: Record<DividerStyle, { horizontal: string; vertical: string }> = {
+export const chars: Record<DividerStyle, { horizontal: string; vertical: string }> = {
   single: { horizontal: '─', vertical: '│' },
   double: { horizontal: '═', vertical: '║' },
   thick: { horizontal: '━', vertical: '┃' },

@@ -18,7 +18,7 @@ export interface BreadcrumbsTheme {
   dimColor: (s: string) => string;
 }
 
-const defaultTheme: BreadcrumbsTheme = {
+export const defaultTheme: BreadcrumbsTheme = {
   separatorColor: (s) => `\x1b[90m${s}\x1b[0m`,
   itemColor: (s) => `\x1b[36m${s}\x1b[0m`,
   activeItemColor: (s) => `\x1b[1;37m${s}\x1b[0m`,

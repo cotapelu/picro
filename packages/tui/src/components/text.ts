@@ -7,7 +7,7 @@
 import type { UIElement, RenderContext } from './base.js';
 import { visibleWidth, wrapText, truncateText } from './internal-utils.js';
 
-type TextCache = {
+export type TextCache = {
 	width: number;
 	lines: string[];
 };

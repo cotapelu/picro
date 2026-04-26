@@ -1,5 +1,5 @@
-import { ProcessTerminal } from '../src/terminal.js';
-import type { Terminal } from '../src/terminal.js';
+import { ProcessTerminal } from '../src/components/terminal.js';
+import type { Terminal } from '../src/components/terminal.js';
 
 interface TestResult { name: string; passed: boolean; error?: string; }
 const results: TestResult[] = [];

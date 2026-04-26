@@ -30,7 +30,7 @@ export interface ModelSelectorTheme {
   accentColor: (s: string) => string;
 }
 
-const defaultTheme: ModelSelectorTheme = {
+export const defaultTheme: ModelSelectorTheme = {
   bgColor: (s) => `\x1b[48;5;234m${s}\x1b[0m`,
   fgColor: (s) => `\x1b[37m${s}\x1b[0m`,
   borderColor: (s) => `\x1b[90m${s}\x1b[0m`,

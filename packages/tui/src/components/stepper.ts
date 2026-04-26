@@ -22,7 +22,7 @@ export interface StepperTheme {
   dimColor: (s: string) => string;
 }
 
-const defaultTheme: StepperTheme = {
+export const defaultTheme: StepperTheme = {
   completedColor: (s) => `\x1b[32m${s}\x1b[0m`,
   currentColor: (s) => `\x1b[1;36m${s}\x1b[0m`,
   pendingColor: (s) => `\x1b[90m${s}\x1b[0m`,

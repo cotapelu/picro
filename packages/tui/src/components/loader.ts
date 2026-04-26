@@ -7,7 +7,7 @@ import { CURSOR_MARKER } from './base.js';
 import type { UIElement, KeyEvent, RenderContext, InteractiveElement } from './base.js';
 import { visibleWidth } from './internal-utils.js';
 
-const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+export const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 let spinnerFrame = 0;
 
 /**

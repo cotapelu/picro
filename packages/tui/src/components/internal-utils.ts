@@ -6,7 +6,7 @@
  */
 
 // Grapheme segmenter (shared instance)
-const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+export const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 
 /**
  * Get the shared grapheme segmenter instance

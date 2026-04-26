@@ -5,6 +5,7 @@ import { spawn } from 'node:child_process';
 
 interface Suite { name: string; file: string; }
 const suites: Suite[] = [
+  { name: 'PublicAPI', file: './test/public-api.test.ts' },
   { name: 'Utils', file: './test/utils.test.ts' },
   { name: 'KillRing', file: './test/kill-ring.test.ts' },
   { name: 'UndoStack', file: './test/undo-stack.test.ts' },

@@ -33,8 +33,8 @@ let cachedCapabilities: TerminalCapabilities | null = null;
 let cellDimensions: CellDimensions = { widthPx: 9, heightPx: 18 };
 
 // Protocol prefixes
-const KITTY_PREFIX = '\x1b_G';
-const ITERM2_PREFIX = '\x1b]1337;File=';
+export const KITTY_PREFIX = '\x1b_G';
+export const ITERM2_PREFIX = '\x1b]1337;File=';
 
 export function getCellDimensions(): CellDimensions {
   return { ...cellDimensions };

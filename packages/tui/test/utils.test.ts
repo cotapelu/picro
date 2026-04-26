@@ -1,4 +1,4 @@
-import { visibleWidth, wrapText, truncateText, stripAnsi, hasAnsi, getSegmenter, extractAnsiCode } from '../src/utils.js';
+import { visibleWidth, wrapText, truncateText, stripAnsi, hasAnsi, getSegmenter, extractAnsiCode } from '../src/components/utils.js';
 
 interface TestResult { name: string; passed: boolean; error?: string; }
 const results: TestResult[] = [];

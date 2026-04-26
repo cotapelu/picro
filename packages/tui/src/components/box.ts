@@ -7,7 +7,7 @@
 import type { UIElement, RenderContext } from './base.js';
 import { visibleWidth } from './internal-utils.js';
 
-type RenderCache = {
+export type RenderCache = {
 	childLines: string[];
 	width: number;
 	bgSample: string | undefined;

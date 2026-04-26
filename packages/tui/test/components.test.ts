@@ -1,6 +1,6 @@
 import { Text } from '../src/components/text.js';
 import { Box } from '../src/components/box.js';
-import type { UIElement, RenderContext } from '../src/tui.js';
+import type { UIElement, RenderContext } from '../src/components/base.js';
 
 interface TestResult { name: string; passed: boolean; error?: string; }
 const results: TestResult[] = [];

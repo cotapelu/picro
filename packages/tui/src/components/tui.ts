@@ -1,38 +1,11 @@
 /**
  * Terminal UI Library for Coding Agent
  * 
- * This module re-exports all base types from components/base.ts
- * for backward compatibility, and provides the TerminalUI class.
- * New code should import directly from './components/base.js'.
+ * This module provides the TerminalUI class.
+ * Base types should be imported from './components/base.js'.
  */
 
-// Re-export all base types from components
-export type {
-  UIElement,
-  RenderContext,
-  InteractiveElement,
-  KeyEvent,
-  KeyHandler,
-  KeyHandlerResult,
-  Dimension,
-  PanelAnchor,
-  PanelMargin,
-  PanelOptions,
-  PanelHandle,
-  UITheme,
-  BorderStyle,
-  TextAlignment,
-  VerticalAlignment,
-} from './components/base.js';
-
-export {
-  isInteractive,
-  CURSOR_MARKER,
-  resolveDimension,
-  ElementContainer,
-} from './components/base.js';
-
-// Import base types for internal use
+// Import base types for internal use only (no re-exports)
 import type {
   UIElement,
   RenderContext,
@@ -46,29 +19,16 @@ import type {
   PanelOptions,
   PanelHandle,
   UITheme,
-} from './components/base.js';
+} from './base.js';
 
 import {
   isInteractive,
   CURSOR_MARKER,
   resolveDimension,
   ElementContainer,
-} from './components/base.js';
+} from './base.js';
 
-// Re-export internal utilities for backward compatibility
-export {
-  visibleWidth,
-  truncateText,
-  wrapText,
-} from './components/internal-utils.js';
-
-// Import utilities for internal use
-import {
-  visibleWidth,
-  truncateText,
-  wrapText,
-} from './components/internal-utils.js';
-
+import { visibleWidth, truncateText, wrapText } from './internal-utils.js';
 import type { Terminal } from './terminal.js';
 import { parseKey, isKeyRelease } from './keys.js';
 
@@ -826,7 +786,3 @@ export class TerminalUI extends ElementContainer {
 export function isTermuxSession(): boolean {
 	return Boolean(process.env.TERMUX_VERSION);
 }
-
-/**
- * UI Theme interface for styling
- */

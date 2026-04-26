@@ -27,7 +27,7 @@ export interface ModalTheme {
   accentColor: (s: string) => string;
 }
 
-const defaultTheme: ModalTheme = {
+export const defaultTheme: ModalTheme = {
   bgColor: (s) => `\x1b[48;5;235m${s}\x1b[0m`,
   fgColor: (s) => `\x1b[37m${s}\x1b[0m`,
   borderColor: (s) => `\x1b[90m${s}\x1b[0m`,
@@ -40,7 +40,7 @@ const defaultTheme: ModalTheme = {
   accentColor: (s) => `\x1b[36m${s}\x1b[0m`,
 };
 
-const icons: Record<ModalType, string> = {
+export const icons: Record<ModalType, string> = {
   confirm: '❓',
   info: 'ℹ️',
   warning: '⚠️',

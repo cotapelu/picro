@@ -2,10 +2,10 @@
  * Theme presets for Terminal UI
  * Supports dark (default), light, and high-contrast themes
  */
-import type { UITheme } from './tui.js';
+import type { UITheme } from './base.js';
 
 // ANSI color codes
-const colors = {
+export const colors = {
   // Standard colors
   black: '\x1b[30m',
   red: '\x1b[31m',

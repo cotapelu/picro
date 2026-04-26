@@ -44,7 +44,7 @@ export interface DiffOptions {
 }
 
 // Default theme
-const defaultTheme: DiffTheme = {
+export const defaultTheme: DiffTheme = {
   headerColor: (s) => `\x1b[1;35m${s}\x1b[0m`,      // Bold magenta
   hunkColor: (s) => `\x1b[36m${s}\x1b[0m`,           // Cyan
   addedColor: (s) => `\x1b[32m${s}\x1b[0m`,          // Green
@@ -56,7 +56,7 @@ const defaultTheme: DiffTheme = {
 /**
  * Parse a diff line
  */
-function parseDiffLine(line: string): { type: DiffLineType; content: string; oldNum?: number; newNum?: number } | null {
+export function parseDiffLine(line: string): { type: DiffLineType; content: string; oldNum?: number; newNum?: number } | null {
   // Header lines
   if (line.startsWith('diff --git') || line.startsWith('index ') || 
       line.startsWith('--- ') || line.startsWith('+++ ') ||
@@ -97,7 +97,7 @@ function parseDiffLine(line: string): { type: DiffLineType; content: string; old
 /**
  * Simple word-level diff for intra-line highlighting
  */
-function wordDiff(oldLine: string, newLine: string): { old: string; new: string } {
+export function wordDiff(oldLine: string, newLine: string): { old: string; new: string } {
   const oldWords = oldLine.split(/(\s+)/).filter(Boolean);
   const newWords = newLine.split(/(\s+)/).filter(Boolean);
   
@@ -149,7 +149,7 @@ function wordDiff(oldLine: string, newLine: string): { old: string; new: string 
 /**
  * Replace tabs with spaces
  */
-function replaceTabs(text: string, tabSize = 4): string {
+export function replaceTabs(text: string, tabSize = 4): string {
   return text.replace(/\t/g, ' '.repeat(tabSize));
 }
 

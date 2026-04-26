@@ -1,8 +1,8 @@
 /**
  * Utility Functions for TUI
  * 
- * This module re-exports all utilities from components/internal-utils.ts
- * for backward compatibility and public API.
+ * Public API for utility functions.
+ * Re-exports from internal-utils.
  */
 
 export {
@@ -20,4 +20,4 @@ export {
   escapeRegex,
   splitGraphemes,
   graphemeLength,
-} from './components/internal-utils.js';
+} from './internal-utils.js';

@@ -4,7 +4,7 @@
  */
 import { CURSOR_MARKER, type UIElement, type RenderContext, type KeyEvent, type InteractiveElement } from './base.js';
 import { visibleWidth, truncateText } from './internal-utils.js';
-import { fuzzyFilter } from '../fuzzy.js';
+import { fuzzyFilter } from './fuzzy.js';
 import { Input } from './input.js';
 
 export interface Command {
@@ -31,7 +31,7 @@ export interface CommandPaletteTheme {
   shortcutColor: (s: string) => string;
 }
 
-const defaultTheme: CommandPaletteTheme = {
+export const defaultTheme: CommandPaletteTheme = {
   bgColor: (s) => `\x1b[48;5;234m${s}\x1b[0m`,
   fgColor: (s) => `\x1b[37m${s}\x1b[0m`,
   borderColor: (s) => `\x1b[90m${s}\x1b[0m`,

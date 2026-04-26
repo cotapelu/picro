@@ -1,7 +1,7 @@
 /**
  * Tests for KillRing module
  */
-import { KillRing, defaultKillRing } from '../src/kill-ring.js';
+import { KillRing, defaultKillRing } from '../src/components/kill-ring.js';
 
 interface TestResult { name: string; passed: boolean; error?: string; }
 const results: TestResult[] = [];

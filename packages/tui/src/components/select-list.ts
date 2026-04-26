@@ -6,7 +6,7 @@
 import { CURSOR_MARKER } from './base.js';
 import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from './base.js';
 import { visibleWidth, truncateText } from './internal-utils.js';
-import { getKeybindings } from '../keybindings.js';
+import { getKeybindings } from './keybindings.js';
 
 export interface SelectItem {
 	value: string;

@@ -16,7 +16,7 @@ export interface BadgeTheme {
   info: (s: string) => string;
 }
 
-const defaultTheme: BadgeTheme = {
+export const defaultTheme: BadgeTheme = {
   default: (s) => `\x1b[48;5;240m\x1b[37m${s}\x1b[0m`,
   primary: (s) => `\x1b[48;5;33m\x1b[97m${s}\x1b[0m`,
   success: (s) => `\x1b[48;5;28m\x1b[97m${s}\x1b[0m`,

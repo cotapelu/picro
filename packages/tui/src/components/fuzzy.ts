@@ -30,7 +30,7 @@ export interface FuzzyOptions {
 /**
  * Default options
  */
-const DEFAULT_OPTIONS: FuzzyOptions = {
+export const DEFAULT_OPTIONS: FuzzyOptions = {
 	threshold: 0.6,
 	caseSensitive: false,
 };

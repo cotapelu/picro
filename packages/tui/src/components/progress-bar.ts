@@ -15,7 +15,7 @@ export interface ProgressBarTheme {
   accentColor: (s: string) => string;
 }
 
-const defaultTheme: ProgressBarTheme = {
+export const defaultTheme: ProgressBarTheme = {
   bgColor: (s) => `\x1b[48;5;235m${s}\x1b[0m`,
   fgColor: (s) => `\x1b[37m${s}\x1b[0m`,
   filledColor: (s) => `\x1b[48;5;33m\x1b[97m${s}\x1b[0m`,

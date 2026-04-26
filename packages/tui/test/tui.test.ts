@@ -1,10 +1,11 @@
 /**
  * TUI Test Suite
  */
-import { TerminalUI, ElementContainer, CURSOR_MARKER, resolveDimension, isInteractive, isTermuxSession } from '../src/tui.js';
-import { ProcessTerminal } from '../src/terminal.js';
+import { TerminalUI, isTermuxSession } from '../src/components/tui.js';
+import { ProcessTerminal } from '../src/components/terminal.js';
 import { Text } from '../src/components/text.js';
-import type { UIElement, InteractiveElement, RenderContext } from '../src/tui.js';
+import { ElementContainer, CURSOR_MARKER, resolveDimension, isInteractive } from '../src/components/base.js';
+import type { UIElement, InteractiveElement, RenderContext } from '../src/components/base.js';
 
 interface TestResult { name: string; passed: boolean; error?: string; }
 const results: TestResult[] = [];

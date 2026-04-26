@@ -10,9 +10,9 @@
 
 import { EventEmitter } from 'node:events';
 
-const ESC = "\x1b";
-const BRACKETED_PASTE_START = "\x1b[200~";
-const BRACKETED_PASTE_END = "\x1b[201~";
+export const ESC = "\x1b";
+export const BRACKETED_PASTE_START = "\x1b[200~";
+export const BRACKETED_PASTE_END = "\x1b[201~";
 
 export interface StdinBufferEventMap {
 	data: [sequence: string];
@@ -26,7 +26,7 @@ export interface StdinBufferOptions {
 	pasteThreshold?: number;
 }
 
-const DEFAULT_OPTIONS: StdinBufferOptions = {
+export const DEFAULT_OPTIONS: StdinBufferOptions = {
 	timeout: 10,
 	pasteThreshold: 1024,
 };
@@ -34,7 +34,7 @@ const DEFAULT_OPTIONS: StdinBufferOptions = {
 /**
  * Check if a string is a complete escape sequence or needs more data
  */
-function isCompleteSequence(data: string): 'complete' | 'incomplete' | 'not-escape' {
+export function isCompleteSequence(data: string): 'complete' | 'incomplete' | 'not-escape' {
 	if (!data.startsWith(ESC)) {
 		return 'not-escape';
 	}
@@ -82,7 +82,7 @@ function isCompleteSequence(data: string): 'complete' | 'incomplete' | 'not-esca
 	return 'complete';
 }
 
-function isCompleteCsiSequence(data: string): 'complete' | 'incomplete' {
+export function isCompleteCsiSequence(data: string): 'complete' | 'incomplete' {
 	if (!data.startsWith(`${ESC}[`)) {
 		return 'complete';
 	}
@@ -116,7 +116,7 @@ function isCompleteCsiSequence(data: string): 'complete' | 'incomplete' {
 	return 'incomplete';
 }
 
-function isCompleteOscSequence(data: string): 'complete' | 'incomplete' {
+export function isCompleteOscSequence(data: string): 'complete' | 'incomplete' {
 	if (!data.startsWith(`${ESC}]`)) {
 		return 'complete';
 	}
@@ -128,7 +128,7 @@ function isCompleteOscSequence(data: string): 'complete' | 'incomplete' {
 	return 'incomplete';
 }
 
-function isCompleteDcsSequence(data: string): 'complete' | 'incomplete' {
+export function isCompleteDcsSequence(data: string): 'complete' | 'incomplete' {
 	if (!data.startsWith(`${ESC}P`)) {
 		return 'complete';
 	}
@@ -140,7 +140,7 @@ function isCompleteDcsSequence(data: string): 'complete' | 'incomplete' {
 	return 'incomplete';
 }
 
-function isCompleteApcSequence(data: string): 'complete' | 'incomplete' {
+export function isCompleteApcSequence(data: string): 'complete' | 'incomplete' {
 	if (!data.startsWith(`${ESC}_`)) {
 		return 'complete';
 	}
@@ -155,7 +155,7 @@ function isCompleteApcSequence(data: string): 'complete' | 'incomplete' {
 /**
  * Split accumulated buffer into complete sequences
  */
-function extractCompleteSequences(buffer: string): { sequences: string[]; remainder: string } {
+export function extractCompleteSequences(buffer: string): { sequences: string[]; remainder: string } {
 	const sequences: string[] = [];
 	let pos = 0;
 

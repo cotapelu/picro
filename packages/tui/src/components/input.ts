@@ -7,7 +7,7 @@
 
 import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from './base.js';
 import { visibleWidth, sliceByColumn } from './internal-utils.js';
-import { parseKey, Key, matchesKey, isKeyRelease } from '../keys.js';
+import { parseKey, Key, matchesKey, isKeyRelease } from './keys.js';
 
 /**
  * Input options

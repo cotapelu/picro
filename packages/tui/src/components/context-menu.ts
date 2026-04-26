@@ -42,7 +42,7 @@ export interface ContextMenuTheme {
   separatorColor: (s: string) => string;
 }
 
-const defaultTheme: ContextMenuTheme = {
+export const defaultTheme: ContextMenuTheme = {
   borderColor: (s) => `\x1b[90m${s}\x1b[0m`,
   bgColor: (s) => `\x1b[48;5;236m${s}\x1b[0m`,
   itemColor: (s) => `\x1b[37m${s}\x1b[0m`,

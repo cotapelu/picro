@@ -5,7 +5,7 @@
 
 import { CURSOR_MARKER, type UIElement, type InteractiveElement, type RenderContext, type KeyEvent } from './base.js';
 import { truncateText, visibleWidth } from './internal-utils.js';
-import { getKeybindings } from '../keybindings.js';
+import { getKeybindings } from './keybindings.js';
 
 export interface SettingItem {
 	id: string;

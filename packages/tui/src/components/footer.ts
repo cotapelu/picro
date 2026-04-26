@@ -21,7 +21,7 @@ export interface FooterTheme {
   separator: string;
 }
 
-const defaultTheme: FooterTheme = {
+export const defaultTheme: FooterTheme = {
   bgColor: (s) => `\x1b[48;5;235m${s}\x1b[0m`,
   fgColor: (s) => `\x1b[37m${s}\x1b[0m`,
   keyColor: (s) => `\x1b[33m${s}\x1b[0m`,

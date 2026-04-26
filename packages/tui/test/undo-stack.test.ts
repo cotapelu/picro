@@ -1,7 +1,7 @@
 /**
  * Tests for UndoStack module
  */
-import { UndoStack, UndoRedoManager } from '../src/undo-stack.js';
+import { UndoStack, UndoRedoManager } from '../src/components/undo-stack.js';
 
 interface TestResult { name: string; passed: boolean; error?: string; }
 const results: TestResult[] = [];

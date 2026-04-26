@@ -6,12 +6,12 @@
 import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from './base.js';
 import { CURSOR_MARKER } from './base.js';
 import { visibleWidth, wrapText, truncateText } from './internal-utils.js';
-import { KillRing, defaultKillRing } from '../kill-ring.js';
-import { UndoRedoManager } from '../undo-stack.js';
-import { getKeybindings } from '../keybindings.js';
-import { decodeKittyPrintable, matchesKey } from '../keys.js';
+import { KillRing, defaultKillRing } from './kill-ring.js';
+import { UndoRedoManager } from './undo-stack.js';
+import { getKeybindings } from './keybindings.js';
+import { decodeKittyPrintable, matchesKey } from './keys.js';
 
-interface EditorState {
+export interface EditorState {
   lines: string[];
   cursorLine: number;
   cursorCol: number;
