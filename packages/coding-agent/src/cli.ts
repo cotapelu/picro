@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Main entry point - Minimal TUI Chat Interface
 
 import { TerminalUI, ProcessTerminal, SelectList, SelectItem, Input, Text, UserMessage, AssistantMessage, ToolMessage, ElementContainer } from '@picro/tui';
