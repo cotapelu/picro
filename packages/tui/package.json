@@ -19,7 +19,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch -p tsconfig.build.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "bench": "tsx benchmarks/render-bench.ts"
   },
   "dependencies": {
     "highlight.js": "^11.11.1"
