@@ -20,3 +20,7 @@ export type { LsToolInput } from "./ls-tool.js";
 
 export { editTool, editToolDefinition } from "./edit-tool.js";
 export type { EditToolInput } from "./edit-tool.js";
+
+// Bash tool
+export { createBashTool, createBashToolDefinition } from "./bash-tool.js";
+export type { BashToolInput, BashToolOptions } from "./bash-tool.js";

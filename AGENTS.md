@@ -131,44 +131,7 @@ Your goal: **Full-stack, production-ready coding assistant** - TUI, memory, tool
 
 ## 🎯 CURRENT PRIORITIES (Tier 1 - Start Immediately)
 
-### 1. Memory UI Integration
-- Show retrieved memories in panel (query, count, snippets)
-- Indicate which response parts came from memory (highlight/icon)
-- Add "View All Memories" command
-- Allow memory edit/delete from UI
-
-**Files to touch:** `packages/coding-agent/src/tui-app.ts`, `packages/memory/`
-
-### 2. Syntax Highlighting
-- Integrate `highlight.js` or `prism.js` into Markdown renderer
-- Detect language from code fence
-- Theme-aware colors
-- Copy button for code blocks
-
-**Files to touch:** `packages/tui/src/components/Markdown.ts`
-
-### 3. Debug Mode Panel
-- Toggle with `F5` or `--debug` flag
-- Show: tool timing, memory retrieval time, LLM latency, token counts
-- Log to `~/.coding-agent/debug.log` (JSON lines)
-- Real-time metrics in overlay
-
-**Files to touch:** `packages/coding-agent/src/tui-app.ts`, `packages/agent/`
-
-### 4. Enhanced Session Search
-- Full-text search (messages + tool results)
-- BM25/TF-IDF ranking (not just filename)
-- Highlight matches in results
-- Filters: date, provider, tags
-
-**Files to touch:** `packages/coding-agent/src/core/manager.ts`, TUI panels
-
-### 5. Tool Progress & Cancellation
-- Tools report progress via callback
-- UI shows progress bar for long-running tools
-- Cancel long-running tools with `Ctrl+C` or button
-
-**Files to touch:** `packages/agent/src/executor.ts`, `packages/coding-agent/src/tools/`, TUI
+### 1. Check docs/TODO.md for more information
 
 ---
 
@@ -207,7 +170,7 @@ chore/deps-update
 
 ### Documentation Updates
 - **README.md** - User-facing: installation, features, keybindings
-- **TODO.md** - Roadmap, mark tasks, add new ones
+- **docs/TODO.md** - Roadmap, mark tasks, add new ones
 - **docs/architecture.md** - System design (create if missing)
 - **docs/tools/** - Tool reference (keep in sync with code)
 - Inline JSDoc on all public exports
@@ -231,16 +194,16 @@ You do **NOT** need to:
 - ❌ Ask permission
 - ❌ Wait for reviews (self-review is enough)
 - ❌ Keep dead code "just in case"
-- ❌ Maintain backward compatibility pre-v1.0 (but document breaks)
+- ❌ Maintain backward compatibility pre-v1.0
 
 ---
 
 ## 🚀 STARTING PROCEDURE
 
 1. **Read this entire file** (you are now).
-2. **Read** `SYSTEM.md` and `TODO.md`.
+2. **Read** `SYSTEM.md` and `docs/TODO.md`.
 3. **Check current state:** `git status`, `npm test`, `npm run build`.
-4. **Pick a Tier 1 task** from above (or highest UNSTARTED in TODO.md).
+4. **Pick a Tier 1 task** from above (or highest UNSTARTED in docs/TODO.md).
 5. **Create branch:** `git checkout -b feature/<task-name>-<timestamp>`.
 6. **Execute the Workflow Loop** until task complete.
 7. **Merge, document, repeat.**
@@ -257,7 +220,7 @@ If you encounter:
 | Tests fail                           | Fix OR add tests that justify change      |
 | Stuck >2 hours on problem           | Open issue, document attempts, move to next task |
 | Contradiction between docs          | Follow this AGENTS.md (it's supreme)      |
-| Unclear requirement                 | Check `TODO.md` first, then code comments, git history |
+| Unclear requirement                 | Check `docs/TODO.md` first, then code comments, git history |
 | Breaking change in `llm/`            | Reconsider. Find alternative.             |
 
 ---
@@ -265,7 +228,7 @@ If you encounter:
 ## 📝 IMPORTANT NOTES
 
 - **Pre-v1.0** - Breaking changes are expected, but **communicate** them clearly.
-- **Memory was recently optimized** (PROTOCOL.md) - your job is to **integrate it into UI and tools**.
+- **Memory was recently optimized** - your job is to **integrate it into UI and tools**.
 - **No tests yet** - you are building the testing culture as you go.
 - **TUI works but is basic** - focus on UX polish, not rewrites.
 - **LLM package is stable** - many dependencies, treat as interface contract.

@@ -120,3 +120,34 @@ export type {
   StreamOptions,
   StreamFunction,
 } from './types.js';
+
+// ============================================================================
+// Agent Session (NEW - Phase A)
+// ============================================================================
+export { AgentSession, parseSkillBlock } from './agent-session.js';
+export type { AgentSessionConfig, AgentSessionEventListener, AgentSessionEvent } from './agent-session-types.js';
+export type { QueueUpdateEvent, CompactionStartEvent, CompactionEndEvent, AutoRetryStartEvent, AutoRetryEndEvent, CompactionResult, PromptOptions, ModelCycleResult, SessionStats, ParsedSkillBlock } from './agent-session-types.js';
+
+// ============================================================================
+// Agent Session Runtime (NEW - Phase A)
+// ============================================================================
+export { AgentSessionRuntime, createAgentSessionRuntime } from './agent-session-runtime.js';
+export type { AgentSessionRuntimeDiagnostic, CreateAgentSessionRuntimeFactory, CreateAgentSessionRuntimeResult, SessionStartEvent } from './agent-session-runtime.js';
+
+// ============================================================================
+// Agent Session Services (NEW - Phase A)
+// ============================================================================
+export { createAgentSessionServices, createAgentSessionFromServices } from './agent-session-services.js';
+export type { CreateAgentSessionServicesOptions, CreateAgentSessionFromServicesOptions, AgentSessionServices } from './agent-session-services.js';
+
+// ============================================================================
+// Resource Loader (NEW - Phase B)
+// ============================================================================
+export { DefaultResourceLoader, loadProjectContextFiles } from './resource-loader.js';
+export type { ResourceLoader, LoadExtensionsResult, ExtensionRuntime, ResourceDiagnostic, SourceInfo, PromptTemplate, Theme } from './resource-loader.js';
+
+// ============================================================================
+// Model Registry (NEW - Phase C)
+// ============================================================================
+export { DefaultModelRegistry, createModelRegistry } from './model-registry.js';
+export type { ModelRegistry } from './model-registry.js';

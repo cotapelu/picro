@@ -72,3 +72,61 @@ export interface ToolMessage extends BaseMessage {
 }
 
 export type AgentMessage = SystemMessage | UserMessage | AssistantMessage | ToolMessage;
+
+// ============================================================================
+// Agent Types
+// ============================================================================
+
+export type ThinkingLevel = 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+
+export interface AgentState {
+  systemPrompt: string;
+  model?: any;
+  thinkingLevel: ThinkingLevel;
+  messages: AgentMessage[];
+  tools: AgentTool[];
+  isStreaming: boolean;
+  isRunning: boolean;
+}
+
+export interface AgentTool {
+  name: string;
+  description: string;
+  parameters?: {
+    type: 'object';
+    properties: Record<string, any>;
+    required?: string[];
+  };
+  handler: ToolHandler;
+}
+
+export type ToolHandler = (
+  args: Record<string, unknown>,
+  context: ToolContext,
+  onProgress?: (update: ToolProgressUpdate) => void | Promise<void>
+) => string | Promise<string> | void | Promise<void>;
+
+export interface ToolContext {
+  round: number;
+  runtimeState: AgentRuntimeState;
+  signal?: AbortSignal;
+  metadata?: Record<string, unknown>;
+}
+
+export interface ToolProgressUpdate {
+  partialResult?: string;
+  details?: Record<string, unknown>;
+}
+
+export interface AgentRuntimeState {
+  messages: AgentMessage[];
+  tools: AgentTool[];
+  isRunning: boolean;
+  isStreaming: boolean;
+  history: AgentMessage[];
+}
+
+// Re-export from types
+export type { QueueMode } from './types.js';
+export type { AgentEvent } from './types.js';
+export type { Agent } from './agent.js';
