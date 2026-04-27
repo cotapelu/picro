@@ -1,6 +1,6 @@
 // Main entry point - Minimal TUI Chat Interface
 
-import { TerminalUI, ProcessTerminal, SelectList, SelectItem, Input, Text, UserMessage, AssistantMessage, ToolMessage, BorderedLoader, ElementContainer } from '@picro/tui';
+import { TerminalUI, ProcessTerminal, SelectList, SelectItem, Input, Text, UserMessage, AssistantMessage, ToolMessage, ElementContainer } from '@picro/tui';
 import { Agent, getModel, getProviders, getModels, type AgentRunResult } from '@picro/agent';
 import chalk from 'chalk';
 

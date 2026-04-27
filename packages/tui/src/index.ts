@@ -14,10 +14,7 @@ export { SelectList, type SelectItem } from './components/select-list.js';
 // Display Components
 export { Text } from './components/text.js';
 
-// Chat Message Components
+// Chat Components
 export { UserMessage, type UserMessageOptions } from './components/user-message.js';
 export { AssistantMessage, type AssistantMessageOptions } from './components/assistant-message.js';
 export { ToolMessage, type ToolMessageOptions } from './components/tool-message.js';
-
-// Loading Indicator
-export { BorderedLoader } from './components/loader.js';
