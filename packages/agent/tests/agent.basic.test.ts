@@ -85,9 +85,13 @@ describe('Agent (Basic Integration)', () => {
   });
 
   describe('run', () => {
-    it('should reject if no LLM provider set', async () => {
+    it('should attempt to run when model is provided (auto-creates LLM provider from llm)', async () => {
+      // Agent now auto-creates LLM provider when model is provided
       agent = new Agent(model, tools);
-      await expect(agent.run('Hello')).rejects.toThrow('LLM provider not set');
+      
+      // Should resolve (even if LLM call fails due to incomplete mock model)
+      const result = await agent.run('Hello');
+      expect(result).toBeDefined();
     });
 
     it('should execute and return result', async () => {

@@ -22,6 +22,9 @@ import { AgentRunner } from './agent-runner.js';
 import { LoopStrategyFactory } from './loop-strategy.js';
 import { MessageQueue } from './message-queue.js';
 
+// Import from llm
+import { complete, stream, type Model, type Context, type Message, type Tool, type StreamOptions } from "@picro/llm";
+
 /**
  * Agent orchestrates AI interactions with tools.
  */
@@ -107,6 +110,115 @@ export class Agent {
     );
 
     this.toolExecutor.registerAll(tools);
+
+    // Auto-set LLM provider using llm if model provided
+    if (model) {
+      this.llmProvider = this._createLlmProvider(model);
+      this.streamProvider = this._createStreamProvider(model);
+    }
+  }
+
+  /**
+   * Convert agent's ToolDefinition to llm's Tool format
+   */
+  private _convertToolsToLlm(tools: ToolDefinition[]): Tool[] {
+    return tools.map(tool => ({
+      name: tool.name,
+      description: tool.description || '',
+      parameters: tool.parameters || {},
+    }));
+  }
+
+  /**
+   * Create LLM provider using llm's complete function
+   */
+  private _createLlmProvider(model: AIModel) {
+    const llmModel: Model = {
+      id: model.id || model.name,
+      name: model.name || model.id,
+      api: 'openai-completions',
+      provider: (model as any).provider || 'openai',
+      baseUrl: (model as any).baseUrl || '',
+      reasoning: (model as any).reasoning || false,
+      input: (model as any).input || ['text'],
+      cost: (model as any).cost || { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      contextWindow: (model as any).contextWindow || 128000,
+      maxTokens: (model as any).maxTokens || 8192,
+    };
+
+    return async (prompt: string, tools: ToolDefinition[], options?: any): Promise<LLMResponse> => {
+      const context: Context = {
+        messages: [
+          { role: 'user', content: prompt, timestamp: Date.now() }
+        ] as Message[],
+        tools: tools.length > 0 ? this._convertToolsToLlm(tools) : undefined,
+      };
+
+      const llmOptions: StreamOptions = {
+        ...options,
+        temperature: options?.temperature,
+        maxTokens: options?.maxTokens,
+        signal: options?.signal,
+      };
+
+      const result = await complete(llmModel, context, llmOptions);
+
+      // Convert llm result to LLMResponse format
+      const content = Array.isArray(result.content) 
+        ? result.content.map((c: any) => c.text || c.thinking || '').join('')
+        : result.content || '';
+
+      return {
+        content,
+        stopReason: result.stopReason || 'stop',
+        usage: result.usage,
+        toolCalls: [],
+      };
+    };
+  }
+
+  /**
+   * Create stream provider using llm's stream function
+   */
+  private _createStreamProvider(model: AIModel) {
+    const llmModel: Model = {
+      id: model.id || model.name,
+      name: model.name || model.id,
+      api: 'openai-completions',
+      provider: (model as any).provider || 'openai',
+      baseUrl: (model as any).baseUrl || '',
+      reasoning: (model as any).reasoning || false,
+      input: (model as any).input || ['text'],
+      cost: (model as any).cost || { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      contextWindow: (model as any).contextWindow || 128000,
+      maxTokens: (model as any).maxTokens || 8192,
+    };
+
+    return async function* (prompt: string, tools: ToolDefinition[], options?: any): AsyncIterable<any> {
+      const context: Context = {
+        messages: [
+          { role: 'user', content: prompt, timestamp: Date.now() }
+        ] as Message[],
+        tools: tools.length > 0 ? tools.map(t => ({
+          name: t.name,
+          description: t.description || '',
+          parameters: t.parameters || {},
+        })) : undefined,
+      };
+
+      const llmOptions: StreamOptions = {
+        ...options,
+        temperature: options?.temperature,
+        maxTokens: options?.maxTokens,
+        signal: options?.signal,
+      };
+
+      const eventStream = await stream(llmModel, context, llmOptions);
+
+      for await (const event of eventStream) {
+        yield event;
+      }
+    };
   }
 
   // ============================================================================
