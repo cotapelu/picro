@@ -6,7 +6,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "pi": "./dist/cli.js"
+    "picro": "./dist/cli.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
