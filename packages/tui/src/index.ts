@@ -1,45 +1,23 @@
-/**
- * Terminal UI Package - Minimal Public API for Coding Agent
- * 
- * Exports only what coding-agent actually uses.
- */
+// Base Container (for custom layouts)
+export { ElementContainer } from './components/base.js';
 
-// ============================================================================
-// BASE TYPES (for custom components)
-// ============================================================================
-export { CURSOR_MARKER } from './components/base.js';
-export type { UIElement, InteractiveElement, KeyEvent, RenderContext } from './components/base.js';
-
-// ============================================================================
-// CORE INFRASTRUCTURE
-// ============================================================================
+// Core Engine
 export { TerminalUI } from './components/tui.js';
 export { ProcessTerminal } from './components/terminal.js';
 
-// ============================================================================
-// SELECTION COMPONENTS
-// ============================================================================
-export { SelectList, type SelectItem } from './components/select-list.js';
-export { SettingsList, type SettingItem } from './components/settings-list.js';
-
-// ============================================================================
-// PANEL COMPONENTS
-// ============================================================================
-export { MemoryPanel, type MemoryEntry } from './components/memory-panel.js';
-
-// ============================================================================
-// INPUT COMPONENTS
-// ============================================================================
+// Input
 export { Input, type InputOptions } from './components/input.js';
 
-// ============================================================================
-// DIALOG COMPONENTS
-// ============================================================================
-export { Modal, type ModalOptions, type ModalButton, type ModalTheme, confirmDialog, alertDialog } from './components/modal.js';
+// Selection
+export { SelectList, type SelectItem } from './components/select-list.js';
 
-// ============================================================================
-// LOW-LEVEL COMPONENTS (for advanced usage)
-// ============================================================================
+// Display Components
 export { Text } from './components/text.js';
-export { Markdown } from './components/markdown.js';
+
+// Chat Message Components
+export { UserMessage, type UserMessageOptions } from './components/user-message.js';
+export { AssistantMessage, type AssistantMessageOptions } from './components/assistant-message.js';
+export { ToolMessage, type ToolMessageOptions } from './components/tool-message.js';
+
+// Loading Indicator
 export { BorderedLoader } from './components/loader.js';
