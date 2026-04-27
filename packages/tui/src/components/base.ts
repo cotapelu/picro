@@ -262,6 +262,13 @@ export class ElementContainer implements UIElement {
 }
 
 /**
+ * Interface for elements that can be expanded/collapsed.
+ */
+export interface Expandable {
+	setExpanded(expanded: boolean): void;
+}
+
+/**
  * Utility types for component styling
  */
 export type BorderStyle = 'single' | 'double' | 'solid' | 'dotted' | 'dashed' | 'none';
