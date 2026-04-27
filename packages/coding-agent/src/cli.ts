@@ -1,7 +1,6 @@
-// Main entry point exports (all TUI-based)
+// Main entry point - Minimal TUI Chat Interface
 
-import type { UIElement, RenderContext } from '@picro/tui';
-import { TerminalUI, ProcessTerminal, SelectList, SelectItem, Input, Markdown, Text } from '@picro/tui';
+import { TerminalUI, ProcessTerminal, SelectList, SelectItem, Input, Text, UserMessage, AssistantMessage, ToolMessage, BorderedLoader, ElementContainer } from '@picro/tui';
 import { Agent, getModel, getProviders, getModels, type AgentRunResult } from '@picro/agent';
 import chalk from 'chalk';
 
@@ -39,88 +38,76 @@ function buildModelItems(provider: string): SelectItem[] {
 /** Main TUI Application */
 export class PiCli {
   private tui: TerminalUI;
-  private terminal: ProcessTerminal;
   private agent: Agent | null = null;
   private provider: string = '';
   private modelId: string = '';
-  private outputLines: string[] = []; // accumulated output
-  private history: string[] = [];
+  private chatContainer: ElementContainer;
+  private input!: Input;
+  private footer!: Text;
 
   constructor() {
-    this.terminal = new ProcessTerminal();
-    this.tui = new TerminalUI(this.terminal, true);
+    const terminal = new ProcessTerminal();
+    this.tui = new TerminalUI(terminal, true);
+    this.chatContainer = new ElementContainer();
 
-    // Build UI structure
     this.setupUI();
 
-    // Handle key globally (e.g., Ctrl+C to exit)
     this.tui.addKeyHandler((key): KeyHandlerResult => {
-      if (key.raw === '\x03') { // Ctrl+C
+      if (key.raw === '\x03') {
         this.tui.stop();
         process.exit(0);
         return { consume: true };
       }
       if (key.name === 'escape') {
-        // Escape anywhere returns to prompt
-        this.focusPrompt();
+        this.focusInput();
         return { consume: true };
       }
       return {};
     });
   }
 
-  /** Setup UI elements */
   private setupUI(): void {
-    // Title bar
+    // Title
     const title = new Text('🤖 picro - AI Coding Assistant');
+    this.tui.children.push(title);
 
-    // Output area (markdown)
-    const output = new Markdown('');
+    // Chat container (scrollable region)
+    this.tui.children.push(this.chatContainer);
 
-    // Prompt input
-    const promptInput = new Input({
+    // Input
+    this.input = new Input({
       placeholder: 'Ask anything... (Ctrl+C to exit)',
       onChange: () => this.tui.requestRender(),
-      onSubmit: (val) => this.handleSubmit(val, output),
+      onSubmit: (val) => this.handleSubmit(val),
       onCancel: () => this.handleCancel(),
     });
+    this.tui.children.push(this.input);
 
-    // Build root layout - TerminalUI is an ElementContainer, so we push to children
-    this.tui.children.push(title);
-    this.tui.children.push(output);
-    this.tui.children.push(promptInput);
-
-    // Store references
-    (this as any)._outputEl = output;
-    (this as any)._promptEl = promptInput;
+    // Footer
+    this.footer = new Text('');
+    this.tui.children.push(this.footer);
   }
 
-  /** Start the application */
   async start(): Promise<void> {
-    // Start TUI event loop FIRST (render screen, enable raw mode)
     this.tui.start();
+    this.updateFooter('Selecting model...');
 
-    // Then show provider/model selection
     await this.selectProviderAndModel();
 
-    // Initialize agent
     this.agent = new Agent(toAIModel(this.modelId, this.provider), []);
+    this.updateFooter(`Ready: ${this.provider}/${this.modelId}`);
     console.log();
   }
 
-  /** Select provider and model using SelectList */
   private async selectProviderAndModel(): Promise<void> {
-    // Step 1: Select provider
     const providers = getProviders();
     const providerItems = providers.map(p => ({ value: p, label: p }));
     this.provider = await this.showSelect('Select AI Provider:', providerItems);
 
-    // Step 2: Select model
     const models = buildModelItems(this.provider);
     this.modelId = await this.showSelect(`Select Model for ${this.provider}:`, models);
   }
 
-  /** Show a SelectList and return selected value */
   private async showSelect(message: string, items: SelectItem[]): Promise<string> {
     const { cols, rows } = this.tui.getSize();
 
@@ -138,7 +125,6 @@ export class PiCli {
         process.exit(0);
       });
 
-      // Show as modal panel
       const panel = this.tui.showPanel(select, {
         anchor: 'center',
         width: Math.min(60, cols - 4),
@@ -147,77 +133,48 @@ export class PiCli {
     });
   }
 
-  /** Handle prompt submission */
-  private async handleSubmit(prompt: string, output: Markdown): Promise<void> {
+  private async handleSubmit(prompt: string): Promise<void> {
     if (!prompt.trim()) return;
 
-    // Add to history
-    this.history.push(prompt);
+    // User message
+    const userMsg = new UserMessage({ text: prompt });
+    this.chatContainer.append(userMsg);
 
-    // Append user prompt to output
-    this.appendOutput(`**User:** ${prompt}\n\n`);
+    // Tool status (loading)
+    const toolMsg = new ToolMessage({ toolName: 'agent', output: '⏳ Thinking...' });
+    this.chatContainer.append(toolMsg);
 
-    // Show loading
-    const loadingId = this.appendOutput('⏳ Thinking...');
+    this.tui.requestRender();
 
     try {
       const result: AgentRunResult = await this.agent!.run(prompt);
       const response = result.finalAnswer || '(no response)';
 
-      // Replace loading with response
-      this.replaceOutput(loadingId, `**Assistant:** ${response}\n`);
-      this.appendOutput('');
+      toolMsg.setResult('✅ Done', 0);
+
+      const assistantMsg = new AssistantMessage({ content: response });
+      this.chatContainer.append(assistantMsg);
     } catch (error) {
       const err = error as Error;
-      this.replaceOutput(loadingId, `❌ **Error:** ${err.message}`);
+      toolMsg.setError(`❌ Error: ${err.message}`);
+      const errorMsg = new AssistantMessage({ content: `**Error:** ${err.message}` });
+      this.chatContainer.append(errorMsg);
     }
 
-    // Clear input
-    (this as any)._promptEl.setValue?.('');
+    this.input.setValue?.('');
     this.tui.requestRender();
   }
 
-  /** Handle cancel/escape */
   private handleCancel(): void {
-    // Could show confirm dialog
     process.exit(0);
   }
 
-  /** Focus back to prompt */
-  private focusPrompt(): void {
-    const prompt = (this as any)._promptEl;
-    if (prompt) {
-      this.tui.setFocus(prompt);
-    }
+  private focusInput(): void {
+    this.tui.setFocus(this.input);
   }
 
-  /** Append line to output */
-  private appendOutput(text: string): number {
-    const id = this.outputLines.length;
-    this.outputLines.push(text);
-    this.refreshOutput();
-    return id;
-  }
-
-  /** Replace output line at index */
-  private replaceOutput(index: number, text: string): void {
-    if (index >= 0 && index < this.outputLines.length) {
-      this.outputLines[index] = text;
-      this.refreshOutput();
-    }
-  }
-
-  /** Refresh the Markdown output element */
-  private refreshOutput(): void {
-    const output = (this as any)._outputEl as Markdown;
-    if (output) {
-      output.setContent(this.outputLines.join('\n'));
-      this.tui.requestRender();
-    }
-  }
-
-  /** Update prompt marker position */
-  private updatePromptMarker(): void {
+  private updateFooter(text: string): void {
+    this.footer.setContent(text);
     this.tui.requestRender();
   }
 }
