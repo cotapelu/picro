@@ -6,7 +6,7 @@
 import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from './base.js';
 import { SelectList, type SelectItem } from './select-list.js';
 
-type ThinkingLevel = 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+export type ThinkingLevel = 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
 
 const LEVEL_DESCRIPTIONS: Record<ThinkingLevel, string> = {
 	off: 'No reasoning',
