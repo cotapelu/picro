@@ -15,6 +15,7 @@ import { SelectList, type SelectItem } from './components/select-list.js';
 import { UserMessage, type UserMessageOptions } from './components/user-message.js';
 import { AssistantMessage, type AssistantMessageOptions } from './components/assistant-message.js';
 import { ToolMessage, type ToolMessageOptions } from './components/tool-message.js';
+import { Toast, type ToastOptions } from './components/toast.js';
 import { CountdownTimer } from './components/countdown-timer.js';
 import type { ExtensionUIContext, ExtensionWidgetOptions, ExtensionUIDialogOptions } from './extensions/extension-ui-context.js';
 
@@ -177,6 +178,23 @@ class ChatInterface implements UIElement, InteractiveElement {
 
 	handleKey(key: KeyEvent): void {
 		// Not used; focus is on child input
+	}
+
+	/** Get current editor text */
+	getEditorText(): string {
+		return this.input.getValue();
+	}
+
+	/** Set editor text */
+	setEditorText(text: string): void {
+		this.input.setValue(text);
+	}
+
+	/** Paste text into editor (at cursor) */
+	pasteToEditor(text: string): void {
+		// Input doesn't support paste at cursor directly; append at end
+		const current = this.input.getValue();
+		this.input.setValue(current + text);
 	}
 
 	clearCache(): void {
@@ -367,8 +385,12 @@ export class InteractiveMode {
 				});
 			},
 			notify: (message, type) => {
-				// For now, simply log; could use Toast
-				console.log(`Notify [${type}]: ${message}`);
+				// Show a toast notification
+				const duration = 4000;
+				const toast = new Toast({ message, type: type as any, duration });
+				const handle = mode.tui.showPanel(toast, { anchor: 'top-right' });
+				// Auto-close after duration
+				setTimeout(() => handle.close(), duration);
 			},
 			onTerminalInput: (handler) => {
 				// Could add a keyhandler to TUI
@@ -412,27 +434,39 @@ export class InteractiveMode {
 				await mode.showDialog(component);
 			},
 			pasteToEditor: (text) => {
-				// Not implemented
-				console.log('pasteToEditor stub');
+				mode.chatInterface.pasteToEditor?.(text);
 			},
 			setEditorText: (text) => {
-				// Could expose a method on ChatInterface to set Input value
-				// Not implemented
+				mode.chatInterface.setEditorText?.(text);
 			},
 			getEditorText: () => {
-				// Could get value from Input; not implemented
-				return '';
+				return mode.chatInterface.getEditorText?.() ?? '';
 			},
 			editor: async (title, prefill) => {
-				// Show a multi-line editor modal (use Editor component)
-				// Not implemented
-				return undefined;
+				// Simple editor using Input (single-line)
+				const container = new ElementContainer();
+				const input = new Input({
+					placeholder: title || 'Edit',
+					value: prefill,
+					onSubmit: (val) => {
+						resolveInput(val);
+						handle.close();
+					},
+					onCancel: () => {
+						resolveInput(undefined);
+						handle.close();
+					},
+				});
+				container.append(input);
+				let resolveInput: (value: string | undefined) => void = () => {};
+				const handle = mode.tui.showPanel(container, { anchor: 'center' });
+				return new Promise<string | undefined>((r) => { resolveInput = r; });
 			},
 			addAutocompleteProvider: (factory) => {
-				// Could register with Input's autocomplete; not implemented
+				console.warn('addAutocompleteProvider not implemented yet');
 			},
 			setEditorComponent: (factory) => {
-				// Replace the Input component entirely; would need to rebuild layout
+				console.warn('setEditorComponent not implemented yet');
 			},
 			get theme() {
 				// Minimal stub: return a plain object
