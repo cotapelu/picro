@@ -2,15 +2,10 @@
 /**
  * Model Resolver - Resolve model patterns to actual Model objects
  * 
- * Học từ legacy mà KHÔNG copy code:
- * - Model pattern parsing with thinking level support
- * - Wildcard/glob matching
- * - Fallback to available models
+ * Simple implementation using ModelEntry from model-registry
  */
 
-import type { Model, Api } from "@mariozechner/pi-ai";
-
-import { type ModelRegistry } from "./model-registry.js";
+import { type ModelRegistry, type ModelEntry } from "./model-registry.js";
 
 // ============================================================================
 // Constants
@@ -18,30 +13,16 @@ import { type ModelRegistry } from "./model-registry.js";
 
 /** Default model IDs for each known provider */
 export const defaultModelPerProvider: Record<string, string> = {
-  "amazon-bedrock": "us.anthropic.claude-opus-4-6-v1",
   anthropic: "claude-opus-4-7",
   openai: "gpt-5.4",
-  "azure-openai-responses": "gpt-5.4",
-  "openai-codex": "gpt-5.5",
   google: "gemini-3.1-pro-preview",
-  "google-gemini-cli": "gemini-3.1-pro-preview",
-  "google-antigravity": "gemini-3.1-pro-high",
-  "google-vertex": "gemini-3.1-pro-preview",
-  "github-copilot": "gpt-5.4",
   openrouter: "moonshotai/kimi-k2.6",
-  "vercel-ai-gateway": "zai/glm-5.1",
   xai: "grok-4.20-0309-reasoning",
   groq: "openai/gpt-oss-120b",
   cerebras: "zai-glm-4.7",
   zai: "glm-5.1",
   mistral: "devstral-medium-latest",
   minimax: "MiniMax-M2.7",
-  "minimax-cn": "MiniMax-M2.7",
-  huggingface: "moonshotai/Kimi-K2.6",
-  fireworks: "accounts/fireworks/models/kimi-k2p6",
-  opencode: "kimi-k2.6",
-  "opencode-go": "kimi-k2.6",
-  "kimi-coding": "kimi-for-coding",
 };
 
 // ============================================================================
@@ -49,26 +30,25 @@ export const defaultModelPerProvider: Record<string, string> = {
 // ============================================================================
 
 export interface ScopedModel {
-  model: Model<Api>;
-  /** Thinking level if explicitly specified in pattern */
+  model: ModelEntry;
   thinkingLevel?: string;
 }
 
 export interface ParsedModelResult {
-  model: Model<Api> | undefined;
+  model: ModelEntry | undefined;
   thinkingLevel?: string;
   warning: string | undefined;
 }
 
 export interface ResolveCliModelResult {
-  model: Model<Api> | undefined;
+  model: ModelEntry | undefined;
   thinkingLevel?: string;
   warning: string | undefined;
   error: string | undefined;
 }
 
 export interface InitialModelResult {
-  model: Model<Api> | undefined;
+  model: ModelEntry | undefined;
   thinkingLevel: string;
   fallbackMessage: string | undefined;
 }
@@ -77,72 +57,49 @@ export interface InitialModelResult {
 // Helper Functions
 // ============================================================================
 
-/**
- * Check if a model ID looks like an alias (no date suffix)
- */
 function isAlias(id: string): boolean {
   if (id.endsWith("-latest")) return true;
   const datePattern = /-\d{8}$/;
   return !datePattern.test(id);
 }
 
-/**
- * Find exact model reference match
- */
 function findExactModelReferenceMatch(
   modelReference: string,
-  availableModels: Model<Api>[]
-): Model<Api> | undefined {
+  availableModels: ModelEntry[]
+): ModelEntry | undefined {
   const trimmedReference = modelReference.trim().toLowerCase();
   if (!trimmedReference) return undefined;
 
-  // Try canonical format: provider/modelId
   const canonicalMatches = availableModels.filter(
     (m) => `${m.provider}/${m.id}`.toLowerCase() === trimmedReference
   );
   if (canonicalMatches.length === 1) return canonicalMatches[0];
 
-  // Try provider/modelId format
   const slashIndex = trimmedReference.indexOf("/");
   if (slashIndex !== -1) {
     const provider = trimmedReference.substring(0, slashIndex);
     const modelId = trimmedReference.substring(slashIndex + 1);
     const matches = availableModels.filter(
-      (m) =>
-        m.provider.toLowerCase() === provider &&
-        m.id.toLowerCase() === modelId
+      (m) => m.provider.toLowerCase() === provider && m.id.toLowerCase() === modelId
     );
     if (matches.length === 1) return matches[0];
   }
 
-  // Try bare model ID
-  const idMatches = availableModels.filter(
-    (m) => m.id.toLowerCase() === trimmedReference
-  );
+  const idMatches = availableModels.filter((m) => m.id.toLowerCase() === trimmedReference);
   return idMatches.length === 1 ? idMatches[0] : undefined;
 }
 
-/**
- * Try to match a pattern to a model from available models
- */
-function tryMatchModel(
-  pattern: string,
-  availableModels: Model<Api>[]
-): Model<Api> | undefined {
+function tryMatchModel(pattern: string, availableModels: ModelEntry[]): ModelEntry | undefined {
   const exactMatch = findExactModelReferenceMatch(pattern, availableModels);
   if (exactMatch) return exactMatch;
 
-  // Partial matching
   const lower = pattern.toLowerCase();
   const matches = availableModels.filter(
-    (m) =>
-      m.id.toLowerCase().includes(lower) ||
-      m.name?.toLowerCase().includes(lower)
+    (m) => m.id.toLowerCase().includes(lower) || m.name?.toLowerCase().includes(lower)
   );
 
   if (matches.length === 0) return undefined;
 
-  // Prefer alias over dated versions
   const aliases = matches.filter((m) => isAlias(m.id));
   const datedVersions = matches.filter((m) => !isAlias(m.id));
 
@@ -155,21 +112,15 @@ function tryMatchModel(
   }
 }
 
-/**
- * Valid thinking levels
- */
-const thinkingLevels = ["off", "low", "medium", "high", "auto"] as const;
+const thinkingLevels = ["off", "low", "medium", "high", "auto"];
 
 function isValidThinkingLevel(level: string): boolean {
-  return thinkingLevels.includes(level as typeof thinkingLevels[number]);
+  return thinkingLevels.includes(level);
 }
 
-/**
- * Parse model pattern to extract model and thinking level
- */
 export function parseModelPattern(
   pattern: string,
-  availableModels: Model<Api>[],
+  availableModels: ModelEntry[],
   options?: { allowInvalidThinkingLevelFallback?: boolean }
 ): ParsedModelResult {
   const exactMatch = tryMatchModel(pattern, availableModels);
@@ -219,11 +170,6 @@ export function parseModelPattern(
 
 /**
  * Resolve model patterns to actual Model objects
- * Supports:
- * - "modelId" - exact or partial match
- * - "provider/modelId" - canonical format
- * - "modelId:thinking" - with thinking level
- * - "provider/*:thinking" - wildcard with thinking level
  */
 export async function resolveModelScope(
   patterns: string[],
@@ -233,7 +179,6 @@ export async function resolveModelScope(
   const scopedModels: ScopedModel[] = [];
 
   for (const pattern of patterns) {
-    // Extract optional thinking level
     let searchPattern = pattern;
     let thinkingLevel: string | undefined;
 
@@ -246,14 +191,11 @@ export async function resolveModelScope(
       }
     }
 
-    // Check for wildcard
     if (searchPattern.includes("*") || searchPattern.includes("?")) {
       const lower = searchPattern.toLowerCase();
       const matches = availableModels.filter((m) => {
         const fullId = `${m.provider}/${m.id}`.toLowerCase();
-        return (
-          matchGlob(fullId, lower) || matchGlob(m.id.toLowerCase(), lower)
-        );
+        return matchGlob(fullId, lower) || matchGlob(m.id.toLowerCase(), lower);
       });
 
       if (matches.length === 0) {
@@ -269,10 +211,7 @@ export async function resolveModelScope(
       continue;
     }
 
-    const { model, thinkingLevel: parsedLevel, warning } = parseModelPattern(
-      searchPattern,
-      availableModels
-    );
+    const { model, thinkingLevel: parsedLevel, warning } = parseModelPattern(searchPattern, availableModels);
 
     if (warning) console.warn(`Warning: ${warning}`);
     if (!model) {
@@ -290,10 +229,7 @@ export async function resolveModelScope(
 }
 
 function matchGlob(str: string, pattern: string): boolean {
-  const regex = new RegExp(
-    "^" + pattern.replace(/\*/g, ".*").replace(/\?/g, ".") + "$",
-    "i"
-  );
+  const regex = new RegExp("^" + pattern.replace(/\*/g, ".*").replace(/\?/g, ".") + "$", "i");
   return regex.test(str);
 }
 
@@ -320,7 +256,6 @@ export function resolveCliModel(options: {
     };
   }
 
-  // Build provider lookup
   const providerMap = new Map<string, string>();
   for (const m of availableModels) {
     providerMap.set(m.provider.toLowerCase(), m.provider);
@@ -354,9 +289,7 @@ export function resolveCliModel(options: {
   if (!provider) {
     const lower = cliModel.toLowerCase();
     const exact = availableModels.find(
-      (m) =>
-        m.id.toLowerCase() === lower ||
-        `${m.provider}/${m.id}`.toLowerCase() === lower
+      (m) => m.id.toLowerCase() === lower || `${m.provider}/${m.id}`.toLowerCase() === lower
     );
     if (exact) {
       return { model: exact, warning: undefined, thinkingLevel: undefined, error: undefined };
@@ -377,18 +310,6 @@ export function resolveCliModel(options: {
 
   if (model) {
     return { model, thinkingLevel, warning, error: undefined };
-  }
-
-  if (inferredProvider) {
-    const lower = cliModel.toLowerCase();
-    const exact = availableModels.find(
-      (m) =>
-        m.id.toLowerCase() === lower ||
-        `${m.provider}/${m.id}`.toLowerCase() === lower
-    );
-    if (exact) {
-      return { model: exact, warning: undefined, thinkingLevel: undefined, error: undefined };
-    }
   }
 
   const display = provider ? `${provider}/${pattern}` : cliModel;
@@ -413,20 +334,10 @@ export async function findInitialModel(options: {
   defaultThinkingLevel?: string;
   modelRegistry: ModelRegistry;
 }): Promise<InitialModelResult> {
-  const {
-    cliProvider,
-    cliModel,
-    scopedModels,
-    isContinuing,
-    defaultProvider,
-    defaultModelId,
-    defaultThinkingLevel,
-    modelRegistry,
-  } = options;
+  const { cliProvider, cliModel, scopedModels, isContinuing, defaultProvider, defaultModelId, defaultThinkingLevel, modelRegistry } = options;
 
   const DEFAULT_THINKING = "auto";
 
-  // 1. CLI args
   if (cliProvider && cliModel) {
     const resolved = resolveCliModel({ cliProvider, cliModel, modelRegistry });
     if (resolved.error) {
@@ -438,7 +349,6 @@ export async function findInitialModel(options: {
     }
   }
 
-  // 2. Use first model from scoped models
   if (scopedModels.length > 0 && !isContinuing) {
     return {
       model: scopedModels[0].model,
@@ -447,26 +357,17 @@ export async function findInitialModel(options: {
     };
   }
 
-  // 3. Try saved default
   if (defaultProvider && defaultModelId) {
     const found = modelRegistry.find(defaultProvider, defaultModelId);
     if (found) {
-      return {
-        model: found,
-        thinkingLevel: defaultThinkingLevel ?? DEFAULT_THINKING,
-        fallbackMessage: undefined,
-      };
+      return { model: found, thinkingLevel: defaultThinkingLevel ?? DEFAULT_THINKING, fallbackMessage: undefined };
     }
   }
 
-  // 4. Try first available model
   const availableModels = await modelRegistry.getAvailable();
   if (availableModels.length > 0) {
-    // Try default from known providers first
     for (const [prov, defaultId] of Object.entries(defaultModelPerProvider)) {
-      const match = availableModels.find(
-        (m) => m.provider === prov && m.id === defaultId
-      );
+      const match = availableModels.find((m) => m.provider === prov && m.id === defaultId);
       if (match) {
         return { model: match, thinkingLevel: DEFAULT_THINKING, fallbackMessage: undefined };
       }
@@ -483,10 +384,10 @@ export async function findInitialModel(options: {
 export async function restoreModelFromSession(
   savedProvider: string,
   savedModelId: string,
-  currentModel: Model<Api> | undefined,
+  currentModel: ModelEntry | undefined,
   shouldPrintMessages: boolean,
   modelRegistry: ModelRegistry
-): Promise<{ model: Model<Api> | undefined; fallbackMessage: string | undefined }> {
+): Promise<{ model: ModelEntry | undefined; fallbackMessage: string | undefined }> {
   const restoredModel = modelRegistry.find(savedProvider, savedModelId);
   const hasConfiguredAuth = restoredModel ? modelRegistry.hasConfiguredAuth(restoredModel) : false;
 
@@ -515,7 +416,7 @@ export async function restoreModelFromSession(
 
   const availableModels = await modelRegistry.getAvailable();
   if (availableModels.length > 0) {
-    let fallbackModel: Model<Api> | undefined;
+    let fallbackModel: ModelEntry | undefined;
     for (const [prov, defaultId] of Object.entries(defaultModelPerProvider)) {
       const match = availableModels.find((m) => m.provider === prov && m.id === defaultId);
       if (match) {

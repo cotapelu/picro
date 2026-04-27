@@ -21,11 +21,15 @@ import type {
 } from "./types.js";
 import { Agent } from "./agent.js";
 import type { AgentTool } from "./agent-types.js";
-import type { Model } from "@mariozechner/pi-ai";
+import type { Model } from "@picro/llm";
+import type { ModelEntry } from "./model-registry.js";
+import type { ModelRegistry } from "./model-registry.js";
+
+// Backward compatible alias
+type ModelAny = ModelEntry;
 import type { SessionManager } from "./session-manager.js";
 import type { SettingsManager } from "./settings-manager.js";
 import type { ResourceLoader } from "./resource-loader.js";
-import type { ModelRegistry } from "./model-registry.js";
 
 // Re-export types
 export type { AgentSessionEventListener, AgentSessionConfig } from "./agent-session-types.js";
@@ -101,7 +105,7 @@ export class AgentSession {
   readonly modelRegistry: ModelRegistry;
 
   // State
-  private _scopedModels: Array<{ model: Model<any>; thinkingLevel?: ThinkingLevel }>;
+  private _scopedModels: Array<{ model: Model; thinkingLevel?: ThinkingLevel }>;
   private _cwd: string;
   private _initialActiveToolNames?: string[];
   private _allowedToolNames?: Set<string>;
@@ -138,7 +142,7 @@ export class AgentSession {
   private _baseSystemPrompt = "";
 
   // Current model (stored locally for session)
-  private _model?: Model<any>;
+  private _model?: Model;
   private _thinkingLevel: ThinkingLevel = DEFAULT_THINKING_LEVEL;
 
   // Pending next turn messages (custom messages for next turn)
@@ -163,7 +167,7 @@ export class AgentSession {
     sessionManager: SessionManager;
     settingsManager: SettingsManager;
     cwd: string;
-    scopedModels?: Array<{ model: Model<any>; thinkingLevel?: ThinkingLevel }>;
+    scopedModels?: Array<{ model: Model; thinkingLevel?: ThinkingLevel }>;
     resourceLoader: ResourceLoader;
     customTools?: ToolDefinition[];
     modelRegistry: ModelRegistry;
@@ -197,7 +201,7 @@ export class AgentSession {
   // =========================================================================
 
   /** Current model (may be undefined if not yet selected) */
-  get model(): Model<any> | undefined {
+  get model(): Model | undefined {
     return this._model;
   }
 
@@ -238,7 +242,7 @@ export class AgentSession {
 
   /** Scoped models for cycling (from --models flag) */
   get scopedModels(): ReadonlyArray<{
-    model: Model<any>;
+    model: Model;
     thinkingLevel?: ThinkingLevel;
   }> {
     return this._scopedModels;
@@ -335,7 +339,7 @@ export class AgentSession {
   /**
    * Set model directly.
    */
-  async setModel(model: Model<any>): Promise<void> {
+  async setModel(model: Model): Promise<void> {
     if (!this.modelRegistry.hasConfiguredAuth(model)) {
       throw new Error(`No API key for ${model.provider}/${model.id}`);
     }
@@ -360,7 +364,7 @@ export class AgentSession {
    */
   async cycleModel(
     direction: "forward" | "backward" = "forward"
-  ): Promise<{ model: Model<any>; thinkingLevel: ThinkingLevel; isScoped: boolean } | undefined> {
+  ): Promise<{ model: Model; thinkingLevel: ThinkingLevel; isScoped: boolean } | undefined> {
     if (this._scopedModels.length > 0) {
       return this._cycleScopedModel(direction);
     }
@@ -617,7 +621,7 @@ export class AgentSession {
    * Update scoped models for cycling.
    */
   setScopedModels(
-    scopedModels: Array<{ model: Model<any>; thinkingLevel?: ThinkingLevel }>
+    scopedModels: Array<{ model: Model; thinkingLevel?: ThinkingLevel }>
   ): void {
     this._scopedModels = scopedModels;
   }
@@ -696,7 +700,7 @@ export class AgentSession {
 
   private async _cycleScopedModel(
     direction: "forward" | "backward"
-  ): Promise<{ model: Model<any>; thinkingLevel: ThinkingLevel; isScoped: boolean } | undefined> {
+  ): Promise<{ model: Model; thinkingLevel: ThinkingLevel; isScoped: boolean } | undefined> {
     const scopedModels = this._scopedModels.filter((scoped) =>
       this.modelRegistry.hasConfiguredAuth(scoped.model)
     );
@@ -730,7 +734,7 @@ export class AgentSession {
 
   private async _cycleAvailableModel(
     direction: "forward" | "backward"
-  ): Promise<{ model: Model<any>; thinkingLevel: ThinkingLevel; isScoped: boolean } | undefined> {
+  ): Promise<{ model: Model; thinkingLevel: ThinkingLevel; isScoped: boolean } | undefined> {
     const availableModels = await this.modelRegistry.getAvailable();
     if (availableModels.length <= 1) return undefined;
 
@@ -759,7 +763,7 @@ export class AgentSession {
     };
   }
 
-  private _modelsEqual(a: Model<any>, b: Model<any> | undefined): boolean {
+  private _modelsEqual(a: Model, b: Model | undefined): boolean {
     if (!b) return false;
     return a.provider === b.provider && a.id === b.id;
   }

@@ -1,38 +1,50 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * @picro/llm - OpenAI-Compatible LLM Extension
- *
- * Provides access to 800+ models across 23 providers including NVIDIA NIM,
- * OpenRouter, Anthropic, Google, OpenAI, Groq, Cerebras, xAI, Mistral, HuggingFace, and more.
- *
- * @packageDocumentation
+ * 
+ * Export all types and functions needed by agent package
  */
 
-// Models and lookup functions (matches pi-ai pattern)
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+
+// Models and lookup functions
 export { MODELS, getModel, getProviders, getModels } from './models.js';
 
-// Type exports
-export type {
+// Re-export from types
+export type { 
   Model,
-  Context,
-  Message,
-  UserMessage,
-  AssistantMessage,
-  ToolResultMessage,
-  Tool,
-  TextContent,
-  ImageContent,
+  Context, 
+  Message, 
+  UserMessage, 
+  AssistantMessage, 
+  ToolResultMessage, 
+  Tool, 
+  TextContent, 
+  ImageContent, 
   ThinkingContent,
-  StopReason,
-  Usage,
+  MessageContent,
+  ToolCall,
+  StopReason, 
+  Usage, 
   StreamOptions,
+  AssistantMessageEvent
 } from './types.js';
 
-// Provider APIs
+// Provider APIs  
 export { stream, complete } from './providers/openai-compatible.js';
 
 // Stream optimization
 export { StreamBuffer, getProviderBufferConfig, createStreamBuffer, providerBufferConfigs } from './utils/stream-buffer.js';
 export type { BufferConfig } from './utils/stream-buffer.js';
+
+// Api type - simple alias for provider API object
+export type Api = "openai" | "anthropic" | "google" | "custom";
+
+// Simple model lookup - returns Model from MODELS
+export function getModelById(modelId: string): any {
+  return getModel("any", modelId);
+}
 
 // Default export
 import { MODELS, getModel, getProviders, getModels } from './models.js';
@@ -45,4 +57,5 @@ export default {
   getModels,
   stream,
   complete,
+  getModelById,
 };

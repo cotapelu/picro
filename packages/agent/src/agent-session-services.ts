@@ -20,7 +20,7 @@ export interface SessionStartEvent {
   reason: "startup" | "new" | "resume" | "fork";
   previousSessionFile?: string;
 }
-import type { Model } from "@mariozechner/pi-ai";
+import type { Model } from "@picro/llm";
 import type { ThinkingLevel } from "./agent-types.js";
 
 /**
@@ -51,9 +51,9 @@ export interface CreateAgentSessionFromServicesOptions {
   services: AgentSessionServices;
   sessionManager: SessionManager;
   sessionStartEvent?: SessionStartEvent;
-  model?: Model<any>;
+  model?: Model;
   thinkingLevel?: ThinkingLevel;
-  scopedModels?: Array<{ model: Model<any>; thinkingLevel?: ThinkingLevel }>;
+  scopedModels?: Array<{ model: Model; thinkingLevel?: ThinkingLevel }>;
   tools?: string[];
   noTools?: "all" | "builtin";
   customTools?: ToolDefinition[];

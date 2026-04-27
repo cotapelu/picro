@@ -4,7 +4,7 @@
  */
 
 import type { AgentRuntimeState } from "./types.js";
-import type { Model } from "@mariozechner/pi-ai";
+import type { ModelEntry } from "./model-registry.js";
 import type { ToolDefinition } from "./types.js";
 
 // ============================================================================
@@ -28,7 +28,7 @@ export interface AgentSessionConfig {
   cwd: string;
 
   /** Models to cycle through with Ctrl+P */
-  scopedModels?: Array<{ model: Model<any>; thinkingLevel?: any }>;
+  scopedModels?: Array<{ model: ModelEntry; thinkingLevel?: any }>;
 
   /** Resource loader */
   resourceLoader: any;
@@ -69,7 +69,7 @@ export interface PromptOptions {
  * Result from cycleModel()
  */
 export interface ModelCycleResult {
-  model: Model<any>;
+  model: ModelEntry;
   thinkingLevel: any;
   isScoped: boolean;
 }
