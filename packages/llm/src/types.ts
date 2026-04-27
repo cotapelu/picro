@@ -97,6 +97,7 @@ export interface Model {
   maxTokens: number;
   compat?: Record<string, any>;
   headers?: Record<string, string>;
+  releaseDate?: string;
 }
 
 export interface StreamOptions {

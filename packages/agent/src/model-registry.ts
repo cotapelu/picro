@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Model Registry - Manage models and API keys
+ * Model Registry - Wrapper around llm package
  * 
- * Uses ModelEntry that MATCHES llm/src/types.ts Model exactly
+ * Uses @picro/llm MODELS and lookup functions
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { getModel, getProviders, getModels } from "@picro/llm";
+import type { Model } from "@picro/llm";
+
+import { existsSync } from "node:fs";
 
 /** Model config from JSON */
 interface ModelConfig {
@@ -15,28 +18,24 @@ interface ModelConfig {
   apiKeyEnv?: string;
   apiBaseUrl?: string;
   extraHeaders?: Record<string, string>;
-  routing?: Record<string, unknown>;
   reasoning?: boolean;
   vision?: boolean;
   audio?: boolean;
   imageInput?: boolean;
 }
 
-/** Model entry - MUST match llm/src/types.ts Model exactly */
-export interface ModelEntry {
-  id: string;
-  name: string;
-  api: string;
-  provider: string;
-  baseUrl: string;
-  reasoning: boolean;
-  input: ('text' | 'image')[];
-  cost: { input: number; output: number; cacheRead: number; cacheWrite: number };
-  contextWindow: number;
-  maxTokens: number;
-  compat?: Record<string, any>;
-  headers?: Record<string, string>;
-  releaseDate?: string;
+// ModelEntry is just an alias for llm's Model
+export type ModelEntry = Model;
+
+// ModelRegistry interface
+export interface ModelRegistry {
+  find(provider: string, modelId: string): ModelEntry | undefined;
+  getAvailable(): Promise<ModelEntry[]>;
+  getAll(): ModelEntry[];
+  hasConfiguredAuth(model: ModelEntry): boolean;
+  isUsingOAuth(model: ModelEntry): boolean;
+  getApiKeyAndHeaders(model: ModelEntry): Promise<{ ok: boolean; apiKey?: string; headers?: Record<string, string>; error?: string }>;
+  registerProvider(name: string, config: unknown): void;
 }
 
 const PROVIDER_API_KEYS: Record<string, string> = {
@@ -52,44 +51,48 @@ const PROVIDER_API_KEYS: Record<string, string> = {
   cerebras: "CEREBRAS_API_KEY",
 };
 
-export interface ModelRegistry {
-  find(provider: string, modelId: string): ModelEntry | undefined;
-  getAvailable(): Promise<ModelEntry[]>;
-  getAll(): ModelEntry[];
-  hasConfiguredAuth(model: ModelEntry): boolean;
-  isUsingOAuth(model: ModelEntry): boolean;
-  getApiKeyAndHeaders(model: ModelEntry): Promise<{ ok: boolean; apiKey?: string; headers?: Record<string, string>; error?: string }>;
-  registerProvider(name: string, config: unknown): void;
-}
-
+/**
+ * Default model registry using llm MODELS
+ */
 export class DefaultModelRegistry implements ModelRegistry {
-  private models: ModelEntry[] = [];
-  private apiKeys: Map<string, string> = new Map();
-  private headers: Map<string, Record<string, string>> = new Map();
+  private customApiKeys: Map<string, string> = new Map();
+  private customHeaders: Map<string, Record<string, string>> = new Map();
   private modelsPath?: string;
 
   constructor(modelsPath?: string) {
     this.modelsPath = modelsPath;
-    if (modelsPath && existsSync(modelsPath)) {
-      this._loadModels(modelsPath);
-    }
   }
 
   find(provider: string, modelId: string): ModelEntry | undefined {
-    return this.models.find((m) => m.provider === provider && m.id === modelId);
+    return getModel(provider, modelId);
   }
 
   async getAvailable(): Promise<ModelEntry[]> {
-    return this.models.filter((m) => this.hasConfiguredAuth(m));
+    const available: ModelEntry[] = [];
+    
+    for (const provider of getProviders()) {
+      const models = getModels(provider);
+      for (const model of models) {
+        if (this.hasConfiguredAuth(model)) {
+          available.push(model);
+        }
+      }
+    }
+    
+    return available;
   }
 
   getAll(): ModelEntry[] {
-    return [...this.models];
+    const all: ModelEntry[] = [];
+    for (const provider of getProviders()) {
+      all.push(...getModels(provider));
+    }
+    return all;
   }
 
   hasConfiguredAuth(model: ModelEntry): boolean {
     const key = this._getKey(model.provider, "*");
-    if (this.apiKeys.has(key)) return true;
+    if (this.customApiKeys.has(key)) return true;
     const envVar = PROVIDER_API_KEYS[model.provider];
     return envVar ? !!process.env[envVar] : false;
   }
@@ -103,8 +106,8 @@ export class DefaultModelRegistry implements ModelRegistry {
     let modelHeaders: Record<string, string> | undefined;
 
     const key = this._getKey(model.provider, "*");
-    apiKey = this.apiKeys.get(key);
-    modelHeaders = this.headers.get(key);
+    apiKey = this.customApiKeys.get(key);
+    modelHeaders = this.customHeaders.get(key);
 
     if (!apiKey) {
       const envVar = PROVIDER_API_KEYS[model.provider];
@@ -116,7 +119,7 @@ export class DefaultModelRegistry implements ModelRegistry {
     }
 
     const modelKey = this._getKey(model.provider, model.id);
-    const extraHeaders = this.headers.get(modelKey);
+    const extraHeaders = this.customHeaders.get(modelKey);
     const headers = extraHeaders ? { ...modelHeaders, ...extraHeaders } : modelHeaders;
 
     return { ok: true, apiKey, headers };
@@ -126,54 +129,26 @@ export class DefaultModelRegistry implements ModelRegistry {
     console.log(`Registering provider: ${name}`);
   }
 
-  addModel(model: ModelEntry): void {
-    this.models.push(model);
-  }
-
   setApiKey(provider: string, apiKey: string, headers?: Record<string, string>): void {
     const key = this._getKey(provider, "*");
-    this.apiKeys.set(key, apiKey);
-    if (headers) this.headers.set(key, headers);
+    this.customApiKeys.set(key, apiKey);
+    if (headers) this.customHeaders.set(key, headers);
   }
 
   setModelApiKey(provider: string, modelId: string, apiKey: string, headers?: Record<string, string>): void {
     const key = this._getKey(provider, modelId);
-    this.apiKeys.set(key, apiKey);
-    if (headers) this.headers.set(key, headers);
+    this.customApiKeys.set(key, apiKey);
+    if (headers) this.customHeaders.set(key, headers);
   }
 
   private _getKey(provider: string, modelId: string): string {
     return `${provider}:${modelId}`;
   }
-
-  private _loadModels(modelsPath: string): void {
-    try {
-      const content = readFileSync(modelsPath, "utf-8");
-      const parsed = JSON.parse(content);
-      const configs: ModelConfig[] = Array.isArray(parsed) ? parsed : parsed.models || [];
-
-      for (const config of configs) {
-        const model: ModelEntry = {
-          id: config.id,
-          name: config.name || config.id,
-          provider: config.provider,
-          api: config.provider,
-          baseUrl: config.apiBaseUrl || "",
-          reasoning: config.reasoning ?? false,
-          input: config.imageInput ? ['text', 'image'] : ['text'],
-          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-          contextWindow: 128000,
-          maxTokens: 8192,
-        };
-        this.models.push(model);
-      }
-      console.log(`Loaded ${this.models.length} models from ${modelsPath}`);
-    } catch (error) {
-      console.warn(`Failed to load models from ${modelsPath}:`, error);
-    }
-  }
 }
 
-export function createModelRegistry(modelsPath?: string): ModelRegistry {
-  return new DefaultModelRegistry(modelsPath);
+export function createModelRegistry(_modelsPath?: string): ModelRegistry {
+  return new DefaultModelRegistry();
 }
+
+// Export llm functions for direct use
+export { getModel, getProviders, getModels };

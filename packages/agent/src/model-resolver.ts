@@ -2,16 +2,17 @@
 /**
  * Model Resolver - Resolve model patterns to actual Model objects
  * 
- * Simple implementation using ModelEntry from model-registry
+ * Uses @picro/llm functions
  */
 
-import { type ModelRegistry, type ModelEntry } from "./model-registry.js";
+import { getModel, getModels, getProviders, type Model } from "@picro/llm";
+
+import { type ModelEntry } from "./model-registry.js";
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-/** Default model IDs for each known provider */
 export const defaultModelPerProvider: Record<string, string> = {
   anthropic: "claude-opus-4-7",
   openai: "gpt-5.4",
@@ -63,38 +64,45 @@ function isAlias(id: string): boolean {
   return !datePattern.test(id);
 }
 
-function findExactModelReferenceMatch(
-  modelReference: string,
-  availableModels: ModelEntry[]
-): ModelEntry | undefined {
+function findExactModelReferenceMatch(modelReference: string, models: ModelEntry[]): ModelEntry | undefined {
   const trimmedReference = modelReference.trim().toLowerCase();
   if (!trimmedReference) return undefined;
 
-  const canonicalMatches = availableModels.filter(
-    (m) => `${m.provider}/${m.id}`.toLowerCase() === trimmedReference
-  );
-  if (canonicalMatches.length === 1) return canonicalMatches[0];
+  // Try canonical format: provider/modelId
+  for (const model of models) {
+    if (`${model.provider}/${model.id}`.toLowerCase() === trimmedReference) {
+      return model;
+    }
+  }
 
+  // Try provider/modelId format
   const slashIndex = trimmedReference.indexOf("/");
   if (slashIndex !== -1) {
     const provider = trimmedReference.substring(0, slashIndex);
     const modelId = trimmedReference.substring(slashIndex + 1);
-    const matches = availableModels.filter(
-      (m) => m.provider.toLowerCase() === provider && m.id.toLowerCase() === modelId
-    );
-    if (matches.length === 1) return matches[0];
+    for (const model of models) {
+      if (model.provider.toLowerCase() === provider && model.id.toLowerCase() === modelId) {
+        return model;
+      }
+    }
   }
 
-  const idMatches = availableModels.filter((m) => m.id.toLowerCase() === trimmedReference);
-  return idMatches.length === 1 ? idMatches[0] : undefined;
+  // Try bare model ID
+  for (const model of models) {
+    if (model.id.toLowerCase() === trimmedReference) {
+      return model;
+    }
+  }
+
+  return undefined;
 }
 
-function tryMatchModel(pattern: string, availableModels: ModelEntry[]): ModelEntry | undefined {
-  const exactMatch = findExactModelReferenceMatch(pattern, availableModels);
+function tryMatchModel(pattern: string, models: ModelEntry[]): ModelEntry | undefined {
+  const exactMatch = findExactModelReferenceMatch(pattern, models);
   if (exactMatch) return exactMatch;
 
   const lower = pattern.toLowerCase();
-  const matches = availableModels.filter(
+  const matches = models.filter(
     (m) => m.id.toLowerCase().includes(lower) || m.name?.toLowerCase().includes(lower)
   );
 
@@ -120,10 +128,10 @@ function isValidThinkingLevel(level: string): boolean {
 
 export function parseModelPattern(
   pattern: string,
-  availableModels: ModelEntry[],
+  models: ModelEntry[],
   options?: { allowInvalidThinkingLevelFallback?: boolean }
 ): ParsedModelResult {
-  const exactMatch = tryMatchModel(pattern, availableModels);
+  const exactMatch = tryMatchModel(pattern, models);
   if (exactMatch) {
     return { model: exactMatch, thinkingLevel: undefined, warning: undefined };
   }
@@ -137,7 +145,7 @@ export function parseModelPattern(
   const suffix = pattern.substring(lastColonIndex + 1);
 
   if (isValidThinkingLevel(suffix)) {
-    const result = parseModelPattern(prefix, availableModels, options);
+    const result = parseModelPattern(prefix, models, options);
     if (result.model) {
       return {
         model: result.model,
@@ -152,7 +160,7 @@ export function parseModelPattern(
       return { model: undefined, thinkingLevel: undefined, warning: undefined };
     }
 
-    const result = parseModelPattern(prefix, availableModels, options);
+    const result = parseModelPattern(prefix, models, options);
     if (result.model) {
       return {
         model: result.model,
@@ -168,14 +176,10 @@ export function parseModelPattern(
 // Public API
 // ============================================================================
 
-/**
- * Resolve model patterns to actual Model objects
- */
 export async function resolveModelScope(
   patterns: string[],
-  modelRegistry: ModelRegistry
+  _modelRegistry: any
 ): Promise<ScopedModel[]> {
-  const availableModels = await modelRegistry.getAvailable();
   const scopedModels: ScopedModel[] = [];
 
   for (const pattern of patterns) {
@@ -191,37 +195,43 @@ export async function resolveModelScope(
       }
     }
 
+    // Get all models from llm
+    let allModels: ModelEntry[] = [];
     if (searchPattern.includes("*") || searchPattern.includes("?")) {
+      // Glob pattern - search all providers
       const lower = searchPattern.toLowerCase();
-      const matches = availableModels.filter((m) => {
-        const fullId = `${m.provider}/${m.id}`.toLowerCase();
-        return matchGlob(fullId, lower) || matchGlob(m.id.toLowerCase(), lower);
-      });
-
-      if (matches.length === 0) {
-        console.warn(`Warning: No models match pattern "${pattern}"`);
-        continue;
-      }
-
-      for (const model of matches) {
-        if (!scopedModels.find((sm) => sm.model.provider === model.provider && sm.model.id === model.id)) {
-          scopedModels.push({ model, thinkingLevel });
+      for (const provider of getProviders()) {
+        const models = getModels(provider);
+        for (const model of models) {
+          const fullId = `${model.provider}/${model.id}`.toLowerCase();
+          if (matchGlob(fullId, lower) || matchGlob(model.id.toLowerCase(), lower)) {
+            allModels.push(model);
+          }
         }
       }
-      continue;
+    } else {
+      // Try direct lookup first
+      const splitIdx = searchPattern.indexOf("/");
+      if (splitIdx !== -1) {
+        const provider = searchPattern.substring(0, splitIdx);
+        const modelId = searchPattern.substring(splitIdx + 1);
+        const model = getModel(provider, modelId);
+        if (model) allModels = [model];
+      }
+      if (allModels.length === 0) {
+        allModels = tryMatchModel(searchPattern, getModels("*") as any as ModelEntry[]) ? [tryMatchModel(searchPattern, getModels("*") as any as ModelEntry[])!] : [];
+      }
     }
 
-    const { model, thinkingLevel: parsedLevel, warning } = parseModelPattern(searchPattern, availableModels);
-
-    if (warning) console.warn(`Warning: ${warning}`);
-    if (!model) {
+    if (allModels.length === 0 || !allModels[0]) {
       console.warn(`Warning: No models match pattern "${pattern}"`);
       continue;
     }
 
-    const effectiveLevel = thinkingLevel || parsedLevel;
-    if (!scopedModels.find((sm) => sm.model.provider === model.provider && sm.model.id === model.id)) {
-      scopedModels.push({ model, thinkingLevel: effectiveLevel });
+    for (const model of allModels) {
+      if (!scopedModels.find((sm) => sm.model.provider === model.provider && sm.model.id === model.id)) {
+        scopedModels.push({ model, thinkingLevel });
+      }
     }
   }
 
@@ -233,22 +243,19 @@ function matchGlob(str: string, pattern: string): boolean {
   return regex.test(str);
 }
 
-/**
- * Resolve a single model from CLI options
- */
 export function resolveCliModel(options: {
   cliProvider?: string;
   cliModel?: string;
-  modelRegistry: ModelRegistry;
+  modelRegistry: any;
 }): ResolveCliModelResult {
-  const { cliProvider, cliModel, modelRegistry } = options;
+  const { cliProvider, cliModel } = options;
 
   if (!cliModel) {
     return { model: undefined, warning: undefined, error: undefined };
   }
 
-  const availableModels = modelRegistry.getAll();
-  if (availableModels.length === 0) {
+  const allModels = getModels("*") as any as ModelEntry[];
+  if (allModels.length === 0) {
     return {
       model: undefined,
       warning: undefined,
@@ -256,9 +263,10 @@ export function resolveCliModel(options: {
     };
   }
 
+  // Build provider lookup
   const providerMap = new Map<string, string>();
-  for (const m of availableModels) {
-    providerMap.set(m.provider.toLowerCase(), m.provider);
+  for (const provider of getProviders()) {
+    providerMap.set(provider.toLowerCase(), provider);
   }
 
   let provider = cliProvider ? providerMap.get(cliProvider.toLowerCase()) : undefined;
@@ -287,10 +295,7 @@ export function resolveCliModel(options: {
   }
 
   if (!provider) {
-    const lower = cliModel.toLowerCase();
-    const exact = availableModels.find(
-      (m) => m.id.toLowerCase() === lower || `${m.provider}/${m.id}`.toLowerCase() === lower
-    );
+    const exact = findExactModelReferenceMatch(cliModel, allModels);
     if (exact) {
       return { model: exact, warning: undefined, thinkingLevel: undefined, error: undefined };
     }
@@ -303,7 +308,7 @@ export function resolveCliModel(options: {
     }
   }
 
-  const candidates = provider ? availableModels.filter((m) => m.provider === provider) : availableModels;
+  const candidates = provider ? getModels(provider) : allModels;
   const { model, thinkingLevel, warning } = parseModelPattern(pattern, candidates, {
     allowInvalidThinkingLevelFallback: false,
   });
@@ -321,9 +326,6 @@ export function resolveCliModel(options: {
   };
 }
 
-/**
- * Find the initial model based on priority
- */
 export async function findInitialModel(options: {
   cliProvider?: string;
   cliModel?: string;
@@ -332,14 +334,14 @@ export async function findInitialModel(options: {
   defaultProvider?: string;
   defaultModelId?: string;
   defaultThinkingLevel?: string;
-  modelRegistry: ModelRegistry;
+  modelRegistry: any;
 }): Promise<InitialModelResult> {
-  const { cliProvider, cliModel, scopedModels, isContinuing, defaultProvider, defaultModelId, defaultThinkingLevel, modelRegistry } = options;
+  const { cliProvider, cliModel, scopedModels, isContinuing, defaultProvider, defaultModelId, defaultThinkingLevel } = options;
 
   const DEFAULT_THINKING = "auto";
 
   if (cliProvider && cliModel) {
-    const resolved = resolveCliModel({ cliProvider, cliModel, modelRegistry });
+    const resolved = resolveCliModel({ cliProvider, cliModel, modelRegistry: options.modelRegistry });
     if (resolved.error) {
       console.error(resolved.error);
       process.exit(1);
@@ -358,47 +360,40 @@ export async function findInitialModel(options: {
   }
 
   if (defaultProvider && defaultModelId) {
-    const found = modelRegistry.find(defaultProvider, defaultModelId);
+    const found = getModel(defaultProvider, defaultModelId);
     if (found) {
       return { model: found, thinkingLevel: defaultThinkingLevel ?? DEFAULT_THINKING, fallbackMessage: undefined };
     }
   }
 
-  const availableModels = await modelRegistry.getAvailable();
-  if (availableModels.length > 0) {
-    for (const [prov, defaultId] of Object.entries(defaultModelPerProvider)) {
-      const match = availableModels.find((m) => m.provider === prov && m.id === defaultId);
-      if (match) {
-        return { model: match, thinkingLevel: DEFAULT_THINKING, fallbackMessage: undefined };
-      }
+  // Try first available from llm
+  for (const provider of getProviders()) {
+    const models = getModels(provider);
+    if (models.length > 0) {
+      return { model: models[0], thinkingLevel: DEFAULT_THINKING, fallbackMessage: undefined };
     }
-    return { model: availableModels[0], thinkingLevel: DEFAULT_THINKING, fallbackMessage: undefined };
   }
 
   return { model: undefined, thinkingLevel: DEFAULT_THINKING, fallbackMessage: undefined };
 }
 
-/**
- * Restore model from session with fallback
- */
 export async function restoreModelFromSession(
   savedProvider: string,
   savedModelId: string,
   currentModel: ModelEntry | undefined,
   shouldPrintMessages: boolean,
-  modelRegistry: ModelRegistry
+  _modelRegistry: any
 ): Promise<{ model: ModelEntry | undefined; fallbackMessage: string | undefined }> {
-  const restoredModel = modelRegistry.find(savedProvider, savedModelId);
-  const hasConfiguredAuth = restoredModel ? modelRegistry.hasConfiguredAuth(restoredModel) : false;
+  const restoredModel = getModel(savedProvider, savedModelId);
 
-  if (restoredModel && hasConfiguredAuth) {
+  if (restoredModel) {
     if (shouldPrintMessages) {
       console.log(`Restored model: ${savedProvider}/${savedModelId}`);
     }
     return { model: restoredModel, fallbackMessage: undefined };
   }
 
-  const reason = !restoredModel ? "model no longer exists" : "no auth configured";
+  const reason = "model no longer exists";
 
   if (shouldPrintMessages) {
     console.warn(`Warning: Could not restore model ${savedProvider}/${savedModelId} (${reason}).`);
@@ -414,25 +409,19 @@ export async function restoreModelFromSession(
     };
   }
 
-  const availableModels = await modelRegistry.getAvailable();
-  if (availableModels.length > 0) {
-    let fallbackModel: ModelEntry | undefined;
-    for (const [prov, defaultId] of Object.entries(defaultModelPerProvider)) {
-      const match = availableModels.find((m) => m.provider === prov && m.id === defaultId);
-      if (match) {
-        fallbackModel = match;
-        break;
+  // Try first available
+  for (const provider of getProviders()) {
+    const models = getModels(provider);
+    if (models.length > 0) {
+      const fallbackModel = models[0];
+      if (shouldPrintMessages) {
+        console.log(`Falling back to: ${fallbackModel.provider}/${fallbackModel.id}`);
       }
+      return {
+        model: fallbackModel,
+        fallbackMessage: `Could not restore model ${savedProvider}/${savedModelId} (${reason}). Using ${fallbackModel.provider}/${fallbackModel.id}.`,
+      };
     }
-    if (!fallbackModel) fallbackModel = availableModels[0];
-
-    if (shouldPrintMessages) {
-      console.log(`Falling back to: ${fallbackModel.provider}/${fallbackModel.id}`);
-    }
-    return {
-      model: fallbackModel,
-      fallbackMessage: `Could not restore model ${savedProvider}/${savedModelId} (${reason}). Using ${fallbackModel.provider}/${fallbackModel.id}.`,
-    };
   }
 
   return { model: undefined, fallbackMessage: undefined };

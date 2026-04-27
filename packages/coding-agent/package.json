@@ -1,0 +1,47 @@
+{
+  "name": "@picro/coding-agent",
+  "version": "0.0.1",
+  "description": "AI coding assistant with CLI and TUI",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "pi": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch src/index.ts",
+    "dev:interactive": "tsx watch src/cli.ts interactive",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@picro/agent": "workspace:*",
+    "@picro/llm": "workspace:*",
+    "@picro/memory": "workspace:*",
+    "@picro/tui": "workspace:*",
+    "blessed": "^0.5.0",
+    "boxen": "^7.1.1",
+    "chalk": "^5.4.1",
+    "ora": "^6.3.1",
+    "inquirer": "^10.0.5",
+    "yargs": "^17.7.2",
+    "dotenv": "^16.5.0",
+    "ws": "^8.18.0",
+    "nanoid": "^5.1.0",
+    "tree-kill": "^1.2.2",
+    "semver": "^7.7.1",
+    "compare-versions": "^6.1.1",
+    "yaml": "^2.7.0",
+    "shx": "^0.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.2",
+    "@types/ws": "^8.18.0",
+    "@types/yargs": "^17.0.34",
+    "tsx": "^4.19.4",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
+  }
+}

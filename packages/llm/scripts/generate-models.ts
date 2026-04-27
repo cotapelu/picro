@@ -32,6 +32,7 @@ interface ModelConfig {
   cost: { input: number; output: number; cacheRead?: number; cacheWrite?: number };
   compat?: Record<string, any>;
   headers?: Record<string, string>;
+  releaseDate?: string;
 }
 
 interface ProviderConfig {
@@ -154,6 +155,7 @@ async function fetchModelsDev(): Promise<ModelConfig[]> {
             input: m.modalities?.input?.includes('image') ? ['text', 'image'] : ['text'],
             contextWindow: m.limit?.context || 4096,
             maxTokens: m.limit?.output || 4096,
+            releaseDate: m.release_date || undefined,
             cost: {
               input: m.cost?.input || 0,
               output: m.cost?.output || 0,
@@ -563,9 +565,16 @@ export const MODELS = {
   const sortedProviders = Object.keys(providers).sort();
   for (const provider of sortedProviders) {
     output += `\t${JSON.stringify(provider)}: {\n`;
-    const sortedModelIds = Object.keys(providers[provider]).sort();
-    for (const modelId of sortedModelIds) {
-      const m = providers[provider][modelId];
+    
+    // Sort models by releaseDate (newest first)
+    const modelsInProvider = Object.values(providers[provider]);
+    modelsInProvider.sort((a, b) => {
+      const dateA = a.releaseDate || '1970-01-01';
+      const dateB = b.releaseDate || '1970-01-01';
+      return dateB.localeCompare(dateA); // Newest first
+    });
+    
+    for (const m of modelsInProvider) {
       output += `\t\t"${m.id}": {\n`;
       output += `\t\t\tid: "${m.id}",\n`;
       output += `\t\t\tname: "${m.name.replace(/"/g, '\\"')}",\n`;
@@ -588,6 +597,9 @@ export const MODELS = {
       output += `\t\t\t},\n`;
       output += `\t\t\tcontextWindow: ${m.contextWindow},\n`;
       output += `\t\t\tmaxTokens: ${m.maxTokens},\n`;
+      if (m.releaseDate) {
+        output += `\t\t\treleaseDate: "${m.releaseDate}",\n`;
+      }
       output += `\t\t} satisfies Model,\n`;
     }
     output += `\t},\n`;

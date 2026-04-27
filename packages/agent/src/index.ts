@@ -149,5 +149,5 @@ export type { ResourceLoader, LoadExtensionsResult, ExtensionRuntime, ResourceDi
 // ============================================================================
 // Model Registry (NEW - Phase C)
 // ============================================================================
-export { DefaultModelRegistry, createModelRegistry } from './model-registry.js';
-export type { ModelRegistry } from './model-registry.js';
+export { DefaultModelRegistry, createModelRegistry, getModel, getProviders, getModels } from './model-registry.js';
+export type { ModelRegistry, ModelEntry } from './model-registry.js';
