@@ -261,4 +261,10 @@ export class SelectList implements UIElement, InteractiveElement {
 		// Clamp scroll
 		this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, Math.max(0, displayItems.length - this.visibleRows)));
 	}
+
+	/** Set the selected index */
+	setSelectedIndex(index: number): void {
+		this.selectedIndex = Math.max(0, Math.min(index, this.items.length - 1));
+		this.adjustScroll();
+	}
 }
