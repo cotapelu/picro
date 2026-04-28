@@ -349,7 +349,9 @@ export function buildSessionContext(
   }
 
   const messages: any[] = [];
-  for (const entry of path) {
+  
+  // Helper to append non-compaction entries to messages
+  const appendMessage = (entry: SessionEntry) => {
     if (entry.type === "message") {
       messages.push((entry as SessionMessageEntry).message);
     } else if (entry.type === "custom_message") {
@@ -366,8 +368,45 @@ export function buildSessionContext(
       messages.push({
         role: "branchSummary",
         summary: bse.summary,
+        fromId: bse.fromId,
         timestamp: bse.timestamp,
       });
+    }
+    // Note: compaction entries are handled separately
+  };
+
+  if (compaction) {
+    // Emit compaction summary first
+    messages.push({
+      role: "compactionSummary",
+      summary: compaction.summary,
+      tokensBefore: compaction.tokensBefore,
+      timestamp: compaction.timestamp,
+    });
+
+    // Find compaction index in path
+    const compactionIdx = path.findIndex((e) => e.id === compaction.id);
+
+    // Emit kept messages before compaction (starting from firstKeptEntryId)
+    let foundFirstKept = false;
+    for (let i = 0; i < compactionIdx; i++) {
+      const entry = path[i];
+      if (entry.id === compaction.firstKeptEntryId) {
+        foundFirstKept = true;
+      }
+      if (foundFirstKept) {
+        appendMessage(entry);
+      }
+    }
+
+    // Emit messages after compaction
+    for (let i = compactionIdx + 1; i < path.length; i++) {
+      appendMessage(path[i]);
+    }
+  } else {
+    // No compaction - emit all messages in path order
+    for (const entry of path) {
+      appendMessage(entry);
     }
   }
 
