@@ -8,387 +8,429 @@ import { UserMessage, type UserMessageOptions } from './components/user-message.
 import { AssistantMessage, type AssistantMessageOptions } from './components/assistant-message.js';
 import { ToolMessage, type ToolMessageOptions } from './components/tool-message.js';
 import { Toast, type ToastOptions } from './components/toast.js';
-import { CountdownTimer } from './components/countdown-timer.js';
 import { Text } from './components/text.js';
+import { CountdownTimer } from './components/countdown-timer.js';
 import type { ExtensionUIContext, ExtensionWidgetOptions, ExtensionUIDialogOptions } from './extensions/extension-ui-context.js';
 
 export interface InteractiveModeOptions {
-	tui: TerminalUI;
-	inputPlaceholder?: string;
-	initialStatus?: string;
-	onUserInput?: (text: string) => void;
+  tui: TerminalUI;
+  inputPlaceholder?: string;
+  initialStatus?: string;
+  onUserInput?: (text: string) => void;
 }
 
 interface ChatMessage {
-	id: string;
-	element: UIElement;
+  id: string;
+  element: UIElement;
 }
 
+/**
+ * ChatInterface - Main layout container
+ *
+ * Composes:
+ * - Header (optional)
+ * - Message area (scrollable, showing chat messages)
+ * - Widget area (up to 3 lines)
+ * - Input area (single-line)
+ * - Footer (status line or custom)
+ */
 class ChatInterface implements UIElement, InteractiveElement {
-	public isFocused = false;
-	private messages: ChatMessage[] = [];
-	private widgets = new Map<string, UIElement>();
-	private input: Input;
-	private footer: Footer;
-	private placeholder: string;
-	private onUserInput?: (text: string) => void;
-	private tui: TerminalUI;
+  public isFocused = false;
+  private messages: ChatMessage[] = [];
+  private widgets = new Map<string, UIElement>();
+  private header: UIElement | null = null;
+  private customFooter: UIElement | null = null;
+  private input: Input;
+  private footer: Footer;
+  private placeholder: string;
+  private onUserInput?: (text: string) => void;
+  private tui: TerminalUI;
 
-	constructor(tui: TerminalUI, placeholder: string, onUserInput?: (text: string) => void) {
-		this.tui = tui;
-		this.placeholder = placeholder;
-		this.onUserInput = onUserInput;
-		this.input = new Input({
-			placeholder,
-			onSubmit: (value) => {
-				if (value.trim()) {
-					onUserInput?.(value);
-				}
-				this.input.setValue('');
-				this.tui.requestRender();
-			},
-			onCancel: () => {
-				this.input.setValue('');
-				this.tui.requestRender();
-			},
-		});
-		this.footer = new Footer({ leftItems: [], rightItems: [] });
-	}
+  constructor(tui: TerminalUI, placeholder: string, onUserInput?: (text: string) => void) {
+    this.tui = tui;
+    this.placeholder = placeholder;
+    this.onUserInput = onUserInput;
+    this.input = new Input({
+      placeholder,
+      onSubmit: (value) => {
+        if (value.trim()) {
+          onUserInput?.(value);
+        }
+        this.input.setValue('');
+        this.tui.requestRender();
+      },
+      onCancel: () => {
+        this.input.setValue('');
+        this.tui.requestRender();
+      },
+    });
+    this.footer = new Footer({ leftItems: [], rightItems: [] });
+  }
 
-	addMessage(element: UIElement, id?: string): string {
-		const msgId = id || `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-		this.messages.push({ id: msgId, element });
-		this.tui.requestRender();
-		return msgId;
-	}
+  /**
+   * Add a message to the chat
+   */
+  addMessage(element: UIElement, id?: string): string {
+    const msgId = id || `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    this.messages.push({ id: msgId, element });
+    this.tui.requestRender();
+    return msgId;
+  }
 
-	removeMessage(id: string): void {
-		const idx = this.messages.findIndex(m => m.id === id);
-		if (idx !== -1) {
-			this.messages.splice(idx, 1);
-			this.tui.requestRender();
-		}
-	}
+  /**
+   * Remove a message by ID
+   */
+  removeMessage(id: string): void {
+    const idx = this.messages.findIndex(m => m.id === id);
+    if (idx !== -1) {
+      this.messages.splice(idx, 1);
+      this.tui.requestRender();
+    }
+  }
 
-	setStatus(text: string): void {
-		this.footer.leftItems = text ? [{ label: text }] : [];
-		this.footer.clearCache?.();
-		this.tui.requestRender();
-	}
+  /**
+   * Set status text in the footer (left items)
+   */
+  setStatus(text: string): void {
+    this.footer.leftItems = text ? [{ label: text }] : [];
+    this.footer.clearCache?.();
+    this.tui.requestRender();
+  }
 
-	setRightItems(items: FooterItem[]): void {
-		this.footer.rightItems = items;
-		this.footer.clearCache?.();
-		this.tui.requestRender();
-	}
+  /**
+   * Set footer right items
+   */
+  setRightItems(items: FooterItem[]): void {
+    this.footer.rightItems = items;
+    this.footer.clearCache?.();
+    this.tui.requestRender();
+  }
 
-	setWidget(key: string, content: UIElement | null): void {
-		if (content === null) {
-			this.widgets.delete(key);
-		} else {
-			this.widgets.set(key, content);
-		}
-		this.tui.requestRender();
-	}
+  /**
+   * Set a widget (extension UI)
+   */
+  setWidget(key: string, content: UIElement | null): void {
+    if (content === null) {
+      this.widgets.delete(key);
+    } else {
+      this.widgets.set(key, content);
+    }
+    this.tui.requestRender();
+  }
 
-	focusInput(): void {
-		this.tui.setFocus(this.input);
-		this.isFocused = true;
-	}
+  /**
+   * Set a header component (top of screen)
+   */
+  setHeader(header: UIElement | null): void {
+    this.header = header;
+    this.tui.requestRender();
+  }
 
-	draw(context: RenderContext): string[] {
-		const width = context.width;
-		const totalHeight = context.height;
+  /**
+   * Set a custom footer component (replaces default footer)
+   */
+  setCustomFooter(footer: UIElement | null): void {
+    this.customFooter = footer;
+    this.tui.requestRender();
+  }
 
-		const footerHeight = 1;
-		const inputHeight = 1;
-		const maxWidgetHeight = 3;
+  /**
+   * Focus the input field
+   */
+  focusInput(): void {
+    this.tui.setFocus(this.input);
+    this.isFocused = true;
+  }
 
-		// Collect all widget lines
-		const widgetLinesAll: string[] = [];
-		for (const widget of this.widgets.values()) {
-			widgetLinesAll.push(...widget.draw({ width, height: 1000 } as RenderContext));
-		}
-		const widgetHeight = Math.min(widgetLinesAll.length, maxWidgetHeight);
+  draw(context: RenderContext): string[] {
+    const width = context.width;
+    const totalHeight = context.height;
 
-		// Compute messages height remaining
-		const nonMessagesHeight = footerHeight + inputHeight + widgetHeight;
-		const messagesHeight = Math.max(0, totalHeight - nonMessagesHeight);
+    const footerHeight = 1;
+    const inputHeight = 1;
+    const maxWidgetHeight = 3;
+    const headerHeight = this.header ? 1 : 0;
 
-		const lines: string[] = [];
+    // Collect all widget lines
+    const widgetLinesAll: string[] = [];
+    for (const widget of this.widgets.values()) {
+      widgetLinesAll.push(...widget.draw({ width, height: 1000 } as RenderContext));
+    }
+    const widgetHeight = Math.min(widgetLinesAll.length, maxWidgetHeight);
 
-		// Render messages (bottom-aligned)
-		if (messagesHeight > 0) {
-			const allMsgLines: string[] = [];
-			for (const msg of this.messages) {
-				allMsgLines.push(...msg.element.draw({ width, height: 1e6 } as RenderContext));
-			}
-			if (allMsgLines.length > messagesHeight) {
-				lines.push(...allMsgLines.slice(allMsgLines.length - messagesHeight));
-			} else {
-				const pad = messagesHeight - allMsgLines.length;
-				for (let i = 0; i < pad; i++) lines.push('');
-				lines.push(...allMsgLines);
-			}
-		}
+    const nonMessagesHeight = headerHeight + widgetHeight + inputHeight + footerHeight;
+    const messagesHeight = Math.max(0, totalHeight - nonMessagesHeight);
 
-		// Render widget lines (if any)
-		if (widgetHeight > 0) {
-			lines.push(...widgetLinesAll.slice(0, widgetHeight));
-		}
+    const lines: string[] = [];
 
-		// Render input (one line)
-		const inputLines = this.input.draw({ width, height: inputHeight } as RenderContext);
-		lines.push(...inputLines.slice(0, inputHeight));
+    // Header
+    if (headerHeight > 0 && this.header) {
+      const hdrLines = this.header.draw({ width, height: 1 } as RenderContext);
+      lines.push(...hdrLines.slice(0, 1));
+    }
 
-		// Render footer (one line)
-		const footerLines = this.footer.draw({ width, height: footerHeight } as RenderContext);
-		lines.push(...footerLines.slice(0, footerHeight));
+    // Render messages (bottom-aligned)
+    if (messagesHeight > 0) {
+      const allMsgLines: string[] = [];
+      for (const msg of this.messages) {
+        allMsgLines.push(...msg.element.draw({ width, height: 1e6 } as RenderContext));
+      }
+      if (allMsgLines.length > messagesHeight) {
+        lines.push(...allMsgLines.slice(allMsgLines.length - messagesHeight));
+      } else {
+        const pad = messagesHeight - allMsgLines.length;
+        for (let i = 0; i < pad; i++) lines.push('');
+        lines.push(...allMsgLines);
+      }
+    }
 
-		// If we have more lines than totalHeight, truncate from top
-		if (lines.length > totalHeight) {
-			return lines.slice(lines.length - totalHeight);
-		}
-		return lines;
-	}
+    // Widget lines
+    if (widgetHeight > 0) {
+      lines.push(...widgetLinesAll.slice(0, widgetHeight));
+    }
 
-	handleKey(key: KeyEvent): void {
-		// Not used; focus is on child input
-	}
+    // Input
+    const inputLines = this.input.draw({ width, height: inputHeight } as RenderContext);
+    lines.push(...inputLines.slice(0, inputHeight));
 
-	clearCache(): void {
-		this.input.clearCache?.();
-		this.footer.clearCache?.();
-		this.messages.forEach(m => m.element.clearCache?.());
-		this.widgets.forEach(w => w.clearCache?.());
-	}
+    // Footer (custom or default)
+    const footerEl = this.customFooter || this.footer;
+    const footerLines = footerEl.draw({ width, height: footerHeight } as RenderContext);
+    lines.push(...footerLines.slice(0, footerHeight));
+
+    if (lines.length > totalHeight) {
+      return lines.slice(lines.length - totalHeight);
+    }
+    return lines;
+  }
+
+  handleKey(key: KeyEvent): void {
+    // Not used; focus is on input
+  }
+
+  clearCache(): void {
+    this.input.clearCache?.();
+    this.footer.clearCache?.();
+    this.header?.clearCache?.();
+    this.customFooter?.clearCache?.();
+    this.messages.forEach(m => m.element.clearCache?.());
+    this.widgets.forEach(w => w.clearCache?.());
+  }
 }
 
 export class InteractiveMode {
-	private tui: TerminalUI;
-	private chatInterface: ChatInterface;
-	private countdownTimers: CountdownTimer[] = [];
-	private extensionContext!: ExtensionUIContext;
-	private userInputHandler?: (text: string) => void;
+  private tui: TerminalUI;
+  private chatInterface: ChatInterface;
+  private countdownTimers: CountdownTimer[] = [];
+  private extensionContext!: ExtensionUIContext;
+  private userInputHandler?: (text: string) => void;
 
-	constructor(options: InteractiveModeOptions) {
-		this.tui = options.tui;
-		this.userInputHandler = options.onUserInput;
+  constructor(options: InteractiveModeOptions) {
+    this.tui = options.tui;
+    this.userInputHandler = options.onUserInput;
 
-		this.chatInterface = new ChatInterface(
-			this.tui,
-			options.inputPlaceholder || 'You: ',
-			(text) => {
-				this.userInputHandler?.(text);
-			}
-		);
+    this.chatInterface = new ChatInterface(
+      this.tui,
+      options.inputPlaceholder || 'You: ',
+      (text) => {
+        this.userInputHandler?.(text);
+      }
+    );
 
-		this.tui.append(this.chatInterface);
-		this.chatInterface.focusInput();
+    this.tui.append(this.chatInterface);
+    this.chatInterface.focusInput();
 
-		if (options.initialStatus) {
-			this.chatInterface.setStatus(options.initialStatus);
-		}
+    if (options.initialStatus) {
+      this.chatInterface.setStatus(options.initialStatus);
+    }
 
-		this.extensionContext = this.createExtensionUIContext();
-	}
+    this.extensionContext = this.createExtensionUIContext();
+  }
 
-	addUserMessage(content: string, options?: Omit<UserMessageOptions, 'text'>): string {
-		const msg = new UserMessage({ ...options, text: content });
-		return this.chatInterface.addMessage(msg);
-	}
+  addUserMessage(content: string, options?: Omit<UserMessageOptions, 'text'>): string {
+    const msg = new UserMessage({ ...options, text: content });
+    return this.chatInterface.addMessage(msg);
+  }
 
-	addAssistantMessage(content: string, options?: Omit<AssistantMessageOptions, 'content'>): string {
-		const msg = new AssistantMessage({ ...options, content });
-		return this.chatInterface.addMessage(msg);
-	}
+  addAssistantMessage(content: string, options?: Omit<AssistantMessageOptions, 'content'>): string {
+    const msg = new AssistantMessage({ ...options, content });
+    return this.chatInterface.addMessage(msg);
+  }
 
-	addToolMessage(toolName: string, output: string, exitCode?: number): string {
-		const msg = new ToolMessage({ toolName, output, error: exitCode !== 0 });
-		return this.chatInterface.addMessage(msg);
-	}
+  addToolMessage(toolName: string, output: string, exitCode?: number): string {
+    const msg = new ToolMessage({ toolName, output, error: exitCode !== 0 });
+    return this.chatInterface.addMessage(msg);
+  }
 
-	setStatus(message: string): void {
-		this.chatInterface.setStatus(message);
-	}
+  setStatus(message: string): void {
+    this.chatInterface.setStatus(message);
+  }
 
-	startCountdown(
-		id: string,
-		timeoutMs: number,
-		onTick: (seconds: number) => void,
-		onComplete: () => void
-	): void {
-		const timer = new CountdownTimer(timeoutMs, this.tui, onTick, onComplete);
-		this.countdownTimers.push(timer);
-	}
+  startCountdown(
+    id: string,
+    timeoutMs: number,
+    onTick: (seconds: number) => void,
+    onComplete: () => void
+  ): void {
+    const timer = new CountdownTimer(timeoutMs, this.tui, onTick, onComplete);
+    this.countdownTimers.push(timer);
+  }
 
-	async showDialog(component: UIElement): Promise<void> {
-		this.tui.showPanel(component, { anchor: 'center' });
-	}
+  async showDialog(component: UIElement): Promise<void> {
+    this.tui.showPanel(component, { anchor: 'center' });
+  }
 
-	getExtensionUIContext(): ExtensionUIContext {
-		return this.extensionContext;
-	}
+  getExtensionUIContext(): ExtensionUIContext {
+    return this.extensionContext;
+  }
 
-	focusInput(): void {
-		this.chatInterface.focusInput();
-	}
+  focusInput(): void {
+    this.chatInterface.focusInput();
+  }
 
-	dispose(): void {
-		for (const timer of this.countdownTimers) {
-			timer.dispose();
-		}
-		this.countdownTimers = [];
-	}
+  dispose(): void {
+    for (const timer of this.countdownTimers) {
+      timer.dispose();
+    }
+    this.countdownTimers = [];
+  }
 
-	private createExtensionUIContext(): ExtensionUIContext {
-		const mode = this;
-		return {
-			select: async (title, options, opts) => {
-				const container = new ElementContainer();
-				const items: SelectItem[] = options.map((opt, idx) => ({
-					value: String(idx),
-					label: opt,
-				}));
-				const selectList = new SelectList(
-					items,
-					Math.min(options.length, 10),
-					{},
-					(value) => {
-						const idx = parseInt(value, 10);
-						resolve(options[idx]);
-						handle.close();
-					},
-					() => {
-						resolve(undefined);
-						handle.close();
-					}
-				);
-				container.append(selectList);
-				let resolve: (value: string | undefined) => void = () => {};
-				const handle = mode.tui.showPanel(container, { anchor: 'center' });
-				return new Promise<string | undefined>((r) => {
-					resolve = r;
-				});
-			},
-			confirm: async (title, message, opts) => {
-				return true;
-			},
-			input: async (title, placeholder, opts) => {
-				const container = new ElementContainer();
-				const input = new Input({
-					placeholder,
-					onSubmit: (val) => {
-						resolve(val);
-						handle.close();
-					},
-					onCancel: () => {
-						resolve(undefined);
-						handle.close();
-					},
-				});
-				container.append(input);
-				let resolve: (value: string | undefined) => void = () => {};
-				const handle = mode.tui.showPanel(container, { anchor: 'center' });
-				return new Promise<string | undefined>((r) => {
-					resolve = r;
-				});
-			},
-			notify: (message, type) => {
-				const duration = 4000;
-				const toast = new Toast({ message, type: type as any, duration });
-				const handle = mode.tui.showPanel(toast, { anchor: 'top-right' });
-				setTimeout(() => handle.close(), duration);
-			},
-			onTerminalInput: (handler) => {
-				// Could add a keyhandler to TUI
-			},
-			setStatus: (key, text) => {
-				mode.chatInterface.setRightItems([{ key, label: text }]);
-			},
-			setWorkingMessage: (message) => {
-				if (message) {
-					mode.setStatus(`⏳ ${message}`);
-				} else {
-					mode.setStatus('');
-				}
-			},
-			setWorkingIndicator: (opts) => {
-				// no-op
-			},
-			setHiddenThinkingLabel: (label) => {
-				// no-op
-			},
-			setWidget: (key, content, options) => {
-				mode.chatInterface.setWidget(key, content);
-			},
-			setFooter: (factory) => {
-				// Replace footer component entirely - needs layout support
-			},
-			setHeader: (factory) => {
-				// Not implemented
-			},
-			setTitle: (title) => {
-				mode.tui.terminal.setTitle(title);
-			},
-			custom: async (factory, options) => {
-				const component = factory(mode.tui);
-				await mode.showDialog(component);
-			},
-			pasteToEditor: (text) => {
-				mode.chatInterface.setWidget('paste', new Text(text));
-			},
-			setEditorText: (text) => {
-				console.warn('setEditorText not yet implemented');
-			},
-			getEditorText: () => {
-				return '';
-			},
-			editor: async (title, prefill) => {
-				const container = new ElementContainer();
-				const input = new Input({
-					placeholder: title || 'Edit',
-					value: prefill,
-					onSubmit: (val) => {
-						resolve(val);
-						handle.close();
-					},
-					onCancel: () => {
-						resolve(undefined);
-						handle.close();
-					},
-				});
-				container.append(input);
-				let resolve: (value: string | undefined) => void = () => {};
-				const handle = mode.tui.showPanel(container, { anchor: 'center' });
-				return new Promise<string | undefined>((r) => {
-					resolve = r;
-				});
-			},
-			addAutocompleteProvider: (factory) => {
-				console.warn('addAutocompleteProvider not implemented yet');
-			},
-			setEditorComponent: (factory) => {
-				console.warn('setEditorComponent not implemented yet');
-			},
-			get theme() {
-				return { primary: '', secondary: '', accent: '', background: '', foreground: '' } as any;
-			},
-			getAllThemes: () => {
-				return [];
-			},
-			getTheme: (name) => {
-				return undefined;
-			},
-			setTheme: (themeOrName) => {
-				return { success: false };
-			},
-			getToolsExpanded: () => {
-				return true;
-			},
-			setToolsExpanded: (expanded) => {
-				// no-op
-			},
-		};
-	}
+  private createExtensionUIContext(): ExtensionUIContext {
+    const mode = this;
+    return {
+      select: async (title, options, opts) => {
+        const container = new ElementContainer();
+        const items: SelectItem[] = options.map((opt, idx) => ({
+          value: String(idx),
+          label: opt,
+        }));
+        const selectList = new SelectList(
+          items,
+          Math.min(options.length, 10),
+          {},
+          (value) => {
+            const idx = parseInt(value, 10);
+            resolve(options[idx]);
+            handle.close();
+          },
+          () => {
+            resolve(undefined);
+            handle.close();
+          }
+        );
+        container.append(selectList);
+        let resolve: (value: string | undefined) => void = () => {};
+        const handle = mode.tui.showPanel(container, { anchor: 'center' });
+        return new Promise<string | undefined>((r) => {
+          resolve = r;
+        });
+      },
+      confirm: async (title, message, opts) => {
+        return true;
+      },
+      input: async (title, placeholder, opts) => {
+        const container = new ElementContainer();
+        const input = new Input({
+          placeholder,
+          onSubmit: (val) => {
+            resolve(val);
+            handle.close();
+          },
+          onCancel: () => {
+            resolve(undefined);
+            handle.close();
+          },
+        });
+        container.append(input);
+        let resolve: (value: string | undefined) => void = () => {};
+        const handle = mode.tui.showPanel(container, { anchor: 'center' });
+        return new Promise<string | undefined>((r) => {
+          resolve = r;
+        });
+      },
+      notify: (message, type) => {
+        const duration = 4000;
+        const toast = new Toast({ message, type: type as any, duration });
+        const handle = mode.tui.showPanel(toast, { anchor: 'top-right' });
+        setTimeout(() => handle.close(), duration);
+      },
+      onTerminalInput: (handler) => {},
+      setStatus: (key, text) => {
+        mode.chatInterface.setRightItems([{ key, label: text }]);
+      },
+      setWorkingMessage: (message) => {
+        if (message) {
+          mode.setStatus(`⏳ ${message}`);
+        } else {
+          mode.setStatus('');
+        }
+      },
+      setWorkingIndicator: (opts) => {},
+      setHiddenThinkingLabel: (label) => {},
+      setWidget: (key, content, options) => {
+        mode.chatInterface.setWidget(key, content);
+      },
+      setFooter: (factory) => {
+        const footer = factory(mode.tui);
+        mode.chatInterface.setCustomFooter(footer ?? null);
+      },
+      setHeader: (factory) => {
+        const header = factory(mode.tui);
+        mode.chatInterface.setHeader(header ?? null);
+      },
+      setTitle: (title) => {
+        mode.tui.terminal.setTitle(title);
+      },
+      custom: async (factory, options) => {
+        const component = factory(mode.tui);
+        await mode.showDialog(component);
+      },
+      pasteToEditor: (text) => {
+        mode.chatInterface.setWidget('paste', new Text(text));
+      },
+      setEditorText: (text) => {
+        console.warn('setEditorText not implemented');
+      },
+      getEditorText: () => '',
+      editor: async (title, prefill) => {
+        const container = new ElementContainer();
+        const input = new Input({
+          placeholder: title || 'Edit',
+          value: prefill,
+          onSubmit: (val) => {
+            resolve(val);
+            handle.close();
+          },
+          onCancel: () => {
+            resolve(undefined);
+            handle.close();
+          },
+        });
+        container.append(input);
+        let resolve: (value: string | undefined) => void = () => {};
+        const handle = mode.tui.showPanel(container, { anchor: 'center' });
+        return new Promise<string | undefined>((r) => {
+          resolve = r;
+        });
+      },
+      addAutocompleteProvider: (factory) => {
+        console.warn('addAutocompleteProvider not implemented yet');
+      },
+      setEditorComponent: (factory) => {
+        console.warn('setEditorComponent not implemented yet');
+      },
+      get theme() {
+        return { primary: '', secondary: '', accent: '', background: '', foreground: '' } as any;
+      },
+      getAllThemes: () => [],
+      getTheme: (name) => undefined,
+      setTheme: (themeOrName) => ({ success: false }),
+      getToolsExpanded: () => true,
+      setToolsExpanded: (expanded) => {},
+    };
+  }
 }
+
+export { ChatInterface };
+
+export { ChatInterface };

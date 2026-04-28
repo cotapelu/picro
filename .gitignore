@@ -49,11 +49,7 @@ coverage/
 .ant-colony/
 
 # Legacy
-pi-ai-legacy/
-pi-agent-legacy/
-pi-tui-legacy/
-claudecode-legacy/
-coding-agent-legacy/
+llm-context/
 
 # Config files
 auth.json
