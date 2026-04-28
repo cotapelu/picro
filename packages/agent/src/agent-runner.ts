@@ -564,7 +564,7 @@ export class AgentRunner {
        let currentPrompt = initialPrompt;
        const maxRounds = this.config.maxRounds;
 
-       roundLoop: while (this.state.round < maxRounds && !this.state.isCancelled) {
+       while (this.state.round < maxRounds && !this.state.isCancelled) {
          const roundStartTime = Date.now();
          this.state.round++;
 
@@ -714,7 +714,7 @@ export class AgentRunner {
                    message: finalMessage,
                  } as any);
                  // Exit the for-await, continue with processing finalMessage
-                 break roundLoop;
+                 break;
 
                case 'error':
                  streamError = event.error?.errorMessage || 'Stream error';
@@ -725,7 +725,7 @@ export class AgentRunner {
                    round: this.state.round,
                    message: streamError,
                  } as any);
-                 break roundLoop;
+                 break;
              }
            }
 
@@ -851,11 +851,19 @@ export class AgentRunner {
              hasAssistantContent: true,
            } as any);
 
+           // Build a response object for strategy (has toolCalls field)
+           const responseForStrategy: LLMResponse = {
+             content: '',
+             toolCalls,
+             stopReason: finalMessage.stopReason,
+             usage: finalMessage.usage,
+             errorMessage: finalMessage.errorMessage,
+           };
+
            // Continue to next round if strategy permits
-           if (!this.strategy.shouldContinue(finalMessage as any, this.state)) {
+           if (!this.strategy.shouldContinue(responseForStrategy, this.state)) {
              break; // Exit while loop
            }
-           // Continue (next iteration)
          } else {
            // No tool calls - finish successfully
            await this.emitter.emit({
@@ -866,8 +874,14 @@ export class AgentRunner {
              hasAssistantContent: true,
            } as any);
 
+           // Extract final answer as string from content blocks
+           const contentBlocks = finalMessage.content || [];
+           const finalAnswer = Array.isArray(contentBlocks)
+             ? contentBlocks.filter((c: any) => c.type === 'text').map((c: any) => c.text).join('')
+             : String(contentBlocks);
+
            const finalResult: AgentRunResult = {
-             finalAnswer: (finalMessage as any).content || '',
+             finalAnswer,
              totalRounds: this.state.round,
              totalToolCalls: this.state.totalToolCalls,
              totalTokens: this.state.totalTokens,
