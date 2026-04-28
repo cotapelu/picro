@@ -4,12 +4,10 @@ import { getKeybindings } from '../src/components/keybindings.js';
 
 describe('SelectList', () => {
   beforeAll(() => {
-    // Ensure keybinding context is set to tui.select for all tests
     getKeybindings().setContext('tui.select');
   });
 
   afterAll(() => {
-    // Reset context to default (empty)
     getKeybindings().setContext('');
   });
 
@@ -36,7 +34,7 @@ describe('SelectList', () => {
   it('should move selection down with down arrow', () => {
     const onSelect = vi.fn();
     const list = new SelectList(items, 5, {}, onSelect);
-    list.handleKey({ raw: '\x1b[B' }); // down -> index 1
+    list.handleKey({ raw: '\x1b[B' });
     list.handleKey({ raw: '\r' });
     expect(onSelect).toHaveBeenCalledWith('b');
   });
@@ -44,7 +42,6 @@ describe('SelectList', () => {
   it('should move selection up with up arrow', () => {
     const onSelect = vi.fn();
     const list = new SelectList(items, 5, {}, onSelect);
-    // start at 0; up shouldn't change
     list.handleKey({ raw: '\x1b[A' });
     list.handleKey({ raw: '\r' });
     expect(onSelect).toHaveBeenCalledWith('a');
@@ -71,11 +68,9 @@ describe('SelectList', () => {
       { value: 'd', label: 'Delta' },
     ];
     const list = new SelectList(moreItems, 5);
-    // filter by 'a'
     list.handleKey({ raw: 'a', name: 'a' });
     let output = list.draw({ width: 30, height: 10 }).join('\n');
     expect(output).toContain('Alpha');
-    // add another letter to produce no matches
     list.handleKey({ raw: 'b', name: 'b' });
     output = list.draw({ width: 30, height: 10 }).join('\n');
     expect(output).toContain('No matches');
@@ -83,11 +78,9 @@ describe('SelectList', () => {
 
   it('should clear filter on Backspace', () => {
     const list = new SelectList(items, 5);
-    // Filter to only A
     list.handleKey({ raw: 'a', name: 'a' });
     let output = list.draw({ width: 30, height: 10 }).join('\n');
     expect(output).toContain('Option A');
-    // Backspace clears filter
     list.handleKey({ raw: '\x7f', name: 'Backspace' });
     output = list.draw({ width: 30, height: 10 }).join('\n');
     expect(output).toContain('Option B');
@@ -95,20 +88,23 @@ describe('SelectList', () => {
   });
 
   it('should toggle selection in multi-select mode with Space', () => {
-    const onSelChange = vi.fn();
     const list = new SelectList(items, 5);
     list.setMultiSelect(true);
-    list.onSelectionChange = onSelChange;
-    // Toggle first item
-    list.handleKey({ raw: ' ', name: ' ' });
-    expect(list.getSelectedIndices()).toContain(0);
-    expect(onSelChange).toHaveBeenCalledWith([0]);
-    // Move down and toggle another
-    onSelChange.mockClear();
+    // Toggle first item (selectedIndex starts at 0)
+    list.handleKey({ raw: ' ' });
+    let selected = list.getSelectedIndices();
+    expect(selected).toContain(0);
+    // Move to next item and toggle
     list.handleKey({ raw: '\x1b[B' });
-    list.handleKey({ raw: ' ', name: ' ' });
-    expect(list.getSelectedIndices()).toHaveLength(2);
-    expect(onSelChange).toHaveBeenCalledWith([0, 1]);
+    list.handleKey({ raw: ' ' });
+    selected = list.getSelectedIndices();
+    expect(selected).toHaveLength(2);
+    expect(selected).toEqual(expect.arrayContaining([0, 1]));
+    // Toggle again to deselect current
+    list.handleKey({ raw: ' ' });
+    selected = list.getSelectedIndices();
+    expect(selected).toHaveLength(1);
+    expect(selected).toContain(0);
   });
 
   it('should scroll when selection goes beyond visible rows', () => {

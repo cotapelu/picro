@@ -65,3 +65,9 @@ describe('ThemeManager', () => {
     expect(colored).toContain('\x1b[38;5;111m');
   });
 });
+
+// Stop the file watcher after all tests to allow process exit
+import { afterAll } from 'vitest';
+afterAll(() => {
+  ThemeManager.getInstance().stopThemeWatcher();
+});

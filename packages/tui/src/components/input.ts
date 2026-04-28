@@ -29,6 +29,8 @@ export interface InputOptions {
 	onSubmit?: (value: string) => void;
 	/** Callback when Escape is pressed */
 	onCancel?: () => void;
+	/** Callback when Tab is pressed (for autocomplete) */
+	onAutocompleteRequested?: () => void;
 }
 
 /**
@@ -44,6 +46,7 @@ export class Input implements UIElement, InteractiveElement {
 	private onChange?: (value: string) => void;
 	private onSubmit?: (value: string) => void;
 	private onCancel?: () => void;
+	private onAutocompleteRequested?: () => void;
 
 	public isFocused = false;
 
@@ -61,6 +64,7 @@ export class Input implements UIElement, InteractiveElement {
 		this.onChange = options.onChange;
 		this.onSubmit = options.onSubmit;
 		this.onCancel = options.onCancel;
+		this.onAutocompleteRequested = options.onAutocompleteRequested;
 	}
 
 	/**
@@ -76,6 +80,17 @@ export class Input implements UIElement, InteractiveElement {
 	setValue(value: string): void {
 		this.value = value;
 		this.cursorPos = Math.min(this.cursorPos, this.value.length);
+		this.onChange?.(this.value);
+	}
+
+	/**
+	 * Insert text at cursor position
+	 */
+	insertText(text: string): void {
+		const before = this.value.slice(0, this.cursorPos);
+		const after = this.value.slice(this.cursorPos);
+		this.value = before + text + after;
+		this.cursorPos += text.length;
 		this.onChange?.(this.value);
 	}
 
@@ -218,6 +233,12 @@ export class Input implements UIElement, InteractiveElement {
 		// Cancel
 		if (matchesKey(key.raw, 'escape') || matchesKey(key.raw, 'ctrl+c')) {
 			this.onCancel?.();
+			return;
+		}
+
+		// Autocomplete
+		if (matchesKey(key.raw, 'tab') && this.onAutocompleteRequested) {
+			this.onAutocompleteRequested();
 			return;
 		}
 

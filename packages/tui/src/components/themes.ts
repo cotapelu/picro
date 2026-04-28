@@ -207,6 +207,17 @@ export class ThemeManager {
       }
     }
   }
+
+  stopThemeWatcher(): void {
+    if (this.watcher) {
+      try {
+        this.watcher.close();
+      } catch {
+        // ignore
+      }
+      this.watcher = undefined;
+    }
+  }
 }
 
 // Convenience singleton access
