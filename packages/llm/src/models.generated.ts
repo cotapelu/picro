@@ -35180,23 +35180,6 @@ export const MODELS = {
 			contextWindow: 128000,
 			maxTokens: 16384,
 		} satisfies Model,
-		"meta-llama/llama-3.1-8b-instruct": {
-			id: "meta-llama/llama-3.1-8b-instruct",
-			name: "Meta: Llama 3.1 8B Instruct",
-			api: "openai-completions",
-			provider: "openrouter",
-			baseUrl: "https://openrouter.ai/api/v1",
-			reasoning: false,
-			input: ["text"],
-			cost: {
-				input: 0.02,
-				output: 0.049999999999999996,
-				cacheRead: 0,
-				cacheWrite: 0,
-			},
-			contextWindow: 16384,
-			maxTokens: 16384,
-		} satisfies Model,
 		"meta-llama/llama-3.1-70b-instruct": {
 			id: "meta-llama/llama-3.1-70b-instruct",
 			name: "Meta: Llama 3.1 70B Instruct",
@@ -35212,6 +35195,23 @@ export const MODELS = {
 				cacheWrite: 0,
 			},
 			contextWindow: 131072,
+			maxTokens: 16384,
+		} satisfies Model,
+		"meta-llama/llama-3.1-8b-instruct": {
+			id: "meta-llama/llama-3.1-8b-instruct",
+			name: "Meta: Llama 3.1 8B Instruct",
+			api: "openai-completions",
+			provider: "openrouter",
+			baseUrl: "https://openrouter.ai/api/v1",
+			reasoning: false,
+			input: ["text"],
+			cost: {
+				input: 0.02,
+				output: 0.049999999999999996,
+				cacheRead: 0,
+				cacheWrite: 0,
+			},
+			contextWindow: 16384,
 			maxTokens: 16384,
 		} satisfies Model,
 		"mistralai/mistral-nemo": {
@@ -35486,9 +35486,9 @@ export const MODELS = {
 			contextWindow: 16385,
 			maxTokens: 4096,
 		} satisfies Model,
-		"openai/gpt-4-0314": {
-			id: "openai/gpt-4-0314",
-			name: "OpenAI: GPT-4 (older v0314)",
+		"openai/gpt-4": {
+			id: "openai/gpt-4",
+			name: "OpenAI: GPT-4",
 			api: "openai-completions",
 			provider: "openrouter",
 			baseUrl: "https://openrouter.ai/api/v1",
@@ -35503,9 +35503,9 @@ export const MODELS = {
 			contextWindow: 8191,
 			maxTokens: 4096,
 		} satisfies Model,
-		"openai/gpt-4": {
-			id: "openai/gpt-4",
-			name: "OpenAI: GPT-4",
+		"openai/gpt-4-0314": {
+			id: "openai/gpt-4-0314",
+			name: "OpenAI: GPT-4 (older v0314)",
 			api: "openai-completions",
 			provider: "openrouter",
 			baseUrl: "https://openrouter.ai/api/v1",
