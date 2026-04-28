@@ -88,6 +88,11 @@ export function resetCapabilitiesCache(): void {
   cachedCapabilities = null;
 }
 
+/** Override the cached capabilities. Useful in tests to exercise both code paths. */
+export function setCapabilities(caps: TerminalCapabilities): void {
+  cachedCapabilities = caps;
+}
+
 export function isImageLine(line: string): boolean {
   if (line.startsWith(KITTY_PREFIX) || line.startsWith(ITERM2_PREFIX)) {
     return true;
@@ -318,4 +323,9 @@ export function imageFallback(mimeType: string, dimensions?: ImageDimensions, fi
   parts.push(`[${mimeType}]`);
   if (dimensions) parts.push(`${dimensions.widthPx}x${dimensions.heightPx}`);
   return `[Image: ${parts.join(' ')}]`;
+}
+
+/** Check if running in Termux session */
+export function isTermuxSession(): boolean {
+  return Boolean(process.env.TERMUX_VERSION);
 }

@@ -144,10 +144,80 @@ export type { CreateAgentSessionServicesOptions, CreateAgentSessionFromServicesO
 // Resource Loader (NEW - Phase B)
 // ============================================================================
 export { DefaultResourceLoader, loadProjectContextFiles } from './resource-loader.js';
-export type { ResourceLoader, LoadExtensionsResult, ExtensionRuntime, ResourceDiagnostic, SourceInfo, PromptTemplate, Theme } from './resource-loader.js';
+export type { ResourceLoader, LoadExtensionsResult, ExtensionRuntime, ResourceDiagnostic, SourceInfo, LoadedPromptTemplate, Theme } from './resource-loader.js';
 
 // ============================================================================
 // Model Registry (NEW - Phase C)
 // ============================================================================
 export { DefaultModelRegistry, createModelRegistry, getModel, getProviders, getModels } from './model-registry.js';
 export type { ModelRegistry, ModelEntry } from './model-registry.js';
+
+// ============================================================================
+// Defaults
+// ============================================================================
+export { DEFAULT_THINKING_LEVEL, DEFAULT_TOOL_TIMEOUT, DEFAULT_MAX_OUTPUT_SIZE, DEFAULT_MAX_OUTPUT_LINES, DEFAULT_COMPACTION_THRESHOLD, DEFAULT_MAX_HISTORY_TURNS, DEFAULT_TEMPERATURE, DEFAULT_TOP_P, DEFAULT_MAX_RETRIES } from './defaults.js';
+
+// ============================================================================
+// Bash Execution
+// ============================================================================
+export { executeBash, executeBashLocal } from './bash-executor.js';
+export type { BashExecutorOptions, BashResult } from './bash-executor.js';
+
+// ============================================================================
+// Diagnostics
+// ============================================================================
+export { getSystemInfo, getMemoryInfo, getPerformanceMetrics, collectDiagnostics, generateDiagnosticReport, formatFileSize, isDevelopment, isTest } from './diagnostics.js';
+export type { SystemInfo, MemoryInfo, PerformanceMetrics } from './diagnostics.js';
+
+// ============================================================================
+// Telemetry
+// ============================================================================
+export { getTelemetry, setTelemetry, track, telemetryMethod } from './telemetry.js';
+export type { Telemetry, TelemetryConfig, TelemetryEvent, TelemetryPayload } from './telemetry.js';
+
+// ============================================================================
+// Output Guard
+// ============================================================================
+export { sanitizeOutput, validateOutput, safeReadFile, cleanupTempFile } from './output-guard.js';
+export type { OutputValidation } from './output-guard.js';
+
+// ============================================================================
+// Shell Utilities
+// ============================================================================
+export { getShellConfig, getShellEnv, sanitizeBinaryOutput, killProcessTree, trackDetachedChildPid, untrackDetachedChildPid, killTrackedDetachedChildren } from './utils/shell.js';
+export type { ShellConfig } from './utils/shell.js';
+
+// ============================================================================
+// Config Resolution
+// ============================================================================
+export { resolveConfigValue, resolveConfigValueUncached, resolveConfigValueOrThrow, resolveConfigValueToNumber, resolveConfigValueToBoolean, resolveConfigValueToList } from './resolve-config-value.js';
+
+// ============================================================================
+// System Prompt
+// ============================================================================
+export { buildSystemPrompt } from './system-prompt.js';
+export type { BuildSystemPromptOptions } from './system-prompt.js';
+
+// ============================================================================
+// Package Manager
+// ============================================================================
+export { DefaultPackageManager, createPackageManager } from './package-manager.js';
+export type { PackageSource, ResolvedPackage, PackageManagerOptions } from './package-manager.js';
+
+// ============================================================================
+// Footer DataProvider
+// ============================================================================
+export { DefaultFooterDataProvider, createFooterDataProvider, getGitInfo } from './footer-data-provider.js';
+export type { FooterDataProvider, FooterData, GitInfo, ExtensionStatus } from './footer-data-provider.js';
+
+// ============================================================================
+// Built-in Tools
+// ============================================================================
+export { createBashToolDefinition, createReadToolDefinition, createWriteToolDefinition, createEditToolDefinition, createLsToolDefinition, truncateOutput, truncateTail, truncateHead, truncateLines, DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES } from './tools/index.js';
+export type { BashToolInput, BashToolDetails, ReadToolInput, WriteToolInput, EditToolInput, LsToolInput, LsEntry, TruncationResult } from './tools/index.js';
+
+// ============================================================================
+// Prompt Templates
+// ============================================================================
+export { expandPromptTemplate } from './prompt-templates.js';
+export type { PromptTemplate } from './prompt-templates.js';

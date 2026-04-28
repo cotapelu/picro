@@ -371,11 +371,11 @@ export class InteractiveMode {
         mode.chatInterface.setWidget(key, content);
       },
       setFooter: (factory) => {
-        const footer = factory(mode.tui);
+        const footer = factory();
         mode.chatInterface.setCustomFooter(footer ?? null);
       },
       setHeader: (factory) => {
-        const header = factory(mode.tui);
+        const header = factory();
         mode.chatInterface.setHeader(header ?? null);
       },
       setTitle: (title) => {
@@ -430,7 +430,5 @@ export class InteractiveMode {
     };
   }
 }
-
-export { ChatInterface };
 
 export { ChatInterface };

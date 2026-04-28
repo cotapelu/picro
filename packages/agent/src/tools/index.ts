@@ -1,26 +1,22 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Tools Index - Export all tools
+ * Built-in tools for the agent
  */
 
-export { readFileTool, readToolDefinition } from "./read-tool.js";
-export type { ReadToolInput, ReadToolDetails } from "./read-tool.js";
+export { createBashToolDefinition } from './bash.js';
+export type { BashToolInput, BashToolDetails } from './bash.js';
 
-export { writeFileTool, writeToolDefinition } from "./write-tool.js";
-export type { WriteToolInput } from "./write-tool.js";
+export { createReadToolDefinition } from './read.js';
+export type { ReadToolInput } from './read.js';
 
-export { grepTool, grepToolDefinition } from "./grep-tool.js";
-export type { GrepToolInput } from "./grep-tool.js";
+export { createWriteToolDefinition } from './write.js';
+export type { WriteToolInput } from './write.js';
 
-export { findTool, findToolDefinition } from "./find-tool.js";
-export type { FindToolInput } from "./find-tool.js";
+export { createEditToolDefinition } from './edit.js';
+export type { EditToolInput } from './edit.js';
 
-export { lsTool, lsToolDefinition } from "./ls-tool.js";
-export type { LsToolInput } from "./ls-tool.js";
+export { createLsToolDefinition } from './ls.js';
+export type { LsToolInput, LsEntry } from './ls.js';
 
-export { editTool, editToolDefinition } from "./edit-tool.js";
-export type { EditToolInput } from "./edit-tool.js";
-
-// Bash tool
-export { createBashTool, createBashToolDefinition } from "./bash-tool.js";
-export type { BashToolInput, BashToolOptions } from "./bash-tool.js";
+export { truncateOutput, truncateTail, truncateHead, truncateLines, DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES } from './truncate.js';
+export type { TruncationResult } from './truncate.js';

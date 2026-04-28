@@ -118,7 +118,7 @@ export { KillRing, defaultKillRing } from './components/kill-ring.js';
 export { UndoStack } from './components/undo-stack.js';
 export { renderDiff } from './components/diff.js';
 export type { DiffOptions } from './components/diff.js';
-export { visibleWidth, wrapText, truncateText, truncateToWidth, expandTabs } from './components/internal-utils.js';
+export { visibleWidth, wrapText, truncateText, truncateToWidth, expandTabs, wrapTextWithAnsi, extractSegments } from './components/internal-utils.js';
 export { parseKey, matchesKey, isKeyRelease, isKeyRepeat, decodeKittyPrintable } from './components/keys.js';
 export { getKeybindings, KeybindingsManager } from './components/keybindings.js';
 export {
@@ -139,12 +139,25 @@ export {
 	encodeITerm2,
 	getImageDimensions,
 	setCellDimensions,
-	getCellDimensions
+	getCellDimensions,
+	isImageLine,
+	isTermuxSession,
+	allocateImageId,
+	deleteKittyImage,
+	deleteAllKittyImages,
+	calculateImageRows,
+	imageFallback,
+	getCapabilities,
+	detectCapabilities,
+	resetCapabilitiesCache,
+	setCapabilities
 } from './components/terminal-image.js';
 export type {
 	CellDimensions,
 	ImageDimensions,
-	ImageRenderOptions
+	ImageRenderOptions,
+	TerminalCapabilities,
+	ImageProtocol
 } from './components/terminal-image.js';
 
 // Misc

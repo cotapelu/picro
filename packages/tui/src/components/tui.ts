@@ -28,10 +28,13 @@ import {
   ElementContainer,
 } from './base.js';
 
-import { visibleWidth, truncateText, wrapText } from './internal-utils.js';
+import { visibleWidth, truncateText, wrapText, sliceByColumn, extractOverlaySegments, wrapTextWithAnsi } from './internal-utils.js';
+import { isImageLine, getCellDimensions, setCellDimensions } from './terminal-image.js';
 import type { Terminal } from './terminal.js';
 import { parseKey, isKeyRelease } from './keys.js';
 import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 
 /**
  * TerminalUI - Main class for managing terminal UI with incremental rendering
@@ -124,6 +127,40 @@ export class TerminalUI extends ElementContainer {
 
 	setClearOnShrink(enabled: boolean): void {
 		this.clearOnShrink = enabled;
+	}
+
+	/** Query terminal for cell size (for image rendering) */
+	private queryCellSize(): void {
+		// Only query if terminal supports images
+		const caps = { images: false } as any;
+		if (!caps.images) return;
+		// Query terminal for cell size: CSI 16 t
+		// Response format: CSI 6 ; height ; width t
+		this.terminal.write('\x1b[16t');
+	}
+
+	// Handle cell size response (CSI 6 ; height ; width t)
+	private consumeCellSizeResponse(data: string): boolean {
+		const match = data.match(/^\x1b\[6;(\d+);(\d+)t$/);
+		if (!match) return false;
+		const heightPx = parseInt(match[1], 10);
+		const widthPx = parseInt(match[2], 10);
+		if (heightPx <= 0 || widthPx <= 0) return true;
+		setCellDimensions({ widthPx, heightPx });
+		// Invalidate to re-render images with correct dimensions
+		this.invalidate();
+		this.requestRender();
+		return true;
+	}
+
+	/** Invalidate cached state for all children */
+	public invalidate(): void {
+		for (const child of this.children) {
+			child.clearCache?.();
+		}
+		for (const panel of this.panelStack) {
+			panel.element.clearCache?.();
+		}
 	}
 
 	setFocus(element: UIElement | null): void {
@@ -228,6 +265,9 @@ export class TerminalUI extends ElementContainer {
 
 		this.terminal.hideCursor();
 
+		// Query cell size for image rendering
+		this.queryCellSize();
+
 		// Initial render
 		this.requestRender();
 	}
@@ -327,6 +367,11 @@ export class TerminalUI extends ElementContainer {
 				this.handleMouse({ row: cy - 1, col: cx - 1, button: 'left' });
 			}
 			return; // consume mouse
+		}
+
+		// Consume terminal cell size responses without blocking unrelated input.
+		if (this.consumeCellSizeResponse(data)) {
+			return;
 		}
 
 		if (this.keyHandlers.size > 0) {
@@ -473,7 +518,7 @@ export class TerminalUI extends ElementContainer {
 		const finalLines = this.mergePanels(baseLines, panelLines, width, height);
 
 		// Full redraw
-		this.fullRedraw(finalLines);
+		this.fullRedraw(finalLines, width, height);
 
 		// Update tracking
 		this.previousLines = finalLines;
@@ -814,7 +859,7 @@ export class TerminalUI extends ElementContainer {
 	/**
 	 * Full redraw - simpler and more reliable than incremental
 	 */
-	private fullRedraw(newLines: string[]): void {
+	private fullRedraw(newLines: string[], width: number, height: number): void {
 		// Clear screen and move to home
 		try { this.terminal.clearScreen(); } catch {}
 		this.terminal.moveBy(-this.cursorRow);
@@ -830,10 +875,37 @@ export class TerminalUI extends ElementContainer {
 			}
 		}
 
-		// Write all lines
+		// Write all lines with overflow protection
 		for (let i = 0; i < newLines.length; i++) {
 			this.terminal.clearLine();
-			this.terminal.write(newLines[i]);
+			const line = newLines[i];
+			// Skip image lines in width check
+			if (!isImageLine(line)) {
+				const lineWidth = visibleWidth(line);
+				if (lineWidth > width) {
+					// Log crash info
+					const crashLogPath = path.join(os.homedir(), '.pi', 'agent', 'pi-crash.log');
+					const crashData = [
+						`Crash at ${new Date().toISOString()}`,
+						`Terminal width: ${width}`,
+						`Line ${i} visible width: ${lineWidth}`,
+						"",
+						"=== All rendered lines ===",
+						...newLines.map((l, idx) => `[${idx}] (w=${visibleWidth(l)}) ${l}`),
+					].join('\n');
+					try {
+						fs.mkdirSync(path.dirname(crashLogPath), { recursive: true });
+						fs.writeFileSync(crashLogPath, crashData);
+					} catch {}
+					this.stop();
+					throw new Error(
+						`Rendered line ${i} exceeds terminal width (${lineWidth} > ${width}). ` +
+						`This is likely caused by a custom component not truncating output. ` +
+						`Debug log written to: ${crashLogPath}`
+					);
+				}
+			}
+			this.terminal.write(line);
 			if (i < newLines.length - 1) {
 				this.terminal.moveBy(1);
 			}

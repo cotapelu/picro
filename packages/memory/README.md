@@ -1,14 +1,15 @@
 # @picro/memory
 
-Memory system for AI agents with storage, retrieval, and context management.
+Memory Management for AI Agents - Vector storage and semantic search.
 
 ## Features
 
-- **Storage**: JSON file-based memory persistence
-- **Retrieval**: Search and filter memories by query, action, or project
-- **Context Management**: Automatic context building for LLM prompts
-- **Event Logging**: Track all memory operations
-- **Crypto Integrity**: SHA-256 hashing for memory integrity
+- 💾 **Vector Storage** - Store and retrieve semantic memories
+- 🔍 **Similarity Search** - Find relevant memories by embedding similarity
+- 🏷️ **Metadata Filtering** - Filter by user, session, type, custom fields
+- ⏰ **Temporal Indexing** - Time-based memory weighting
+- 🔄 **Automatic Pruning** - Configurable retention policies
+- 📊 **Token Accounting** - Track memory usage in tokens
 
 ## Installation
 
@@ -16,59 +17,234 @@ Memory system for AI agents with storage, retrieval, and context management.
 npm install @picro/memory
 ```
 
-## Usage
+## Quick Start
 
 ```typescript
-import { AgentMemoryApp, MemoryStore } from '@picro/memory';
+import { MemoryStore } from '@picro/memory';
 
-// Create memory store
-const store = new MemoryStore('memory.json');
+const store = new MemoryStore({
+  embedder: 'openai:text-embedding-ada-002',
+});
 
-// Create memory app
-const memoryApp = new AgentMemoryApp(store, 'my-project');
+// Store a memory
+await store.addMemory({
+  content: 'User prefers TypeScript over JavaScript',
+  userId: 'user-123',
+  sessionId: 'session-456',
+  type: 'preference',
+});
 
-// Remember file operations
-memoryApp.rememberFileRead('/path/to/file.txt', 'file content summary');
-memoryApp.rememberFileEdit('/path/to/file.txt', 'fixed bug');
+// Search for relevant memories
+const results = await store.search('What programming language does the user like?', {
+  userId: 'user-123',
+  limit: 5,
+});
 
-// Remember commands
-memoryApp.rememberCommand('npm install', 'installed packages');
-
-// Recall memories
-const results = memoryApp.recall('file operations');
-
-// Get context for LLM
-const context = memoryApp.getContext();
+console.log(results);
+// [
+//   { content: 'User prefers TypeScript...', score: 0.92, metadata: {...} },
+//   ...
+// ]
 ```
 
-## API
-
-### AgentMemoryApp
-
-- `rememberFileRead(filePath, summary)` - Remember file read operation
-- `rememberFileEdit(filePath, description)` - Remember file edit operation
-- `rememberCommand(cmd, output)` - Remember command execution
-- `rememberProjectInfo(info)` - Remember project information
-- `rememberTaskInfo(taskId, info)` - Remember task information
-- `recall(query)` - Search memories by query
-- `getContext()` - Get formatted context for LLM
-- `getRecentActions(limit)` - Get recent actions
-- `clear()` - Clear all memories
-- `getMemoryCount()` - Get total memory count
-- `getByAction(action)` - Get memories by action type
-- `getByFile(filePath)` - Get memories by file path
-- `getStats()` - Get memory statistics
+## Core Concepts
 
 ### MemoryStore
 
-- `addMemory(id, content, embedding, metadata)` - Add memory
-- `getMemory(id)` - Get memory by ID
-- `getAllMemories()` - Get all memories
-- `deleteMemory(id)` - Delete memory
-- `updateMemory(id, content, metadata)` - Update memory
-- `getMemoryCount()` - Get total memory count
-- `clear()` - Clear all memories
+The main class for memory operations:
+
+```typescript
+interface MemoryConfig {
+  /** Embedding model to use */
+  embedder: string;
+  /** Max memories to store per user (default: 10000) */
+  maxMemories?: number;
+  /** Default retention policy */
+  retention?: RetentionPolicy;
+  /** Vector DB backend (default: 'memory') */
+  backend?: 'memory' | 'pgvector' | 'qdrant' | 'pinecone';
+}
+
+class MemoryStore {
+  /** Add a memory */
+  async addMemory(memory: Memory): Promise<string> {}
+
+  /** Search for similar memories */
+  async search(
+    query: string,
+    options: SearchOptions = {}
+  ): Promise<SearchResult[]> {}
+
+  /** Get memory by ID */
+  async getMemory(id: string): Promise<Memory | null> {}
+
+  /** Update a memory */
+  async updateMemory(id: string, updates: Partial<Memory>): Promise<void> {}
+
+  /** Delete a memory */
+  async deleteMemory(id: string): Promise<void> {}
+
+  /** Clear all memories */
+  async clear(): Promise<void> {}
+
+  /** Get stats */
+  async getStats(): Promise<MemoryStats> {}
+}
+```
+
+### Memory Structure
+
+```typescript
+interface Memory {
+  /** Unique ID */
+  id: string;
+
+  /** Memory content (text to embed) */
+  content: string;
+
+  /** User ID (for multi-user systems) */
+  userId: string;
+
+  /** Session ID (optional) */
+  sessionId?: string;
+
+  /** Memory type (preference, fact, skill, etc.) */
+  type?: string;
+
+  /** Embedding vector (auto-generated) */
+  embedding?: number[];
+
+  /** Metadata (custom fields) */
+  metadata?: Record<string, any>;
+
+  /** Creation timestamp */
+  createdAt: Date;
+
+  /** Last accessed timestamp */
+  accessedAt: Date;
+
+  /** Access count */
+  accessCount: number;
+}
+```
+
+## Search Options
+
+```typescript
+interface SearchOptions {
+  /** Maximum results to return */
+  limit?: number;
+
+  /** Minimum similarity threshold (0-1) */
+  threshold?: number;
+
+  /** Filter by user */
+  userId?: string;
+
+  /** Filter by session */
+  sessionId?: string;
+
+  /** Filter by memory type */
+  type?: string;
+
+  /** Custom metadata filters */
+  metadata?: Record<string, any>;
+
+  /** Time range */
+  createdAt?: { since: Date; until?: Date };
+
+  /** Include embeddings in results */
+  includeEmbeddings?: boolean;
+}
+```
+
+## Retention Policies
+
+```typescript
+interface RetentionPolicy {
+  /** Max age in days (default: 365) */
+  maxAgeDays?: number;
+
+  /** Min access count to keep (default: 0) */
+  minAccessCount?: number;
+
+  /** Max memories per user (default: 10000) */
+  maxPerUser?: number;
+
+  /** Auto-compaction on add */
+  autoCompact?: boolean;
+}
+```
+
+## Backends
+
+- **memory** (default) - In-memory store (ephemeral, fast)
+- **pgvector** - PostgreSQL with pgvector extension
+- **qdrant** - Qdrant vector database
+- **pinecone** - Pinecone cloud service
+
+Configure backend:
+
+```typescript
+const store = new MemoryStore({
+  embedder: 'openai:text-embedding-ada-002',
+  backend: 'pgvector',
+  connection: {
+    host: 'localhost',
+    port: 5432,
+    database: 'memory',
+  },
+});
+```
+
+## Utility Functions
+
+```typescript
+import { chunkText, countTokens } from '@picro/memory';
+
+// Split long text into chunks for embedding
+const chunks = chunkText(longDocument, { chunkSize: 1000, overlap: 200 });
+
+// Estimate token count
+const tokens = countTokens('Hello world'); // 2
+```
+
+## Integration with Agent
+
+```typescript
+import { MemoryStore } from '@picro/memory';
+import { AgentSession } from '@picro/agent';
+
+const memory = new MemoryStore({ embedder: 'openai:text-embedding-ada-002' });
+const session = new AgentSession({ /* config */ });
+
+// Add memories when user shares info
+session.on('user:message', async (msg) => {
+  if (msg.content.includes('my name is')) {
+    await memory.addMemory({
+      content: `User's name is ${extractName(msg.content)}`,
+      userId: session.config.userId,
+      type: 'personal',
+    });
+  }
+});
+
+// Retrieve relevant memories for prompts
+const relevant = await memory.search(session.currentPrompt, {
+  userId: session.config.userId,
+  limit: 10,
+});
+session.setContextMemories(relevant);
+```
+
+## API Reference
+
+See [API.md](./docs/API.md) for complete API.
 
 ## License
 
-MIT
+Apache-2.0
+
+---
+
+<p align="center">Smart memory for AI agents</p>

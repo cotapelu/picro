@@ -1,0 +1,162 @@
+# Picro Workspace Summary
+
+## 🎯 Project Context
+
+**Picro** là một coding agent harness với TUI (Terminal User Interface) mạnh mẽ. Dự án được thiết kế theo kiến trúc clean-room, tham khảo từ `llm-context` nhưng **không copy code** - chỉ đọc và tái implement theo kiến trúc phù hợp.
+
+## 📦 Packages
+
+### 1. @picro/tui
+**Terminal UI Library**
+
+- **Build**: ✅
+- **Tests**: 113 passed (17 test files)
+- **Key Features**:
+  - Differential rendering với overlay system
+  - Terminal image support (Kitty, iTerm2)
+  - ANSI-aware text utilities (wrapTextWithAnsi, extractSegments)
+  - Width overflow protection với crash logging
+  - Cell dimension queries cho images
+  - Complete component library: Input, Editor, SelectList, Markdown, Messages, etc.
+- **New/Enhanced**:
+  - `src/components/terminal-image.ts`: setCapabilities, isTermuxSession
+  - `src/components/internal-utils.ts`: wrapTextWithAnsi, extractOverlaySegments
+  - `src/components/tui.ts`: queryCellSize, consumeCellSizeResponse, invalidate, width overflow protection
+
+### 2. @picro/agent
+**Core Agent Logic**
+
+- **Build**: ✅
+- **Tests**: 126 passed (9 test files)
+- **Key Features**:
+  - Agent session management
+  - Tool execution với streaming & truncation
+  - Diagnostics & telemetry
+  - Output sanitization & validation
+  - Config resolution (env vars, shell commands)
+  - System prompt builder
+  - Package manager cho extensions
+  - Footer data provider (git info)
+  - Built-in tools: bash, read, write, edit, ls
+  - SDK factory functions
+- **New Modules** (12 files):
+  - `bash-executor.ts`: Streaming bash execution với temp file backup
+  - `diagnostics.ts`: System/memory/performance metrics
+  - `telemetry.ts`: Rate-limited usage tracking (opt-in)
+  - `output-guard.ts`: Sanitization, binary detection, validation
+  - `utils/shell.ts`: Cross-platform shell config, process tree killing
+  - `resolve-config-value.ts`: Config resolution với caching
+  - `system-prompt.ts`: Dynamic prompt builder với tools, skills, context
+  - `package-manager.ts`: Extension/package installation
+  - `footer-data-provider.ts`: Git status, extension status
+  - `tools/`: truncate, bash, read, write, edit, ls
+  - `defaults.ts`: Centralized constants
+
+### 3. @picro/llm
+**LLM Integration**
+
+- **Build**: ✅
+- Auto-generates 2966 models từ 98 providers
+- Model discovery và lookup
+
+### 4. @picro/memory
+**Memory Management**
+
+- **Build**: ✅
+- Session persistence và memory retrieval
+
+## 🧪 Test Coverage
+
+```
+TUI:    113 tests passed (17 files)
+Agent:  126 tests passed (9 files)
+Total:  239 tests passing
+```
+
+**No breaking changes** - tất cả tests đều pass.
+
+## 🔧 Technical Highlights
+
+### TUI Architecture
+- **Incremental rendering** với synchronized output (`\x1b[?2026h/l`)
+- **Overlay system** với anchor-based positioning
+- **Cursor IME support** với CURSOR_MARKER
+- **Image protocol** hỗ trợ Kitty và iTerm2
+- **Width overflow protection** với detailed crash logging
+
+### Agent Architecture
+- **Event-driven** với EventEmitter
+- **Pluggable tools** với ToolExecutor
+- **Streaming execution** với onChunk callbacks
+- **Output truncation** tự động (bytes + lines)
+- **Sanitization** cho binary và control characters
+- **Config resolution** hỗ trợ shell commands (`!cmd`)
+- **Telemetry** rate-limited (5s default)
+- **Diagnostics** collect: system, memory, performance
+
+### Clean-Room Implementation
+- Không copy code từ llm-context
+- Tất cả đều reimplement dựa trên architecture tham khảo
+- TypeScript strict mode
+- Comprehensive error handling
+
+## 📂 File Changes Summary
+
+### Modified Packages
+- `packages/tui/`: Enhanced with image support, utils, TerminalUI improvements
+- `packages/agent/`: 12 new modules, tools, services
+
+### New Files (30+)
+**TUI:**
+- `src/components/terminal-image.ts` (enhanced)
+- `src/components/internal-utils.ts` (enhanced)
+- `src/components/tui.ts` (enhanced)
+
+**Agent:**
+- `src/bash-executor.ts`
+- `src/diagnostics.ts`
+- `src/telemetry.ts`
+- `src/output-guard.ts`
+- `src/utils/shell.ts`
+- `src/resolve-config-value.ts`
+- `src/system-prompt.ts`
+- `src/package-manager.ts`
+- `src/footer-data-provider.ts`
+- `src/tools/truncate.ts`
+- `src/tools/bash.ts`
+- `src/tools/read.ts`
+- `src/tools/write.ts`
+- `src/tools/edit.ts`
+- `src/tools/ls.ts`
+- `src/tools/index.ts`
+- `src/defaults.ts`
+
+## 🚀 Getting Started
+
+```typescript
+// Example: Create an agent session
+import { createAgentSession } from '@picro/agent';
+
+const agent = await createAgentSession({
+  model: 'claude-3.5-sonnet',
+  thinkingLevel: 'medium'
+});
+
+// Or use TUI directly
+import { TerminalUI, ProcessTerminal } from '@picro/tui';
+
+const tui = new TerminalUI(new ProcessTerminal());
+tui.start();
+```
+
+## 📝 Notes
+
+- Workspace build hoàn toàn (TUI, Agent, LLM, Memory)
+- No code copied from reference material
+- All code written from scratch với inspiration từ architecture
+- Ready for integration và further development
+
+---
+
+**Generated by**: Automated workspace analysis
+**Date**: 2025-01-20

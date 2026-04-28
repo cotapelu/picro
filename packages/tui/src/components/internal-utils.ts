@@ -333,6 +333,157 @@ export function truncateToWidth(
 }
 
 /**
+ * Extract before/after segments from a line for overlay compositing
+ */
+export function extractOverlaySegments(
+  line: string,
+  beforeEnd: number,
+  afterStart: number,
+  afterLen: number,
+  strictAfter = false
+): { before: string; beforeWidth: number; after: string; afterWidth: number } {
+  let before = '', beforeWidth = 0;
+  let after = '', afterWidth = 0;
+  let currentCol = 0;
+  let i = 0;
+  let pendingAnsi = '';
+
+  // Simple one-pass extraction without full state tracking
+  while (i < line.length) {
+    const ansi = extractAnsiCode(line, i);
+    if (ansi) {
+      if (currentCol < beforeEnd) {
+        before += ansi.code;
+      } else if (currentCol >= afterStart && currentCol < afterStart + afterLen) {
+        after += ansi.code;
+      }
+      i += ansi.length;
+      continue;
+    }
+
+    // Collect contiguous non-ANSI text
+    let textEnd = i;
+    while (textEnd < line.length && !extractAnsiCode(line, textEnd)) {
+      textEnd++;
+    }
+    const text = line.slice(i, textEnd);
+
+    // Process graphemes
+    for (const g of getSegmenter().segment(text)) {
+      const segment = g.segment;
+      const w = visibleWidth(segment);
+
+      if (currentCol < beforeEnd) {
+        before += segment;
+        beforeWidth += w;
+      } else if (currentCol >= afterStart && currentCol < afterStart + afterLen) {
+        after += segment;
+        afterWidth += w;
+      }
+      currentCol += w;
+      if (currentCol >= afterStart + afterLen) break;
+    }
+    i = textEnd;
+    if (currentCol >= afterStart + afterLen) break;
+  }
+
+  return { before, beforeWidth, after, afterWidth };
+}
+
+/**
+ * Wrap text with ANSI codes preserved.
+ * Returns lines where each line is <= width visible chars.
+ */
+export function wrapTextWithAnsi(text: string, width: number): string[] {
+  if (!text) return [''];
+
+  const inputLines = text.split('\n');
+  const result: string[] = [];
+
+  for (const inputLine of inputLines) {
+    // Quick ASCII path
+    if (/^[\x00-\x7F\s]*$/.test(inputLine)) {
+      const wrapped = wrapText(inputLine, width);
+      result.push(...wrapped);
+      continue;
+    }
+
+    // ANSI-aware wrapping
+    const segments: Array<{ ansi?: string; text: string }> = [];
+    let i = 0;
+    while (i < inputLine.length) {
+      const ansi = extractAnsiCode(inputLine, i);
+      if (ansi) {
+        segments.push({ ansi: ansi.code, text: '' });
+        i += ansi.length;
+      } else {
+        // Accumulate non-ANSI text
+        let textStart = i;
+        let j = i;
+        while (j < inputLine.length && !extractAnsiCode(inputLine, j)) {
+          j++;
+        }
+        segments.push({ text: inputLine.slice(i, j) });
+        i = j;
+      }
+    }
+
+    // Build line with ANSI codes
+    let currentLine = '';
+    let currentWidth = 0;
+
+    const flushLine = () => {
+      if (currentLine) {
+        result.push(currentLine);
+        currentLine = '';
+        currentWidth = 0;
+      }
+    };
+
+    for (const seg of segments) {
+      if (seg.ansi) {
+        currentLine += seg.ansi;
+        continue;
+      }
+
+      const words = seg.text.split(/(\s+)/); // Keep delimiters
+      for (const word of words) {
+        if (!word) continue;
+        const wordWidth = visibleWidth(word);
+
+        if (currentWidth + wordWidth > width) {
+          if (currentWidth > 0) flushLine();
+          // Force split if single word exceeds width
+          if (wordWidth > width) {
+            // Break word
+            let remaining = word;
+            while (remaining.length > 0) {
+              let lineWidth = 0;
+              let k = 0;
+              while (k < remaining.length) {
+                const w = visibleWidth(remaining[k]);
+                if (lineWidth + w > width) break;
+                lineWidth += w;
+                k++;
+              }
+              currentLine += remaining.slice(0, k);
+              remaining = remaining.slice(k);
+              flushLine();
+            }
+            continue;
+          }
+        }
+        currentLine += word;
+        currentWidth += wordWidth;
+      }
+    }
+    flushLine();
+  }
+
+  return result.length > 0 ? result : [''];
+}
+
+/**
  * Expand tab characters to spaces
  */
 export function expandTabs(text: string, tabSize = 2): string {

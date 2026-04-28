@@ -19,7 +19,7 @@ export interface ResourceLoader {
   getSkills(): { skills: Skill[]; diagnostics: ResourceDiagnostic[] };
 
   /** Get loaded prompt templates */
-  getPrompts(): { prompts: PromptTemplate[]; diagnostics: ResourceDiagnostic[] };
+  getPrompts(): { prompts: LoadedPromptTemplate[]; diagnostics: ResourceDiagnostic[] };
 
   /** Get loaded themes */
   getThemes(): { themes: Theme[]; diagnostics: ResourceDiagnostic[] };
@@ -93,7 +93,7 @@ export interface SourceInfo {
 /**
  * Prompt template
  */
-export interface PromptTemplate {
+export interface LoadedPromptTemplate {
   name: string;
   description?: string;
   filePath: string;
@@ -139,7 +139,7 @@ export class DefaultResourceLoader implements ResourceLoader {
     return { skills: [], diagnostics: [] };
   }
 
-  getPrompts(): { prompts: PromptTemplate[]; diagnostics: ResourceDiagnostic[] } {
+  getPrompts(): { prompts: LoadedPromptTemplate[]; diagnostics: ResourceDiagnostic[] } {
     return { prompts: [], diagnostics: [] };
   }
 
