@@ -88,6 +88,12 @@ export class SelectList implements UIElement, InteractiveElement {
 			return;
 		}
 
+		// Space toggles selection in multi-select mode (precedes confirm)
+		if (this.multiSelect && (key.name === ' ' || data === ' ')) {
+			this.toggleSelection(this.selectedIndex);
+			return;
+		}
+
 		if (kb.matches(data, 'tui.select.confirm')) {
 			if (this.items[this.selectedIndex]) {
 				this.onSelect?.(this.items[this.selectedIndex].value);
@@ -137,11 +143,6 @@ export class SelectList implements UIElement, InteractiveElement {
 			return;
 		}
 
-		// Space toggles selection in multi-select mode
-		if (this.multiSelect && (key.name === ' ' || data === ' ')) {
-			this.toggleSelection(this.selectedIndex);
-			return;
-		}
 	}
 
 	draw(context: RenderContext): string[] {

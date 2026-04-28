@@ -57,14 +57,58 @@ export function decodeKittyPrintable(data: string): string {
 
 /**
  * Parse raw key data into structured format
+ * Supports common keys: Enter, Escape, Backspace, Tab, Arrows, PageUp, PageDown
  */
 export function parseKey(data: string): ParsedKey | null {
+	// Handle special single-character keys
 	if (data === '\r' || data === '\n') {
-		return { raw: data, type: 'press', name: 'Enter', ctrl: false, alt: false, shift: false, meta: false };
+		return { raw: data, type: 'press', name: 'enter', ctrl: false, alt: false, shift: false, meta: false };
 	}
+	if (data === '\t') {
+		return { raw: data, type: 'press', name: 'tab', ctrl: false, alt: false, shift: false, meta: false };
+	}
+	if (data === '\x7f' || data === '\x08') {
+		return { raw: data, type: 'press', name: 'backspace', ctrl: false, alt: false, shift: false, meta: false };
+	}
+	if (data === '\x1b') {
+		return { raw: data, type: 'press', name: 'escape', ctrl: false, alt: false, shift: false, meta: false };
+	}
+
+	// Handle CSI sequences (ESC [ ...)
+	if (data.length >= 3 && data[0] === '\x1b' && data[1] === '[') {
+		const finalChar = data[data.length - 1];
+		const inner = data.substring(2, data.length - 1); // between '[' and final char
+
+		// Arrow keys: ESC [ A/B/C/D
+		if (finalChar === 'A') {
+			return { raw: data, type: 'press', name: 'up', ctrl: false, alt: false, shift: false, meta: false };
+		}
+		if (finalChar === 'B') {
+			return { raw: data, type: 'press', name: 'down', ctrl: false, alt: false, shift: false, meta: false };
+		}
+		if (finalChar === 'C') {
+			return { raw: data, type: 'press', name: 'right', ctrl: false, alt: false, shift: false, meta: false };
+		}
+		if (finalChar === 'D') {
+			return { raw: data, type: 'press', name: 'left', ctrl: false, alt: false, shift: false, meta: false };
+		}
+		// PageUp/PageDown: ESC [ 5 ~ / ESC [ 6 ~
+		if (finalChar === '~') {
+			const num = parseInt(inner, 10);
+			if (num === 5) {
+				return { raw: data, type: 'press', name: 'pageup', ctrl: false, alt: false, shift: false, meta: false };
+			}
+			if (num === 6) {
+				return { raw: data, type: 'press', name: 'pagedown', ctrl: false, alt: false, shift: false, meta: false };
+			}
+		}
+	}
+
+	// Single printable character: name is the character itself
 	if (data.length === 1) {
 		return { raw: data, type: 'press', name: data, ctrl: false, alt: false, shift: false, meta: false };
 	}
+
 	return null;
 }
 
