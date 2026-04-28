@@ -20,6 +20,7 @@ import type {
    LoopStrategy,
    DebugRoundTimingEvent,
    DebugRunTimingEvent,
+   ToolDefinition,
  } from './types.js';
  import { EventEmitter } from './event-emitter.js';
  import { ToolExecutor } from './tool-executor.js';
@@ -428,29 +429,7 @@ export class AgentRunner {
      }
    }
 
-  /**
-   * Stream agent execution (stub: currently delegates to run).
-   * Full delta streaming not yet implemented.
-   */
-  async *stream(
-    initialPrompt: string,
-    steeringQueue: MessageQueue,
-    followUpQueue: MessageQueue,
-    streamProvider: (prompt: string, tools: any[], options?: any) => AsyncIterable<any> | Promise<AsyncIterable<any>>,
-    signal?: AbortSignal,
-    initialTurns: ConversationTurn[] = []
-  ): AsyncGenerator<any, AgentRunResult> {
-    // For now, use non-streaming run and return result
-    const result = await this.run(
-      initialPrompt,
-      steeringQueue,
-      followUpQueue,
-      (p, t, o) => Promise.resolve({} as any) as any,
-      signal,
-      initialTurns
-    );
-    return result;
-  }
+
 
   private drainQueue(queue: MessageQueue): ConversationTurn[] {
     return queue.drainAll();
@@ -544,4 +523,456 @@ export class AgentRunner {
     if ('error' in result) return result.error;
     return result.result;
   }
+
+  /**
+   * Stream agent execution with delta events.
+   * Yields LLMStreamEvent during streaming and returns final AgentRunResult.
+   */
+   async *stream(
+     initialPrompt: string,
+     steeringQueue: MessageQueue,
+     followUpQueue: MessageQueue,
+     streamProvider: (prompt: string, tools: any[], options?: any) => AsyncIterable<any> | Promise<AsyncIterable<any>>,
+     signal?: AbortSignal,
+     initialTurns: ConversationTurn[] = []
+   ): AsyncGenerator<any, AgentRunResult> {
+     this.abortController = new AbortController();
+     const combinedSignal = signal
+       ? this.combineSignals(signal, this.abortController.signal)
+       : this.abortController.signal;
+
+     this.state = this.createInitialState();
+     if (initialTurns.length > 0) {
+       this.state.history.push(...initialTurns);
+     }
+     this.state.isRunning = true;
+
+     const runStartTime = Date.now();
+     let totalContextBuildingTime = 0;
+     let totalMemoryRetrievalTime = 0;
+     let totalLLMRequestTime = 0;
+     let totalToolExecutionTime = 0;
+
+     try {
+       await this.emitter.emit({
+         type: 'agent:start',
+         timestamp: Date.now(),
+         round: 0,
+         initialPrompt,
+       } as any);
+
+       let currentPrompt = initialPrompt;
+       const maxRounds = this.config.maxRounds;
+
+       roundLoop: while (this.state.round < maxRounds && !this.state.isCancelled) {
+         const roundStartTime = Date.now();
+         this.state.round++;
+
+         await this.emitter.emit({
+           type: 'turn:start',
+           timestamp: Date.now(),
+           round: this.state.round,
+           promptLength: currentPrompt.length,
+         } as any);
+
+         // Drain steering queue
+         if (steeringQueue.hasPending) {
+           const steering = this.drainQueue(steeringQueue);
+           this.state.history.push(...steering);
+         }
+
+         // Apply transformPrompt
+         currentPrompt = this.strategy.transformPrompt?.(currentPrompt, this.state) ?? currentPrompt;
+
+         // Context building with timing
+         const contextBuildStart = Date.now();
+         let contextTurns = this.state.history;
+         if (this.config.transformContext) {
+           contextTurns = await this.config.transformContext(contextTurns, combinedSignal);
+         }
+         const contextBuildEnd = Date.now();
+         totalContextBuildingTime += (contextBuildEnd - contextBuildStart);
+
+         // Memory retrieval with timing
+         let memories: MemoryEntry[] = [];
+         let memoryRetrievalTime = 0;
+         if (this.memoryStore) {
+           const memoryStart = Date.now();
+           try {
+             const retrieval = await this.memoryStore.recall(currentPrompt);
+             memories = retrieval.memories;
+             memoryRetrievalTime = Date.now() - memoryStart;
+             totalMemoryRetrievalTime += memoryRetrievalTime;
+             await this.emitter.emit({
+               type: 'memory:retrieve',
+               timestamp: Date.now(),
+               round: this.state.round,
+               query: currentPrompt,
+               memoriesRetrieved: memories.length,
+               scores: retrieval.scores,
+               memories: memories.map((mem, index) => ({
+                 content: mem.content,
+                 relevance: mem.relevance,
+                 index,
+               })),
+             } as any);
+           } catch (e) {
+             console.warn('Memory retrieval failed:', e);
+           }
+         }
+
+         // Build prompt
+         const { prompt: fullPrompt, tokenCount } = this.contextBuilder.build(
+           currentPrompt,
+           contextTurns,
+           memories
+         );
+         this.state.promptLength = fullPrompt.length;
+         this.state.totalTokens += tokenCount;
+
+         // Prepare internal tool definitions (ToolDefinition[])
+         const internalToolDefs: ToolDefinition[] = this.toolExecutor.getNames().map(name => this.toolExecutor.getDefinition(name)!);
+
+         // LLM request timing
+         const llmStartTime = Date.now();
+         await this.emitter.emit({
+           type: 'llm:request',
+           timestamp: Date.now(),
+           round: this.state.round,
+           promptLength: fullPrompt.length,
+           toolsAvailable: internalToolDefs.length,
+         } as any);
+
+         // Stream options
+         const streamOptions: any = {
+           signal: combinedSignal,
+           sessionId: this.config.sessionId,
+           reasoning: this.config.reasoningLevel,
+           thinkingBudget: this.config.thinkingBudgets?.[this.config.reasoningLevel ?? 'off'],
+         };
+
+         let partialMessage: any = null;
+         let finalMessage: any = null;
+         let streamError: string | null = null;
+
+         try {
+           const rawStream = streamProvider(fullPrompt, internalToolDefs, streamOptions);
+           for await (const event of (rawStream as any)) {
+             // Yield raw event to caller
+             yield event;
+
+             switch (event.type) {
+               case 'start':
+                 partialMessage = event.partial;
+                 await this.emitter.emit({
+                   type: 'message:start',
+                   timestamp: Date.now(),
+                   round: this.state.round,
+                   message: { ...partialMessage },
+                 } as any);
+                 break;
+
+               case 'text_start':
+               case 'thinking_start':
+               case 'toolcall_start':
+                 if (partialMessage) {
+                   await this.emitter.emit({
+                     type: 'message:update',
+                     timestamp: Date.now(),
+                     round: this.state.round,
+                     message: { ...partialMessage },
+                   } as any);
+                 }
+                 break;
+
+               case 'text_delta':
+               case 'thinking_delta':
+               case 'toolcall_delta':
+                 if (partialMessage) {
+                   await this.emitter.emit({
+                     type: 'message:update',
+                     timestamp: Date.now(),
+                     round: this.state.round,
+                     message: { ...partialMessage },
+                     delta: event.delta,
+                   } as any);
+                 }
+                 break;
+
+               case 'text_end':
+               case 'thinking_end':
+               case 'toolcall_end':
+                 // no special handling
+                 break;
+
+               case 'done':
+                 finalMessage = event.message;
+                 await this.emitter.emit({
+                   type: 'message:end',
+                   timestamp: Date.now(),
+                   round: this.state.round,
+                   message: finalMessage,
+                 } as any);
+                 // Exit the for-await, continue with processing finalMessage
+                 break roundLoop;
+
+               case 'error':
+                 streamError = event.error?.errorMessage || 'Stream error';
+                 this.state.isCancelled = true;
+                 await this.emitter.emit({
+                   type: 'error',
+                   timestamp: Date.now(),
+                   round: this.state.round,
+                   message: streamError,
+                 } as any);
+                 break roundLoop;
+             }
+           }
+
+           // If we exit the for-await loop without 'done' or 'error'
+           if (!finalMessage && !streamError) {
+             streamError = 'Stream ended without completion';
+           }
+         } catch (err: any) {
+           streamError = err.message || String(err);
+           this.state.isCancelled = true;
+           await this.emitter.emit({
+             type: 'error',
+             timestamp: Date.now(),
+             round: this.state.round,
+             message: streamError,
+             stack: err.stack,
+           } as any);
+         }
+
+         // LLM response timing
+         const llmEndTime = Date.now();
+         const llmRequestTime = llmEndTime - llmStartTime;
+         totalLLMRequestTime += llmRequestTime;
+
+         await this.emitter.emit({
+           type: 'llm:response',
+           timestamp: Date.now(),
+           round: this.state.round,
+           tokensUsed: tokenCount,
+           toolCallsCount: finalMessage?.content.filter((c: any) => c.type === 'toolCall').length || 0,
+         } as any);
+
+         if (streamError) {
+           const errorResult: AgentRunResult = {
+             finalAnswer: '',
+             totalRounds: this.state.round,
+             totalToolCalls: this.state.totalToolCalls,
+             totalTokens: this.state.totalTokens,
+             toolResults: this.state.toolResults,
+             success: false,
+             stopReason: 'error',
+             error: streamError,
+             finalState: { ...this.state },
+           };
+           await this.emitter.emit({
+             type: 'agent:end',
+             timestamp: Date.now(),
+             round: this.state.round,
+             result: errorResult,
+           } as any);
+           return errorResult;
+         }
+
+         if (!finalMessage) {
+           // Should not happen if error handled, but safeguard
+           const err = 'No final message from LLM';
+           const errorResult: AgentRunResult = {
+             finalAnswer: '',
+             totalRounds: this.state.round,
+             totalToolCalls: this.state.totalToolCalls,
+             totalTokens: this.state.totalTokens,
+             toolResults: this.state.toolResults,
+             success: false,
+             stopReason: 'error',
+             error: err,
+             finalState: { ...this.state },
+           };
+           await this.emitter.emit({
+             type: 'agent:end',
+             timestamp: Date.now(),
+             round: this.state.round,
+             result: errorResult,
+           } as any);
+           return errorResult;
+         }
+
+         // Push assistant turn to history
+         this.state.history.push(this.createAssistantTurn(finalMessage));
+
+         // Check for tool calls
+         const toolCalls = finalMessage.content.filter((c: any) => c.type === 'toolCall') as ToolCallData[];
+
+         if (toolCalls.length > 0) {
+           this.state.totalToolCalls += toolCalls.length;
+
+           const toolContext: ToolContext = {
+             round: this.state.round,
+             runtimeState: this.state,
+             signal: combinedSignal,
+           };
+
+           // Tool execution timing
+           const toolExecStartTime = Date.now();
+           const toolResults = await this.toolExecutor.executeAll(
+             toolCalls,
+             toolContext,
+             combinedSignal
+           );
+           const toolExecEndTime = Date.now();
+           const toolExecutionTime = toolExecEndTime - toolExecStartTime;
+           totalToolExecutionTime += toolExecutionTime;
+
+           this.state.toolResults.push(...toolResults);
+
+           if (this.config.autoSaveMemories && this.memoryStore) {
+             await this.autoSaveMemory(currentPrompt, finalMessage, toolResults);
+           }
+
+           // Append tool turns to history
+           for (const result of toolResults) {
+             this.state.history.push(this.createToolTurn(result));
+           }
+
+           // Append tool results text to currentPrompt for next round
+           const resultsText = this.strategy.formatResults(toolResults);
+           currentPrompt += `\n\n[Tool Results]\n${resultsText}`;
+
+           await this.emitter.emit({
+             type: 'turn:end',
+             timestamp: Date.now(),
+             round: this.state.round,
+             toolCallsExecuted: toolCalls.length,
+             hasAssistantContent: true,
+           } as any);
+
+           // Continue to next round if strategy permits
+           if (!this.strategy.shouldContinue(finalMessage as any, this.state)) {
+             break; // Exit while loop
+           }
+           // Continue (next iteration)
+         } else {
+           // No tool calls - finish successfully
+           await this.emitter.emit({
+             type: 'turn:end',
+             timestamp: Date.now(),
+             round: this.state.round,
+             toolCallsExecuted: 0,
+             hasAssistantContent: true,
+           } as any);
+
+           const finalResult: AgentRunResult = {
+             finalAnswer: (finalMessage as any).content || '',
+             totalRounds: this.state.round,
+             totalToolCalls: this.state.totalToolCalls,
+             totalTokens: this.state.totalTokens,
+             toolResults: this.state.toolResults,
+             success: true,
+             stopReason: finalMessage.stopReason || 'stop',
+             error: finalMessage.errorMessage,
+             finalState: { ...this.state },
+           };
+
+           if (this.config.debug) {
+             const runEndTime = Date.now();
+             const totalRunTime = runEndTime - runStartTime;
+             await this.emitter.emit({
+               type: 'debug:run:timing',
+               timestamp: Date.now(),
+               totalRunTime,
+               totalContextBuildingTime,
+               totalMemoryRetrievalTime,
+               totalLLMRequestTime,
+               totalToolExecutionTime,
+             } as any);
+           }
+
+           await this.emitter.emit({
+             type: 'agent:end',
+             timestamp: Date.now(),
+             round: this.state.round,
+             result: finalResult,
+           } as any);
+
+           return finalResult;
+         }
+       } // while
+
+       // Exited while: either max rounds or cancelled
+       let finalResult: AgentRunResult;
+       if (this.state.isCancelled) {
+         finalResult = this.createAbortedResult();
+       } else {
+         finalResult = {
+           finalAnswer: 'Max rounds reached without final answer',
+           totalRounds: this.state.round,
+           totalToolCalls: this.state.totalToolCalls,
+           totalTokens: this.state.totalTokens,
+           toolResults: this.state.toolResults,
+           success: false,
+           stopReason: 'max_rounds',
+           error: 'Max rounds reached',
+           finalState: { ...this.state },
+         };
+       }
+
+       if (this.config.debug) {
+         const runEndTime = Date.now();
+         const totalRunTime = runEndTime - runStartTime;
+         await this.emitter.emit({
+           type: 'debug:run:timing',
+           timestamp: Date.now(),
+           totalRunTime,
+           totalContextBuildingTime,
+           totalMemoryRetrievalTime,
+           totalLLMRequestTime,
+           totalToolExecutionTime,
+         } as any);
+       }
+
+       await this.emitter.emit({
+         type: 'agent:end',
+         timestamp: Date.now(),
+         round: this.state.round,
+         result: finalResult,
+       } as any);
+
+       return finalResult;
+     } catch (error: any) {
+       this.state.isCancelled = true;
+       await this.emitter.emit({
+         type: 'error',
+         timestamp: Date.now(),
+         round: this.state.round,
+         message: error.message || String(error),
+         stack: error.stack,
+       } as any);
+       const errorResult: AgentRunResult = {
+         finalAnswer: '',
+         totalRounds: this.state.round,
+         totalToolCalls: this.state.totalToolCalls,
+         totalTokens: this.state.totalTokens,
+         toolResults: this.state.toolResults,
+         success: false,
+         stopReason: 'error',
+         error: error.message || String(error),
+         finalState: { ...this.state },
+       };
+       await this.emitter.emit({
+         type: 'agent:end',
+         timestamp: Date.now(),
+         round: this.state.round,
+         result: errorResult,
+       } as any);
+       return errorResult;
+     } finally {
+       this.state.isRunning = false;
+       this.state.isCancelled = false;
+     }
+   }
 }
