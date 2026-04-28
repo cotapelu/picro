@@ -3,7 +3,7 @@
  * Extensions Loader - Load extensions from file system
  */
 
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Extension, ExtensionFactory, ExtensionContext, ExtensionRuntime } from "./types.js";
 import type { LoadExtensionsResult } from "./types.js";
@@ -140,6 +140,43 @@ function createExtensionAPI(runtime: ExtensionRuntime): any {
 }
 
 /**
+ * Resolve extension entry points from a directory.
+ *
+ * Checks for:
+ * 1. package.json with "pi.extensions" field -> returns declared paths
+ * 2. index.ts or index.js -> returns the index file
+ *
+ * Returns resolved absolute paths or null if no entry points found.
+ */
+function resolveExtensionEntries(dir: string): string[] | null {
+  // Check for package.json with pi field first
+  const packageJsonPath = join(dir, "package.json");
+  if (existsSync(packageJsonPath)) {
+    try {
+      const content = readFileSync(packageJsonPath, "utf-8");
+      const pkg = JSON.parse(content);
+      if (pkg.pi?.extensions?.length) {
+        const entries: string[] = [];
+        for (const extPath of pkg.pi.extensions) {
+          const resolved = resolve(dir, extPath);
+          if (existsSync(resolved)) entries.push(resolved);
+        }
+        if (entries.length) return entries;
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }
+
+  // Check for index.ts or index.js (prefer .ts for development)
+  const indexTs = join(dir, "index.ts");
+  const indexJs = join(dir, "index.js");
+  if (existsSync(indexTs)) return [indexTs];
+  if (existsSync(indexJs)) return [indexJs];
+  return null;
+}
+
+/**
  * Discover and load extensions from standard locations
  */
 export async function discoverAndLoadExtensions(options: {
@@ -156,24 +193,62 @@ export async function discoverAndLoadExtensions(options: {
     join(options.cwd, ".pi", "extensions"),
   ];
   
-  for (const path of defaultPaths) {
-    if (existsSync(path)) {
-      try {
-        const entries = readdirSync(path, { withFileTypes: true });
-        for (const entry of entries) {
-          if (entry.isDirectory()) {
-            paths.push(join(path, entry.name));
+  for (const basePath of defaultPaths) {
+    if (!existsSync(basePath)) continue;
+    try {
+      const entries = readdirSync(basePath, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = join(basePath, entry.name);
+        if (entry.isDirectory()) {
+          // Resolve extension entry points from directory
+          const extEntries = resolveExtensionEntries(fullPath);
+          if (extEntries) {
+            paths.push(...extEntries);
+          } else {
+            // Fall back: treat directory as extension directly
+            paths.push(fullPath);
           }
+        } else if ((entry.isFile() || entry.isSymbolicLink()) && 
+                   (entry.name.endsWith('.js') || entry.name.endsWith('.ts'))) {
+          // Direct JS/TS file in extensions directory
+          paths.push(fullPath);
         }
-      } catch {
-        // Ignore errors
       }
+    } catch {
+      // Ignore errors
     }
   }
   
   // Add additional paths
   if (options.additionalPaths) {
-    paths.push(...options.additionalPaths);
+    for (const additionalPath of options.additionalPaths) {
+      const resolvedPath = resolve(options.cwd, additionalPath);
+      if (existsSync(resolvedPath)) {
+        const stats = statSync(resolvedPath);
+        if (stats.isDirectory()) {
+          const extEntries = resolveExtensionEntries(resolvedPath);
+          if (extEntries) {
+            paths.push(...extEntries);
+          } else {
+            // Discover individual .js/.ts files in directory
+            try {
+              const files = readdirSync(resolvedPath, { withFileTypes: true });
+              for (const file of files) {
+                if ((file.isFile() || file.isSymbolicLink()) && 
+                    (file.name.endsWith('.js') || file.name.endsWith('.ts'))) {
+                  paths.push(join(resolvedPath, file.name));
+                }
+              }
+            } catch {
+              // ignore
+            }
+          }
+        } else if (stats.isFile() && 
+                   (resolvedPath.endsWith('.js') || resolvedPath.endsWith('.ts'))) {
+          paths.push(resolvedPath);
+        }
+      }
+    }
   }
   
   return loadExtensions(paths, options.cwd, options.eventBus);

@@ -294,6 +294,8 @@ function getLatestCompactionEntry(entries: SessionEntry[]): CompactionEntry | nu
 // Session Context Building
 // ============================================================================
 
+import { convertSessionMessagesToLlm } from './convert-to-llm.js';
+
 export function buildSessionContext(
   entries: SessionEntry[],
   leafId?: string | null,
@@ -410,7 +412,9 @@ export function buildSessionContext(
     }
   }
 
-  return { messages, thinkingLevel, model };
+  // Convert session-specific messages to LLM-compatible format
+  const convertedMessages = convertSessionMessagesToLlm(messages);
+  return { messages: convertedMessages, thinkingLevel, model };
 }
 
 // ============================================================================
