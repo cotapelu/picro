@@ -758,6 +758,140 @@ export class SessionManager {
     return buildSessionContext(this.getEntries(), this.leafId, this.byId);
   }
 
+  // ============================================================================
+  // Session Export/Import
+  // ============================================================================
+
+  /**
+   * Export the entire session (all entries) as a JSON string.
+   * This includes the header, all entries, and labels.
+   * The data is NOT encrypted by default; use encrypt parameter for encryption.
+   */
+  exportSession(encrypt: false): string;
+  exportSession(encrypt: true, password: string): string;
+  exportSession(encrypt: boolean = false, password?: string): string {
+    const sessionData = {
+      version: CURRENT_SESSION_VERSION,
+      header: this.getHeader(),
+      entries: this.getEntries(),
+      labels: Object.fromEntries(this.labelsById),
+      labelTimestamps: Object.fromEntries(this.labelTimestampsById),
+    };
+
+    const json = JSON.stringify(sessionData, null, 2);
+
+    if (encrypt && password) {
+      // Simple XOR-based encryption (use webcrypto in production)
+      const encrypted = this._encrypt(json, password);
+      return JSON.stringify({ v: 1, alg: 'xor', data: encrypted });
+    }
+
+    return json;
+  }
+
+  /**
+   * Import a session from JSON string.
+   * Can handle both plain and encrypted (with password) formats.
+   * Returns a new SessionManager instance with the imported session.
+   */
+  static importSession(
+    cwd: string,
+    sessionDir: string,
+    json: string,
+    password?: string
+  ): SessionManager {
+    let wrapper: any;
+    try {
+      wrapper = JSON.parse(json);
+    } catch (e) {
+      throw new Error('Invalid JSON');
+    }
+
+    let sessionData: any;
+    if (wrapper.encrypted || wrapper.v === 1) {
+      if (!password) {
+        throw new Error('Password required for encrypted session');
+      }
+      const decrypted = SessionManager._decrypt(wrapper.data, password);
+      try {
+        sessionData = JSON.parse(decrypted);
+      } catch (e) {
+        throw new Error('Failed to decrypt session: invalid password or corrupted data');
+      }
+    } else {
+      sessionData = wrapper;
+    }
+
+    const entries: FileEntry[] = [sessionData.header as SessionHeader];
+    entries.push(...(sessionData.entries || []));
+
+    // Rebuild indexes
+    const byId = new Map<string, SessionEntry>();
+    const labelsById = new Map<string, string>();
+    const labelTimestampsById = new Map<string, string>();
+    let leafId: string | null = null;
+
+    for (const entry of entries) {
+      if (entry.type === 'session') continue;
+      byId.set(entry.id, entry);
+      leafId = entry.id;
+      if (entry.type === 'label') {
+        if (entry.label) {
+          labelsById.set(entry.targetId, entry.label);
+          labelTimestampsById.set(entry.targetId, entry.timestamp);
+        }
+      }
+    }
+
+    const manager = new SessionManager(cwd, sessionDir, undefined, true);
+    manager.fileEntries = entries;
+    manager.byId = byId;
+    manager.labelsById = labelsById;
+    manager.labelTimestampsById = labelTimestampsById;
+    manager.leafId = leafId;
+
+    // Write to file if persist
+    if (manager.persist && manager.sessionFile) {
+      const content = entries.map(e => JSON.stringify(e)).join('\n') + '\n';
+      writeFileSync(manager.sessionFile, content);
+    }
+
+    return manager;
+  }
+
+  /**
+   * XOR-based encryption (simple). Use WebCrypto in production.
+   */
+  private _encrypt(text: string, password: string): string {
+    const key = SessionManager._hashPassword(password);
+    const result: number[] = [];
+    for (let i = 0; i < text.length; i++) {
+      result.push(text.charCodeAt(i) ^ key[i % key.length]);
+    }
+    return Buffer.from(result).toString('base64');
+  }
+
+  private static _decrypt(encrypted: string, password: string): string {
+    const key = SessionManager._hashPassword(password);
+    const buffer = Buffer.from(encrypted, 'base64');
+    let result = '';
+    for (let i = 0; i < buffer.length; i++) {
+      result += String.fromCharCode(buffer[i] ^ key[i % key.length]);
+    }
+    return result;
+  }
+
+  private static _hashPassword(password: string): number[] {
+    const key: number[] = [];
+    for (let i = 0; i < password.length; i++) {
+      key.push(password.charCodeAt(i));
+    }
+    while (key.length < 32) {
+      key.push(...key.slice(0, Math.min(32 - key.length, key.length)));
+    }
+    return key;
+  }
+
   getHeader(): SessionHeader | null {
     const h = this.fileEntries.find((e) => e.type === "session");
     return h as SessionHeader | null;
