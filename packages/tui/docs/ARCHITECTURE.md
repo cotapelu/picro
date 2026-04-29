@@ -1,329 +1,220 @@
-# Kiến trúc TUI - Phân tầng thành phần
+# Kiến trúc TUI
 
 ## Tổng quan
 
-Thư viện TUI được xây dựng theo mô hình phân tầng, với các lớp phụ thuộc rõ ràng:
+TUI sử dụng **phân tầng theo dependency** với 5 lớp. Tất cả components nằm trong `src/components/`.
 
 ```
-Lớp 1 (Foundation).py
-    │
-    ├── keys.ts           - Xử lý phím, Kitty protocol
-    ├── utils.ts          - Text width, ANSI, wrapping
-    ├── fuzzy.ts          - Fuzzy matching
-    ├── autocomplete.ts   - Autocomplete engine
-    ├── kill-ring.ts      - Emacs clipboard
-    ├── undo-stack.ts     - Generic undo
-    └── editor-component.ts (interface)
-    │
-Lớp 2 (Simple Components)
-    │
-    ├── base.ts           - UIElement, ElementContainer
-    ├── spacer.ts         - Empty spacing
-    ├── divider.ts        - Visual separator
-    ├── badge.ts          - Status labels
-    ├── progress-bar.ts   - Progress indicator
-    ├── rating.ts         - Star rating
-    ├── stepper.ts        - Multi-step wizard
-    ├── countdown-timer.ts - Timer utility
-    ├── text.ts           - Multi-line text
-    ├── truncated-text.ts - Truncated text
-    └── box.ts            - Container w/ padding/bg
-    │
-Lớp 3 (Interactive Basic)
-    │
-    ├── input.ts          - Single-line input
-    ├── select-list.ts    - Scrollable list
-    └── settings-list.ts  - Toggle settings
-    │
-Lớp 4 (Complex Components)
-    │
-    ├── editor.ts         - Multi-line editor (rich)
-    ├── markdown.ts       - Markdown renderer
-    ├── terminal-image.ts - Image rendering
-    ├── modal.ts          - Modal overlay
-    ├── toast.ts          - Toast notifications
-    ├── footer.ts         - Status bar
-    ├── command-palette.ts - Command palette
-    ├── context-menu.ts   - Context menu
-    ├── file-browser.ts   - File explorer
-    ├── login-dialog.ts   - Auth dialog
-    ├── memory-panel.ts   - Memory manager
-    ├── debug-panel.ts    - Debug info
-    │
-    ├── Selectors (13 loại):
-    │   ├── session-selector.ts
-    │   ├── model-selector.ts
-    │   ├── oauth-selector.ts
-    │   ├── extension-selector.ts
-    │   ├── theme-selector.ts
-    │   ├── tree-selector.ts
-    │   ├── thinking-selector.ts
-    │   └── ... (scoped-models, extension-input/editor, settings, show-images)
-    │
-    ├── Messages (11 loại):
-    │   ├── user-message.ts
-    │   ├── assistant-message.ts
-    │   ├── tool-message.ts
-    │   ├── bash-execution-message.ts
-    │   ├── custom-message.ts
-    │   ├── tool-execution.ts
-    │   ├── branch-summary-message.ts
-    │   ├── compaction-summary-message.ts
-    │   ├── skill-invocation-message.ts
-    │   ├── diff.ts
-    │   └── armin.ts, daxnuts.ts, earendil-announcement.ts
-    │
-    └── Core Engine:
-        ├── tui.ts          - TerminalUI (render orchestration)
-        ├── terminal.ts     - ProcessTerminal (IO abstraction)
-        ├── keybindings.ts  - Global keybinding registry
-        └── themes.ts       - Theme management
+Lớp 5: Engine (tui, terminal, keybindings, themes)
+    ↑ điều phối
+Lớp 4: Complex Components (editor, modal, selectors, messages, ...)
+    ↑ kế thừa/compose
+Lớp 3: Interactive Basic (input, select-list, settings-list)
+    ↑ kế thừa/compose
+Lớp 2: Simple Components (spacer, badge, text, box, ...)
+    ↑ import
+Lớp 1: Foundation (keys, utils, fuzzy, base, ...)
 ```
 
 ---
 
-## Lớp 1: Foundation (Không phụ thuộc)
+## Lớp 1: Foundation
 
-**Đặc điểm:** Hoàn toàn độc lập, không import component UI nào.
+**Mục đích:** Utilities và interfaces độc lập hoàn toàn.
 
-| File | Dependencies | Mô tả |
-|------|-------------|-------|
-| `keys.ts` | Node built-ins | Parse phím, Kitty protocol, `matchesKey()`, `parseKey()` |
-| `utils.ts` | `get-east-asian-width` | `visibleWidth()`, `wrapText()`, `truncateToWidth()`, ANSI handling |
-| `fuzzy.ts` | none | `fuzzyMatch()`, `fuzzyFilter()` - fuzzy search |
-| `autocomplete.ts` | `fuzzy.ts`, `fs`, `path` | `AutocompleteProvider`, `CombinedAutocompleteProvider` |
-| `kill-ring.ts` | none | `KillRing` - clipboard ring (Emacs style) |
-| `undo-stack.ts` | none | `UndoStack<T>` - generic undo với clone |
-| `editor-component.ts` | type imports | Interface cho custom editor |
+**Files:**
+- `base.ts`: `UIElement`, `ElementContainer`, types
+- `keys.ts`: `parseKey()`, `matchesKey()`, Kitty protocol
+- `utils.ts`: `visibleWidth()`, `wrapText()`, `truncateToWidth()`, ANSI handling
+- `fuzzy.ts`: `fuzzyMatch()`, `fuzzyFilter()`
+- `autocomplete.ts`: `AutocompleteProvider`, `CombinedAutocompleteProvider`
+- `kill-ring.ts`, `undo-stack.ts`: Data structures
+- `editor-component.ts`: Editor interface (types only)
 
-**Tổng:** 7 files
+**Dependencies:** Node built-ins, `get-east-asian-width` (external).
 
 ---
 
 ## Lớp 2: Simple Components
 
-**Đặc điểm:** Chỉ dùng Lớp 1 + types, không phụ thuộc component khác. Lớp "leaf" hoặc container đơn giản.
+**Mục đích:** Leaf components và simple containers, render-only.
 
-| Component | Dependencies | Ghi chú |
-|-----------|-------------|---------|
-| `base.ts` | none | Core: `UIElement`, `ElementContainer`, types |
-| `spacer.ts` | `base` | Render empty lines |
-| `divider.ts` | `base`, `internal-utils` | Separator với/không label |
-| `badge.ts` | `base`, `internal-utils` | Status badge với themes |
-| `progress-bar.ts` | `base` | Visual progress bar |
-| `rating.ts` | `base`, `internal-utils` | Star ratings |
-| `stepper.ts` | `base`, `internal-utils` | Wizard/step indicator |
-| `countdown-timer.ts` | `tui` (type only) | Countdown utility (không render) |
-| `text.ts` | `base`, `utils` | Multi-line text + wrapping + padding |
-| `truncated-text.ts` | `base`, `utils` | Single-line truncation |
-| `box.ts` | `base`, `utils` | Container với padding/background |
+**Chars:**
+- Không có state phức tạp
+- Không xử lý input
+- Chỉ implement `draw(context): string[]`
+- Có cache (optional)
 
-**Tổng:** 11 components
+**Examples:**
+- `spacer.ts`, `divider.ts` - layout
+- `badge.ts`, `progress-bar.ts`, `rating.ts` - widgets
+- `text.ts`, `truncated-text.ts`, `box.ts` - text containers
+
+**Dependencies:** Chỉ Lớp 1 (`utils`, `base`).
 
 ---
 
 ## Lớp 3: Interactive Basic
 
-**Đặc điểm:** Có xử lý key events, state, focus. Dùng Lớp 1-2.
+**Mục đích:** Components có state và handle key events.
 
-| Component | Dependencies | Mô tả |
-|-----------|-------------|-------|
-| `input.ts` | `base`, `keys`, `internal-utils`, `keybindings` | Single-line text + history + kill ring |
-| `select-list.ts` | `base`, `keys`, `utils`, `keybindings` | Scrollable list với selection |
-| `settings-list.ts` | `base`, `keys`, `utils`, `keybindings` | Toggle settings list |
+**Chars:**
+- Implements `InteractiveElement` (`isFocused`)
+- Implements `handleKey(key: KeyEvent)`
+- Có selection state, scrolling, filtering
+- Dùng `getKeybindings()` để match keys
 
-**Tổng:** 3 components
+**Components:**
+- `input.ts` - single-line editor
+- `select-list.ts` - scrollable list
+- `settings-list.ts` - toggle list
+
+**Dependencies:** L1 (keys, utils) + L2 + `keybindings.ts`.
 
 ---
 
 ## Lớp 4: Complex Components
 
-**Đặc điểm:** Tích hợp nhiều thành phần, dùng overlay system, theming, external libs, hoặc `TerminalUI`.
+**Mục đích:** Tích hợp sâu với Engine, overlay system, hoặc external libs.
 
-### 4.1 Editor & Display
-- `editor.ts`: Multi-line editor (undo, kill ring, autocomplete, word wrap)
-- `markdown.ts`: Markdown + syntax highlight (`highlight.js`)
-- `terminal-image.ts`: Kitty/iTerm2 image protocols
+**Chars:**
+- Dùng `TerminalUI.showOverlay()` (modal, toast, context-menu)
+- Compose nhiều components (ví dụ: `editor` dùng `select-list`, `autocomplete`)
+- Có logic phức tạp, lifecycle, async
+- External dependencies (highlight.js, image libs)
 
-### 4.2 Overlay System
-- `modal.ts`: Modal với backdrop
-- `toast.ts`: Temporary notifications
-- `context-menu.ts`: Right-click menu
+**Categories:**
+1. **Editors:** `editor.ts` (full editor), `markdown.ts` (syntax highlight), `terminal-image.ts` (images)
+2. **Overlays:** `modal.ts`, `toast.ts`, `context-menu.ts`
+3. **Chrome:** `footer.ts`, `stats-footer.ts`, `command-palette.ts`
+4. **Panels:** `file-browser.ts`, `memory-panel.ts`, `debug-panel.ts`
+5. **Dialogs:** `login-dialog.ts`
+6. **Selectors** (13 types): Tất cả dựa trên `select-list` hoặc `settings-list`
+7. **Messages** (11 types): Chat bubbles với styling
+8. **Utilities:** `dynamic-border.ts`, `diff.ts`, `visual-truncate.ts`, `keybinding-hints.ts`
 
-### 4.3 UI Chrome
-- `footer.ts`: Status bar với left/right items
-- `command-palette.ts`: Command palette (dựa trên `select-list`)
-- `file-browser.ts`: File explorer với fuzzy search
-- `debug-panel.ts`: Debug info panel
-- `memory-panel.ts`: Memory viewer/editor
-
-### 4.4 Selectors (Dialogs)
-Tất cả đều dựa trên `select-list`, `settings-list`, hoặc custom:
-- `session-selector.ts`
-- `model-selector.ts`
-- `oauth-selector.ts`
-- `extension-selector.ts`
-- `extension-input.ts`, `extension-editor.ts`
-- `settings-selector.ts`
-- `theme-selector.ts`
-- `show-images-selector.ts`
-- `tree-selector.ts`
-- `thinking-selector.ts`
-- `scoped-models-selector.ts`
-
-### 4.5 Message Bubbles (Chat UI)
-- `user-message.ts`
-- `assistant-message.ts`
-- `tool-message.ts`
-- `bash-execution-message.ts`
-- `custom-message.ts`
-- `tool-execution.ts`
-- `branch-summary-message.ts`
-- `compaction-summary-message.ts`
-- `skill-invocation-message.ts`
-- `diff.ts` (diff view)
-- Easter eggs: `armin.ts`, `daxnuts.ts`, `earendil-announcement.ts`
-
-### 4.6 Core Engine
-- `tui.ts`: `TerminalUI` class - orchestration, render loop, overlay stack, focus management
-- `terminal.ts`: `ProcessTerminal` - stdin/stdout abstraction, Kitty protocol detection
-- `keybindings.ts`: Global keybinding registry
-- `themes.ts`: Theme definitions + manager
-
-**Tổng Layer 4:** ~40+ components
+**Dependencies:** L1-3 + Engine (`tui.ts`, `terminal.ts`).
 
 ---
 
-## Core Engine (TerminalUI)
+## Lớp 5: Engine
 
-`TerminalUI` (tui.ts) là orchestrator cao nhất:
+**Mục đích:** Orchestration cao nhất - điều phối render loop, input, overlays.
 
-**Input flow:**
-```
-ProcessTerminal (raw data)
-    ↓
-StdinBuffer (batch splitting)
-    ↓
-keys.parseKey() → KeyEvent
-    ↓
-keybindings.matches()
-    ↓
-focusedElement.handleKey() or overlay handler
-```
+**Components:**
 
-**Render flow:**
-```
-requestRender() → debounce (16ms min)
-    ↓
-children.draw() + overlay composite
-    ↓
-diff algorithm (incremental) or fullRedraw()
-    ↓
-Terminal.write() with synchronized output (\x1b[?2026h/l)
-```
+| File | Mô tả |
+|------|-------|
+| `tui.ts` | `TerminalUI` class - main orchestrator |
+| `terminal.ts` | `ProcessTerminal` - stdin/stdout abstraction |
+| `keybindings.ts` | `KeybindingsManager`, global registry |
+| `themes.ts` | `ThemeManager`, theme definitions |
+| `stdin-buffer.ts` | Input batch splitting |
 
-**Overlay system:**
-- Stack-based (z-index theo focusOrder)
-- Positioning: anchor-based (9 vị trí) + absolute/percentage
-- Focus trapping và autofocus
+**TerminalUI responsibilities:**
+- Input pipeline: `Terminal` → `StdinBuffer` → `keys.parseKey()` → `keybindings` → `focusedElement.handleKey()`
+- Render pipeline: `requestRender()` → debounce → `children.draw()` + overlay composite → `diff()`/`fullRedraw()` → `Terminal.write()`
+- Overlay stack: positioning, focus trapping, z-index
+- Hardware cursor positioning cho IME
+
+**Dependencies:** Lớp 1 (keys, utils), không import Lớp 2-4 components trực tiếp (chỉ qua `UIElement` interface).
 
 ---
 
-## Utilities & Support
+## Dependency Rules
 
-| File | Mục đích |
-|------|---------|
-| `stdin-buffer.ts` | Split batched input thành sequences |
-| `keybindings.ts` | Registry + `getKeybindings()` singleton |
-| `themes.ts` | Theme definitions + `ThemeManager` |
-| `diff.ts` | `renderDiff()` - side-by-side diff |
-| `visual-truncate.ts` | Truncation với grapheme awareness |
-| `internal-utils.ts` | `extractSegments()`, `sliceByColumn()` |
+✅ **Được phép:**
+- Layer N import Layer < N
+- Engine (`keybindings.ts`, `themes.ts`) import từ bất kỳ đâu (global services)
 
----
+❌ **Cấm:**
+- Layer N import Layer > N (circular dependency风险)
 
-## Dependency Map
-
-```
-Layer 1 (Foundation)
-├─ keys.ts
-├─ utils.ts
-├─ fuzzy.ts
-├─ autocomplete.ts
-├─ kill-ring.ts
-├─ undo-stack.ts
-└─ editor-component.ts
-
-Layer 2 (Simple)
-├─ base.ts (dùng Layer 1)
-├─ spacer.ts (base)
-├─ divider.ts (base, utils)
-├─ badge.ts (base, utils)
-├─ progress-bar.ts (base)
-├─ rating.ts (base, utils)
-├─ stepper.ts (base, utils)
-├─ countdown-timer.ts (tui type)
-├─ text.ts (base, utils)
-├─ truncated-text.ts (base, utils)
-└─ box.ts (base, utils)
-
-Layer 3 (Interactive Basic)
-├─ input.ts (L1+L2, keybindings)
-├─ select-list.ts (L1+L2, keybindings)
-└─ settings-list.ts (L1+L2, keybindings)
-
-Layer 4 (Complex)
-├─ editor.ts (L1-3, select-list, fuzzy, autocomplete)
-├─ markdown.ts (L1-2, highlight.js)
-├─ terminal-image.ts (L1, image libs)
-├─ modal.ts, toast.ts, context-menu.ts (tui)
-├─ footer.ts (tui)
-├─ command-palette.ts (L3, fuzzy)
-├─ file-browser.ts (L3, fuzzy)
-├─ All selectors (L3, fuzzy, tui)
-├─ All messages (L2, utils)
-└─ Core: tui.ts, terminal.ts, keybindings.ts, themes.ts
-```
+**Kiểm tra:** Tất cả files tuân thủ. Ngoại lệ: `stats-footer.ts` là Lớp 4 (kế thừa `Footer`), không phải L2.
 
 ---
 
 ## Design Principles
 
-1. **Lớp dưới không biết lớp trên**: Foundation không import component UI.
-2. **Component leaf đơn giản**: Chỉ `draw()`, không có children.
-3. **Container quản lý children**: `ElementContainer` cung cấp `append()`, `remove()`.
-4. **InteractiveElement**: Focus management qua `isFocused` + `CURSOR_MARKER`.
-5. **Overlay system**: Stack-based, compositing ở `tui.ts`.
-6. **Caching**: Component tự quản lý cache (kiểm tra `text`, `width`, theme).
-7. **Theming**: Theme functions `(str) => string` với ANSI codes.
-8. **Keybindings**: Centralized qua `getKeybindings().matches()`.
-9. **Incremental rendering**: Diff algorithm trong `tui.ts` để giảm flicker.
-10. **Hardware cursor**: IME support qua `CURSOR_MARKER` + hardware cursor positioning.
+1. **UIElement interface:** Tất cả components implements `draw(context)`. Đơn giản, testable.
+2. **ElementContainer:** Base class cho composition (`append`, `remove`, `clear`).
+3. **InteractiveElement:** Focus management qua `isFocused` + `CURSOR_MARKER`.
+4. **Overlay system:** Stack-based, compositing trong `tui.ts`, positioning anchor-based.
+5. **Caching:** Component tự quản lý cache (ví dụ: `Text` cache `cachedLines`).
+6. **Theming:** Theme functions `(s: string) => string` trả về ANSI codes.
+7. **Keybindings:** Global registry, có context stacks.
+8. **Incremental rendering:** Diff algorithm trong `tui.ts` giảm flicker.
+9. **Hardware cursor:** IME support qua `CURSOR_MARKER` + `positionHardwareCursor()`.
+10. **Separation:** Foundation (L1) không biết gì về TerminalUI.
 
 ---
 
-## Reusability Checklist
+## Flow Examples
 
-Component có thể tách ra dùng độc lập nếu:
-- ✅ Chỉ dùng `base.ts` + `utils.ts`
-- ✅ Không dùng `TerminalUI` overlay system
-- ✅ Không cần focus management
-- ✅ Render-only (no imperative API)
+### Input flow:
+```
+ProcessTerminal (raw data)
+    ↓
+StdinBuffer (batch split)
+    ↓
+keys.parseKey() → KeyEvent
+    ↓
+keybindings.matches()
+    ↓
+focusedElement.handleKey()
+    ↓
+element.setState() / callbacks
+    ↓
+tui.requestRender()
+```
 
-**Như vậy có thể tách:** `Spacer`, `Divider`, `Badge`, `ProgressBar`, `Rating`, `Stepper`, `Text`, `TruncatedText`, `Box`.
+### Render flow:
+```
+tui.requestRender() (debounced, min 16ms)
+    ↓
+renderAll() → children.draw() + overlayComposite()
+    ↓
+computeDiff() (so với previousLines)
+    ↓
+if small diff → incrementalRender()
+else → fullRedraw()
+    ↓
+Terminal.write(buffer) với synchronized output (\x1b[?2026h/l)
+```
 
-**Cần TerminalUI:** `Input`, `SelectList`, `SettingsList` (vì focus handling).
-
-**Cần overlay/context:** Modal, Toast, CommandPalette, ContextMenu, Footer.
+### Overlay flow:
+```
+tui.showOverlay(component, options)
+    ↓
+push overlayStack (with preFocus)
+    ↓
+setFocus(component) if visible
+    ↓
+render: compositeOverlays() → gọi `component.render(width)` → composite vào buffer
+    ↓
+handle key: focused overlay's handleKey()
+    ↓
+overlay.close() → pop stack → restore focus
+```
 
 ---
 
-## Notes
+## Reusability
 
-- `llm-context/tui-core/` là reference implementation (legacy style). `src/` là implementation hiện tại với API khác biệt.
-- Lớp 1 và 2 có thể chuyển thành standalone package.
-- `countdown-timer.ts` thuộc Layer 2 nhưng dùng `TerminalUI` type → có thể refactor để không phụ thuộc.
-- `tui.ts` có thể tách `OverlayManager` và `RenderEngine` riêng trong tương lai.
+Components có thể standalone (testable without TerminalUI):
+- **Lớp 1-2:** Hoàn toàn độc lập.
+- **Lớp 3:** Có thể test với mock `KeybindingsManager`.
+- **Lớp 4:** Cần `TerminalUI` hoặc overlay system.
+- **Engine:** Cần terminal环境.
+
+---
+
+## Potential Refactorings
+
+- Extract `OverlayManager` từ `tui.ts` → testable riêng.
+- Inject `KeybindingsManager` vào interactive components thay vì `getKeybindings()` singleton.
+- Split `utils.ts` (text) vs `ansi-utils.ts` (SGR tracking).
+- Move `stdin-buffer.ts` vào Engine (trong cùng file với terminal?).
 
 ---
 
