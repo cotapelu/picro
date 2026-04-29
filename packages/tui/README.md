@@ -150,9 +150,12 @@ interface UITheme {
 - **Toast** - Temporary notifications
 - **Loader** - Spinner/progress indicators
 
-## API Documentation
+## Documentation
 
-See [API.md](./docs/API.md) for complete API reference.
+- [Architecture](./docs/ARCHITECTURE.md) - Kiến trúc và phân tầng
+- [Components](./docs/COMPONENTS.md) - Danh mục components theo lớp
+- [API Reference](./docs/API.md) - API đầy đủ (to be generated)
+
 
 ## Examples
 

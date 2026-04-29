@@ -272,7 +272,7 @@ export class InteractiveMode {
     onTick: (seconds: number) => void,
     onComplete: () => void
   ): void {
-    const timer = new CountdownTimer(timeoutMs, this.tui, onTick, onComplete);
+    const timer = new CountdownTimer(timeoutMs, onTick, onComplete, () => this.tui.requestRender());
     this.countdownTimers.push(timer);
   }
 

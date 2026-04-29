@@ -23,12 +23,12 @@ describe('CountdownTimer', () => {
   });
 
   it('should call onTick immediately with total seconds', () => {
-    timer = new CountdownTimer(5000, tui, onTick, onExpire);
+    timer = new CountdownTimer(5000, onTick, onExpire, () => tui.requestRender());
     expect(onTick).toHaveBeenCalledWith(5); // 5000ms -> 5 seconds
   });
 
   it('should call onTick every second with decreasing count', () => {
-    timer = new CountdownTimer(3000, tui, onTick, onExpire);
+    timer = new CountdownTimer(3000, onTick, onExpire, () => tui.requestRender());
 
     // Initial call
     expect(onTick).toHaveBeenCalledWith(3);
@@ -43,7 +43,7 @@ describe('CountdownTimer', () => {
   });
 
   it('should call onExpire when countdown reaches zero', () => {
-    timer = new CountdownTimer(2000, tui, onTick, onExpire);
+    timer = new CountdownTimer(2000, onTick, onExpire, () => tui.requestRender());
 
     // Initial: 2 seconds
     expect(onTick).toHaveBeenCalledWith(2);
@@ -60,7 +60,7 @@ describe('CountdownTimer', () => {
 
   it('should call tui.requestRender on each interval tick', () => {
     const requestRenderSpy = vi.spyOn(tui, 'requestRender');
-    timer = new CountdownTimer(5000, tui, onTick, onExpire);
+    timer = new CountdownTimer(5000, onTick, onExpire, () => tui.requestRender());
 
     // Initially requestRender not called (only onTick)
     expect(requestRenderSpy).not.toHaveBeenCalled();
@@ -74,7 +74,7 @@ describe('CountdownTimer', () => {
   });
 
   it('should stop timer after expiration', () => {
-    timer = new CountdownTimer(1000, tui, onTick, onExpire);
+    timer = new CountdownTimer(1000, onTick, onExpire, () => tui.requestRender());
 
     vi.advanceTimersByTime(1000); // expire
     expect(onExpire).toHaveBeenCalled();
@@ -86,7 +86,7 @@ describe('CountdownTimer', () => {
   });
 
   it('dispose should clear the interval and stop callbacks', () => {
-    timer = new CountdownTimer(5000, tui, onTick, onExpire);
+    timer = new CountdownTimer(5000, onTick, onExpire, () => tui.requestRender());
     timer.dispose();
 
     // Advance time - should not trigger callbacks after dispose
