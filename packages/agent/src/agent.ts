@@ -42,7 +42,7 @@ export class Agent {
   private readonly steeringQueue: MessageQueue;
   private readonly followUpQueue: MessageQueue;
   private memoryStore?: MemoryStore;
-  private model: Model;
+  private model?: Model;
   private llmProvider?: (prompt: string, tools: any[], options?: any) => Promise<LLMResponse>;
   private streamProvider?: (prompt: string, tools: any[], options?: any) => AsyncIterable<any> | Promise<AsyncIterable<any>>;
 
@@ -53,8 +53,8 @@ export class Agent {
    * @param config - Optional configuration (maxRounds, verbose, memoryStore, etc.).
    */
   constructor(
-    model: Model,
-    tools: ToolDefinition[],
+    model?: Model,
+    tools: ToolDefinition[] = [],
     config?: Partial<AgentConfig>
   ) {
     this.model = model;

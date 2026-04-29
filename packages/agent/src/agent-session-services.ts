@@ -160,24 +160,21 @@ export async function createAgentSessionFromServices(
 ): Promise<AgentSession> {
   const { services, sessionManager, sessionStartEvent, model, thinkingLevel, scopedModels, tools, noTools, customTools } = options;
 
-  // Determine model to use
-  let resolvedModel: Model;
+  // Determine model to use (can be undefined for interactive mode)
+  let resolvedModel: Model | undefined;
   if (model) {
     resolvedModel = model;
   } else {
-    // Get default model from settings
+    // Try to get default model from settings (but don't throw if not configured)
     const defaultProvider = services.settingsManager.getDefaultProvider();
     const defaultModelId = services.settingsManager.getDefaultModel();
 
-    if (!defaultProvider || !defaultModelId) {
-      throw new Error("No model specified and no default model configured in settings");
+    if (defaultProvider && defaultModelId) {
+      const found = services.modelRegistry.find(defaultProvider, defaultModelId);
+      if (found) {
+        resolvedModel = found;
+      }
     }
-
-    const found = services.modelRegistry.find(defaultProvider, defaultModelId);
-    if (!found) {
-      throw new Error(`Model ${defaultProvider}/${defaultModelId} not found in registry`);
-    }
-    resolvedModel = found;
   }
 
   // Build tool definitions - convert built-in tools to ToolDefinition format
@@ -191,9 +188,9 @@ export async function createAgentSessionFromServices(
         wrapBuiltinTool(createLsToolDefinition()),
       ];
 
-  // Create Agent with built-in tools only
+  // Create Agent with built-in tools only (model can be undefined)
   // AgentSession will register customTools separately
-  const agent = new Agent(resolvedModel, builtInTools, {
+  const agent = new Agent(undefined, builtInTools, {
     maxRounds: 10,
     verbose: false,
     toolTimeout: DEFAULT_TOOL_TIMEOUT,
@@ -225,8 +222,16 @@ export async function createAgentSessionFromServices(
     customTools,
   });
 
-  // Set initial model
-  await session.setModel(resolvedModel);
+  // Set initial model only if we have one
+  if (resolvedModel) {
+    try {
+      await session.setModel(resolvedModel);
+    } catch (error) {
+      // If model auth not configured, that's ok for interactive mode
+      // The user can set model later after logging in
+      console.warn(`Warning: Could not set initial model ${resolvedModel.provider}/${resolvedModel.id}:`, error instanceof Error ? error.message : error);
+    }
+  }
 
   // Set default thinking level from settings
   const defaultThinkingLevel = services.settingsManager.getDefaultThinkingLevel();
