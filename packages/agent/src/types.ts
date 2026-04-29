@@ -34,6 +34,7 @@ export interface TextBlock {
 export interface ThinkingBlock {
   type: 'thinking';
   thinking: string;
+  thinkingSignature?: string;
 }
 
 export interface ToolCallBlock {

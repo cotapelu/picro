@@ -18,10 +18,9 @@ import type {
    MemoryEntry,
    MemoryStore,
    LoopStrategy,
-   DebugRoundTimingEvent,
-   DebugRunTimingEvent,
    ToolDefinition,
  } from './types.js';
+import type { AgentEvent } from './events.js';
  import { EventEmitter } from './event-emitter.js';
  import { ToolExecutor } from './tool-executor.js';
  import { ContextBuilder } from './context-builder.js';
