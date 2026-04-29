@@ -1,14 +1,19 @@
-# Danh mục Components theo Lớp
+# Danh mục Components
+
+**Tất cả files nằm trong `src/components/`.**
+
+---
 
 ## Lớp 1: Foundation
 
 | File | Exports | Mô tả |
 |------|---------|-------|
-| `keys.ts` | `parseKey`, `matchesKey`, `decodeKittyPrintable`, `Key`, `KeyEventType` | Xử lý phím, Kitty protocol |
+| `base.ts` | `UIElement`, `ElementContainer`, `CURSOR_MARKER`, `InteractiveElement`, `RenderContext`, `KeyEvent`, types | Core interfaces |
+| `keys.ts` | `parseKey`, `matchesKey`, `decodeKittyPrintable`, `Key`, `KeyEventType` | Keyboard parsing |
 | `utils.ts` | `visibleWidth`, `wrapText`, `truncateToWidth`, `sliceByColumn`, `extractSegments` | Text/ANSI utilities |
 | `fuzzy.ts` | `fuzzyMatch`, `fuzzyFilter` | Fuzzy matching |
 | `autocomplete.ts` | `AutocompleteProvider`, `CombinedAutocompleteProvider` | Autocomplete engine |
-| `kill-ring.ts` | `KillRing` | Emacs clipboard |
+| `kill-ring.ts` | `KillRing` | Emacs clipboard ring |
 | `undo-stack.ts` | `UndoStack` | Generic undo stack |
 | `editor-component.ts` | `EditorComponent` (interface) | Editor API |
 
@@ -16,68 +21,71 @@
 
 ## Lớp 2: Simple Components
 
-| Component | Exports | Mô tả |
-|-----------|---------|-------|
-| `base.ts` | `UIElement`, `ElementContainer`, `CURSOR_MARKER`, `InteractiveElement`, `RenderContext`, `KeyEvent`, types | Core interfaces |
+| File | Exports | Mô tả |
+|------|---------|-------|
 | `spacer.ts` | `Spacer` | Empty spacing |
 | `divider.ts` | `Divider`, `horizontalDivider`, `verticalDivider`, `sectionDivider`, `doubleDivider` | Separator |
 | `badge.ts` | `Badge`, `BadgeGroup`, `createBadge`, `statusBadge` | Status labels |
-| `progress-bar.ts` | `ProgressBar`, `createProgressBar`, `StepperProgress` (alias) | Progress bar |
+| `progress-bar.ts` | `ProgressBar`, `createProgressBar` | Progress bar |
 | `rating.ts` | `Rating`, `createRating` | Star rating |
 | `stepper.ts` | `Stepper` | Multi-step wizard |
-| `countdown-timer.ts` | `CountdownTimer` | Timer utility (no TUI dependency, inject render callback) |
+| `countdown-timer.ts` | `CountdownTimer` | Timer (không phụ thuộc TerminalUI) |
 | `text.ts` | `Text` | Multi-line text wrapper |
 | `truncated-text.ts` | `TruncatedText` | Truncated single-line text |
-| `box.ts` | `Box` | Container w/ padding/bg |
+| `box.ts` | `Box` | Container với padding/background |
 
 ---
 
 ## Lớp 3: Interactive Basic
 
-| Component | Exports | Mô tả |
-|-----------|---------|-------|
+| File | Exports | Mô tả |
+|------|---------|-------|
 | `input.ts` | `Input`, `InputOptions` | Single-line text input |
 | `select-list.ts` | `SelectList`, `SelectItem`, `SelectListTheme`, `SelectListLayoutOptions` | Scrollable list |
-| `settings-list.ts` | `SettingsList`, `SettingItem`, `SettingsListTheme` | Toggle settings |
+| `settings-list.ts` | `SettingsList`, `SettingItem`, `SettingsListTheme` | Toggle settings list |
 
 ---
 
 ## Lớp 4: Complex Components
 
-### Editor & Display
-| Component | Exports | Mô tả |
-|-----------|---------|-------|
-| `editor.ts` | `Editor`, `EditorOptions` | Multi-line editor (full-featured) |
+### Editors & Display
+| File | Exports | Mô tả |
+|------|---------|-------|
+| `editor.ts` | `Editor`, `EditorOptions` | Multi-line editor |
 | `markdown.ts` | `Markdown`, `MarkdownCache`, `defaultTokenColors` | Markdown renderer |
 | `terminal-image.ts` | `renderImage`, `encodeKitty`, `encodeITerm2`, `getImageDimensions`, `getCapabilities` | Image rendering |
 
-### Overlay & UI Chrome
-| Component | Exports | Mô tả |
-|-----------|---------|-------|
+### Overlays
+| File | Exports | Mô tả |
+|------|---------|-------|
 | `modal.ts` | `Modal`, `ModalOptions` | Modal overlay |
 | `toast.ts` | `Toast`, `ToastOptions` | Toast notifications |
 | `context-menu.ts` | `ContextMenu`, `ContextMenuOptions` | Context menu |
+
+### UI Chrome
+| File | Exports | Mô tả |
+|------|---------|-------|
 | `footer.ts` | `Footer`, `FooterOptions`, `FooterItem` | Status bar |
-| `stats-footer.ts` | `StatsFooter`, `SessionStats` | Extended footer with session statistics |
-| `command-palette.ts` | `CommandPalette` (extends `SelectList`) | Command palette |
+| `stats-footer.ts` | `StatsFooter`, `SessionStats` | Footer với session stats |
+| `command-palette.ts` | `CommandPalette` | Command palette (dựa trên SelectList) |
 
 ### Panels
-| Component | Exports | Mô tả |
-|-----------|---------|-------|
+| File | Exports | Mô tả |
+|------|---------|-------|
 | `file-browser.ts` | `FileBrowser`, `FileEntry` | File explorer |
 | `memory-panel.ts` | `MemoryPanel`, `MemoryPanelOptions` | Memory viewer/editor |
-| `debug-panel.ts` | `DebugPanel` | Debug info |
+| `debug-panel.ts` | `DebugPanel` | Debug info panel |
 
 ### Dialogs
-| Component | Exports | Mô tả |
-|-----------|---------|-------|
+| File | Exports | Mô tả |
+|------|---------|-------|
 | `login-dialog.ts` | `LoginDialog`, `LoginDialogOptions` | Auth dialog |
 
 ### Selectors (13 loại)
-| Component | Exports | Mô tả |
-|-----------|---------|-------|
-| `session-selector.ts` | `SessionSelector`, `SessionSelectorOptions`, `SessionInfo` | Session selector |
-| `model-selector.ts` | `ModelSelector`, `ModelSelectorOptions`, `ModelInfo` | Model selector |
+| File | Exports | Mô tả |
+|------|---------|-------|
+| `session-selector.ts` | `SessionSelector`, `SessionSelectorOptions`, `SessionInfo` | Session picker |
+| `model-selector.ts` | `ModelSelector`, `ModelSelectorOptions`, `ModelInfo` | Model picker |
 | `oauth-selector.ts` | `OAuthSelector`, `OAuthSelectorOptions` | OAuth auth |
 | `extension-selector.ts` | `ExtensionSelector`, `ExtensionSelectorOptions` | Extension picker |
 | `extension-input.ts` | `ExtensionInput`, `ExtensionInputOptions` | Extension input |
@@ -91,52 +99,53 @@
 | `config-selector.ts` | `ConfigSelector` | Config picker |
 
 ### Messages (Chat bubbles)
-| Component | Exports | Mô tả |
-|-----------|---------|-------|
+| File | Exports | Mô tả |
+|------|---------|-------|
 | `user-message.ts` | `UserMessage`, `UserMessageOptions` | User message |
 | `assistant-message.ts` | `AssistantMessage`, `AssistantMessageOptions` | Assistant message |
 | `tool-message.ts` | `ToolMessage`, `ToolMessageOptions` | Tool result |
-| `bash-execution-message.ts` | `BashExecutionMessage`, `BashExecutionMessageOptions` | Bash output |
+| `bash-execution-message.ts` | `BashExecutionMessage`, `BashExecutionMessageOptions` | Bash execution |
 | `custom-message.ts` | `CustomMessage`, `CustomMessageOptions` | Custom message |
-| `tool-execution.ts` | `ToolExecutionMessage`, `ToolExecutionOptions` | Tool execution |
+| `tool-execution.ts` | `ToolExecutionMessage`, `ToolExecutionOptions` | Tool execution inline |
 | `branch-summary-message.ts` | `BranchSummaryMessageComponent` | Branch summary |
 | `compaction-summary-message.ts` | `CompactionSummaryMessageComponent` | Compaction summary |
 | `skill-invocation-message.ts` | `SkillInvocationMessageComponent` | Skill call |
 | `diff.ts` | `renderDiff`, `DiffOptions` | Diff view |
 
 ### Easter Eggs
-| Component | Exports | Mô tả |
-|-----------|---------|-------|
+| File | Exports | Mô tả |
+|------|---------|-------|
 | `armin.ts` | `ArminComponent` | Armin animation |
 | `daxnuts.ts` | `DaxnutsComponent` | Daxnuts |
 | `earendil-announcement.ts` | `EarendilAnnouncementComponent` | Announcement |
 
----
-
-## Core Engine & Utilities
-
-| Component | Exports | Mô tả |
-|-----------|---------|-------|
-| `tui.ts` | `TerminalUI` | Main orchestrator |
-| `terminal.ts` | `Terminal`, `ProcessTerminal` | Terminal abstraction |
-| `keybindings.ts` | `getKeybindings`, `KeybindingsManager`, `TUI_KEYBINDINGS` | Keybinding registry |
-| `themes.ts` | `darkTheme`, `lightTheme`, `highContrastTheme`, `ThemeManager`, `themeManager` | Themes |
-| `internal-utils.ts` | `visibleWidth`, `wrapText`, `truncateText`, `truncateToWidth`, `expandTabs`, `wrapTextWithAnsi`, `extractSegments` | Internal utils |
+### Utilities (Complex)
+| File | Exports | Mô tả |
+|------|---------|-------|
 | `dynamic-border.ts` | `DynamicBorder` | Animated border |
-| `undostack.ts` | `UndoStack` (import từ Lớp 1) | Re-export |
-| `kill-ring.ts` | `KillRing`, `defaultKillRing` (import) | Re-export |
-| `fuzzy.ts` | `fuzzyMatch`, `fuzzyFilter` (import) | Re-export |
-| `keys.ts` | `parseKey`, `matchesKey`, `isKeyRelease`, `isKeyRepeat`, `decodeKittyPrintable` | Re-export |
-| `autocomplete.ts` | `CombinedAutocompleteProvider`, `FilePathAutocompleteProvider`, `SlashCommandAutocompleteProvider` | Re-export |
+| `visual-truncate.ts` | `truncateToVisualLines`, `VisualTruncateResult` | Visual truncation |
+| `keybinding-hints.ts` | `keyHint`, `keyText`, `rawKeyHint` | Key hint formatting |
 
 ---
 
-## Index (`index.ts`)
+## Lớp 5: Engine
 
-Re-exports tất cả public API theo categories:
+| File | Exports | Mô tả |
+|------|---------|-------|
+| `tui.ts` | `TerminalUI` | Main orchestrator (render loop, overlays, focus) |
+| `terminal.ts` | `Terminal`, `ProcessTerminal` | Terminal IO abstraction |
+| `keybindings.ts` | `getKeybindings`, `KeybindingsManager`, `TUI_KEYBINDINGS` | Global keybinding registry |
+| `themes.ts` | `darkTheme`, `lightTheme`, `highContrastTheme`, `ThemeManager`, `themeManager` | Theme definitions |
+| `stdin-buffer.ts` | `StdinBuffer`, `StdinBufferOptions` | Input buffering |
 
-- Core base types
-- TerminalUI, Terminal
+---
+
+## Barrel Export (`index.ts`)
+
+Re-exports tất cả public API, organized by category:
+
+- Base types
+- TerminalUI & Terminal
 - Input & Editor
 - Selection (SelectList, SettingsList)
 - Display (Text, Markdown, Spacer, Divider, Box, DynamicBorder)
@@ -144,15 +153,14 @@ Re-exports tất cả public API theo categories:
 - Progress/Rating/Stepper/Badge/Breadcrumbs
 - Messages (User, Assistant, Tool, Bash, Custom, ToolExecution)
 - UI chrome (Footer, CommandPalette, ContextMenu, FileBrowser, LoginDialog, Modal, Toast, ConfigSelector, MemoryPanel, DebugPanel)
-- Selectors (9+ loại)
+- Selectors (13 types)
 - Utilities (fuzzy, kill-ring, undo-stack, diff, internal-utils, keys, keybindings, autocomplete)
-- Theme (themes, ThemeManager)
+- Themes
 - Terminal images
 - Misc (CountdownTimer, KeybindingHints)
 - InteractiveMode
-- Extensions types
-- Easter eggs
+- Extension types
 
 ---
 
-*Lưu ý:* `llm-context/tui-core/` là reference implementation (không dùng trực tiếp). `src/` là implementation chính.
+*Lưu ý: `llm-context/tui-core/` là reference implementation; `src/` là implementation chính.*

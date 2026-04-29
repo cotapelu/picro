@@ -1,18 +1,21 @@
-# Các Lớp Phân Tầng - Tóm tắt
+# Phân Tầng Components (Conceptual)
+
+**Lưu ý:** Đây là phân lớp **logic** dựa trên dependency. Tất cả files đều nằm trong `src/components/`.
+
+---
 
 ## Lớp 1: Foundation
 
-Các module standalone, không phụ thuộc UI:
+Module độc lập, không phụ thuộc UI:
 
-- `keys.ts` - Keyboard parsing
-- `utils.ts` - Text/ANSI utilities
+- `keys.ts` - Keyboard parsing, Kitty protocol
+- `utils.ts` - Text width, ANSI, wrapping
 - `fuzzy.ts` - Fuzzy matching
 - `autocomplete.ts` - Autocomplete engine
-- `kill-ring.ts` - Clipboard ring
-- `undo-stack.ts` - Undo stack
+- `kill-ring.ts` - Emacs clipboard ring
+- `undo-stack.ts` - Generic undo stack
 - `editor-component.ts` - Editor interface (types)
-
-**Đặc trưng:** Có thể dùng trong bất kỳ môi trường Node.js.
+- `base.ts` - Core interfaces (`UIElement`, `ElementContainer`)
 
 ---
 
@@ -20,15 +23,10 @@ Các module standalone, không phụ thuộc UI:
 
 Leaf components và container đơn giản, chỉ dùng Lớp 1:
 
-- `base.ts` - Core interfaces
 - `spacer.ts`, `divider.ts`, `badge.ts`
 - `progress-bar.ts`, `rating.ts`, `stepper.ts`
 - `text.ts`, `truncated-text.ts`, `box.ts`
-- `countdown-timer.ts` (no TUI dependency)
-
-**Lưu ý:** `stats-footer.ts` thuộc Lớp 4 (kế thừa Footer). - Timer utility (inject render callback, no TUI dependency)
-
-**Đặc trưng:** Render-only, không cần focus/overlay.
+- `countdown-timer.ts` - (inject render callback, **không** dùng `TerminalUI`)
 
 ---
 
@@ -40,30 +38,40 @@ Interactive components với state và key handling:
 - `select-list.ts`
 - `settings-list.ts`
 
-**Phụ thuộc:** Lớp 1 + Lớp 2 + `keybindings.ts`.
-
 ---
 
 ## Lớp 4: Complex Components
 
-Tích hợp sâu với TerminalUI:
+Tích hợp sâu với Engine, overlay system:
 
 - **Editors:** `editor.ts`, `markdown.ts`
 - **Overlays:** `modal.ts`, `toast.ts`, `context-menu.ts`
-- **Chrome:** `footer.ts`, `command-palette.ts`
+- **Chrome:** `footer.ts`, `stats-footer.ts`, `command-palette.ts`
 - **Panels:** `file-browser.ts`, `memory-panel.ts`, `debug-panel.ts`
-- **Selectors:** 13 loại (session, model, oauth, extension, theme, tree, thinking, settings, ...)
-- **Messages:** 11 loại (user, assistant, tool, bash, custom, diff, ...)
-- **Utilities:** `terminal-image.ts`, `dynamic-border.ts`
+- **Dialogs:** `login-dialog.ts`
+- **Selectors** (13 loại): `session-selector.ts`, `model-selector.ts`, `oauth-selector.ts`, `extension-selector.ts`, `extension-input.ts`, `extension-editor.ts`, `settings-selector.ts`, `theme-selector.ts`, `show-images-selector.ts`, `tree-selector.ts`, `thinking-selector.ts`, `scoped-models-selector.ts`, `config-selector.ts`
+- **Messages** (11 loại): `user-message.ts`, `assistant-message.ts`, `tool-message.ts`, `bash-execution-message.ts`, `custom-message.ts`, `tool-execution.ts`, `branch-summary-message.ts`, `compaction-summary-message.ts`, `skill-invocation-message.ts`, `diff.ts`, và Easter eggs (`armin.ts`, `daxnuts.ts`, `earendil-announcement.ts`)
+- **Utilities:** `terminal-image.ts`, `dynamic-border.ts`, `visual-truncate.ts`, `keybinding-hints.ts`
 
 ---
 
-## Core Engine (Top Layer)
+## Lớp 5: Engine
 
-- `tui.ts` - `TerminalUI` (orchestration, render loop, overlay stack)
+Orchestration layer - phần cao nhất:
+
+- `tui.ts` - `TerminalUI` (render loop, overlay stack, focus)
 - `terminal.ts` - `ProcessTerminal` (IO abstraction)
 - `keybindings.ts` - Global keybinding registry
 - `themes.ts` - Theme management
+- `stdin-buffer.ts` - Input buffering
+
+---
+
+## Dependency Rules
+
+- ✅ Layer N có thể import Layer < N
+- ❌ Layer N **không được** import Layer > N
+- ✅ `keybindings.ts`, `themes.ts` (Engine) là global services, có thể import từ bất kỳ đâu.
 
 ---
 
@@ -71,21 +79,19 @@ Tích hợp sâu với TerminalUI:
 
 ```
 ┌─────────────────────────────────────┐
-│  Application Layer                  │
-│  (interactive-mode.ts, cli.ts)      │
+│  Layer 5: Engine                    │
+│  (tui, terminal, keybindings, themes)│
 ├─────────────────────────────────────┤
 │  Layer 4: Complex Components        │
-│  ───────────────────────────────    │
-│  • Editors (editor, markdown)       │
-│  • Overlays (modal, toast, ctx)     │
-│  • Panels (file, memory, debug)     │
-│  • Selectors (13 types)             │
-│  • Messages (11 types)              │
+│  • Editors & Display                │
+│  • Overlays                         │
+│  • Panels & Dialogs                 │
+│  • Selectors (13)                   │
+│  • Messages (11)                    │
 └──────────────┬──────────────────────┘
                │ extends/composes
 ┌──────────────┴──────────────────────┐
 │  Layer 3: Interactive Basic         │
-│  ───────────────────────────────    │
 │  • input                            │
 │  • select-list                      │
 │  • settings-list                    │
@@ -93,34 +99,21 @@ Tích hợp sâu với TerminalUI:
                │ extends/composes
 ┌──────────────┴──────────────────────┐
 │  Layer 2: Simple Components         │
-│  ───────────────────────────────    │
-│  • base (UIElement, Container)      │
-│  • spacer, divider, badge           │
-│  • progress, rating, stepper        │
-│  • text, truncated-text, box        │
+│  • base (foundation)                │
+│  • layout (spacer, divider, box)   │
+│  • widgets (badge, progress, rating, stepper) │
+│  • text (text, truncated-text)      │
 └──────────────┬──────────────────────┘
                │ imports
 ┌──────────────┴──────────────────────┐
 │  Layer 1: Foundation                │
-│  ───────────────────────────────    │
-│  • keys (parseKey, matchesKey)      │
-│  • utils (visibleWidth, wrap...)    │
-│  • fuzzy (fuzzyMatch, fuzzyFilter)  │
+│  • keys                             │
+│  • utils                            │
+│  • fuzzy                            │
 │  • autocomplete                     │
-│  • kill-ring, undo-stack            │
+│  • data structures (kill-ring, undo-stack) │
 └─────────────────────────────────────┘
 ```
-
----
-
-## Dependency Rules
-
-- ✅ Layer 2 có thể import Layer 1
-- ✅ Layer 3 có thể import Layer 1-2
-- ✅ Layer 4 có thể import Layer 1-3
-- ❌ Layer N không được import Layer > N
-- ✅ `keybindings.ts` và `themes.ts` là global services, có thể import từ bất cứ đâu
-- ✅ `tui.ts`/`terminal.ts` chỉ dùng ở Layer 4+ (engine)
 
 ---
 
