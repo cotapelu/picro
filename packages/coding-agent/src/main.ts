@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Coding Agent - Interactive Mode with AgentSessionRuntime + TUI
@@ -19,6 +20,7 @@ import {
 import { createAgentSessionRuntime, createAgentSessionFromServices } from '@picro/agent';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+import fs from 'node:fs';
 
 const AGENT_DIR = join(homedir(), '.pi', 'agent');
 
@@ -27,7 +29,6 @@ async function main() {
   console.log('🚀 Coding Agent (InteractiveMode)\n');
 
   const cwd = process.cwd();
-  const fs = require('node:fs');
   if (!fs.existsSync(AGENT_DIR)) {
     fs.mkdirSync(AGENT_DIR, { recursive: true });
   }
