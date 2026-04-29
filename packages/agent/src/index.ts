@@ -112,7 +112,6 @@ export type {
   ThinkingLevel,
   ToolExecutionStrategy,
   TransportType,
-  AIModel,
   Usage,
   LLMMessage,
   LLMResponse,

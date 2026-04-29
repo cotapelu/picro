@@ -12,7 +12,6 @@ import type {
   ToolDefinition,
   LoopStrategy,
   MemoryStore,
-  AIModel,
   LLMResponse,
 } from './types.js';
 import { EventEmitter } from './event-emitter.js';
@@ -23,7 +22,8 @@ import { LoopStrategyFactory } from './loop-strategy.js';
 import { MessageQueue } from './message-queue.js';
 
 // Import from llm
-import { complete, stream, type Model, type Context, type Message, type Tool, type StreamOptions } from "@picro/llm";
+import { complete, stream } from "@picro/llm";
+import type { Model, Context, Message, Tool, StreamOptions } from "@picro/llm";
 
 /**
  * Agent orchestrates AI interactions with tools.
@@ -42,7 +42,7 @@ export class Agent {
   private readonly steeringQueue: MessageQueue;
   private readonly followUpQueue: MessageQueue;
   private memoryStore?: MemoryStore;
-  private model: AIModel;
+  private model: Model;
   private llmProvider?: (prompt: string, tools: any[], options?: any) => Promise<LLMResponse>;
   private streamProvider?: (prompt: string, tools: any[], options?: any) => AsyncIterable<any> | Promise<AsyncIterable<any>>;
 
@@ -53,7 +53,7 @@ export class Agent {
    * @param config - Optional configuration (maxRounds, verbose, memoryStore, etc.).
    */
   constructor(
-    model: AIModel,
+    model: Model,
     tools: ToolDefinition[],
     config?: Partial<AgentConfig>
   ) {
@@ -132,7 +132,7 @@ export class Agent {
   /**
    * Create LLM provider using llm's complete function
    */
-  private _createLlmProvider(model: AIModel) {
+  private _createLlmProvider(model: Model) {
     const llmModel: Model = {
       id: model.id || model.name,
       name: model.name || model.id,
@@ -180,7 +180,7 @@ export class Agent {
   /**
    * Create stream provider using llm's stream function
    */
-  private _createStreamProvider(model: AIModel) {
+  private _createStreamProvider(model: Model) {
     const llmModel: Model = {
       id: model.id || model.name,
       name: model.name || model.id,

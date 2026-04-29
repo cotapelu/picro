@@ -14,12 +14,12 @@ import type {
    ToolResult,
    ToolContext,
    LLMStreamEvent,
-   AIModel,
    MemoryEntry,
    MemoryStore,
    LoopStrategy,
    ToolDefinition,
  } from './types.js';
+import type { Model } from '@picro/llm';
 import type { AgentEvent } from './events.js';
  import { EventEmitter } from './event-emitter.js';
  import { ToolExecutor } from './tool-executor.js';

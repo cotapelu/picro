@@ -5,6 +5,7 @@
  */
 
 import type { EventEmitter } from './event-emitter.js';
+import type { Model } from '@picro/llm';
 
 // ============================================================================
 // Basic Types
@@ -438,21 +439,6 @@ export interface StreamOptions {
   onPayload?: (payload: unknown) => void;
 }
 
-export interface AIModel {
-  id: string;
-  name: string;
-  api: string;
-  provider: string;
-  baseUrl?: string;
-  reasoning: boolean;
-  contextWindow: number;
-  maxTokens: number;
-  inputCost: number;
-  outputCost: number;
-  cacheReadCost?: number;
-  cacheWriteCost?: number;
-}
-
 export interface Usage {
   input: number;
   output: number;
@@ -505,7 +491,7 @@ export type LLMStreamEvent =
   | { type: 'error'; reason: StopReason; error: AssistantTurn };
 
 export type StreamFunction = (
-  model: AIModel,
+  model: Model,
   context: { systemPrompt: string; messages: LLMMessage[]; tools: ToolDefinition[] },
   options: StreamOptions
 ) => AsyncIterable<LLMStreamEvent>;

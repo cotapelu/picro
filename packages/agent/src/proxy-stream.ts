@@ -4,7 +4,8 @@
  * Different types, but similar purpose to pi-agent-legacy.
  */
 
-import type { LLMStreamEvent, AssistantTurn, AIModel } from './types.js';
+import type { LLMStreamEvent, AssistantTurn } from './types.js';
+import type { Model } from '@picro/llm';
 
 export interface ProxyOptions {
   authToken: string;
@@ -21,8 +22,8 @@ export interface ProxyOptions {
  */
 export function createProxyStream(
   options: ProxyOptions
-): (model: AIModel, context: any, streamOptions?: any) => AsyncIterable<LLMStreamEvent> {
-  return async function* (model: AIModel, context: any, streamOptions?: any): AsyncIterable<LLMStreamEvent> {
+): (model: Model, context: any, streamOptions?: any) => AsyncIterable<LLMStreamEvent> {
+  return async function* (model: Model, context: any, streamOptions?: any): AsyncIterable<LLMStreamEvent> {
     const partial: AssistantTurn = {
       role: 'assistant',
       content: [],
