@@ -7,16 +7,15 @@
  * - agent: TRUYỀN VÀO (required)
  */
 
-import type { Terminal, TerminalUI } from '@picro/tui';
 import { Agent } from './agent.js';
 import type { AgentRunResult } from './types.js';
 import { createEventBus, type EventBus, type EventBusController } from './event-bus.js';
 
 export interface TerminalAgentRuntimeOptions {
-  /** REQUIRED: TerminalUI instance - truyền vào từ bên ngoài */
-  tui: TerminalUI;
+  /** REQUIRED: tui instance - truyền vào từ bên ngoài (any type, do app định nghĩa) */
+  tui: any;
   /** Terminal instance */
-  terminal?: Terminal;
+  terminal?: any;
   /** REQUIRED: Agent instance - truyền vào */
   agent: Agent;
   initialStatus?: string;
@@ -38,8 +37,8 @@ export const EVENTS = {
  * TerminalAgentRuntime - Dùng EventBus để communicate với UI
  */
 export class TerminalAgentRuntime {
-  private terminal?: Terminal;
-  private tui: TerminalUI;
+  private terminal?: any;
+  private tui: any;
   private agent: Agent;
   private bus: EventBusController;
   private onAgentResult?: (result: AgentRunResult) => void;
@@ -89,7 +88,7 @@ export class TerminalAgentRuntime {
     });
   }
 
-  get tuiInstance(): TerminalUI {
+  get tuiInstance(): any {
     return this.tui;
   }
 
