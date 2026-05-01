@@ -19,12 +19,6 @@ export { Agent } from './agent.js';
 export type { AgentConfig, AgentRuntimeState, AgentRunResult } from './types.js';
 
 // ============================================================================
-// Interactive Mode (TUI + Agent)
-// ============================================================================
-export { TerminalAgentRuntime } from './terminal-agent-runtime.js';
-export type { TerminalAgentRuntimeOptions } from './terminal-agent-runtime.js';
-
-// ============================================================================
 // Tool Execution
 // ============================================================================
 export { ToolExecutor } from './tool-executor.js';
