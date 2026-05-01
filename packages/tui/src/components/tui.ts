@@ -56,9 +56,15 @@ export class TerminalUI extends ElementContainer {
 	private maxLinesRendered = 0;
 	private previousViewportTop = 0;
 	private fullRedrawCount = 0;
-	private _dirtyLineCount = 0; // count of lines changed in last incremental render
-	private scrollTop = 0; // first line index of viewport (0-based)
-	private totalBaseLines = 0; // total lines from base content
+	private _dirtyLineCount = 0;
+	private scrollTop = 0;
+	private totalBaseLines = 0;
+	// Key repeat state
+	private keyRepeatDelay = 500; // ms before first repeat
+	private keyRepeatInterval = 50; // ms between repeats
+	private keyRepeatEnabled = true;
+	private keyRepeatTimers = new Map<string, NodeJS.Timeout>();
+	private keyRepeatLastSent = new Map<string, number>();
 	private stopped = false;
 	private debugLogPath?: string;
 
@@ -379,6 +385,12 @@ export class TerminalUI extends ElementContainer {
 		this.panelStack.length = 0;
 		this.panelGeos.clear();
 		this.focusedElement = null;
+		// Clear any key repeat timers
+		for (const timer of this.keyRepeatTimers.values()) {
+			(clearTimeout as any)(timer);
+		}
+		this.keyRepeatTimers.clear();
+		this.keyRepeatLastSent.clear();
 	}
 
 	/**
@@ -500,7 +512,6 @@ export class TerminalUI extends ElementContainer {
 		// Pass to focused element with parsed key info
 		const focused = this.getFocusedElement();
 		if (focused && focused.handleKey) {
-			// Merge parsed info into the key event
 			const keyEvent: KeyEvent = {
 				raw: data,
 				name: parsed.name,
@@ -514,6 +525,9 @@ export class TerminalUI extends ElementContainer {
 			focused.handleKey(keyEvent);
 			this.requestRender();
 		}
+
+		// After key processing, manage key repeat timers
+		this.afterKeyProcessed(parsed, data);
 	}
 
 	/** Handle mouse events (row/col are 0-indexed) */
@@ -1034,6 +1048,85 @@ export class TerminalUI extends ElementContainer {
 		this.hardwareCursorRow = cursorRow;
 	}
 
+
+	/**
+	 * Configure key repeat behavior (delay in ms, interval in ms)
+	 */
+	setKeyRepeatConfig(delay: number, interval: number): void {
+		this.keyRepeatDelay = delay;
+		this.keyRepeatInterval = interval;
+	}
+
+	/**
+	 * Enable or disable key repeat globally
+	 */
+	setKeyRepeatEnabled(enabled: boolean): void {
+		this.keyRepeatEnabled = enabled;
+	}
+
+	/**
+	 * Called after a key is processed to manage key repeat timers.
+	 */
+	private afterKeyProcessed(parsed: any, rawData: string): void {
+		if (!this.keyRepeatEnabled) return;
+		const isRelease = isKeyRelease(parsed);
+		const keyId = this.makeKeyId(parsed);
+
+		if (isRelease) {
+			// Stop repeating this key
+			this.stopKeyRepeat(keyId);
+		} else {
+			// Only start repeat for non-release keys that are actual keys (not mouse, resize etc.)
+			if (parsed.name && !this.keyRepeatTimers.has(keyId)) {
+				this.startKeyRepeatTimer(keyId, parsed, rawData);
+			}
+		}
+	}
+
+	private makeKeyId(parsed: any): string {
+		return `${parsed.name}|${parsed.ctrl}|${parsed.alt}|${parsed.shift}|${parsed.meta}`;
+	}
+
+	private startKeyRepeatTimer(keyId: string, parsed: any, rawData: string): void {
+		const timer = setTimeout(() => {
+			// First repeat: reschedule with interval
+			this.keyRepeatTimers.delete(keyId);
+			const intervalTimer = setInterval(() => {
+				this.fireKeyRepeat(parsed, rawData);
+			}, this.keyRepeatInterval);
+			this.keyRepeatTimers.set(keyId, intervalTimer as any);
+			// Immediately fire first repeat
+			this.fireKeyRepeat(parsed, rawData);
+		}, this.keyRepeatDelay);
+		this.keyRepeatTimers.set(keyId, timer as any);
+	}
+
+	private fireKeyRepeat(parsed: any, rawData: string): void {
+		const focused = this.getFocusedElement();
+		if (focused && focused.handleKey) {
+			const keyEvent: KeyEvent = {
+				raw: rawData,
+				name: parsed.name,
+				modifiers: {
+					ctrl: parsed.ctrl,
+					alt: parsed.alt,
+					shift: parsed.shift,
+					meta: parsed.meta,
+				},
+			};
+			focused.handleKey(keyEvent);
+			this.requestRender();
+		}
+	}
+
+	private stopKeyRepeat(keyId: string): void {
+		const timer = this.keyRepeatTimers.get(keyId);
+		if (timer) {
+			// Use global clearTimeout/clearInterval to accept both types
+			(clearTimeout as any)(timer);
+			this.keyRepeatTimers.delete(keyId);
+		}
+	}
 
 	/**
 	 * Get terminal size
