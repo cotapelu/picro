@@ -454,14 +454,16 @@ export class TerminalUI extends ElementContainer {
 	private handleKey(data: string): void {
 		// Mouse event detection (X10 protocol)
 		if (data.length >= 6 && data.charCodeAt(0) === 27 && data.charCodeAt(1) === 91 && data[2] === 'M') {
-			const cb = data.charCodeAt(3) - 32;
+			const b = data.charCodeAt(3) - 32;
 			const cx = data.charCodeAt(4) - 32;
 			const cy = data.charCodeAt(5) - 32;
-			// Left button press (0) or drag? We'll handle press only
-			if ((cb & 0x03) === 0) { // button 0 press
-				this.handleMouse({ row: cy - 1, col: cx - 1, button: 'left' });
-			}
-			return; // consume mouse
+			const btnCode = b & 0x03; // 0=left,1=middle,2=right,3=release
+			const shift = (b & 0x04) !== 0;
+			const ctrl = (b & 0x10) !== 0;
+			const alt = (b & 0x08) !== 0;
+			const button = btnCode === 0 ? 'left' : btnCode === 1 ? 'middle' : btnCode === 2 ? 'right' : 'release';
+			this.handleMouse({ row: cy - 1, col: cx - 1, button, modifiers: { shift, ctrl, alt, meta: alt } });
+			return;
 		}
 
 		// Consume terminal cell size responses without blocking unrelated input.
@@ -531,7 +533,7 @@ export class TerminalUI extends ElementContainer {
 	}
 
 	/** Handle mouse events (row/col are 0-indexed) */
-	private handleMouse(event: { row: number; col: number; button: 'left' | 'right' | 'middle' }): void {
+	private handleMouse(event: import('./base.js').MouseEvent): void {
 		// Traverse panel stack from topmost to bottom
 		for (let i = this.panelStack.length - 1; i >= 0; i--) {
 			const panel = this.panelStack[i];

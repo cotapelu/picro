@@ -11,6 +11,7 @@ export type {
 	InteractiveElement,
 	RenderContext,
 	KeyEvent,
+	MouseEvent,
 	Expandable,
 	Dimension
 } from './components/base.js';

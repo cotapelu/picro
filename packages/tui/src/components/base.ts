@@ -82,6 +82,25 @@ export interface KeyEvent {
 }
 
 /**
+ * Mouse event data
+ */
+export interface MouseEvent {
+  /** Row (0-indexed) */
+  row: number;
+  /** Column (0-indexed) */
+  col: number;
+  /** Mouse button */
+  button: 'left' | 'right' | 'middle' | 'release';
+  /** Modifier keys */
+  modifiers?: {
+    ctrl?: boolean;
+    alt?: boolean;
+    shift?: boolean;
+    meta?: boolean;
+  };
+}
+
+/**
  * Cursor position marker - APC (Application Program Command) sequence.
  * This is a zero-width escape sequence that terminals ignore.
  * Elements emit this at the cursor position when focused.
