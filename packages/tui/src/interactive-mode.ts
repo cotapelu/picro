@@ -224,6 +224,9 @@ export class InteractiveMode {
   private countdownTimers: CountdownTimer[] = [];
   private extensionContext!: ExtensionUIContext;
   private userInputHandler?: (text: string) => void;
+  private onInputCallback?: (text: string) => void;
+  private inputResolver?: (text: string) => void;
+  private running = false;
 
   constructor(options: InteractiveModeOptions) {
     this.tui = options.tui;
@@ -233,6 +236,13 @@ export class InteractiveMode {
       this.tui,
       options.inputPlaceholder || 'You: ',
       (text) => {
+        // When user submits, resolve the pending input promise
+        if (this.inputResolver) {
+          const resolver = this.inputResolver;
+          this.inputResolver = undefined;
+          resolver(text);
+        }
+        // Also call the external handler
         this.userInputHandler?.(text);
       }
     );
@@ -245,6 +255,48 @@ export class InteractiveMode {
     }
 
     this.extensionContext = this.createExtensionUIContext();
+  }
+
+  /**
+   * Start the interactive mode and run the main loop.
+   * This blocks until the session ends.
+   */
+  async run(): Promise<void> {
+    if (this.running) return;
+    this.running = true;
+    
+    // Start the TUI
+    this.tui.start();
+    
+    // Main interactive loop
+    while (this.running) {
+      const userInput = await this.getUserInput();
+      if (userInput) {
+        this.userInputHandler?.(userInput);
+      }
+    }
+  }
+
+  /**
+   * Get user input - returns a Promise that resolves when user submits.
+   */
+  private getUserInput(): Promise<string> {
+    return new Promise((resolve) => {
+      this.inputResolver = resolve;
+      this.chatInterface.focusInput();
+    });
+  }
+
+  /**
+   * Stop the interactive mode.
+   */
+  stop(): void {
+    this.running = false;
+    if (this.inputResolver) {
+      this.inputResolver('');
+      this.inputResolver = undefined;
+    }
+    this.tui.stop();
   }
 
   addUserMessage(content: string, options?: Omit<UserMessageOptions, 'text'>): string {

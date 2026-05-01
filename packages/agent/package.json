@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@picro/llm": "*",
+    "@picro/tui": "*",
     "typebox": "^0.0.1"
   },
   "devDependencies": {

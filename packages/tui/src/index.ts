@@ -164,10 +164,6 @@ export type {
 export { CountdownTimer } from './components/countdown-timer.js';
 export { KeybindingHints } from './components/keybinding-hints.js';
 
-// Interactive mode
-export { InteractiveMode } from './interactive-mode.js';
-export type { InteractiveModeOptions } from './interactive-mode.js';
-
 // Extensions (all types)
 export type {
 	ExtensionUIContext,

@@ -13,8 +13,16 @@
 // ============================================================================
 // Core Agent
 // ============================================================================
+// Core Agent
+// ============================================================================
 export { Agent } from './agent.js';
 export type { AgentConfig, AgentRuntimeState, AgentRunResult } from './types.js';
+
+// ============================================================================
+// Interactive Mode (TUI + Agent)
+// ============================================================================
+export { InteractiveMode } from './interactive-mode.js';
+export type { InteractiveModeOptions } from './interactive-mode.js';
 
 // ============================================================================
 // Tool Execution
