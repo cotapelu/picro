@@ -99,10 +99,13 @@ export type Dimension = number | `${number}%`;
  */
 export function resolveDimension(value: Dimension | undefined, referenceSize: number): number | undefined {
   if (value === undefined) return undefined;
-  if (typeof value === 'number') return value;
+  if (typeof value === 'number') {
+    return Math.max(0, Math.floor(value));
+  }
   if (typeof value === 'string' && value.endsWith('%')) {
     const percent = parseFloat(value.slice(0, -1));
-    return Math.floor((percent / 100) * referenceSize);
+    const clamped = Math.max(0, Math.min(100, percent));
+    return Math.round((clamped / 100) * referenceSize);
   }
   return undefined;
 }

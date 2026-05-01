@@ -282,6 +282,16 @@ export class TerminalUI extends ElementContainer {
 			this.renderTimer = undefined;
 		}
 
+		// Ensure synchronized output mode is disabled (in case stop() called mid-render)
+		try {
+			this.terminal.write('\x1b[?2026l');
+		} catch {
+			// ignore errors
+		}
+
+		// Clear key handlers to prevent any further handling
+		this.keyHandlers.clear();
+
 		// Move cursor to the end of the content
 		if (this.previousLines.length > 0) {
 			const targetRow = this.previousLines.length;
@@ -296,6 +306,12 @@ export class TerminalUI extends ElementContainer {
 
 		this.terminal.showCursor();
 		this.terminal.stop();
+
+		// Reset internal state
+		this.previousLines = [];
+		this.panelStack.length = 0;
+		this.panelGeos.clear();
+		this.focusedElement = null;
 	}
 
 	/**
@@ -517,8 +533,12 @@ export class TerminalUI extends ElementContainer {
 		// Merge panels into base content
 		const finalLines = this.mergePanels(baseLines, panelLines, width, height);
 
-		// Full redraw
-		this.fullRedraw(finalLines, width, height);
+		// Choose rendering strategy: full redraw on size change, else incremental
+		if (sizeChanged) {
+			this.fullRedraw(finalLines, width, height);
+		} else {
+			this.incrementalRender(finalLines, sizeChanged);
+		}
 
 		// Update tracking
 		this.previousLines = finalLines;
