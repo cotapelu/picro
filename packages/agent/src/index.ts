@@ -162,8 +162,8 @@ export { DEFAULT_THINKING_LEVEL, DEFAULT_TOOL_TIMEOUT, DEFAULT_MAX_OUTPUT_SIZE, 
 // ============================================================================
 // Bash Execution
 // ============================================================================
-export { executeBash, executeBashLocal } from './bash-executor.js';
-export type { BashExecutorOptions, BashResult } from './bash-executor.js';
+export { executeBash, executeBashLocal } from './tools/bash-executor.js';
+export type { BashExecutorOptions, BashResult } from './tools/bash-executor.js';
 
 // ============================================================================
 // Diagnostics
