@@ -9,7 +9,8 @@
  * - Async flush queue
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, openSync, closeSync, unlinkSync } from "node:fs";
+import { validateOrThrow } from "./settings-validator.js";
 import { dirname, join } from "node:path";
 import { homedir } from "node:os";
 
@@ -162,7 +163,51 @@ class FileSettingsStorage implements SettingsStorage {
 
   withLock(scope: SettingsScope, fn: (current: string | undefined) => string | undefined): void {
     const path = scope === "global" ? this.globalSettingsPath : this.projectSettingsPath;
+    const lockPath = path + ".lock";
     const dir = dirname(path);
+
+    const acquireLock = (): number | undefined => {
+      try {
+        const fd = openSync(lockPath, "wx");
+        // Write PID
+        try { writeFileSync(lockPath, `${process.pid}\n`); } catch {}
+        return fd;
+      } catch (err: any) {
+        if (err.code === "EEXIST") {
+          // Check for stale lock
+          try {
+            const pidStr = readFileSync(lockPath, "utf8").trim();
+            const pid = parseInt(pidStr, 10);
+            if (!isNaN(pid)) {
+              try {
+                process.kill(pid, 0); // test if process exists
+              } catch {
+                // Stale lock, remove it
+                unlinkSync(lockPath);
+                return acquireLock();
+              }
+            }
+          } catch {
+            // ignore read errors
+          }
+        }
+        return undefined;
+      }
+    };
+
+    const maxRetries = 5;
+    let lockFd: number | undefined;
+    for (let i = 0; i < maxRetries; i++) {
+      lockFd = acquireLock();
+      if (lockFd !== undefined) break;
+      // Retry after delay
+      const delay = 50 * (i + 1);
+      const start = Date.now();
+      while (Date.now() - start < delay) {}
+    }
+    if (lockFd === undefined) {
+      throw new Error(`Failed to acquire lock for settings: ${path}`);
+    }
 
     try {
       const fileExists = existsSync(path);
@@ -174,8 +219,11 @@ class FileSettingsStorage implements SettingsStorage {
         }
         writeFileSync(path, next, "utf-8");
       }
-    } catch (error) {
-      // Silently fail on lock errors - return current state
+    } finally {
+      closeSync(lockFd);
+      if (existsSync(lockPath)) {
+        try { unlinkSync(lockPath); } catch {}
+      }
     }
   }
 }
@@ -214,6 +262,7 @@ export class SettingsManager {
   private projectSettingsLoadError: Error | null = null;
   private writeQueue: Promise<void> = Promise.resolve();
   private errors: SettingsError[];
+  private changeListeners: Array<(scope: SettingsScope, fields: Set<keyof Settings>) => void> = [];
 
   private constructor(
     storage: SettingsStorage,
@@ -275,7 +324,9 @@ export class SettingsManager {
       return {};
     }
     try {
-      return JSON.parse(content);
+      const parsed = JSON.parse(content) as Settings;
+      validateOrThrow(parsed);
+      return parsed;
     } catch {
       return {};
     }
@@ -432,6 +483,11 @@ export class SettingsManager {
 
       return JSON.stringify(mergedSettings, null, 2);
     });
+    // Notify change listeners
+    const changedFields = new Set(modifiedFields);
+    for (const listener of this.changeListeners) {
+      try { listener(scope, changedFields); } catch {}
+    }
   }
 
   private save(): void {
@@ -772,5 +828,12 @@ export class SettingsManager {
 
   getCodeBlockIndent(): string {
     return this.settings.markdown?.codeBlockIndent ?? "  ";
+  }
+
+  onChange(listener: (scope: SettingsScope, fields: Set<keyof Settings>) => void): () => void {
+    this.changeListeners.push(listener);
+    return () => {
+      this.changeListeners = this.changeListeners.filter(l => l !== listener);
+    };
   }
 }

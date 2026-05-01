@@ -20,7 +20,9 @@ import type {
   ToolDefinition
 } from "./types.js";
 import { Agent } from "./agent.js";
+import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "./auth-guidance.js";
 import type { AgentTool } from "./agent-types.js";
+import { PerformanceTracker } from "./performance-tracker.js";
 import type { Model } from "@picro/llm";
 import type { ModelEntry } from "./model-registry.js";
 import type { ModelRegistry } from "./model-registry.js";
@@ -108,6 +110,14 @@ export class AgentSession {
 
   // Config (subset of AgentSessionConfig)
   private _config: any;
+  // Extension runner
+  private _extensionRunner?: any;
+  // Queue size limits
+  private _maxSteeringQueueSize?: number;
+  private _maxFollowUpQueueSize?: number;
+  // Performance tracking
+  private _performanceTracker?: any;
+  private _enablePerformanceTracking = false;
 
   // State
   private _scopedModels: Array<{ model: Model; thinkingLevel?: ThinkingLevel }>;
@@ -179,6 +189,10 @@ export class AgentSession {
     modelRegistry: ModelRegistry;
     initialActiveToolNames?: string[];
     allowedToolNames?: string[];
+    extensionRunner?: any;
+    maxSteeringQueueSize?: number;
+    maxFollowUpQueueSize?: number;
+    enablePerformanceTracking?: boolean;
   }) {
     this.agent = config.agent;
     this.sessionManager = config.sessionManager;
@@ -192,6 +206,13 @@ export class AgentSession {
     this._allowedToolNames = config.allowedToolNames
       ? new Set(config.allowedToolNames)
       : undefined;
+    this._extensionRunner = config.extensionRunner;
+    this._maxSteeringQueueSize = config.maxSteeringQueueSize;
+    this._maxFollowUpQueueSize = config.maxFollowUpQueueSize;
+    this._enablePerformanceTracking = config.enablePerformanceTracking ?? false;
+    if (this._enablePerformanceTracking) {
+      this._performanceTracker = new PerformanceTracker({ autoStart: true });
+    }
 
     // Create emitter for session events
     this._emitter = new EventEmitter();
@@ -364,6 +385,14 @@ export class AgentSession {
       model,
       previousModel,
     });
+
+    // Adjust thinking level if new model doesn't support it
+    const availableLevels = this.getAvailableThinkingLevels();
+    if (!availableLevels.includes(this._thinkingLevel)) {
+      const clamped = this._clampThinkingLevel(this._thinkingLevel, availableLevels);
+      this._thinkingLevel = clamped;
+      this.sessionManager.appendThinkingLevelChange(clamped);
+    }
   }
 
   /**
@@ -407,6 +436,24 @@ export class AgentSession {
   }
 
   // =========================================================================
+  // Extension Flag Support
+  // =========================================================================
+
+  /**
+   * Get extension flag value.
+   */
+  getExtensionFlag(name: string): string | boolean | undefined {
+    return this._extensionRunner?.getFlag(name);
+  }
+
+  /**
+   * Set extension flag value.
+   */
+  setExtensionFlag(name: string, value: string | boolean): void {
+    this._extensionRunner?.setFlag(name, value);
+  }
+
+  // =========================================================================
   // Prompting
   // =========================================================================
 
@@ -436,11 +483,11 @@ export class AgentSession {
 
     // Validate model
     if (!this._model) {
-      throw new Error("No model selected");
+      throw new Error(formatNoModelSelectedMessage());
     }
 
     if (!this.modelRegistry.hasConfiguredAuth(this._model)) {
-      throw new Error(`No API key for ${this._model.provider}/${this._model.id}`);
+      throw new Error(formatNoApiKeyFoundMessage(this._model.provider));
     }
 
     // Build user message
@@ -573,7 +620,7 @@ export class AgentSession {
       return;
     }
 
-    const config = this.config;
+    const config = this._config;
     const compactionConfig = config.compaction ?? {};
     const enabled = compactionConfig.enabled !== false; // default true
 
@@ -889,6 +936,12 @@ export class AgentSession {
   }
 
   private async _queueSteer(text: string, images?: any[]): Promise<void> {
+    // Congestion control: evict oldest if exceeding max size
+    if (this._maxSteeringQueueSize && this._maxSteeringQueueSize > 0) {
+      while (this._steeringMessages.length >= this._maxSteeringQueueSize) {
+        this._steeringMessages.shift();
+      }
+    }
     this._steeringMessages.push(text);
     this._emitQueueUpdate();
 
@@ -907,6 +960,12 @@ export class AgentSession {
   }
 
   private async _queueFollowUp(text: string, images?: any[]): Promise<void> {
+    // Congestion control: evict oldest if exceeding max size
+    if (this._maxFollowUpQueueSize && this._maxFollowUpQueueSize > 0) {
+      while (this._followUpMessages.length >= this._maxFollowUpQueueSize) {
+        this._followUpMessages.shift();
+      }
+    }
     this._followUpMessages.push(text);
     this._emitQueueUpdate();
 
@@ -939,6 +998,14 @@ export class AgentSession {
   private _handleAgentEvent = (event: any): void => {
     // Create retry promise synchronously
     this._createRetryPromiseForAgentEnd(event);
+
+    // Emit to extension runner if available
+    if (this._extensionRunner) {
+      const extEvent = this._convertAgentEventToExtensionEvent(event);
+      if (extEvent) {
+        this._extensionRunner.emit(extEvent).catch(() => {});
+      }
+    }
 
     // Process event
     this._processAgentEvent(event);
@@ -1041,6 +1108,11 @@ export class AgentSession {
 
       this._resolveRetry();
 
+      // Record performance metrics if tracking enabled
+      if (this._enablePerformanceTracking && this._performanceTracker) {
+        this._performanceTracker.record();
+      }
+
       // Auto-compaction if enabled and context is large
       const compactionConfig = this._config.compaction ?? {};
       const autoCompact = compactionConfig.autoCompact !== false; // default true
@@ -1134,6 +1206,37 @@ export class AgentSession {
   }
 
   /**
+   * Convert AgentEvent to ExtensionEvent for extension consumption.
+   * Returns undefined if event should not be forwarded.
+   */
+  private _convertAgentEventToExtensionEvent(event: any): any {
+    // Map event types
+    switch (event.type) {
+      case 'agent:start':
+        return { type: 'agent_start', prompt: event.initialPrompt, model: this._model };
+      case 'agent:end':
+        return { type: 'agent_end', messages: this.agent.getState().history, success: event.result?.success };
+      case 'turn:start':
+        return { type: 'turn_start', round: event.round, promptLength: event.promptLength };
+      case 'turn:end':
+        return { type: 'turn_end', round: event.round, toolCallsExecuted: event.toolCallsExecuted };
+      case 'message:start':
+        return { type: 'message_start', turn: event.turn };
+      case 'message:end':
+        return { type: 'message_end', turn: event.turn };
+      case 'tool:call:start':
+        return { type: 'tool_call', toolName: event.toolName, toolCallId: event.toolCallId, input: event.arguments };
+      case 'tool:call:end':
+        const result = event.result;
+        return { type: 'tool_result', toolName: result.toolName, toolCallId: result.toolCallId, result: result.result || result.error, isError: result.isError };
+      case 'memory:retrieve':
+        return { type: 'memory_retrieve', query: event.query, memoriesRetrieved: event.memoriesRetrieved };
+      default:
+        return undefined;
+    }
+  }
+
+  /**
    * Schedule auto-compaction after a short delay (debounced).
    * Cancels if agent starts a new run before delay expires.
    */
@@ -1159,6 +1262,30 @@ export class AgentSession {
     }
     this._autoCompactionAbortController?.abort();
     this._autoCompactionAbortController = undefined;
+  }
+
+  /**
+   * Get performance tracking statistics (if enabled)
+   */
+  getPerformanceStats(): {
+    sampleCount: number;
+    timeSpanMS: number;
+    avgCpuUserMS: number;
+    avgCpuSystemMS: number;
+    avgRSSMB: number;
+    avgHeapUsedMB: number;
+    peakRSSMB: number;
+    peakHeapUsedMB: number;
+  } | null {
+    if (!this._performanceTracker) return null;
+    return this._performanceTracker.getStats();
+  }
+
+  /**
+   * Stop performance tracking and destroy internal tracker
+   */
+  stopPerformanceTracking(): void {
+    this._performanceTracker?.stop();
   }
 
   private async _runAutoCompaction(): Promise<void> {

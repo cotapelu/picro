@@ -125,8 +125,20 @@ export class DefaultModelRegistry implements ModelRegistry {
     return { ok: true, apiKey, headers };
   }
 
-  registerProvider(name: string, _config: unknown): void {
-    console.log(`Registering provider: ${name}`);
+  registerProvider(name: string, config: {
+    apiKey?: string;
+    apiBaseUrl?: string;
+    extraHeaders?: Record<string, string>;
+  } = {}): void {
+    if (config.apiKey) {
+      this.setApiKey(name, config.apiKey);
+    }
+    const key = this._getKey(name, "*");
+    if (config.extraHeaders) {
+      const existing = this.customHeaders.get(key) ?? {};
+      this.customHeaders.set(key, { ...existing, ...config.extraHeaders });
+    }
+    console.log(`Registered provider: ${name}`);
   }
 
   setApiKey(provider: string, apiKey: string, headers?: Record<string, string>): void {

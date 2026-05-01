@@ -9,8 +9,19 @@
  * - Resolve package resources
  */
 
-import { existsSync, mkdirSync, readdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { existsSync, mkdirSync, readdirSync, statSync, readFileSync } from 'fs';
+import { join, basename } from 'path';
+import { fileURLToPath } from 'url'; // if needed
+
+export async function fetchJson(url: string): Promise<any> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Package source configuration
@@ -153,6 +164,105 @@ export class DefaultPackageManager {
     });
 
     return result.status === 0;
+  }
+
+  /**
+   * Update an installed package to latest version
+   */
+  async updatePackage(packageName: string): Promise<ResolvedPackage | null> {
+    if (!this.isInstalled(packageName)) {
+      throw new Error(`Package ${packageName} is not installed`);
+    }
+    const { spawnSync } = await import('child_process');
+    const result = spawnSync(this.npmPath, ['update', '--prefix', this.packagesDir, packageName], {
+      encoding: 'utf-8',
+      timeout: 120000,
+    });
+    if (result.status !== 0) {
+      console.error('Failed to update package:', result.stderr);
+      return null;
+    }
+    return this.getInstalledPackage(packageName);
+  }
+
+  /**
+   * Get dependency conflicts among installed packages
+   */
+  async getConflicts(packageName?: string): Promise<string[]> {
+    const args = ['ls', '--all', '--json'];
+    if (packageName) args.push(packageName);
+    const { spawnSync } = await import('child_process');
+    const result = spawnSync(this.npmPath, args, {
+      cwd: this.packagesDir,
+      encoding: 'utf-8',
+    });
+    const conflicts: string[] = [];
+    if (result.status !== 0) {
+      try {
+        const json = JSON.parse(result.stdout);
+        const collectErrors = (node: any) => {
+          if (node.error) {
+            conflicts.push(`${node.name}: ${node.error}`);
+          }
+          if (node.dependencies) {
+            for (const dep of Object.values(node.dependencies)) {
+              collectErrors(dep);
+            }
+          }
+        };
+        collectErrors(json);
+      } catch {
+        conflicts.push(result.stderr || 'Unknown error');
+      }
+    }
+    return conflicts;
+  }
+
+  /**
+   * Get package metadata from npm registry
+   */
+  async checkPackageHealth(packageName: string): Promise<{healthy: boolean; issues: string[]}> {
+    const pkg = this.getInstalledPackage(packageName);
+    if (!pkg) {
+      return { healthy: false, issues: ['Package not installed'] };
+    }
+    const issues: string[] = [];
+    try {
+      const pkgJsonPath = join(pkg.path, 'package.json');
+      const raw = readFileSync(pkgJsonPath, 'utf8');
+      const pkgData = JSON.parse(raw);
+      if (!pkgData.name) issues.push('Missing name in package.json');
+      if (!pkgData.version) issues.push('Missing version in package.json');
+      const entry = pkgData['pi.extension'] || pkgData.main || (pkgData.exports && pkgData.exports['.'] && pkgData.exports['.'].import);
+      if (!entry) {
+        issues.push('No extension entry point defined (pi.extension, main, or exports)');
+      } else if (typeof entry === 'string') {
+        const entryPath = join(pkg.path, entry);
+        if (!existsSync(entryPath)) issues.push(`Entry point file not found: ${entry}`);
+      }
+    } catch (e: any) {
+      issues.push(`Failed to read package.json: ${e.message}`);
+    }
+    return { healthy: issues.length === 0, issues };
+  }
+
+  async getPackageInfo(name: string): Promise<any | null> {
+    const url = this.registry.replace(/\/?$/, '') + `/${encodeURIComponent(name)}`;
+    return await fetchJson(url);
+  }
+
+  /**
+   * Search npm registry for packages
+   */
+  async searchPackages(query: string, limit: number = 20): Promise<Array<{ name: string; version: string; description: string }>> {
+    const url = `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=${limit}`;
+    const data = await fetchJson(url);
+    if (!data || !data.objects) return [];
+    return data.objects.map((obj: any) => ({
+      name: obj.package.name,
+      version: obj.package.version,
+      description: obj.package.description,
+    }));
   }
 
   /**

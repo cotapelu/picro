@@ -23,11 +23,11 @@ export class ExtensionRunner {
   private extensions: Extension[] = [];
   private runtime: ExtensionRuntime;
   private handlers: Map<string, Set<Function>> = new Map();
-  
+
   constructor(runtime?: ExtensionRuntime) {
     this.runtime = runtime ?? createExtensionRuntime();
   }
-  
+
   /**
    * Load extensions
    */
@@ -35,7 +35,7 @@ export class ExtensionRunner {
     this.extensions = result.extensions;
     this.runtime = result.runtime;
   }
-  
+
   /**
    * Check if there are handlers for an event type
    */
@@ -43,7 +43,7 @@ export class ExtensionRunner {
     const handlers = this.handlers.get(eventType);
     return handlers !== undefined && handlers.size > 0;
   }
-  
+
   /**
    * Register a handler for an event
    */
@@ -52,12 +52,12 @@ export class ExtensionRunner {
       this.handlers.set(eventType, new Set());
     }
     this.handlers.get(eventType)!.add(handler);
-    
+
     return () => {
       this.handlers.get(eventType)?.delete(handler);
     };
   }
-  
+
   /**
    * Emit an event to all handlers
    */
@@ -66,7 +66,7 @@ export class ExtensionRunner {
     if (!handlers || handlers.size === 0) {
       return undefined;
     }
-    
+
     let result: any;
     for (const handler of handlers) {
       try {
@@ -75,10 +75,10 @@ export class ExtensionRunner {
         console.error(`Error in handler for ${event.type}:`, error);
       }
     }
-    
+
     return result;
   }
-  
+
   /**
    * Emit before_agent_start event
    */
@@ -96,7 +96,7 @@ export class ExtensionRunner {
       ...options,
     });
   }
-  
+
   /**
    * Emit input event
    */
@@ -111,10 +111,10 @@ export class ExtensionRunner {
       images,
       source,
     });
-    
+
     return result ?? { action: "pass" };
   }
-  
+
   /**
    * Get a command by name
    */
@@ -127,7 +127,7 @@ export class ExtensionRunner {
     }
     return undefined;
   }
-  
+
   /**
    * Get all commands
    */
@@ -140,7 +140,7 @@ export class ExtensionRunner {
     }
     return commands;
   }
-  
+
   /**
    * Get all tools from extensions
    */
@@ -153,21 +153,21 @@ export class ExtensionRunner {
     }
     return tools;
   }
-  
+
   /**
    * Get flag value
    */
   getFlag(name: string): string | boolean | undefined {
     return this.runtime.flagValues.get(name);
   }
-  
+
   /**
    * Set flag value
    */
   setFlag(name: string, value: string | boolean): void {
     this.runtime.flagValues.set(name, value);
   }
-  
+
   /**
    * Invalidate the runner
    */
@@ -176,13 +176,52 @@ export class ExtensionRunner {
     this.handlers.clear();
     this.extensions = [];
   }
-  
+
   /**
    * Create command context
    */
   createCommandContext(): any {
     // Will be populated with actual implementation
     return {};
+  }
+
+  // =========================================================================
+  // UI Provider Methods (stubs for extension UI integration)
+  // =========================================================================
+
+  /**
+   * Provide autocomplete suggestions
+   */
+  async provideAutocomplete(context: any): Promise<any[]> {
+    return [];
+  }
+
+  /**
+   * Render a message (for extended message rendering)
+   */
+  async renderMessage(message: any, options?: any): Promise<any | null> {
+    return null;
+  }
+
+  /**
+   * Render tool execution result
+   */
+  async renderToolExecution(toolName: string, input: any, output: any, options?: any): Promise<any> {
+    return {};
+  }
+
+  /**
+   * Create a widget
+   */
+  async createWidget(options: any): Promise<void> {
+    // no-op
+  }
+
+  /**
+   * Select string (e.g., file picker)
+   */
+  async selectString(options: any): Promise<string | undefined> {
+    return undefined;
   }
 }
 

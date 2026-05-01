@@ -8,7 +8,7 @@
  * - Support requests
  */
 
-import { cpus, freemem, totalmem, arch, platform, release, version, hostname } from 'os';
+import { cpus, freemem, totalmem, arch, platform, release, version, hostname, networkInterfaces } from 'os';
 import { existsSync, statSync } from 'fs';import { stat } from 'fs/promises';
 import type { Stats } from 'fs';
 import { join } from 'path';
@@ -83,6 +83,39 @@ export function getMemoryInfo(): MemoryInfo {
     external: usage.external,
     arrayBuffers: usage.arrayBuffers ?? 0,
   };
+}
+
+/**
+ * Get network interfaces information
+ */
+export interface NetworkInterfaceInfo {
+  interface: string;
+  address: string;
+  netmask?: string;
+  family: 'IPv4' | 'IPv6';
+  mac?: string;
+  internal: boolean;
+}
+
+export function getNetworkInterfaces(): NetworkInterfaceInfo[] {
+  const ifaces = networkInterfaces();
+  const result: NetworkInterfaceInfo[] = [];
+  for (const [iface, addresses] of Object.entries(ifaces)) {
+    if (!addresses) continue;
+    for (const addr of addresses) {
+      if (addr.family === 'IPv4' || addr.family === 'IPv6') {
+        result.push({
+          interface: iface,
+          address: addr.address,
+          netmask: addr.netmask,
+          family: addr.family as 'IPv4' | 'IPv6',
+          mac: addr.mac,
+          internal: addr.internal,
+        });
+      }
+    }
+  }
+  return result;
 }
 
 /**
@@ -179,6 +212,7 @@ export function collectDiagnostics(): Record<string, unknown> {
       cpuUserMS: perf.cpuUsage.user,
       cpuSystemMS: perf.cpuUsage.system,
     },
+    network: getNetworkInterfaces(),
     moduleInfo: {
       agentVersion: getPackageVersion() || 'unknown',
     },
@@ -220,6 +254,13 @@ export function generateDiagnosticReport(): string {
   lines.push(`Host: ${diag.system.hostname}`);
   lines.push(`CPU: ${diag.system.cpuModel} (${diag.system.cpuCores} cores)`);
   lines.push(`Memory: ${diag.system.memoryUsageMB}MB used / ${diag.system.totalMemoryMB}MB total`);
+
+  if (diag.network && diag.network.length) {
+    lines.push('Network Interfaces:');
+    for (const iface of diag.network) {
+      lines.push(`  ${iface.interface} (${iface.family}): ${iface.address}` + (iface.internal ? ' [internal]' : ''));
+    }
+  }
   lines.push('');
 
   lines.push('--- Process ---');

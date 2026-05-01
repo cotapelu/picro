@@ -15,6 +15,7 @@ type EventHandler = (event: AgentEvent) => Promise<void> | void;
 export class EventEmitter {
   private typedListeners: Map<string, Set<EventHandler>> = new Map();
   private globalListeners: Set<EventHandler> = new Set();
+  private eventMetrics: Map<string, { count: number; totalDurationNs: bigint }> = new Map();
 
   /**
    * Subscribe to a specific event type.
@@ -66,6 +67,7 @@ export class EventEmitter {
    * Waits for all async handlers to complete.
    */
   async emit(event: AgentEvent): Promise<void> {
+    const start = process.hrtime.bigint();
     const handlers: Promise<void>[] = [];
 
     // Type-specific listeners
@@ -82,6 +84,10 @@ export class EventEmitter {
     }
 
     await Promise.all(handlers);
+
+    const durationNs = process.hrtime.bigint() - start;
+    const existing = this.eventMetrics.get(event.type) ?? { count: 0, totalDurationNs: 0n };
+    this.eventMetrics.set(event.type, { count: existing.count + 1, totalDurationNs: existing.totalDurationNs + durationNs });
   }
 
   /**
@@ -128,6 +134,25 @@ export class EventEmitter {
       }
     }
     return false;
+  }
+
+  /**
+   * Get event emission metrics.
+   */
+  getEventMetrics(): Map<string, { count: number; avgDurationMs: number }> {
+    const result = new Map<string, { count: number; avgDurationMs: number }>();
+    for (const [type, data] of this.eventMetrics) {
+      const avgMs = data.count > 0 ? Number(data.totalDurationNs) / data.count / 1e6 : 0;
+      result.set(type, { count: data.count, avgDurationMs: avgMs });
+    }
+    return result;
+  }
+
+  /**
+   * Clear event metrics.
+   */
+  clearMetrics(): void {
+    this.eventMetrics.clear();
   }
 }
 

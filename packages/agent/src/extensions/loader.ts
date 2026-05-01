@@ -32,7 +32,39 @@ export async function loadExtensions(
       errors.push({ path, error: message });
     }
   }
-  
+
+  // Detect collisions across loaded extensions
+  const extensionNames = new Set<string>();
+  const toolNames = new Set<string>();
+  const commandNames = new Set<string>();
+
+  for (const ext of extensions) {
+    // Extension name collision
+    if (extensionNames.has(ext.name)) {
+      errors.push({ path: ext.path, error: `Duplicate extension name: ${ext.name}` });
+    } else {
+      extensionNames.add(ext.name);
+    }
+
+    // Tool name collisions
+    for (const [toolName] of ext.tools) {
+      if (toolNames.has(toolName)) {
+        errors.push({ path: ext.path, error: `Duplicate tool name: ${toolName}` });
+      } else {
+        toolNames.add(toolName);
+      }
+    }
+
+    // Command name collisions
+    for (const [cmdName] of ext.commands) {
+      if (commandNames.has(cmdName)) {
+        errors.push({ path: ext.path, error: `Duplicate command name: ${cmdName}` });
+      } else {
+        commandNames.add(cmdName);
+      }
+    }
+  }
+
   return { extensions, errors, runtime };
 }
 

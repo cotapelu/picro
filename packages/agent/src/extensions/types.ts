@@ -399,6 +399,79 @@ export interface ExtensionShortcut {
   handler: () => void | Promise<void>;
 }
 
+/**
+ * Tool info for UI
+ */
+export interface ToolInfo {
+  name: string;
+  description: string;
+  parameters: any;
+}
+
+/**
+ * Registered tool with metadata
+ */
+export interface RegisteredTool {
+  definition: ToolDefinition;
+  sourceInfo?: SourceInfo;
+}
+
+/**
+ * Autocomplete provider factory
+ */
+export type AutocompleteProviderFactory = (context: {
+  sessionId: string;
+  cwd: string;
+  filter: string;
+}) => Promise<Array<{
+  label: string;
+  description?: string;
+  detail?: string;
+  kind: "command" | "tool" | "file" | "flag" | "model";
+  insertText?: string;
+}>>;
+
+/**
+ * Message render result
+ */
+export interface MessageRenderResult {
+  content?: string;
+  attachments?: any[];
+}
+
+/**
+ * Tool render result
+ */
+export interface ToolRenderResult {
+  title?: string;
+  content?: string;
+  attachments?: any[];
+}
+
+/**
+ * Tool render result options
+ */
+export interface ToolRenderResultOptions {
+  width?: number;
+  height?: number;
+  showOutput?: boolean;
+  truncateOutput?: boolean;
+}
+
+/**
+ * Message renderer function
+ */
+export type MessageRenderer = (message: any, options?: any) => Promise<MessageRenderResult | null>;
+
+/**
+ * Working indicator options
+ */
+export interface WorkingIndicatorOptions {
+  message?: string;
+  showSpinner?: boolean;
+  interval?: number;
+}
+
 // ============================================================================
 // Source Info
 // ============================================================================

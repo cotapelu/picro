@@ -223,3 +223,43 @@ export type { BashToolInput, BashToolDetails, ReadToolInput, WriteToolInput, Edi
 // ============================================================================
 export { expandPromptTemplate } from './prompt-templates.js';
 export type { PromptTemplate } from './prompt-templates.js';
+
+// ============================================================================
+// Event Utilities
+// ============================================================================
+export { PrioritizedEventEmitter } from './prioritized-event-emitter.js';
+export type { PrioritizedEventEmitterOptions } from './prioritized-event-emitter.js';
+
+export { EventRecorder } from './event-recorder.js';
+export type { EventRecorderOptions } from './event-recorder.js';
+
+export { eventGuards, isAgentStartEvent, isAgentEndEvent, isTurnStartEvent, isTurnEndEvent, isMessageStartEvent, isMessageUpdateEvent, isMessageEndEvent, isToolCallStartEvent, isToolCallEndEvent, isToolProgressEvent, isToolErrorEvent, isLLMRequestEvent, isLLMResponseEvent, isMemoryRetrievalEvent, isErrorEvent } from './event-guards.js';
+
+// ============================================================================
+// Performance Monitoring
+// ============================================================================
+export { PerformanceTracker } from './performance-tracker.js';
+export type { PerformanceTrackerOptions, PerformanceSample } from './performance-tracker.js';
+
+// ============================================================================
+// Truncation Utilities
+// ============================================================================
+export { truncateBytes, truncateVisualLines, truncateMiddle, truncatePreserveEnds } from './truncate.js';
+// TruncationResult type already exported from './tools/index.js'
+
+// ============================================================================
+// File Mutation
+// ============================================================================
+export { FileMutationQueue } from './file-mutation-queue.js';
+export type { FileMutation, FileMutationQueueOptions } from './file-mutation-queue.js';
+
+// ============================================================================
+// Settings Validation
+// ============================================================================
+export { validateSettings, validateOrThrow } from './settings-validator.js';
+export type { SettingsValidationError } from './settings-validator.js';
+
+// ============================================================================
+// Auth Guidance
+// ============================================================================
+export { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage, formatNoModelsAvailableMessage, formatLoginInstructions } from './auth-guidance.js';

@@ -182,6 +182,10 @@ export async function executeBash(
   if (timeout > 0) {
     timeoutId = setTimeout(() => {
       if (!exited) {
+        // Try to kill entire process tree (Unix)
+        if (child.pid) {
+          try { process.kill(-child.pid, 'SIGTERM'); } catch {}
+        }
         child.kill('SIGTERM');
       }
     }, timeout);
@@ -191,6 +195,9 @@ export async function executeBash(
   if (signal) {
     signal.addEventListener('abort', () => {
       if (!exited) {
+        if (child.pid) {
+          try { process.kill(-child.pid, 'SIGTERM'); } catch {}
+        }
         child.kill('SIGTERM');
       }
     });

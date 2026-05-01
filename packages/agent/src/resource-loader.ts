@@ -7,6 +7,13 @@
 
 import type { AgentMessage } from "./agent-types.js";
 import type { Skill } from "./skills.js";
+import { loadSkills } from "./skills.js";
+import { loadPromptTemplates } from "./prompt-templates.js";
+import { existsSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { discoverAndLoadExtensions } from "./extensions/loader.js";
+import { createExtensionRuntime } from "./extensions/runner.js";
+import { ExtensionRunner } from "./extensions/runner.js";
 
 /**
  * Resource loader interface for loading external resources
@@ -116,12 +123,25 @@ export interface Theme {
  * Default resource loader implementation
  */
 export class DefaultResourceLoader implements ResourceLoader {
+  private _cwd: string;
+  private _agentDir: string;
+  private _skillsCache?: Skill[];
+  private _promptsCache?: any[]; // PromptTemplate[]
+  private _agentsFilesCache?: Array<{ path: string; content: string }>;
+  private _extensionsResult?: LoadExtensionsResult;
+  private _extensionRunner?: any;
+
   constructor(options: {
     cwd: string;
     agentDir: string;
     settingsManager?: any;
   }) {
-    // Stub - full implementation in Phase B
+    this._cwd = options.cwd;
+    this._agentDir = options.agentDir;
+    // Initialize with empty defaults
+    this._extensionsResult = { extensions: [], errors: [], runtime: createExtensionRuntime() };
+    this._extensionRunner = new ExtensionRunner(this._extensionsResult.runtime);
+    this._extensionRunner.loadExtensions(this._extensionsResult);
   }
 
   getExtensions(): LoadExtensionsResult {
@@ -136,11 +156,17 @@ export class DefaultResourceLoader implements ResourceLoader {
   }
 
   getSkills(): { skills: Skill[]; diagnostics: ResourceDiagnostic[] } {
-    return { skills: [], diagnostics: [] };
+    if (this._skillsCache === undefined) {
+      this._skillsCache = loadSkills({ cwd: this._cwd, agentDir: this._agentDir, includeDefaults: true });
+    }
+    return { skills: this._skillsCache, diagnostics: [] };
   }
 
-  getPrompts(): { prompts: LoadedPromptTemplate[]; diagnostics: ResourceDiagnostic[] } {
-    return { prompts: [], diagnostics: [] };
+  getPrompts(): { prompts: any[]; diagnostics: ResourceDiagnostic[] } {
+    if (this._promptsCache === undefined) {
+      this._promptsCache = loadPromptTemplates({ cwd: this._cwd, agentDir: this._agentDir, promptPaths: [], includeDefaults: true });
+    }
+    return { prompts: this._promptsCache, diagnostics: [] };
   }
 
   getThemes(): { themes: Theme[]; diagnostics: ResourceDiagnostic[] } {
@@ -148,7 +174,10 @@ export class DefaultResourceLoader implements ResourceLoader {
   }
 
   getAgentsFiles(): { agentsFiles: Array<{ path: string; content: string }> } {
-    return { agentsFiles: [] };
+    if (this._agentsFilesCache === undefined) {
+      this._agentsFilesCache = loadProjectContextFiles({ cwd: this._cwd, agentDir: this._agentDir });
+    }
+    return { agentsFiles: this._agentsFilesCache };
   }
 
   getSystemPrompt(): string | undefined {
@@ -160,7 +189,20 @@ export class DefaultResourceLoader implements ResourceLoader {
   }
 
   async reload(): Promise<void> {
-    // Stub - full implementation in Phase B
+    // Reload all resources from disk
+    this._skillsCache = loadSkills({ cwd: this._cwd, agentDir: this._agentDir, includeDefaults: true });
+    this._promptsCache = loadPromptTemplates({ cwd: this._cwd, agentDir: this._agentDir, promptPaths: [], includeDefaults: true });
+    this._agentsFilesCache = loadProjectContextFiles({ cwd: this._cwd, agentDir: this._agentDir });
+    // Reload extensions
+    try {
+      this._extensionsResult = await discoverAndLoadExtensions({ cwd: this._cwd, agentDir: this._agentDir });
+      this._extensionRunner = new ExtensionRunner(this._extensionsResult.runtime);
+      this._extensionRunner.loadExtensions(this._extensionsResult);
+    } catch {
+      this._extensionsResult = { extensions: [], errors: [], runtime: createExtensionRuntime() };
+      this._extensionRunner = new ExtensionRunner(this._extensionsResult.runtime);
+      this._extensionRunner.loadExtensions(this._extensionsResult);
+    }
   }
 }
 
@@ -171,6 +213,22 @@ export function loadProjectContextFiles(options: {
   cwd: string;
   agentDir: string;
 }): Array<{ path: string; content: string }> {
-  // Stub implementation - will be implemented in Phase B
-  return [];
+  const files: Array<{ path: string; content: string }> = [];
+  const pathsToCheck = [
+    join(options.agentDir, "AGENTS.md"),
+    join(options.agentDir, "CLAUDE.md"),
+    join(options.cwd, ".pi", "AGENTS.md"),
+    join(options.cwd, ".pi", "CLAUDE.md"),
+  ];
+  for (const path of pathsToCheck) {
+    if (existsSync(path)) {
+      try {
+        const content = readFileSync(path, "utf8");
+        files.push({ path, content });
+      } catch {
+        // ignore read errors
+      }
+    }
+  }
+  return files;
 }

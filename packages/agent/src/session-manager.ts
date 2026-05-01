@@ -232,6 +232,9 @@ export function parseSessionEntries(content: string): FileEntry[] {
     }
   }
 
+  // Apply migrations if needed
+  migrateToCurrentVersion(entries);
+
   return entries;
 }
 
@@ -980,6 +983,44 @@ export class SessionManager {
     };
     this._appendEntry(entry);
     return entry.id;
+  }
+
+  // ============================================================================
+  // Search & Filtering
+  // ============================================================================
+
+  /**
+   * Find entries by label substring
+   */
+  findByLabel(label: string): SessionEntry[] {
+    const result: SessionEntry[] = [];
+    for (const [entryId, entryLabel] of this.labelsById) {
+      if (entryLabel.includes(label)) {
+        const entry = this.byId.get(entryId);
+        if (entry) result.push(entry);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Find entries by type(s)
+   */
+  findByTypes(types: string[]): SessionEntry[] {
+    return this.fileEntries.filter(e => types.includes(e.type)) as SessionEntry[];
+  }
+
+  /**
+   * Search message content case-insensitively
+   */
+  searchMessages(query: string): SessionMessageEntry[] {
+    const lowerQ = query.toLowerCase();
+    return this.fileEntries.filter(e => {
+      if (e.type !== "message") return false;
+      const msgEntry = e as SessionMessageEntry;
+      const content = JSON.stringify(msgEntry.message).toLowerCase();
+      return content.includes(lowerQ);
+    }) as SessionMessageEntry[];
   }
 
   // ============================================================================

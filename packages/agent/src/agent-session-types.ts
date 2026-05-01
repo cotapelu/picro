@@ -47,7 +47,20 @@ export interface AgentSessionConfig {
 
   /** Compaction configuration */
   compaction?: any;
+
+  /** Extension runner for managing extensions */
+  extensionRunner?: any;
+
+  /** Max steering queue size (0 = unlimited) */
+  maxSteeringQueueSize?: number;
+
+  /** Max follow-up queue size (0 = unlimited) */
+  maxFollowUpQueueSize?: number;
+
+  /** Enable performance tracking (default false) */
+  enablePerformanceTracking?: boolean;
 }
+
 
 /**
  * Parsed skill block from a user message

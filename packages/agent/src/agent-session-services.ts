@@ -17,6 +17,8 @@ import { SessionManager } from "./session-manager.js";
 import { Agent } from "./agent.js";
 import { AgentSession } from "./agent-session.js";
 import { DEFAULT_TOOL_TIMEOUT } from "./defaults.js";
+import { discoverAndLoadExtensions } from "./extensions/loader.js";
+import { ExtensionRunner, createExtensionRuntime } from "./extensions/runner.js";
 import type { ToolDefinition } from "./types.js";
 
 import {
@@ -86,6 +88,7 @@ export interface AgentSessionServices {
   modelRegistry: DefaultModelRegistry;
   resourceLoader: DefaultResourceLoader;
   diagnostics: AgentSessionRuntimeDiagnostic[];
+  extensionRunner?: any;
 }
 
 /**
@@ -126,6 +129,17 @@ export async function createAgentSessionServices(
 
   const diagnostics: AgentSessionRuntimeDiagnostic[] = [];
 
+  // Load extensions (best effort, non-fatal)
+  let extensionRunner: any;
+  try {
+    const result = await discoverAndLoadExtensions({ cwd, agentDir });
+    extensionRunner = new ExtensionRunner(result.runtime);
+    extensionRunner.loadExtensions(result);
+  } catch (error) {
+    // Extensions are optional, so ignore errors
+    extensionRunner = new ExtensionRunner(createExtensionRuntime());
+  }
+
   return {
     cwd,
     agentDir,
@@ -135,6 +149,7 @@ export async function createAgentSessionServices(
     modelRegistry,
     resourceLoader,
     diagnostics,
+    extensionRunner,
   };
 }
 
@@ -220,6 +235,7 @@ export async function createAgentSessionFromServices(
     modelRegistry: services.modelRegistry,
     scopedModels,
     customTools,
+    extensionRunner: services.extensionRunner,
   });
 
   // Set initial model only if we have one
