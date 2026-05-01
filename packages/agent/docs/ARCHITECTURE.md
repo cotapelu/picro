@@ -6,13 +6,15 @@ The `@picro/agent` package follows a **3-layer architecture**:
 
 ```
 Layer 3: AgentSessionRuntime (Highest Level API)
-    ↓ compose
+    ↓ creates/uses
 Layer 2: AgentSession (Session Management)
     ↓ uses
 Layer 1: Agent (Core - LLM + Tools)
 ```
 
-**Dependency Rule:** Layer N can only import Layer < N. No circular dependencies.
+**Dependency Rule:** Layer N can only import Layer < N or utilities. No circular dependencies.
+
+**External Dependency:** `@picro/llm` for LLM calls.
 
 ---
 
