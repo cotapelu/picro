@@ -5,11 +5,14 @@ Terminal UI Library for building interactive terminal applications.
 ## Features
 
 - ✅ **Differential Rendering** - Only updates changed lines for smooth animations
-- ✅ **Overlay System** - Position modals and panels with flexible anchoring
+- ✅ **Overlay System** - Position modals and panels with flexible anchoring and z-index
+- ✅ **Viewport Scrolling** - Large content handled with scroll APIs
 - ✅ **Terminal Images** - Support for Kitty and iTerm2 image protocols
 - ✅ **ANSI-aware** - Proper handling of wide characters and escape codes
 - ✅ **Cursor IME** - Hardware cursor positioning for IME candidate windows
-- ✅ **Component Library** - Input, Editor, SelectList, Markdown, Messages, etc.
+- ✅ **Component Library** - 75+ components (Input, Editor, SelectList, Markdown, Messages, etc.)
+- ✅ **Key Repeat** - Configurable repeat delay/interval for held keys
+- ✅ **Performance Metrics** - Dirty line count, render stats
 
 ## Installation
 
@@ -82,6 +85,21 @@ interface RenderContext {
 - `fuzzyFilter(items, query, getter)` - Fuzzy search
 - `getKeybindings()` - Access keybindings manager
 
+## Examples
+
+See [examples/](./examples/) for working demos:
+
+- `basic-tui.ts` - Simple "Hello World"
+- `input-form.ts` - Input with submit callback
+- `select-list.ts` - Scrollable selection list
+- `markdown.ts` - Markdown rendering
+- `panel.ts` - Modal overlay demo
+- `terminal-image.ts` - Image rendering
+
+## API Reference
+
+Full API documentation is available in [API.md](./API.md).
+
 ## Terminal Images
 
 ```typescript
@@ -100,17 +118,45 @@ if (caps.images) {
 
 ## Overlays (Modals)
 
+Panels can be displayed on top of base content with flexible positioning and z-index stacking:
+
 ```typescript
-const handle = tui.showOverlay(component, {
+const handle = tui.showPanel(component, {
   anchor: 'center',
   width: 60,
   height: 20,
+  zIndex: 10, // higher = on top
 });
 
 // Control the overlay
 handle.focus();
 handle.setHidden(true);
 handle.close();
+
+// Dynamic reordering
+handle.bringToFront();
+handle.sendToBack();
+handle.setZIndex(5);
+```
+
+## Viewport Scrolling
+
+For content larger than the terminal, use the scroll APIs:
+
+```typescript
+tui.scroll(5); // scroll down 5 lines
+tui.scroll(-1); // scroll up 1 line
+tui.scrollTo(100); // scroll to absolute line index
+const metrics = tui.getScrollMetrics(); // { scrollTop, totalLines, viewportLines }
+```
+
+## Key Repeat
+
+Configure auto-repeat when keys are held down:
+
+```typescript
+tui.setKeyRepeatConfig(500, 50); // delay 500ms, interval 50ms
+tui.setKeyRepeatEnabled(true);
 ```
 
 ## Keybindings
