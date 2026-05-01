@@ -56,6 +56,7 @@ export class TerminalUI extends ElementContainer {
 	private maxLinesRendered = 0;
 	private previousViewportTop = 0;
 	private fullRedrawCount = 0;
+	private _dirtyLineCount = 0; // count of lines changed in last incremental render
 	private stopped = false;
 	private debugLogPath?: string;
 
@@ -106,6 +107,14 @@ export class TerminalUI extends ElementContainer {
 
 	get fullRedraws(): number {
 		return this.fullRedrawCount;
+	}
+
+	/**
+	 * Get the number of lines changed in the last incremental render.
+	 * Useful for performance monitoring.
+	 */
+	get dirtyLineCount(): number {
+		return this._dirtyLineCount;
 	}
 
 	getShowHardwareCursor(): boolean {
@@ -810,7 +819,6 @@ export class TerminalUI extends ElementContainer {
 			renderEnd = oldLines.length - 1;
 		} else {
 			renderStart = firstDiff === -1 ? 0 : firstDiff;
-			// If lines were removed before lastDiff, we need to clear until old end
 			if (newLines.length < oldLines.length) {
 				lastDiff = Math.max(lastDiff, oldLines.length - 1);
 			} else {
@@ -818,6 +826,9 @@ export class TerminalUI extends ElementContainer {
 			}
 			renderEnd = lastDiff;
 		}
+
+		// Track dirty line count for metrics
+		this._dirtyLineCount = renderEnd - renderStart + 1;
 
 		// Debug logging for incremental mode
 		const mode = appendOnly ? 'append-only' : deleteOnly ? 'delete-only' : 'diff';
@@ -880,6 +891,9 @@ export class TerminalUI extends ElementContainer {
 	 * Full redraw - simpler and more reliable than incremental
 	 */
 	private fullRedraw(newLines: string[], width: number, height: number): void {
+		// All lines are dirty in full redraw
+		this._dirtyLineCount = newLines.length;
+
 		// Clear screen and move to home
 		try { this.terminal.clearScreen(); } catch {}
 		this.terminal.moveBy(-this.cursorRow);
