@@ -528,6 +528,13 @@ export class TerminalUI extends ElementContainer {
 			this.requestRender();
 		}
 
+		// Handle Tab for focus traversal
+		if (parsed.name === 'Tab') {
+			const direction = parsed.shift ? 'prev' : 'next';
+			this.traverseFocus(direction);
+			return;
+		}
+
 		// After key processing, manage key repeat timers
 		this.afterKeyProcessed(parsed, data);
 	}
@@ -1128,6 +1135,48 @@ export class TerminalUI extends ElementContainer {
 			(clearTimeout as any)(timer);
 			this.keyRepeatTimers.delete(keyId);
 		}
+	}
+
+	/**
+	 * Collect all focusable elements from a list (supports nested containers)
+	 */
+	private collectFocusables(elements: UIElement[]): UIElement[] {
+		const focusables: UIElement[] = [];
+		for (const el of elements) {
+			if (isInteractive(el)) {
+				focusables.push(el);
+			}
+			// Recurse into ElementContainer children
+			if ('children' in el && Array.isArray((el as any).children)) {
+				focusables.push(...this.collectFocusables((el as any).children));
+			}
+		}
+		return focusables;
+	}
+
+	/**
+	 * Move focus to next or previous focusable element (Tab/Shift+Tab)
+	 */
+	private traverseFocus(direction: 'next' | 'prev'): void {
+		// Get focusable elements from root children only (not panels)
+		const focusables = this.collectFocusables(this.children);
+		if (focusables.length <= 1) return;
+
+		// Find currently focused element among focusables
+		const currentIndex = focusables.findIndex(el => el === this.focusedElement);
+
+		// Compute next index
+		let nextIndex: number;
+		if (direction === 'next') {
+			nextIndex = currentIndex + 1;
+			if (nextIndex >= focusables.length) nextIndex = 0;
+		} else {
+			nextIndex = currentIndex - 1;
+			if (nextIndex < 0) nextIndex = focusables.length - 1;
+		}
+
+		this.setFocus(focusables[nextIndex]);
+		this.requestRender();
 	}
 
 	/**
