@@ -8,7 +8,7 @@
  * - TerminalUI từ @picro/tui (nếu cần thêm UI components)
  */
 
-import { InteractiveMode, Agent, ToolDefinition } from '@picro/agent';
+import { TerminalAgentRuntime, Agent, ToolDefinition } from '@picro/agent';
 import { TerminalUI, ProcessTerminal, UserMessage, AssistantMessage, ToolMessage } from '@picro/tui';
 import type { Model, Message } from '@picro/llm';
 import { complete } from '@picro/llm';
@@ -149,8 +149,8 @@ async function main() {
     }
   });
 
-  // Create InteractiveMode
-  const interactive = new InteractiveMode({
+  // Create TerminalAgentRuntime
+  const runtime = new TerminalAgentRuntime({
     agent,
     initialStatus: 'Ready',
     showWorking: true,
@@ -169,7 +169,7 @@ async function main() {
   console.log('✅ Ready! Gõ exit để thoát.\n');
 
   // Run - sẽ block cho đến khi user exit
-  await interactive.run();
+  await runtime.run();
 }
 
 main().catch((error) => {

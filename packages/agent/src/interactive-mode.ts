@@ -13,7 +13,7 @@ import { Agent } from './agent.js';
 import type { AgentConfig, AgentRunResult, ToolDefinition } from './types.js';
 import type { Model } from '@picro/llm';
 
-export interface InteractiveModeOptions {
+export interface TerminalAgentRuntimeOptions {
   /** Terminal instance (defaults to ProcessTerminal) */
   terminal?: Terminal;
   /** Agent instance */
@@ -35,19 +35,21 @@ export interface InteractiveModeOptions {
 }
 
 /**
- * InteractiveMode - Chạy agent trong terminal với TUI
+ * AgentSessionRuntime - Chạy agent trong terminal với TUI
+ * 
+ * Phần session engine + TUI kết hợp
  * 
  *_usage:
  * ```ts
- * import { InteractiveMode } from '@picro/agent';
+ * import { AgentSessionRuntime } from '@picro/agent';
  * import { Agent } from '@picro/agent';
  * 
  * const agent = new Agent(model, tools, config);
- * const mode = new InteractiveMode({ agent });
- * await mode.run();
+ * const runtime = new AgentSessionRuntime({ agent });
+ * await runtime.run();
  * ```
  */
-export class InteractiveMode {
+export class TerminalAgentRuntime {
   private terminal: Terminal;
   private tui: TerminalUI;
   private agent: Agent;
@@ -66,7 +68,7 @@ export class InteractiveMode {
   private inputComponent!: Input;
   private inputResolver?: (value: string) => void;
 
-  constructor(options: InteractiveModeOptions) {
+  constructor(options: TerminalAgentRuntimeOptions) {
     this.terminal = options.terminal || new ProcessTerminal();
     this.tui = new TerminalUI(this.terminal, options.tuiOptions?.showHardwareCursor);
     this.agent = options.agent;
