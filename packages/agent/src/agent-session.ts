@@ -30,6 +30,8 @@ type ModelAny = ModelEntry;
 import type { SessionManager } from "./session-manager.js";
 import type { SettingsManager } from "./settings-manager.js";
 import type { ResourceLoader } from "./resource-loader.js";
+import { compact as performCompaction, type CompactOptions } from "./compaction/compaction.js";
+import { shouldCompact, type CompactionThresholds } from "./compaction/core.js";
 
 // Re-export types
 export type { AgentSessionEventListener, AgentSessionConfig } from "./agent-session-types.js";
@@ -104,6 +106,9 @@ export class AgentSession {
   readonly resourceLoader: ResourceLoader;
   readonly modelRegistry: ModelRegistry;
 
+  // Config (subset of AgentSessionConfig)
+  private _config: any;
+
   // State
   private _scopedModels: Array<{ model: Model; thinkingLevel?: ThinkingLevel }>;
   private _cwd: string;
@@ -121,6 +126,7 @@ export class AgentSession {
   // Compaction state
   private _compactionAbortController: AbortController | undefined;
   private _autoCompactionAbortController: AbortController | undefined;
+  private _autoCompactionTimer: any;
   private _overflowRecoveryAttempted = false;
 
   // Branch summarization state
@@ -179,6 +185,7 @@ export class AgentSession {
     this.settingsManager = config.settingsManager;
     this._cwd = config.cwd;
     this._scopedModels = config.scopedModels ?? [];
+    this._config = config;
     this.resourceLoader = config.resourceLoader;
     this.modelRegistry = config.modelRegistry;
     this._initialActiveToolNames = config.initialActiveToolNames;
@@ -559,26 +566,128 @@ export class AgentSession {
 
   /**
    * Manually trigger compaction.
+   * Summarizes older conversation entries to keep context within limits.
    */
   async compact(): Promise<void> {
     if (this.isCompacting) {
       return;
     }
 
+    const config = this.config;
+    const compactionConfig = config.compaction ?? {};
+    const enabled = compactionConfig.enabled !== false; // default true
+
+    if (!enabled) {
+      return; // Compaction disabled
+    }
+
     this._compactionAbortController = new AbortController();
+    const signal = this._compactionAbortController.signal;
 
     try {
-      // Compaction logic would go here
+      this._emit({ type: "compaction_start", reason: "manual" });
+
+      // 1. Get model and API key
+      const model = this._model;
+      if (!model) {
+        throw new Error("No model selected for compaction");
+      }
+
+      const auth = await this.modelRegistry.getApiKeyAndHeaders(model);
+      if (!auth.ok || !auth.apiKey) {
+        throw new Error(`No API key configured for ${model.provider}/${model.id}`);
+      }
+
+      // 2. Get all session entries
+      const entries = this.sessionManager.getEntries();
+
+      // 3. Determine if compaction needed
+      const thresholds: CompactionThresholds = {
+        tokenThreshold: compactionConfig.tokenThreshold ?? 100000,
+        minTokens: compactionConfig.minTokens ?? 50000,
+        maxAfterCompaction: compactionConfig.maxTokens ?? 50000,
+      };
+
+      // Quick token estimation using char/4 approximation
+      // For more accurate count, we could use contextBuilder.estimateHistoryTokens
+      const estimatedTokens = entries.reduce((sum, entry) => {
+        if (entry.type === 'message') {
+          const turn = (entry as any).message as ConversationTurn;
+          const content = this._extractTextFromTurn(turn.content);
+          return sum + Math.ceil(content.length / 4);
+        }
+        return sum;
+      }, 0);
+
+      if (!shouldCompact(estimatedTokens, thresholds)) {
+        this._emit({
+          type: "compaction_end",
+          reason: "manual",
+          result: undefined,
+          aborted: false,
+          willRetry: false,
+        });
+        return;
+      }
+
+      // 4. Perform compaction
+      const options: CompactOptions = {
+        model,
+        apiKey: auth.apiKey,
+        headers: auth.headers,
+        signal,
+        reserveTokens: compactionConfig.reserveTokens ?? 16384,
+      };
+
+      const compactionEntry = await performCompaction(entries, options);
+
+      // 5. Append compaction entry to session
+      this.sessionManager.appendEntry(compactionEntry);
+
       this._emit({
         type: "compaction_end",
         reason: "manual",
-        result: undefined,
+        result: {
+          summary: compactionEntry.summary,
+          tokensBefore: estimatedTokens,
+          entriesAdded: 1,
+        },
         aborted: false,
         willRetry: false,
       });
+    } catch (error: any) {
+      if (signal.aborted) {
+        this._emit({
+          type: "compaction_end",
+          reason: "manual",
+          result: undefined,
+          aborted: true,
+          willRetry: false,
+        });
+      } else {
+        this._emit({
+          type: "compaction_end",
+          reason: "manual",
+          result: undefined,
+          aborted: false,
+          willRetry: false,
+          errorMessage: error.message,
+        });
+        throw error;
+      }
     } finally {
       this._compactionAbortController = undefined;
     }
+  }
+
+  /**
+   * Extract plain text from content blocks.
+   */
+  private _extractTextFromTurn(content: any[]): string {
+    return content
+      .filter((c: any) => c.type === 'text')
+      .map((c: any) => c.text)
+      .join(' ');
   }
 
   // =========================================================================
@@ -931,6 +1040,15 @@ export class AgentSession {
       }
 
       this._resolveRetry();
+
+      // Auto-compaction if enabled and context is large
+      const compactionConfig = this._config.compaction ?? {};
+      const autoCompact = compactionConfig.autoCompact !== false; // default true
+      if (autoCompact && !this.isCompacting) {
+        // Debounce: schedule compaction after a short delay
+        // If a new agent run starts within delay, cancel compaction
+        await this._scheduleAutoCompaction();
+      }
     }
   }
 
@@ -1012,6 +1130,107 @@ export class AgentSession {
       this._retryResolve();
       this._retryResolve = undefined;
       this._retryPromise = undefined;
+    }
+  }
+
+  /**
+   * Schedule auto-compaction after a short delay (debounced).
+   * Cancels if agent starts a new run before delay expires.
+   */
+  private async _scheduleAutoCompaction(): Promise<void> {
+    this._cancelAutoCompaction();
+
+    const delay = 2000; // 2 seconds
+    this._autoCompactionTimer = setTimeout(() => {
+      this._autoCompactionTimer = undefined;
+      // Only compact if agent not running
+      if (!this.agent.getState().isRunning) {
+        this._runAutoCompaction().catch((err) => {
+          console.warn('Auto-compaction failed:', err);
+        });
+      }
+    }, delay);
+  }
+
+  private _cancelAutoCompaction(): void {
+    if (this._autoCompactionTimer) {
+      clearTimeout(this._autoCompactionTimer);
+      this._autoCompactionTimer = undefined;
+    }
+    this._autoCompactionAbortController?.abort();
+    this._autoCompactionAbortController = undefined;
+  }
+
+  private async _runAutoCompaction(): Promise<void> {
+    if (this.isCompacting) return;
+
+    const entries = this.sessionManager.getEntries();
+    // Estimate tokens quickly
+    let estimatedTokens = 0;
+    for (const entry of entries) {
+      if (entry.type === 'message') {
+        const turn = (entry as any).message as ConversationTurn;
+        const content = this._extractTextFromTurn(turn.content);
+        estimatedTokens += Math.ceil(content.length / 4);
+      }
+    }
+
+    const compactionConfig = this._config.compaction ?? {};
+    const thresholds: CompactionThresholds = {
+      tokenThreshold: compactionConfig.tokenThreshold ?? 100000,
+      minTokens: compactionConfig.minTokens ?? 50000,
+      maxAfterCompaction: compactionConfig.maxTokens ?? 50000,
+    };
+
+    if (!shouldCompact(estimatedTokens, thresholds)) {
+      return;
+    }
+
+    this._autoCompactionAbortController = new AbortController();
+    try {
+      this._emit({ type: 'compaction_start', reason: 'threshold' });
+
+      const model = this._model;
+      if (!model) return;
+
+      const auth = await this.modelRegistry.getApiKeyAndHeaders(model);
+      if (!auth.ok || !auth.apiKey) return;
+
+      const options: CompactOptions = {
+        model,
+        apiKey: auth.apiKey,
+        headers: auth.headers,
+        signal: this._autoCompactionAbortController.signal,
+        reserveTokens: compactionConfig.reserveTokens ?? 16384,
+      };
+
+      const compactionEntry = await performCompaction(entries, options);
+      this.sessionManager.appendEntry(compactionEntry);
+
+      this._emit({
+        type: 'compaction_end',
+        reason: 'threshold',
+        result: {
+          summary: compactionEntry.summary,
+          tokensBefore: estimatedTokens,
+          entriesAdded: 1,
+        },
+        aborted: false,
+        willRetry: false,
+      });
+    } catch (error: any) {
+      if (this._autoCompactionAbortController?.signal.aborted) {
+        this._emit({
+          type: 'compaction_end',
+          reason: 'threshold',
+          result: undefined,
+          aborted: true,
+          willRetry: false,
+        });
+      }
+      // else ignore errors for auto-compaction
+    } finally {
+      this._autoCompactionAbortController = undefined;
     }
   }
 }

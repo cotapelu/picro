@@ -44,6 +44,9 @@ export interface AgentSessionConfig {
 
   /** Optional allowlist of tool names */
   allowedToolNames?: string[];
+
+  /** Compaction configuration */
+  compaction?: any;
 }
 
 /**

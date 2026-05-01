@@ -589,6 +589,14 @@ export class SessionManager {
     return entry.id;
   }
 
+  /**
+   * Append a raw session entry (used for compaction, branch summaries).
+   * The entry should already have id, parentId, timestamp set.
+   */
+  appendEntry(entry: SessionEntry): void {
+    this._appendEntry(entry);
+  }
+
   appendThinkingLevelChange(thinkingLevel: string): string {
     const entry: ThinkingLevelChangeEntry = {
       type: "thinking_level_change",

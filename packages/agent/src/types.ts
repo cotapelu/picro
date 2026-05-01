@@ -378,6 +378,24 @@ export interface ContextBuilderConfig {
   enableMemoryInjection: boolean;
 }
 
+/**
+ * Compaction configuration
+ */
+export interface CompactionConfig {
+  /** Whether compaction is enabled (default: true) */
+  enabled?: boolean;
+  /** Token threshold to trigger auto-compaction (default: 100000) */
+  tokenThreshold?: number;
+  /** Minimum tokens to consider compaction (default: 50000) */
+  minTokens?: number;
+  /** Maximum tokens after compaction (default: 50000) */
+  maxTokens?: number;
+  /** Reserve tokens for future context (default: 16384) */
+  reserveTokens?: number;
+  /** Auto-compaction after agent:end (default: true) */
+  autoCompact?: boolean;
+}
+
 export interface MemoryEntry {
   content: string;
   relevance?: number;
@@ -426,6 +444,8 @@ export interface AgentConfig {
    loopStrategy?: 'react' | 'plan-solve' | 'reflection' | 'simple' | 'self-refine';
    /** Enable debug mode with detailed timing and metrics */
    debug?: boolean;
+   /** Compaction configuration */
+   compaction?: CompactionConfig;
  }
 
 export interface StreamOptions {

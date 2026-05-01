@@ -35,53 +35,6 @@ npm run build
 npm test
 ```
 
-## Usage
-
-### Basic Agent
-
-```typescript
-import { AgentSession } from '@picro/agent';
-
-const session = new AgentSession({
-  cwd: process.cwd(),
-  model: 'anthropic/claude-3.5-sonnet',
-});
-
-const result = await session.prompt('Explain this codebase');
-console.log(result.content);
-```
-
-### Terminal UI
-
-```typescript
-import { TerminalUI, ProcessTerminal, Text } from '@picro/tui';
-
-const tui = new TerminalUI(new ProcessTerminal());
-
-class MyUI extends ElementContainer {
-  draw(context) {
-    return [`Hello! Terminal width: ${context.width}`];
-  }
-}
-
-tui.append(new MyUI());
-tui.start();
-```
-
-### Combined (Coding Agent)
-
-```typescript
-import { createCodingAgent } from '@picro/coding-agent';
-
-const agent = await createCodingAgent({
-  model: 'claude-3.5-sonnet',
-  thinkingLevel: 'medium',
-});
-
-// Agent TUI auto-starts
-// Use agent.session for programmatic control
-// Use agent.tui for custom UI components
-```
 
 ## Architecture
 
@@ -109,33 +62,6 @@ packages/
 └── coding-agent/ # Combined wrapper (optional)
 ```
 
-### Scripts
-
-```bash
-# Build all packages
-npm run build
-
-# Build specific package
-npm run build:tui
-npm run build:agent
-npm run build:llm
-npm run build:memory
-
-# Run tests
-npm test
-# or per package
-cd packages/tui && npm test
-
-# Watch mode
-cd packages/agent && npm run dev
-```
-
-### Adding a New Package
-
-1. Create `packages/your-package/`
-2. Add `package.json`, `tsconfig.json`
-3. Implement in `src/`
-4. Add build/test scripts to root `package.json`
 
 ## Design Principles
 
@@ -146,19 +72,6 @@ cd packages/agent && npm run dev
 - **Performance** - Incremental rendering, streaming, caching
 - **Security** - Input sanitization, output validation
 
-## Testing
-
-```bash
-# Run all tests
-npm test
-
-# Run specific package tests
-cd packages/tui && npm test
-cd packages/agent && npm test
-
-# With coverage
-npm run test:coverage
-```
 
 ## License
 
@@ -166,17 +79,7 @@ Apache-2.0
 
 ## Contributing
 
-Contributions welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) first.
 
 ## Links
 
 - [Documentation](./docs/)
-- [Examples](./examples/)
-- [Changelog](./CHANGELOG.md)
-- [Issue Tracker](../../issues)
-
----
-
-<p align="center">
-Built with ❤️ for the pi ecosystem
-</p>

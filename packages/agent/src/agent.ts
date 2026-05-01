@@ -493,6 +493,7 @@ export class Agent {
        executor: {
          timeout: config?.executor?.timeout ?? 30000,
          cacheEnabled: config?.executor?.cacheEnabled ?? false,
+         cacheSize: config?.executor?.cacheSize ?? 1000,
          toolExecutionStrategy: config?.executor?.toolExecutionStrategy ?? 'parallel',
          beforeToolCall: config?.executor?.beforeToolCall,
          afterToolCall: config?.executor?.afterToolCall,
@@ -506,6 +507,7 @@ export class Agent {
        followUpMode: config?.followUpMode ?? 'dequeue-one',
        autoSaveMemories: config?.autoSaveMemories,
        debug: config?.debug ?? false,
+       compaction: config?.compaction ?? { enabled: true, autoCompact: true },
      };
    }
 

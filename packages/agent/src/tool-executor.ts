@@ -243,7 +243,8 @@ export class ToolExecutor {
        if (this.config.cacheEnabled) {
          const cacheKey = this.buildCacheKey(toolCall);
          // LRU eviction: remove oldest entry if at capacity
-         if (this.config.cacheSize !== 0 && this.cache.size >= this.config.cacheSize) {
+         const maxSize = this.config.cacheSize ?? 1000;
+         if (maxSize !== 0 && this.cache.size >= maxSize) {
            const firstKey = this.cache.keys().next().value;
            if (firstKey !== undefined) {
              this.cache.delete(firstKey);
