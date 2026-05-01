@@ -149,8 +149,12 @@ async function main() {
     }
   });
 
-  // Create TerminalAgentRuntime
+  const terminal = new ProcessTerminal();
+  const tui = new TerminalUI(terminal);
+
+  // Create TerminalAgentRuntime - truyền tui VÀO
   const runtime = new TerminalAgentRuntime({
+    tui,      // TRUYỀN VÀO
     agent,
     initialStatus: 'Ready',
     onUserInput: async (text) => {

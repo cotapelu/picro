@@ -2,24 +2,25 @@
 /**
  * TerminalAgentRuntime - Agent runtime với terminal I/O
  * 
- * Dùng EventBus để tui và agent nói chuyện
+ * COMPOSE, không phụ thuộc:
+ * - tui: TRUYỀN VÀO (required)
+ * - agent: TRUYỀN VÀO (required)
  */
 
-import type { Terminal } from '@picro/tui';
-import { TerminalUI, ProcessTerminal } from '@picro/tui';
+import type { Terminal, TerminalUI } from '@picro/tui';
 import { Agent } from './agent.js';
 import type { AgentRunResult } from './types.js';
 import { createEventBus, type EventBus, type EventBusController } from './event-bus.js';
 
 export interface TerminalAgentRuntimeOptions {
+  /** REQUIRED: TerminalUI instance - truyền vào từ bên ngoài */
+  tui: TerminalUI;
+  /** Terminal instance */
   terminal?: Terminal;
+  /** REQUIRED: Agent instance - truyền vào */
   agent: Agent;
-  tuiOptions?: {
-    showHardwareCursor?: boolean;
-  };
   initialStatus?: string;
   onAgentResult?: (result: AgentRunResult) => void;
-  /** Callback cho user input */
   onUserInput?: (text: string) => void;
 }
 
@@ -37,7 +38,7 @@ export const EVENTS = {
  * TerminalAgentRuntime - Dùng EventBus để communicate với UI
  */
 export class TerminalAgentRuntime {
-  private terminal: Terminal;
+  private terminal?: Terminal;
   private tui: TerminalUI;
   private agent: Agent;
   private bus: EventBusController;
@@ -46,8 +47,9 @@ export class TerminalAgentRuntime {
   private statusText: string = '';
 
   constructor(options: TerminalAgentRuntimeOptions) {
-    this.terminal = options.terminal || new ProcessTerminal();
-    this.tui = new TerminalUI(this.terminal, options.tuiOptions?.showHardwareCursor);
+    // Dùng tui được truyền vào (COMPOSE)
+    this.tui = options.tui;
+    this.terminal = options.terminal;
     this.agent = options.agent;
     this.onAgentResult = options.onAgentResult;
     this.onUserInput = options.onUserInput;
