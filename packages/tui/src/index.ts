@@ -176,6 +176,7 @@ export type {
 	ExtensionUIDialogOptions
 } from './extensions/extension-ui-context.js';
 
+
 // Easter eggs / special components
 export { ArminComponent } from './components/armin.js';
 export { DaxnutsComponent } from './components/daxnuts.js';
