@@ -4,20 +4,21 @@
  * 
  * COMPOSE, không phụ thuộc:
  * - tui: TRUYỀN VÀO (required)
- * - agent: TRUYỀN VÀO (required)
+ * - session: TRUYỀN VÀO (required) - AgentSession từ layer trên Agent
  */
 
-import { Agent } from './agent.js';
+import { AgentSession } from './agent-session.js';
+import type { AgentSessionEvent } from './agent-session-types.js';
 import type { AgentRunResult } from './types.js';
 import { createEventBus, type EventBus, type EventBusController } from './event-bus.js';
 
 export interface TerminalAgentRuntimeOptions {
-  /** REQUIRED: tui instance - truyền vào từ bên ngoài (any type, do app định nghĩa) */
+  /** REQUIRED: tui instance - truyền vào từ bên ngoài */
   tui: any;
   /** Terminal instance */
   terminal?: any;
-  /** REQUIRED: Agent instance - truyền vào */
-  agent: Agent;
+  /** REQUIRED: AgentSession - truyền vào */
+  session: AgentSession;
   initialStatus?: string;
   onAgentResult?: (result: AgentRunResult) => void;
   onUserInput?: (text: string) => void;
@@ -39,24 +40,25 @@ export const EVENTS = {
 export class TerminalAgentRuntime {
   private terminal?: any;
   private tui: any;
-  private agent: Agent;
+  private session: AgentSession;
   private bus: EventBusController;
   private onAgentResult?: (result: AgentRunResult) => void;
   private onUserInput?: (text: string) => void;
   private statusText: string = '';
 
   constructor(options: TerminalAgentRuntimeOptions) {
-    // Dùng tui được truyền vào (COMPOSE)
+    // Dùng session được truyền vào (COMPOSE)
     this.tui = options.tui;
     this.terminal = options.terminal;
-    this.agent = options.agent;
+    this.session = options.session;
     this.onAgentResult = options.onAgentResult;
     this.onUserInput = options.onUserInput;
     this.statusText = options.initialStatus || 'Ready';
 
-    // Tạo EventBus cho tui ↔ agent communication
+    // Tạo EventBus cho tui ↔ session communication
     this.bus = createEventBus();
     this.setupEventHandlers();
+    this.subscribeToSession();
   }
 
   /**
@@ -66,21 +68,56 @@ export class TerminalAgentRuntime {
     return this.bus;
   }
 
+  private subscribeToSession(): void {
+    // Subscribe to session events
+    this.session.subscribe((event: AgentSessionEvent) => {
+      switch (event.type) {
+        case 'agent:start':
+          this.setStatus('⏳ Working...');
+          break;
+        case 'agent:end':
+          this.setStatus('Ready');
+          break;
+        case 'message:end':
+          if (event.turn?.role === 'assistant') {
+            const content = this.extractContent(event.turn.content);
+            if (content) {
+              this.bus.emit(EVENTS.AGENT_RESULT, { finalAnswer: content });
+            }
+          }
+          break;
+        case 'error':
+          this.bus.emit(EVENTS.AGENT_ERROR, event.message);
+          this.setStatus(`Error: ${event.message}`);
+          break;
+      }
+    });
+  }
+
+  private extractContent(content: any): string {
+    if (!content) return '';
+    if (typeof content === 'string') return content;
+    if (Array.isArray(content)) {
+      return content
+        .filter((c: any) => c.type === 'text')
+        .map((c: any) => c.text)
+        .join('');
+    }
+    return '';
+  }
+
   private setupEventHandlers(): void {
     // Khi có user input từ TUI
     this.bus.on(EVENTS.USER_INPUT, async (data) => {
       const input = data as string;
       if (!input.trim()) return;
       
-      this.setStatus('⏳ Working...');
-
       this.onUserInput?.(input);
 
       try {
-        const result = await this.agent.run(input);
-        this.bus.emit(EVENTS.AGENT_RESULT, result);
-        this.onAgentResult?.(result);
-        this.setStatus('Ready');
+        // Dùng session.prompt() thay vì agent.run()
+        await this.session.prompt(input);
+        // Result sẽ được emit qua session events
       } catch (error) {
         this.bus.emit(EVENTS.AGENT_ERROR, error);
         this.setStatus(`Error: ${error}`);
@@ -92,8 +129,8 @@ export class TerminalAgentRuntime {
     return this.tui;
   }
 
-  get agentInstance(): Agent {
-    return this.agent;
+  get sessionInstance(): AgentSession {
+    return this.session;
   }
 
   /**
