@@ -179,6 +179,8 @@ export interface PanelOptions {
   col?: Dimension;
   width?: Dimension;
   height?: Dimension;
+  /** Stacking order for panels. Higher values appear on top. */
+  zIndex?: number;
 }
 
 /**
@@ -197,6 +199,14 @@ export interface PanelHandle {
   unfocus(): void;
   /** Check if this panel currently has focus */
   isFocused(): boolean;
+  /** Change the z-index of this panel */
+  setZIndex(zIndex: number): void;
+  /** Get current z-index */
+  getZIndex(): number;
+  /** Increase z-index to be on top of all other panels */
+  bringToFront(): void;
+  /** Decrease z-index to be below all other panels */
+  sendToBack(): void;
 }
 
 /**

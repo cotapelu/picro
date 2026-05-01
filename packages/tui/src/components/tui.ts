@@ -71,6 +71,7 @@ export class TerminalUI extends ElementContainer {
 		preFocus: UIElement | null;
 		hidden: boolean;
 		focusOrder: number;
+		zIndex: number;
 	}[] = [];
 
 	// Track geometry of rendered panels for mouse hit testing
@@ -203,6 +204,7 @@ export class TerminalUI extends ElementContainer {
 			preFocus: this.focusedElement,
 			hidden: false,
 			focusOrder: ++this.focusOrderCounter,
+			zIndex: options?.zIndex ?? 0,
 		};
 
 		this.panelStack.push(entry);
@@ -221,6 +223,10 @@ export class TerminalUI extends ElementContainer {
 			focus: () => this.setFocus(element),
 			unfocus: () => this.setFocus(entry.preFocus),
 			isFocused: () => this.focusedElement === element,
+			setZIndex: (zIndex: number) => this.setPanelZIndex(element, zIndex),
+			getZIndex: () => this.getPanelZIndex(element),
+			bringToFront: () => this.bringPanelToFront(element),
+			sendToBack: () => this.sendPanelToBack(element),
 		};
 	}
 
@@ -259,6 +265,56 @@ export class TerminalUI extends ElementContainer {
 	isPanelHidden(element: UIElement): boolean {
 		const panel = this.panelStack.find(p => p.element === element);
 		return panel?.hidden ?? false;
+	}
+
+	/**
+	 * Get panel z-index
+	 */
+	getPanelZIndex(element: UIElement): number {
+		const panel = this.panelStack.find(p => p.element === element);
+		return panel?.zIndex ?? 0;
+	}
+
+	/**
+	 * Set panel z-index
+	 */
+	setPanelZIndex(element: UIElement, zIndex: number): void {
+		const panel = this.panelStack.find(p => p.element === element);
+		if (panel) {
+			panel.zIndex = zIndex;
+			this.requestRender();
+		}
+	}
+
+	/**
+	 * Bring panel to front (increase z-index relative to others)
+	 */
+	bringPanelToFront(element: UIElement): void {
+		const panel = this.panelStack.find(p => p.element === element);
+		if (panel) {
+			// Find max zIndex among other panels
+			let maxZ = 0;
+			for (const p of this.panelStack) {
+				if (p !== panel) maxZ = Math.max(maxZ, p.zIndex);
+			}
+			panel.zIndex = maxZ + 1;
+			this.requestRender();
+		}
+	}
+
+	/**
+	 * Send panel to back (decrease z-index below all others)
+	 */
+	sendPanelToBack(element: UIElement): void {
+		const panel = this.panelStack.find(p => p.element === element);
+		if (panel) {
+			let minZ = 0;
+			for (const p of this.panelStack) {
+				if (p !== panel) minZ = Math.min(minZ, p.zIndex);
+			}
+			panel.zIndex = minZ - 1;
+			this.requestRender();
+		}
 	}
 
 	/**
@@ -635,10 +691,12 @@ export class TerminalUI extends ElementContainer {
 	private mergePanels(baseLines: string[], panelMap: Map<UIElement, string[]>, width: number, height: number): string[] {
 		const result = [...baseLines];
 
-		// Sort panels by focus order (newest on top)
+		// Sort panels by zIndex (higher on top), then focusOrder (newer on top)
 		const sortedPanels = Array.from(panelMap.entries()).sort((a, b) => {
 			const aPanel = this.panelStack.find(p => p.element === a[0]);
 			const bPanel = this.panelStack.find(p => p.element === b[0]);
+			const zDiff = (bPanel?.zIndex ?? 0) - (aPanel?.zIndex ?? 0);
+			if (zDiff !== 0) return zDiff;
 			return (bPanel?.focusOrder ?? 0) - (aPanel?.focusOrder ?? 0);
 		});
 
