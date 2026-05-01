@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Agent runner: core loop execution.
+ * AgentLoop: core loop execution.
  * Different from pi-agent-legacy: class-based, simpler flow.
  */
 
@@ -23,14 +23,14 @@ import type { Model } from '@picro/llm';
 import type { AgentEvent } from './events.js';
  import { EventEmitter } from './event-emitter.js';
  import { ToolExecutor } from './tool-executor.js';
- import { ContextBuilder } from './context-builder.js';
+ import { ContextBuilder } from './context-manager.js';
  import { MessageQueue } from './message-queue.js';
 
 /**
  * Manages the agent execution loop.
  * Separated from Agent class for cleaner architecture.
  */
-export class AgentRunner {
+export class AgentLoop {
   private state: AgentRuntimeState;
   private config: AgentConfig;
   private emitter: EventEmitter;

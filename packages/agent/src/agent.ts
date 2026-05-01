@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Agent: main public API.
- * Different design: separates concerns with AgentRunner.
+ * Different design: separates concerns with AgentLoop.
  */
 
 import type {
@@ -16,8 +16,8 @@ import type {
 } from './types.js';
 import { EventEmitter } from './event-emitter.js';
 import { ToolExecutor } from './tool-executor.js';
-import { ContextBuilder } from './context-builder.js';
-import { AgentRunner } from './agent-runner.js';
+import { ContextBuilder } from './context-manager.js';
+import { AgentLoop } from './agent-loop.js';
 import { LoopStrategyFactory } from './loop-strategy.js';
 import { MessageQueue } from './message-queue.js';
 
@@ -38,7 +38,7 @@ export class Agent {
   private readonly toolExecutor: ToolExecutor;
   private readonly contextBuilder: ContextBuilder;
   private readonly strategy: LoopStrategy;
-  private readonly runner: AgentRunner;
+  private readonly runner: AgentLoop;
   private readonly steeringQueue: MessageQueue;
   private readonly followUpQueue: MessageQueue;
   private memoryStore?: MemoryStore;
@@ -100,7 +100,7 @@ export class Agent {
       this.memoryStore = config.memoryStore;
     }
 
-    this.runner = new AgentRunner(
+    this.runner = new AgentLoop(
       this.config,
       this.emitter,
       this.toolExecutor,

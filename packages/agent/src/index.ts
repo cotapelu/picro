@@ -37,7 +37,7 @@ export type {
 // ============================================================================
 // Context Building
 // ============================================================================
-export { ContextBuilder } from './context-builder.js';
+export { ContextBuilder } from './context-manager.js';
 export type { ContextBuilderConfig, MemoryEntry, MemoryStore } from './types.js';
 
 // ============================================================================
