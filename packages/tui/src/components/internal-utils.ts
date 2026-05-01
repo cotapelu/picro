@@ -8,6 +8,19 @@
 // Grapheme segmenter (shared instance)
 export const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 
+// Cache for visibleWidth to improve performance
+const VISIBLE_WIDTH_CACHE = new Map<string, number>();
+const VISIBLE_WIDTH_CACHE_MAX = 512;
+
+function cacheVisibleWidth(str: string, width: number): number {
+  if (VISIBLE_WIDTH_CACHE.size >= VISIBLE_WIDTH_CACHE_MAX) {
+    const firstKey = VISIBLE_WIDTH_CACHE.keys().next().value;
+    if (firstKey !== undefined) VISIBLE_WIDTH_CACHE.delete(firstKey);
+  }
+  VISIBLE_WIDTH_CACHE.set(str, width);
+  return width;
+}
+
 /**
  * Get the shared grapheme segmenter instance
  */
@@ -19,6 +32,9 @@ export function getSegmenter(): Intl.Segmenter {
  * Calculate visible width of a string (accounting for ANSI codes and wide characters)
  */
 export function visibleWidth(str: string): number {
+  const cached = VISIBLE_WIDTH_CACHE.get(str);
+  if (cached !== undefined) return cached;
+
   let width = 0;
   let inAnsi = false;
   let inCsi = false; // CSI sequence (ESC [)
@@ -74,7 +90,7 @@ export function visibleWidth(str: string): number {
       width += 1;
     }
   }
-  return width;
+  return cacheVisibleWidth(str, width);
 }
 
 /**
