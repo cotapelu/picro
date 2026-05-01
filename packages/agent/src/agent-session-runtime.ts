@@ -82,6 +82,14 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
   }
 
   /**
+   * Subscribe to session events
+   * App nên dùng cái này thay vì session.subscribe()
+   */
+  subscribe(listener: (event: any) => void): () => void {
+    return this._session.subscribe(listener);
+  }
+
+  /**
    * Get the current services
    */
   get services(): AgentSessionServices {
