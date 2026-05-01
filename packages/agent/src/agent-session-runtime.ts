@@ -75,13 +75,6 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
   }
 
   /**
-   * Get the current session
-   */
-  get session(): AgentSession {
-    return this._session;
-  }
-
-  /**
    * Subscribe to session events
    * App nên dùng cái này thay vì session.subscribe()
    */
