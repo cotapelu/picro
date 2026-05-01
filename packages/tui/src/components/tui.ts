@@ -57,6 +57,8 @@ export class TerminalUI extends ElementContainer {
 	private previousViewportTop = 0;
 	private fullRedrawCount = 0;
 	private _dirtyLineCount = 0; // count of lines changed in last incremental render
+	private scrollTop = 0; // first line index of viewport (0-based)
+	private totalBaseLines = 0; // total lines from base content
 	private stopped = false;
 	private debugLogPath?: string;
 
@@ -585,18 +587,24 @@ export class TerminalUI extends ElementContainer {
 			this.fullRedrawCount++;
 		}
 
-		// Render base content
+		// Render base content (full)
 		const context: RenderContext = { width, height };
-		const baseLines = this.renderBaseContent(context);
+		const fullBase = this.renderBaseContent(context);
+		this.totalBaseLines = fullBase.length;
 
-		// Render panels
+		// Determine viewport slice
+		const viewportStart = this.scrollTop;
+		const viewportEnd = Math.min(fullBase.length, viewportStart + height);
+		const baseLines = fullBase.slice(viewportStart, viewportEnd);
+
+		// Render panels (full)
 		const panelLines = this.renderPanels(context);
 
 		// Clear previous panel geometries; will be repopulated during merge
 		this.panelGeos.clear();
 
-		// Merge panels into base content
-		const finalLines = this.mergePanels(baseLines, panelLines, width, height);
+		// Merge panels into base content, respecting viewport offset
+		const finalLines = this.mergePanels(baseLines, panelLines, width, height, viewportStart);
 
 		// Choose rendering strategy: full redraw on size change, else incremental
 		if (sizeChanged) {
@@ -686,10 +694,15 @@ export class TerminalUI extends ElementContainer {
 	}
 
 	/**
-	 * Merge panels into base content
+	 * Merge panels into base content, with viewport offset for scrolling
 	 */
-	private mergePanels(baseLines: string[], panelMap: Map<UIElement, string[]>, width: number, height: number): string[] {
-		const result = [...baseLines];
+	private mergePanels(baseLines: string[], panelMap: Map<UIElement, string[]>, width: number, height: number, viewportStart: number): string[] {
+		// Initialize result with empty lines up to viewport height
+		const result: string[] = new Array(height).fill('');
+		// Copy visible base lines into result starting at row 0
+		for (let i = 0; i < baseLines.length; i++) {
+			result[i] = baseLines[i];
+		}
 
 		// Sort panels by zIndex (higher on top), then focusOrder (newer on top)
 		const sortedPanels = Array.from(panelMap.entries()).sort((a, b) => {
@@ -719,7 +732,7 @@ export class TerminalUI extends ElementContainer {
 
 			// Merge panel lines
 			for (let i = 0; i < panelHeight; i++) {
-				const outputRow = startRow + i;
+				const outputRow = (startRow - viewportStart) + i;
 				if (outputRow >= 0 && outputRow < result.length) {
 					const outputLine = result[outputRow];
 					const panelLine = panelLines[i] || '';
@@ -1027,6 +1040,44 @@ export class TerminalUI extends ElementContainer {
 	 */
 	getSize(): { rows: number; cols: number } {
 		return { rows: this.terminal.rows, cols: this.terminal.columns };
+	}
+
+	/**
+	 * Get scroll metrics
+	 */
+	getScrollMetrics(): { scrollTop: number; totalLines: number; viewportLines: number } {
+		const { rows } = this.getSize();
+		return {
+			scrollTop: this.scrollTop,
+			totalLines: this.totalBaseLines,
+			viewportLines: rows,
+		};
+	}
+
+	/**
+	 * Get maximum possible scrollTop (0-indexed)
+	 */
+	getScrollMax(): number {
+		const { rows } = this.getSize();
+		return Math.max(0, this.totalBaseLines - rows);
+	}
+
+	/**
+	 * Scroll by delta lines (positive=down, negative=up), clamped
+	 */
+	scroll(delta: number): void {
+		const max = this.getScrollMax();
+		this.scrollTop = Math.max(0, Math.min(max, this.scrollTop + delta));
+		this.requestRender();
+	}
+
+	/**
+	 * Scroll to an absolute line index (clamped)
+	 */
+	scrollTo(line: number): void {
+		const max = this.getScrollMax();
+		this.scrollTop = Math.max(0, Math.min(max, line));
+		this.requestRender();
 	}
 
 	/**
