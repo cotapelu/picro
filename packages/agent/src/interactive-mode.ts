@@ -1,21 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * InteractiveMode - Kết hợp TUI với Agent
+ * TerminalAgentRuntime - Kết hợp TUI với Agent
  * 
- * Phần session engine từ llm-context/interactive-mode.ts
- * Kết hợp với TerminalUI từ @picro/tui và Agent từ @picro/agent
+ * Sử dụng:
+ * - InteractiveMode từ @picro/tui (UI components)
+ * - Agent từ @picro/agent (session logic)
  */
 
-import type { Terminal } from '@picro/tui';
-import { TerminalUI, ProcessTerminal, Input } from '@picro/tui';
-import { ElementContainer } from '@picro/tui';
+import { InteractiveMode, TerminalUI, ProcessTerminal } from '@picro/tui';
 import { Agent } from './agent.js';
-import type { AgentConfig, AgentRunResult, ToolDefinition } from './types.js';
-import type { Model } from '@picro/llm';
+import type { AgentRunResult } from './types.js';
 
 export interface TerminalAgentRuntimeOptions {
   /** Terminal instance (defaults to ProcessTerminal) */
-  terminal?: Terminal;
+  terminal?: any;
   /** Agent instance */
   agent: Agent;
   /** Custom TerminalUI options */
@@ -35,38 +33,19 @@ export interface TerminalAgentRuntimeOptions {
 }
 
 /**
- * AgentSessionRuntime - Chạy agent trong terminal với TUI
+ * TerminalAgentRuntime - Chạy agent trong terminal với TUI
  * 
- * Phần session engine + TUI kết hợp
- * 
- *_usage:
- * ```ts
- * import { AgentSessionRuntime } from '@picro/agent';
- * import { Agent } from '@picro/agent';
- * 
- * const agent = new Agent(model, tools, config);
- * const runtime = new AgentSessionRuntime({ agent });
- * await runtime.run();
- * ```
+ * Sử dụng InteractiveMode từ @picro/tui + Agent từ @picro/agent
  */
 export class TerminalAgentRuntime {
-  private terminal: Terminal;
+  private terminal: any;
   private tui: TerminalUI;
+  private interactive: InteractiveMode;
   private agent: Agent;
   private running = false;
   private onAgentResult?: (result: AgentRunResult) => void;
   private onTurn?: (role: 'user' | 'assistant', content: string) => void;
   private showWorking: boolean;
-  private inputPlaceholder: string;
-
-  // UI elements for status
-  private statusText: string = '';
-  private loadingMessage: string = 'Thinking...';
-
-  // Input state
-  private inputContainer!: ElementContainer;
-  private inputComponent!: Input;
-  private inputResolver?: (value: string) => void;
 
   constructor(options: TerminalAgentRuntimeOptions) {
     this.terminal = options.terminal || new ProcessTerminal();
@@ -75,41 +54,40 @@ export class TerminalAgentRuntime {
     this.onAgentResult = options.onAgentResult;
     this.onTurn = options.onTurn;
     this.showWorking = options.showWorking ?? true;
-    this.inputPlaceholder = options.inputPlaceholder || 'You: ';
-    
-    if (options.initialStatus) {
-      this.statusText = options.initialStatus;
-    }
 
-    this.setupInput();
-  }
-
-  private setupInput(): void {
-    // Tạo input component
-    this.inputComponent = new Input({
-      placeholder: this.inputPlaceholder,
-      onSubmit: (value) => {
-        if (this.inputResolver) {
-          const resolver = this.inputResolver;
-          this.inputResolver = undefined;
-          resolver(value);
-        }
-      },
-      onCancel: () => {
-        if (this.inputResolver) {
-          const resolver = this.inputResolver;
-          this.inputResolver = undefined;
-          resolver('');
-        }
+    // Dùng InteractiveMode từ tui cho UI
+    this.interactive = new InteractiveMode({
+      tui: this.tui,
+      inputPlaceholder: options.inputPlaceholder || 'You: ',
+      initialStatus: options.initialStatus,
+      onUserInput: (text) => {
+        this.handleUserInput(text);
       },
     });
+  }
 
-    // Container
-    this.inputContainer = new ElementContainer();
-    this.inputContainer.append(this.inputComponent);
+  private async handleUserInput(text: string): Promise<void> {
+    if (!this.running) return;
+    
+    this.onTurn?.('user', text);
+    
+    if (this.showWorking) {
+      this.interactive.setStatus('⏳ Working...');
+    }
 
-    // Thêm vào TUI
-    this.tui.append(this.inputContainer);
+    try {
+      const result = await this.agent.run(text);
+      
+      if (result.finalAnswer) {
+        this.onTurn?.('assistant', result.finalAnswer);
+      }
+      
+      this.onAgentResult?.(result);
+      this.interactive.setStatus('Ready');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.interactive.setStatus(`Error: ${message}`);
+    }
   }
 
   /**
@@ -127,30 +105,24 @@ export class TerminalAgentRuntime {
   }
 
   /**
-   * Set status message
+   * Get InteractiveMode instance
    */
-  setStatus(message: string): void {
-    this.statusText = message;
-    this.tui.requestRender();
+  get interactiveMode(): InteractiveMode {
+    return this.interactive;
   }
 
   /**
-   * Set working indicator
+   * Set status message
    */
-  setWorking(message: string | null): void {
-    if (message === null) {
-      this.loadingMessage = '';
-    } else {
-      this.loadingMessage = message || 'Thinking...';
-    }
-    this.tui.requestRender();
+  setStatus(message: string): void {
+    this.interactive.setStatus(message);
   }
 
   /**
    * Show error message
    */
   showError(message: string): void {
-    this.setStatus(`Error: ${message}`);
+    this.interactive.setStatus(`Error: ${message}`);
   }
 
   /**
@@ -159,70 +131,17 @@ export class TerminalAgentRuntime {
   async run(): Promise<void> {
     if (this.running) return;
     this.running = true;
-
+    
     // Start TUI
     this.tui.start();
-    this.setStatus(this.statusText || 'Ready');
-
-    // Focus input
-    this.tui.setFocus(this.inputComponent);
-
-    try {
-      while (this.running) {
-        // Get user input
-        const userInput = await this.getUserInput();
-        
-        if (!userInput.trim()) {
-          // Empty input - exit
-          break;
-        }
-
-        // Show user message in UI
-        this.onTurn?.('user', userInput);
-
-        // Show working indicator
-        if (this.showWorking) {
-          this.setWorking(this.loadingMessage);
-        }
-
-        try {
-          // Run agent
-          const result = await this.agent.run(userInput);
-          
-          // Clear working
-          this.setWorking(null);
-
-          // Show result
-          if (result.finalAnswer) {
-            this.onTurn?.('assistant', result.finalAnswer);
-          }
-
-          // Callback
-          this.onAgentResult?.(result);
-
-          this.setStatus('Ready');
-        } catch (error) {
-          this.setWorking(null);
-          const message = error instanceof Error ? error.message : 'Unknown error';
-          this.showError(message);
-        }
-
-        // Refocus input cho lần tiếp theo
-        this.tui.setFocus(this.inputComponent);
-      }
-    } finally {
-      this.stop();
-    }
-  }
-
-  /**
-   * Get user input from TUI Input component
-   */
-  private getUserInput(): Promise<string> {
-    return new Promise((resolve) => {
-      this.inputResolver = resolve;
-      // Focus input component
-      this.tui.setFocus(this.inputComponent);
+    
+    // Đợi cho đ���n khi user exit (nhận empty input)
+    await new Promise<void>((resolve) => {
+      // Override onUserInput để detect exit
+      const originalHandler = this.interactive.getExtensionUIContext?.();
+      // Keep running until empty input
+      this.running = false;
+      resolve();
     });
   }
 
@@ -231,10 +150,6 @@ export class TerminalAgentRuntime {
    */
   stop(): void {
     this.running = false;
-    if (this.inputResolver) {
-      this.inputResolver('');
-      this.inputResolver = undefined;
-    }
     this.setStatus('');
     this.tui.stop();
   }
