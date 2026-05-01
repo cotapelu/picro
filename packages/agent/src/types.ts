@@ -335,6 +335,7 @@ export interface AgentRunResult {
 export interface ToolExecutorConfig {
    timeout: number;
    cacheEnabled: boolean;
+   cacheSize?: number; // Max cache entries (0 = unlimited, default 1000)
    toolExecutionStrategy: ToolExecutionStrategy;
    emitter?: EventEmitter;
    beforeToolCall?: BeforeToolHook;

@@ -45,6 +45,8 @@ export interface BashExecutorOptions {
 export interface BashResult {
   /** Combined stdout + stderr output (sanitized, possibly truncated) */
   output: string;
+  /** Separate stderr output (if any) */
+  stderr?: string;
   /** Process exit code (undefined if killed/cancelled) */
   exitCode: number | undefined;
   /** Whether the command was cancelled via signal */
@@ -98,6 +100,7 @@ export async function executeBash(
   const outputChunks: string[] = [];
   let totalBytes = 0;
   let totalLines = 0;
+  let stderrString = '';
   let truncated = false;
   let tempFilePath: string | undefined;
   let tempFileStream: { write: (data: string) => void; end: () => void } | undefined;
@@ -153,7 +156,7 @@ export async function executeBash(
 
     child.stderr?.on('data', (data: Buffer) => {
       const chunk = sanitizeOutput(data);
-      stderr += chunk;
+      stderrString += chunk;
       outputChunks.push(chunk);
       totalBytes += data.length;
       totalLines += chunk.split('\n').length - 1;
@@ -218,6 +221,7 @@ export async function executeBash(
     const truncatedOutput = truncatedLines.join('\n');
     return {
       output: truncatedOutput,
+      stderr: stderrString,
       exitCode,
       cancelled: false,
       truncated: true,
@@ -234,6 +238,7 @@ export async function executeBash(
 
   return {
     output,
+    stderr: stderrString,
     exitCode,
     cancelled: false,
     truncated: false,

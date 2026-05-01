@@ -36,18 +36,43 @@ export const DEFAULT_MAX_OUTPUT_SIZE = 5 * 1024 * 1024;
 export const DEFAULT_MAX_LINE_LENGTH = 10000;
 
 /**
- * Check if string is likely binary
+ * Enhanced binary detection using multiple heuristics
  */
-function isBinaryString(str: string, sampleSize = 1024): boolean {
+function isBinaryString(str: string, sampleSize = 4096): boolean {
   const sample = str.slice(0, sampleSize);
-  let binaryChars = 0;
+  if (!sample) return false;
+
+  // Heuristic 1: Null byte presence
+  if (sample.includes('\0')) return true;
+
+  // Heuristic 2: Invalid UTF-8 sequences
+  try {
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder('utf-8', { fatal: true });
+    decoder.decode(encoder.encode(sample));
+  } catch {
+    return true; // Invalid UTF-8 = binary
+  }
+
+  // Heuristic 3: High ASCII ratio (non-ASCII characters)
+  let nonAscii = 0;
+  for (let i = 0; i < sample.length; i++) {
+    if (sample.charCodeAt(i) > 127) nonAscii++;
+  }
+  const ratio = nonAscii / sample.length;
+  if (ratio > 0.3) return true; // >30% high ASCII
+
+  // Heuristic 4: Control characters (excluding \n, \r, \t)
+  let controlChars = 0;
   for (let i = 0; i < sample.length; i++) {
     const code = sample.charCodeAt(i);
-    if (code < 9 || (code > 13 && code < 32) || code > 126) {
-      binaryChars++;
+    if (code < 32 && code !== 9 && code !== 10 && code !== 13) {
+      controlChars++;
     }
   }
-  return binaryChars > sampleSize * 0.3; // >30% non-printable = binary
+  if (controlChars > sample.length * 0.1) return true; // >10% control chars
+
+  return false;
 }
 
 /**

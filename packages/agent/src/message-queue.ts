@@ -16,15 +16,28 @@ export class MessageQueue {
   private storage: ConversationTurn[] = [];
   private head: number = 0;
   private mode: QueueMode;
+  private maxSize?: number;
 
-  constructor(mode: QueueMode = 'dequeue-one') {
+  constructor(mode: QueueMode = 'dequeue-one', maxSize?: number) {
     this.mode = mode;
+    this.maxSize = maxSize;
   }
 
   /**
    * Add a message to the queue.
    */
   enqueue(turn: ConversationTurn): void {
+    // Evict oldest entries if at capacity
+    if (this.maxSize !== undefined) {
+      while (this.size >= this.maxSize && this.head < this.storage.length) {
+        this.head++; // drop oldest
+      }
+      // Compress storage nếu head lớn (tránh memory leak từ never-cleared array)
+      if (this.head > 1000) {
+        this.storage = this.storage.slice(this.head);
+        this.head = 0;
+      }
+    }
     this.storage.push(turn);
   }
 

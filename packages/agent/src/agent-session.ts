@@ -999,8 +999,10 @@ export class AgentSession {
 
     try {
       await this.agent.resume();
+      this._resolveRetry();
       return true;
     } catch {
+      this._resolveRetry();
       return false;
     }
   }
