@@ -63,6 +63,7 @@ export type { LoopStrategy } from './loop-strategy.js';
 // Event System
 // ============================================================================
 export { EventEmitter, createConsoleLogger } from './event-emitter.js';
+export { createEventBus, type EventBus, type EventBusController } from './event-bus.js';
 export type {
   AgentEvent,
   AgentStartEvent,

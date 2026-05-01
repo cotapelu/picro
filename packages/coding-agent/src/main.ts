@@ -153,16 +153,22 @@ async function main() {
   const runtime = new TerminalAgentRuntime({
     agent,
     initialStatus: 'Ready',
-    showWorking: true,
-    onTurn: async (role, content) => {
-      if (role === 'user') {
-        console.log(`\n👤 You: ${content.substring(0, 50)}...`);
-      } else {
-        console.log(`🤖 Assistant: ${content.substring(0, 100)}...`);
-      }
+    onUserInput: async (text) => {
+      console.log(`\n👤 You: ${text.substring(0, 50)}...`);
     },
     onAgentResult: (result) => {
       console.log(`\n✓ Done: ${result.totalRounds} rounds, ${result.totalToolCalls} tools`);
+    }
+  });
+
+  // Subscribe to events
+  runtime.events.on('status', (msg: any) => {
+    console.log(`[Status] ${msg}`);
+  });
+  runtime.events.on('agent:result', (result: any) => {
+    const answer = typeof result.finalAnswer === 'string' ? result.finalAnswer : '';
+    if (answer) {
+      console.log(`🤖 Assistant: ${answer.substring(0, 100)}...`);
     }
   });
 

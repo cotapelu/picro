@@ -2,14 +2,14 @@
 /**
  * TerminalAgentRuntime - Agent runtime với terminal I/O
  * 
- * Phần Agent: run loop, tool execution, session logic
- * Phần UI: Tự implement (không dùng InteractiveMode từ tui)
+ * Dùng EventBus để tui và agent nói chuyện
  */
 
 import type { Terminal } from '@picro/tui';
 import { TerminalUI, ProcessTerminal } from '@picro/tui';
 import { Agent } from './agent.js';
 import type { AgentRunResult } from './types.js';
+import { createEventBus, type EventBus, type EventBusController } from './event-bus.js';
 
 export interface TerminalAgentRuntimeOptions {
   terminal?: Terminal;
@@ -18,36 +18,73 @@ export interface TerminalAgentRuntimeOptions {
     showHardwareCursor?: boolean;
   };
   initialStatus?: string;
-  inputPlaceholder?: string;
   onAgentResult?: (result: AgentRunResult) => void;
-  onTurn?: (role: 'user' | 'assistant', content: string) => void;
-  showWorking?: boolean;
+  /** Callback cho user input */
+  onUserInput?: (text: string) => void;
 }
 
 /**
- * TerminalAgentRuntime - Tự implement UI riêng, không dùng tui InteractiveMode
+ * Event channels
+ */
+export const EVENTS = {
+  USER_INPUT: 'user:input',
+  AGENT_RESULT: 'agent:result',
+  AGENT_ERROR: 'agent:error',
+  STATUS: 'status',
+} as const;
+
+/**
+ * TerminalAgentRuntime - Dùng EventBus để communicate với UI
  */
 export class TerminalAgentRuntime {
   private terminal: Terminal;
   private tui: TerminalUI;
   private agent: Agent;
-  private running = false;
+  private bus: EventBusController;
   private onAgentResult?: (result: AgentRunResult) => void;
-  private onTurn?: (role: 'user' | 'assistant', content: string) => void;
-  private showWorking: boolean;
-  private inputPlaceholder: string;
+  private onUserInput?: (text: string) => void;
   private statusText: string = '';
-  private inputBuffer: string = '';
 
   constructor(options: TerminalAgentRuntimeOptions) {
     this.terminal = options.terminal || new ProcessTerminal();
     this.tui = new TerminalUI(this.terminal, options.tuiOptions?.showHardwareCursor);
     this.agent = options.agent;
     this.onAgentResult = options.onAgentResult;
-    this.onTurn = options.onTurn;
-    this.showWorking = options.showWorking ?? true;
-    this.inputPlaceholder = options.inputPlaceholder || '> ';
+    this.onUserInput = options.onUserInput;
     this.statusText = options.initialStatus || 'Ready';
+
+    // Tạo EventBus cho tui ↔ agent communication
+    this.bus = createEventBus();
+    this.setupEventHandlers();
+  }
+
+  /**
+   * Get EventBus để external có thể subscribe
+   */
+  get events(): EventBus {
+    return this.bus;
+  }
+
+  private setupEventHandlers(): void {
+    // Khi có user input từ TUI
+    this.bus.on(EVENTS.USER_INPUT, async (data) => {
+      const input = data as string;
+      if (!input.trim()) return;
+      
+      this.setStatus('⏳ Working...');
+
+      this.onUserInput?.(input);
+
+      try {
+        const result = await this.agent.run(input);
+        this.bus.emit(EVENTS.AGENT_RESULT, result);
+        this.onAgentResult?.(result);
+        this.setStatus('Ready');
+      } catch (error) {
+        this.bus.emit(EVENTS.AGENT_ERROR, error);
+        this.setStatus(`Error: ${error}`);
+      }
+    });
   }
 
   get tuiInstance(): TerminalUI {
@@ -58,9 +95,12 @@ export class TerminalAgentRuntime {
     return this.agent;
   }
 
+  /**
+   * Emit event để update status
+   */
   setStatus(message: string): void {
     this.statusText = message;
-    this.tui.requestRender();
+    this.bus.emit(EVENTS.STATUS, message);
   }
 
   showError(message: string): void {
@@ -68,56 +108,15 @@ export class TerminalAgentRuntime {
   }
 
   /**
-   * Run - Main loop
+   * Run
    */
   async run(): Promise<void> {
-    if (this.running) return;
-    this.running = true;
     this.tui.start();
     this.setStatus(this.statusText);
-
-    try {
-      while (this.running) {
-        const input = await this.getInput();
-        if (!input.trim()) break;
-        
-        this.onTurn?.('user', input);
-        if (this.showWorking) this.setStatus('⏳ Working...');
-
-        try {
-          const result = await this.agent.run(input);
-          const answer = typeof result.finalAnswer === 'string' ? result.finalAnswer : '';
-          if (answer) this.onTurn?.('assistant', answer);
-          this.onAgentResult?.(result);
-          this.setStatus('Ready');
-        } catch (error) {
-          this.showError(error instanceof Error ? error.message : 'Unknown');
-        }
-      }
-    } finally {
-      this.stop();
-    }
-  }
-
-  /**
-   * Get input from terminal - đơn giản
-   */
-  private getInput(): Promise<string> {
-    return new Promise((resolve) => {
-      // Đợi input đơn giản - trong thực tế sẽ dùng readline
-      import('readline').then(rl => {
-        const r = rl.createInterface({ input: process.stdin, output: process.stdout });
-        r.question(this.inputPlaceholder, (answer) => {
-          r.close();
-          resolve(answer);
-        });
-      }).catch(() => resolve(''));
-    });
   }
 
   stop(): void {
-    this.running = false;
-    this.setStatus('');
+    this.bus.clear();
     this.tui.stop();
   }
 }
