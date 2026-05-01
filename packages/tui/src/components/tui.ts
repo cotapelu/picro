@@ -511,6 +511,18 @@ export class TerminalUI extends ElementContainer {
 			}
 		}
 
+		// Handle Tab for focus traversal
+		if (parsed.name === 'Tab') {
+			const direction = parsed.shift ? 'prev' : 'next';
+			this.traverseFocus(direction);
+			return;
+		}
+
+		// Handle chord sequences
+		if (this.processChords(parsed)) {
+			return;
+		}
+
 		// Pass to focused element with parsed key info
 		const focused = this.getFocusedElement();
 		if (focused && focused.handleKey) {
@@ -526,13 +538,6 @@ export class TerminalUI extends ElementContainer {
 			};
 			focused.handleKey(keyEvent);
 			this.requestRender();
-		}
-
-		// Handle Tab for focus traversal
-		if (parsed.name === 'Tab') {
-			const direction = parsed.shift ? 'prev' : 'next';
-			this.traverseFocus(direction);
-			return;
 		}
 
 		// After key processing, manage key repeat timers
@@ -1177,6 +1182,92 @@ export class TerminalUI extends ElementContainer {
 
 		this.setFocus(focusables[nextIndex]);
 		this.requestRender();
+	}
+
+	// Chord registry and state
+	private chordRegistry: Array<{
+		seq: { name: string; ctrl: boolean; alt: boolean; shift: boolean; meta: boolean }[];
+		handler: () => void;
+	}> = [];
+	private chordBuffer: { name: string; ctrl: boolean; alt: boolean; shift: boolean; meta: boolean }[] = [];
+	private chordTimeoutMs = 1000; // ms to wait for chord completion
+	private chordTimer: NodeJS.Timeout | null = null;
+
+	/**
+	 * Register a chord sequence (e.g., ['ctrl+x', 'ctrl+s'])
+	 */
+	public registerChord(sequence: string[], handler: () => void): void {
+		const parsed = sequence.map(s => this.parseChordStep(s));
+		this.chordRegistry.push({ seq: parsed, handler });
+	}
+
+	/**
+	 * Unregister a chord sequence (exact match)
+	 */
+	public unregisterChord(sequence: string[]): void {
+		const parsed = sequence.map(s => this.parseChordStep(s));
+		const idx = this.chordRegistry.findIndex(c => this.seqEqual(c.seq, parsed));
+		if (idx !== -1) this.chordRegistry.splice(idx, 1);
+	}
+
+	private parseChordStep(step: string): { name: string; ctrl: boolean; alt: boolean; shift: boolean; meta: boolean } {
+		const parts = step.toLowerCase().split('+');
+		const mods = { ctrl: false, alt: false, shift: false, meta: false };
+		let name = '';
+		for (const p of parts) {
+			if (p === 'ctrl') mods.ctrl = true;
+			else if (p === 'alt') mods.alt = true;
+			else if (p === 'shift') mods.shift = true;
+			else if (p === 'meta') mods.meta = true;
+			else name = p;
+		}
+		return { name, ...mods };
+	}
+
+	private seqEqual(a: { name: string; ctrl: boolean; alt: boolean; shift: boolean; meta: boolean }[], b: { name: string; ctrl: boolean; alt: boolean; shift: boolean; meta: boolean }[]): boolean {
+		if (a.length !== b.length) return false;
+		for (let i = 0; i < a.length; i++) {
+			const x = a[i];
+			const y = b[i];
+			if (x.name !== y.name || x.ctrl !== y.ctrl || x.alt !== y.alt || x.shift !== y.shift || x.meta !== y.meta) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Process a key press for chord recognition.
+	 * @returns true if the key completed a chord and was handled.
+	 */
+	private processChords(parsed: any): boolean {
+		// Convert parsed key to descriptor
+		const desc = {
+			name: parsed.name,
+			ctrl: parsed.ctrl,
+			alt: parsed.alt,
+			shift: parsed.shift,
+			meta: parsed.meta,
+		};
+		this.chordBuffer.push(desc);
+		// reset timer
+		if (this.chordTimer) (clearTimeout as any)(this.chordTimer);
+		this.chordTimer = setTimeout(() => {
+			this.chordBuffer = [];
+			this.chordTimer = null;
+		}, this.chordTimeoutMs) as any;
+		// check for full match
+		for (const chord of this.chordRegistry) {
+			if (this.seqEqual(this.chordBuffer, chord.seq)) {
+				// match
+				this.chordBuffer = [];
+				if (this.chordTimer) { clearTimeout(this.chordTimer); this.chordTimer = null; }
+				chord.handler();
+				return true;
+			}
+			// If buffer is not a prefix of this chord, we could discard early? Not needed.
+		}
+		return false;
 	}
 
 	/**

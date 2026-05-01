@@ -104,8 +104,14 @@ export function parseKey(data: string): ParsedKey | null {
 		}
 	}
 
-	// Single printable character: name is the character itself
+	// Handle Ctrl+Letter (ASCII control codes 1-26)
 	if (data.length === 1) {
+		const code = data.charCodeAt(0);
+		if (code >= 1 && code <= 26) {
+			const letter = String.fromCharCode(code + 96); // 1->a, 2->b, ...
+			return { raw: data, type: 'press', name: letter, ctrl: true, alt: false, shift: false, meta: false };
+		}
+		// Single printable character: name is the character itself
 		return { raw: data, type: 'press', name: data, ctrl: false, alt: false, shift: false, meta: false };
 	}
 
