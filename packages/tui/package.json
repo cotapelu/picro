@@ -16,19 +16,31 @@
     "README.md",
     "LICENSE"
   ],
+  "sideEffects": false,
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch -p tsconfig.build.json",
     "test": "vitest run",
-    "bench": "tsx benchmarks/render-bench.ts"
+    "test:coverage": "vitest run --coverage",
+    "docs": "typedoc --out docs src",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --check .",
+    "bench": "tsx benchmarks/render-bench.ts",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "arabic-reshaper": "^1.1.0",
     "highlight.js": "^11.11.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
     "tsx": "^4.21.0",
     "typescript": "^5.0.0",
+    "typedoc": "^0.27.0",
     "vitest": "^2.1.9"
   }
 }

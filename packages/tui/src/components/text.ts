@@ -5,7 +5,7 @@
  */
 
 import type { UIElement, RenderContext } from './base.js';
-import { visibleWidth, wrapText, truncateText } from './internal-utils.js';
+import { visibleWidth, wrapTextWithAnsi as wrapText, truncateText, containsRtl, reverseByGraphemes, containsArabic, shapeArabic } from './internal-utils.js';
 
 export type TextCache = {
 	width: number;
@@ -25,6 +25,7 @@ export class Text implements UIElement {
 	private wrap?: boolean;
 	private truncate?: boolean;
 	private align?: 'left' | 'center' | 'right';
+	textDirection?: 'ltr' | 'rtl' | 'auto';
 
 	// Cache for rendered output
 	private cache?: TextCache;
@@ -84,6 +85,19 @@ export class Text implements UIElement {
 			lines = [];
 		}
 
+		// Reshape Arabic text if needed
+		lines = lines.map(line => containsArabic(line) ? shapeArabic(line) : line);
+
+		// Apply text direction (RTL) if needed
+		const dir = this.textDirection ?? 'auto';
+		lines = lines.map(line => {
+			let txt = line;
+			if (dir === 'rtl' || (dir === 'auto' && containsRtl(txt))) {
+				txt = reverseByGraphemes(txt);
+			}
+			return txt;
+		});
+
 		// Apply styling and alignment
 		const styledLines = lines.map(line => this.styleLine(line, width));
 
@@ -98,6 +112,11 @@ export class Text implements UIElement {
 
 	clearCache(): void {
 		this.cache = undefined;
+	}
+
+	/** Accessibility: get text content */
+	describe(): string {
+		return this.content;
 	}
 
 	/**

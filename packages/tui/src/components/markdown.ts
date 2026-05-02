@@ -6,6 +6,7 @@
 import type { UIElement, RenderContext } from './base.js';
 import { visibleWidth, wrapText } from './internal-utils.js';
 import hljs from 'highlight.js';
+import { getImageDimensions, renderImage } from './terminal-image.js';
 
 export type MarkdownCache = {
 	width: number;
@@ -301,6 +302,14 @@ export class Markdown implements UIElement {
 			for (let para of paragraphs) {
 				const paraLines = para.split('\n');
 				for (let line of paraLines) {
+					// Image block: ![alt](url)
+					const imgMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+					if (imgMatch) {
+						const alt = imgMatch[1];
+						const src = imgMatch[2];
+						lines.push(this.renderImageMarkdown(src, alt, width));
+						continue;
+					}
 					if (line.startsWith('# ')) {
 						lines.push(this.styleHeading(line.slice(2), width, 1));
 						continue;
@@ -379,6 +388,22 @@ export class Markdown implements UIElement {
 		}
 	}
 
+	/** Render a markdown image (block-level) */
+	private renderImageMarkdown(src: string, alt: string, maxWidth: number): string {
+		if (src.startsWith('data:')) {
+			const [header, base64] = src.split(',', 2);
+			const mimeMatch = header.match(/data:([^;]+)/);
+			if (!mimeMatch) return `[Image: ${alt}]`;
+			const mime = mimeMatch[1];
+			const dims = getImageDimensions(base64, mime);
+			if (!dims) return `[Image: ${alt}]`;
+			const result = renderImage(base64, dims, { maxWidthCells: maxWidth - 2 });
+			return result?.sequence ?? `[Image: ${alt}]`;
+		}
+		// For remote URLs, return a placeholder; can preload via external mechanism.
+		return `[Image: ${alt}]`;
+	}
+
 	private styleInline(text: string): string {
 		// Bold **text**
 		let result = text.replace(/\*\*(.*?)\*\*/g, '\x1b[1m$1\x1b[22m');
@@ -388,6 +413,8 @@ export class Markdown implements UIElement {
 		result = result.replace(/`(.*?)`/g, '\x1b[32m$1\x1b[39m'); // green
 		// Memory citations [digits]
 		result = result.replace(/\[(\d+)\]/g, '\x1b[33m[$1]\x1b[0m'); // yellow
+		// Inline images: replace ![alt](url) with [Image: alt]
+		result = result.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => `[Image: ${alt}]`);
 		return result;
 	}
 }

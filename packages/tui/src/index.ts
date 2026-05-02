@@ -41,6 +41,25 @@ export { Divider } from './components/divider.js';
 export { Box } from './components/box.js';
 export { DynamicBorder } from './components/dynamic-border.js';
 
+// Data components
+// Tree view, Table, Form
+// ------------------------------------------------------------------
+export { TreeView } from './components/tree-view.js';
+export type { TreeNode, TreeViewOptions } from './components/tree-view.js';
+
+export { Table } from './components/table.js';
+export type { TableOptions } from './components/table.js';
+
+export { Form } from './components/form.js';
+export type { FormField, FormOptions } from './components/form.js';
+
+// Layout managers (Flex, Grid)
+export { Flex } from './components/flex.js';
+export type { FlexOptions } from './components/flex.js';
+
+export { Grid } from './components/grid.js';
+export type { GridOptions } from './components/grid.js';
+
 // Loaders
 export { BorderedLoader } from './components/loader.js';
 export { CancellableLoader } from './components/cancellable-loader.js';
@@ -138,6 +157,7 @@ export {
 	renderImage,
 	encodeKitty,
 	encodeITerm2,
+	encodeSixel,
 	getImageDimensions,
 	setCellDimensions,
 	getCellDimensions,
@@ -151,14 +171,20 @@ export {
 	getCapabilities,
 	detectCapabilities,
 	resetCapabilitiesCache,
-	setCapabilities
+	setCapabilities,
+	clearRenderCache,
+	fetchImageAsBase64,
+	preloadImage,
+	setCustomImageLoader,
+	renderAnimatedGif
 } from './components/terminal-image.js';
 export type {
 	CellDimensions,
 	ImageDimensions,
 	ImageRenderOptions,
 	TerminalCapabilities,
-	ImageProtocol
+	ImageProtocol,
+	ScaleMode
 } from './components/terminal-image.js';
 
 // Misc
@@ -168,6 +194,29 @@ export { KeybindingHints } from './components/keybinding-hints.js';
 // Interactive mode (UI only - for extensions)
 export { InteractiveMode } from './interactive-mode.js';
 export type { InteractiveModeOptions } from './interactive-mode.js';
+
+// Utilities
+export { ObjectPool } from './object-pool.js';
+
+// Color fallback
+export { adaptThemeToTerminal, parseRgbAnsi, rgbTo256, rgbTo8, convertRgbAnsiTo256, convertRgbAnsiTo8 } from './color-fallback.js';
+
+// Layout debugging
+export { LayoutInspector } from './layout-inspector.js';
+
+// Internationalization
+export { i18n } from './i18n.js';
+export type { Translation } from './i18n.js';
+
+// Animations
+export { Blink, Slide } from './animations.js';
+
+// Layout managers
+export { SplitPane } from './split-pane.js';
+
+// Resource bundling
+export { loadBundleFromFile, createBundleFromUrls, saveBundle } from './resource-bundle.js';
+export type { ResourceBundle } from './resource-bundle.js';
 
 // Extensions (all types)
 export type {
@@ -181,6 +230,12 @@ export type {
 export { ArminComponent } from './components/armin.js';
 export { DaxnutsComponent } from './components/daxnuts.js';
 export { EarendilAnnouncementComponent } from './components/earendil-announcement.js';
+
+// Agent integration
+export { createAgentToolBridge } from './agent-bridge.js';
+
+// Debugging
+export { DebugOverlay } from './debug-overlay.js';
 
 // Legacy compatibility aliases (with Component suffix)
 export { Input as TextInputComponent } from './components/input.js';

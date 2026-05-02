@@ -320,4 +320,21 @@ export class Input implements UIElement, InteractiveElement {
 	clearCache(): void {
 		// No caching needed for input
 	}
+
+	/** Accessibility: return current value */
+	describe(): string {
+		return this.value;
+	}
+
+	/** Serialize state */
+	serializeState(): any {
+		return { value: this.value, cursorPos: this.cursorPos };
+	}
+
+	/** Deserialize state */
+	deserializeState(state: any): void {
+		if (state.value !== undefined) this.value = state.value;
+		if (state.cursorPos !== undefined) this.cursorPos = state.cursorPos;
+		this.clearCache();
+	}
 }

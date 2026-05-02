@@ -11,6 +11,7 @@ import { Toast, type ToastOptions } from './components/toast.js';
 import { Text } from './components/text.js';
 import { CountdownTimer } from './components/countdown-timer.js';
 import type { ExtensionUIContext, ExtensionWidgetOptions, ExtensionUIDialogOptions } from './extensions/extension-ui-context.js';
+import type { AutocompleteProvider } from './components/autocomplete.js';
 
 export interface InteractiveModeOptions {
   tui: TerminalUI;
@@ -227,6 +228,7 @@ export class InteractiveMode {
   private onInputCallback?: (text: string) => void;
   private inputResolver?: (text: string) => void;
   private running = false;
+  private autocompleteProviders: AutocompleteProvider[] = [];
 
   constructor(options: InteractiveModeOptions) {
     this.tui = options.tui;
@@ -466,7 +468,7 @@ export class InteractiveMode {
         });
       },
       addAutocompleteProvider: (factory) => {
-        console.warn('addAutocompleteProvider not implemented yet');
+        mode.autocompleteProviders.push(factory());
       },
       setEditorComponent: (factory) => {
         console.warn('setEditorComponent not implemented yet');

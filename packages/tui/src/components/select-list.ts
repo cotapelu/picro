@@ -268,4 +268,27 @@ export class SelectList implements UIElement, InteractiveElement {
 		this.selectedIndex = Math.max(0, Math.min(index, this.items.length - 1));
 		this.adjustScroll();
 	}
+
+	/** Accessibility: Describe selected item */
+	describe(): string {
+		const item = this.items[this.selectedIndex];
+		return item ? `Selected: ${item.label}` : 'No selection';
+	}
+
+	/** Serialize state */
+	serializeState(): any {
+		return {
+			selectedIndex: this.selectedIndex,
+			selectedIndices: Array.from(this.selectedIndices),
+			filter: this.filter,
+		};
+	}
+
+	/** Deserialize state */
+	deserializeState(state: any): void {
+		if (state.selectedIndex !== undefined) this.selectedIndex = state.selectedIndex;
+		if (state.selectedIndices) this.selectedIndices = new Set(state.selectedIndices);
+		if (state.filter !== undefined) this.filter = state.filter;
+		this.adjustScroll();
+	}
 }

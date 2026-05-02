@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { adaptThemeToTerminal } from '../color-fallback.js';
 
 /**
  * Semantic color roles
@@ -80,11 +81,18 @@ export class ThemeManager {
   private static instance: ThemeManager;
   private currentTheme: Theme = darkTheme;
   private listeners: Set<(theme: Theme) => void> = new Set();
+  private palettes = new Map<string, Theme>();
   private configPath: string;
   private watcher?: fs.FSWatcher;
+  private trueColor = true;
+  private has256Color = true;
 
   private constructor() {
     this.configPath = path.join(process.env.HOME || process.env.USERPROFILE || '', '.config', 'picro', 'tui', 'theme.json');
+    // Register built-in palettes
+    this.palettes.set('dark', darkTheme);
+    this.palettes.set('light', lightTheme);
+    this.palettes.set('high-contrast', highContrastTheme);
     this.loadFromFile();
     // Start file watcher for live reload
     try {
@@ -105,11 +113,21 @@ export class ThemeManager {
     return ThemeManager.instance;
   }
 
+  /** Set terminal color capabilities */
+  setTerminalCapabilities(trueColor: boolean, has256Color?: boolean): void {
+    this.trueColor = trueColor;
+    this.has256Color = has256Color ?? true;
+    this.notifyListeners();
+  }
+
   /**
-   * Get current theme
+   * Get current theme (adapted to terminal capabilities)
    */
   getTheme(): Theme {
-    return this.currentTheme;
+    if (this.trueColor) {
+      return this.currentTheme;
+    }
+    return adaptThemeToTerminal(this.currentTheme, this.trueColor, this.has256Color);
   }
 
   /**
@@ -119,19 +137,12 @@ export class ThemeManager {
     let newTheme: Theme;
 
     if (typeof theme === 'string') {
-      switch (theme) {
-        case 'dark':
-          newTheme = darkTheme;
-          break;
-        case 'light':
-          newTheme = lightTheme;
-          break;
-        case 'high-contrast':
-          newTheme = highContrastTheme;
-          break;
-        default:
-          console.warn(`Unknown theme: ${theme}, falling back to dark`);
-          newTheme = darkTheme;
+      const palette = this.palettes.get(theme);
+      if (palette) {
+        newTheme = palette;
+      } else {
+        console.warn(`Unknown theme: ${theme}, falling back to dark`);
+        newTheme = darkTheme;
       }
     } else {
       // Merge with current to preserve unprovided roles
@@ -149,6 +160,16 @@ export class ThemeManager {
   onChange(listener: (theme: Theme) => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  /** Register a custom color palette */
+  registerPalette(name: string, theme: Theme): void {
+    this.palettes.set(name, theme);
+  }
+
+  /** Get a registered palette by name */
+  getPalette(name: string): Theme | undefined {
+    return this.palettes.get(name);
   }
 
   /**

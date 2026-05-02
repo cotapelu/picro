@@ -5,6 +5,8 @@
  * These should NOT be imported by files outside the components directory.
  */
 
+import ArabicReshaper from 'arabic-reshaper';
+
 // Grapheme segmenter (shared instance)
 export const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 
@@ -31,6 +33,59 @@ export function getSegmenter(): Intl.Segmenter {
 /**
  * Calculate visible width of a string (accounting for ANSI codes and wide characters)
  */
+function isZeroWidthChar(code: number): boolean {
+  // Combining marks (Mn)
+  if (
+    (code >= 0x0300 && code <= 0x036F) ||
+    (code >= 0x1AB0 && code <= 0x1AFF) ||
+    (code >= 0x1DC0 && code <= 0x1DFF) ||
+    (code >= 0x20D0 && code <= 0x20FF) ||
+    (code >= 0xFE20 && code <= 0xFE2F)
+  ) {
+    return true;
+  }
+  // Format characters (Cf) and joiner/non-joiner
+  if (
+    code === 0x200C || // ZERO WIDTH NON-JOINER
+    code === 0x200D || // ZERO WIDTH JOINER
+    code === 0x200E || // LEFT-TO-RIGHT MARK
+    code === 0x200F || // RIGHT-TO-LEFT MARK
+    code === 0x2028 || // LINE SEPARATOR
+    code === 0x2029 || // PARAGRAPH SEPARATOR
+    code === 0x2060 || // WORD JOINER
+    code === 0xFEFF    // ZERO WIDTH NO-BREAK SPACE (BOM)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** Check if string contains Arabic characters */
+export function containsArabic(str: string): boolean {
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i);
+    if (
+      (c >= 0x0600 && c <= 0x06FF) || // Arabic
+      (c >= 0x0750 && c <= 0x077F) || // Arabic Supplement
+      (c >= 0x08A0 && c <= 0x08FF) || // Arabic Extended-A
+      (c >= 0xFB50 && c <= 0xFDFF) || // Arabic Presentation Forms-A
+      (c >= 0xFE70 && c <= 0xFEFF)    // Arabic Presentation Forms-B
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Reshape Arabic text to its presentation forms */
+export function shapeArabic(text: string): string {
+  try {
+    return ArabicReshaper(text);
+  } catch (e) {
+    return text;
+  }
+}
+
 export function visibleWidth(str: string): number {
   const cached = VISIBLE_WIDTH_CACHE.get(str);
   if (cached !== undefined) return cached;
@@ -72,6 +127,11 @@ export function visibleWidth(str: string): number {
       continue;
     }
     
+    // Skip zero-width characters (combining marks, ZWJ, etc.)
+    if (isZeroWidthChar(code)) {
+      continue;
+    }
+
     // Check for wide characters (CJK, emojis, etc.)
     if (code >= 0x1100 && (
       (code <= 0x115f) || // Hangul Jamo
@@ -91,6 +151,35 @@ export function visibleWidth(str: string): number {
     }
   }
   return cacheVisibleWidth(str, width);
+}
+
+/**
+ * Parse CSI parameters (numbers separated by ';') from a string.
+ * The string must start at position pos with '['.
+ * Returns params array and the position of the final byte.
+ */
+export function parseCsiParameters(str: string, pos: number): { params: number[]; endPos: number } | null {
+  if (pos >= str.length || str[pos] !== '[') return null;
+  let i = pos + 1;
+  const params: number[] = [];
+  let current = '';
+  while (i < str.length) {
+    const ch = str[i];
+    if (ch >= '0' && ch <= '9') {
+      current += ch;
+    } else if (ch === ';') {
+      params.push(current === '' ? 0 : parseInt(current, 10));
+      current = '';
+    } else {
+      // final byte
+      if (current !== '') {
+        params.push(parseInt(current, 10));
+      }
+      return { params, endPos: i };
+    }
+    i++;
+  }
+  return null; // incomplete
 }
 
 /**
@@ -508,3 +597,35 @@ export function expandTabs(text: string, tabSize = 2): string {
     return ' '.repeat(tabSize - col);
   });
 }
+
+/**
+ * Check if a string contains any RTL characters (Hebrew, Arabic, Syriac, etc.)
+ */
+export function containsRtl(str: string): boolean {
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i);
+    if (
+      (code >= 0x0590 && code <= 0x05FF) || // Hebrew
+      (code >= 0x0600 && code <= 0x06FF) || // Arabic
+      (code >= 0x0750 && code <= 0x077F) || // Arabic Supplement
+      (code >= 0x08A0 && code <= 0x08FF) || // Arabic Extended-A
+      (code >= 0xFB50 && code <= 0xFDFF) || // Arabic Presentation Forms-A
+      (code >= 0xFE70 && code <= 0xFEFF) || // Arabic Presentation Forms-B
+      (code >= 0x0700 && code <= 0x074F) || // Syriac
+      (code >= 0x0780 && code <= 0x07BF) || // Thaana
+      (code >= 0x07C0 && code <= 0x07FF)    // Nko
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Reverse a string by grapheme clusters (preserves combined characters).
+ */
+export function reverseByGraphemes(str: string): string {
+  const graphemes = Array.from(segmenter.segment(str)).map(s => s.segment);
+  return graphemes.reverse().join('');
+}
+

@@ -10,29 +10,25 @@
  * Each element can draw itself to a list of text lines.
  */
 export interface UIElement {
-  /**
-   * Draw the element to lines for the given viewport width
-   * @param context - Rendering context with width and other info
-   * @returns Array of strings, each representing a line
-   */
+  /** Draw the element */
   draw(context: RenderContext): string[];
-
-  /**
-   * Optional handler for keyboard input when element has focus
-   */
+  /** Optional keyboard handler */
   handleKey?(key: KeyEvent): void;
-
-  /**
-   * If true, element receives key release events.
-   * Default is false - release events are filtered out.
-   */
+  /** Receive key release events? */
   wantsKeyRelease?: boolean;
-
-  /**
-   * Clear any cached rendering state.
-   * Called when theme changes or when element needs to redraw from scratch.
-   */
+  /** Clear cache */
   clearCache(): void;
+
+  /** Accessibility: ARIA label for screen readers */
+  ariaLabel?: string;
+  /** Accessibility: ARIA role */
+  role?: string;
+  /** Get a textual description for accessibility (e.g., current value, state) */
+  describe?(): string;
+
+  /** Text direction: 'ltr', 'rtl', or 'auto' (default 'auto') */
+  textDirection?: 'ltr' | 'rtl' | 'auto';
+
 }
 
 /**
@@ -90,7 +86,7 @@ export interface MouseEvent {
   /** Column (0-indexed) */
   col: number;
   /** Mouse button */
-  button: 'left' | 'right' | 'middle' | 'release';
+  button: 'left' | 'right' | 'middle' | 'release' | 'wheelup' | 'wheeldown';
   /** Modifier keys */
   modifiers?: {
     ctrl?: boolean;
