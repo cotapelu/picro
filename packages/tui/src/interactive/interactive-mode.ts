@@ -352,7 +352,7 @@ export class InteractiveMode {
   private createExtensionUIContext(): ExtensionUIContext {
     const mode = this;
     return {
-      select: async (title: any, options: any, opts?: any) => {
+      select: async (title: string, options: string[], opts?: any) => {
         const container = new ElementContainer();
         const items: SelectItem[] = options.map((opt, idx) => ({
           value: String(idx),
@@ -379,10 +379,10 @@ export class InteractiveMode {
           resolve = r;
         });
       },
-      confirm: async (title: any, message: any, opts?: any) => {
+      confirm: async (title: string, message: string, opts?: any) => {
         return true;
       },
-      input: async (title: any, placeholder?: any, opts?: any) => {
+      input: async (title: string, placeholder?: string, opts?: any) => {
         const container = new ElementContainer();
         const input = new Input({
           placeholder,
@@ -480,9 +480,9 @@ export class InteractiveMode {
       getTheme: (name: any) => undefined,
       setTheme: (themeOrName: any) => ({ success: false }),
       getToolsExpanded: () => true,
-      setToolsExpanded: (expanded: any) => {
-    };
-  }
+      setToolsExpanded: (expanded: any) => {}
+  };
+}
 }
 
 export { ChatInterface };

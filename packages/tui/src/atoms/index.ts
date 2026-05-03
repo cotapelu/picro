@@ -17,11 +17,13 @@ export * from './terminal.js';
 export * from './keybindings.js';
 export * from './themes.js';
 // Theme also exports similar names; re-export with rename to avoid conflict
+export type {
+	ThemeColors as ThemeColors_theme,
+	ThemeName
+} from './theme.js';
 export {
 	darkTheme as darkTheme_theme,
 	lightTheme as lightTheme_theme,
-	ThemeColors as ThemeColors_theme,
-	ThemeName,
 	themes,
 	themeManager,
 	getTheme,
