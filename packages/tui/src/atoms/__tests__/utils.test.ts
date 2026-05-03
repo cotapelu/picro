@@ -13,7 +13,7 @@ import {
   containsArabic,
   sliceByColumn,
   sliceWithWidth,
-} from '../src/atoms/utils.js';
+} from '../src/atoms/utils';
 
 describe('Utils Module', () => {
   describe('visibleWidth', () => {

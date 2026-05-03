@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { AssistantMessage } from '../assistant-message.js';
-import type { RenderContext } from '../src/atoms/base.js';
+import { AssistantMessage } from '../src/atoms/assistant-message';
+import type { RenderContext } from '../src/atoms/base';
 
 function createContext(width = 80, height = 24): RenderContext {
   return { width, height };

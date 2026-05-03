@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { ToolMessage } from '../tool-message.js';
-import { visibleWidth } from '../src/atoms/utils.js';
-import type { RenderContext } from '../src/atoms/base.js';
+import { ToolMessage } from '../src/atoms/tool-message';
+import { visibleWidth } from '../src/atoms/utils';
+import type { RenderContext } from '../src/atoms/base';
 
 function createContext(width = 80, height = 24): RenderContext {
   return { width, height };
