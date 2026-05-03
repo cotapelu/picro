@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { CustomMessage } from '../src/atoms/custom-message';
-import type { RenderContext } from '../src/atoms/base';
+import { CustomMessage } from '../custom-message';
+import type { RenderContext } from '../base';
 
 function createContext(width = 80, height = 24): RenderContext {
   return { width, height };

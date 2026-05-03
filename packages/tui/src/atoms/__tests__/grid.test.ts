@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { Grid } from '../src/atoms/grid';
-import { Text } from '../src/atoms/text';
-import type { RenderContext } from '../src/atoms/base';
+import { Grid } from '../grid';
+import { Text } from '../text';
+import type { RenderContext } from '../base';
 
 function createContext(width = 80, height = 24): RenderContext {
   return { width, height };

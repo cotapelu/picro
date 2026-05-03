@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { Markdown } from '../src/atoms/markdown';
-import type { RenderContext } from '../src/atoms/base';
+import { Markdown } from '../markdown';
+import type { RenderContext } from '../base';
 
 function createContext(width = 80, height = 24): RenderContext {
   return { width, height };

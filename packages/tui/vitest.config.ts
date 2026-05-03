@@ -5,8 +5,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: ['./tests/atoms/setup.ts'],
-    include: ['tests/atoms/**/*.test.ts'],
+    setupFiles: ['./src/atoms/__tests__/setup.ts'],
+    include: ['src/**/__tests__/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
   },
   resolve: {
