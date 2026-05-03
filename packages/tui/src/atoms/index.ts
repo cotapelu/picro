@@ -74,6 +74,12 @@ export * from './skill-invocation-message.js';
 export * from './earendil-announcement.js';
 export * from './diff.js';
 
+// Additional message components
+export * from './assistant-message.js';
+export * from './bash-execution-message.js';
+export * from './custom-message.js';
+export * from './tool-message.js';
+
 // Chrome primitives
 export * from './footer.js';
 export * from './stats-footer.js';

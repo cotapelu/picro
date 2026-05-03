@@ -1,24 +1,17 @@
 // Organisms: Complex components (L3)
 
-// Messages
-export * from './assistant-message.js';
-export * from './bash-execution-message.js';
-export * from './custom-message.js';
-export * from './tool-message.js';
-
 // Overlays
 export * from './cancellable-loader.js';
 export * from './command-palette.js';
+export * from './modal.js';
+export * from './context-menu.js';
+export * from './login-dialog.js';
 
 // Panels
 export * from './file-browser.js';
 export * from './memory-panel.js';
+export * from './debug-panel.js';
+export * from './editor.js';
 
 // Selectors
 export * from './thinking-selector.js';
-
-// Misc
-export * from './form.js';
-
-// Bridges
-export * from './agent-bridge.js';

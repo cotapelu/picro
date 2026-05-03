@@ -1,216 +1,58 @@
-# @picro/tui
+# Nguyên tắc phân lớp
 
-Terminal UI Library for building interactive terminal applications.
+Chia code thành các lớp theo thứ tự dependency tăng dần. Mỗi lớp chỉ được phép import từ lớp dưới nó (hoặc cùng lớp).
 
-## Features
+## Lớp 1 – Atoms (foundation)
 
-- ✅ **Differential Rendering** - Only updates changed lines for smooth animations
-- ✅ **Overlay System** - Position modals and panels with flexible anchoring and z-index
-- ✅ **Viewport Scrolling** - Large content handled with scroll APIs
-- ✅ **Terminal Images** - Support for Kitty and iTerm2 image protocols
-- ✅ **ANSI-aware** - Proper handling of wide characters and escape codes
-- ✅ **Cursor IME** - Hardware cursor positioning for IME candidate windows
-- ✅ **Component Library** - 75+ components (Input, Editor, SelectList, Markdown, Messages, etc.)
-- ✅ **Key Repeat** - Configurable repeat delay/interval for held keys
-- ✅ **Performance Metrics** - Dirty line count, render stats
+- **Không phụ thuộc** vào bất kỳ internal module nào (ngoài atoms).
+- Chỉ dùng:
+  - Node built-ins
+  - External packages
+  - **intra-layer** (atoms khác)
+- Ví dụ: `base`, `keys`, `utils`, `fuzzy`, `autocomplete`, `kill-ring`, `undo-stack`, `i18n`, `object-pool`, `resource-bundle`, `internal-utils`, `types`.
+- Bao gồm cả **primitive UI components** (render-only, không interactive) như: `text`, `spacer`, `divider`, `badge`, `rating`, `progress-bar`, `stepper`, `visual-truncate`, `dynamic-border`, `auth-selector-status`, `box`, `flex`, `grid`, `truncated-text`, `markdown`, `toast`, `breadcrumbs`, `table`, `diff`, `footer`, `stats-footer`, `debug-overlay`, `layout-inspector`, `keybinding-hints`, `user-message`, `tool-execution`, `branch-summary-message`, `compaction-summary-message`, `skill-invocation-message`, `earendil-announcement`.
 
-## Installation
+## Lớp 2 – Molecules
 
-```bash
-npm install @picro/tui
-```
+- Chỉ được phép import từ **Atoms (lớp 1)** hoặc **intra-layer** (cùng molecules).
+- **Không được** import từ lớp cao hơn (`organisms`, `interactive`, `engine`).
+- Chứa các UI component **interactive** hoặc phức tạp hơn (có thể implements `InteractiveElement`).
+- Là building blocks cho organisms.
+- Ví dụ (các component còn lại trong molecules):
+  - **Layout**: `split-pane`
+  - **Text & Display**: `tree-view`
+  - **Input & Controls**: `input`, `select-list`, `settings-list`, `countdown-timer`
+  - **Editors**: `editor`
+  - **Overlays**: `modal`, `context-menu`, `loader`, `login-dialog`
+  - **Selectors**: `config-selector`, `extension-selector`, `session-selector`, `model-selector`, `theme-selector`, `tree-selector`, `user-message-selector`, ...
+  - **Panels**: `debug-panel`
+  - **Chrome**: (đã chuyển hết sang atoms)
 
-## Quick Start
+## Lớp 3 – Organisms
 
-```typescript
-import { TerminalUI, ProcessTerminal } from '@picro/tui';
-import { Text } from '@picro/tui';
+- **Bắt buộc** phải import ít nhất một **molecule** từ lớp 2.
+- Có thể import từ:
+  - **Atoms (lớp 1)**
+  - **Molecules (lớp 2)**
+  - **intra-layer** (cùng organisms/lớp 3)
+- Là complex components: overlays, panels, editors, selectors, messages.
+- Ví dụ: `bash-execution-message`, `cancellable-loader`, `command-palette`, `custom-message`, `file-browser`, `form`, `memory-panel`, `thinking-selector`, `tool-message`.
 
-const terminal = new ProcessTerminal();
-const tui = new TerminalUI(terminal);
+## Lớp 4 – Interactive (cao nhất)
 
-// Add a simple text component
-class MyUI extends ElementContainer {
-  draw(context) {
-    return [`Hello, World! Width: ${context.width}`];
-  }
-}
-
-tui.append(new MyUI());
-tui.start();
-```
-
-## Core Concepts
-
-### TerminalUI
-
-The main class that manages the terminal screen and input handling.
-
-```typescript
-const tui = new TerminalUI(terminal);
-tui.start(); // Begin listening to input and rendering
-tui.stop();  // Clean up and restore terminal state
-```
-
-### Components
-
-All components implement the `UIElement` interface:
-
-```typescript
-interface UIElement {
-  draw(context: RenderContext): string[];
-  handleKey?(key: KeyEvent): void;
-  clearCache(): void;
-}
-```
-
-### RenderContext
-
-Provides dimensions for rendering:
-
-```typescript
-interface RenderContext {
-  width: number;   // Available columns
-  height: number;  // Available rows
-  theme?: UITheme; // Optional theme
-}
-```
-
-## Utility Functions
-
-- `visibleWidth(str)` - Calculate display width (handles wide chars)
-- `truncateToWidth(text, width)` - Truncate with ellipsis
-- `wrapText(text, width)` - Simple word wrapping
-- `wrapTextWithAnsi(text, width)` - ANSI-aware wrapping
-- `fuzzyFilter(items, query, getter)` - Fuzzy search
-- `getKeybindings()` - Access keybindings manager
-
-## Examples
-
-See [examples/](./examples/) for working demos:
-
-- `basic-tui.ts` - Simple "Hello World"
-- `input-form.ts` - Input with submit callback
-- `select-list.ts` - Scrollable selection list
-- `markdown.ts` - Markdown rendering
-- `panel.ts` - Modal overlay demo
-- `terminal-image.ts` - Image rendering
-
-## API Reference
-
-Full API documentation is available in [API.md](./API.md).
-
-## Terminal Images
-
-```typescript
-import { renderImage, getImageDimensions, getCapabilities } from '@picro/tui';
-
-const caps = getCapabilities();
-if (caps.images) {
-  const dims = getImageDimensions(base64Data, 'image/png');
-  const result = renderImage(base64Data, dims, { maxWidthCells: 80 });
-  if (result) {
-    // result.sequence contains the escape codes to display the image
-    terminal.write(result.sequence);
-  }
-}
-```
-
-## Overlays (Modals)
-
-Panels can be displayed on top of base content with flexible positioning and z-index stacking:
-
-```typescript
-const handle = tui.showPanel(component, {
-  anchor: 'center',
-  width: 60,
-  height: 20,
-  zIndex: 10, // higher = on top
-});
-
-// Control the overlay
-handle.focus();
-handle.setHidden(true);
-handle.close();
-
-// Dynamic reordering
-handle.bringToFront();
-handle.sendToBack();
-handle.setZIndex(5);
-```
-
-## Viewport Scrolling
-
-For content larger than the terminal, use the scroll APIs:
-
-```typescript
-tui.scroll(5); // scroll down 5 lines
-tui.scroll(-1); // scroll up 1 line
-tui.scrollTo(100); // scroll to absolute line index
-const metrics = tui.getScrollMetrics(); // { scrollTop, totalLines, viewportLines }
-```
-
-## Key Repeat
-
-Configure auto-repeat when keys are held down:
-
-```typescript
-tui.setKeyRepeatConfig(500, 50); // delay 500ms, interval 50ms
-tui.setKeyRepeatEnabled(true);
-```
-
-## Keybindings
-
-```typescript
-import { getKeybindings } from '@picro/tui';
-
-const kb = getKeybindings();
-kb.setBinding('my-action', ['ctrl+x', 'escape']);
-kb.pushContext('select-list'); // Set current context
-```
-
-## Theming
-
-Components can use themes for colors:
-
-```typescript
-interface UITheme {
-  textColor?: string;
-  bgColor?: string;
-  borderColor?: string;
-  accentColor?: string;
-}
-```
-
-## Built-in Components
-
-- **Input** - Single-line text input with history
-- **Editor** - Multi-line editor with undo/redo, kill ring
-- **SelectList** - Scrollable selection list
-- **SettingsList** - Toggle settings list
-- **Text** - Plain text display
-- **Markdown** - Markdown rendering
-- **UserMessage / AssistantMessage / ToolMessage** - Chat bubbles
-- **Footer** - Status bar with left/right items
-- **Modal** - Modal overlay
-- **Toast** - Temporary notifications
-- **Loader** - Spinner/progress indicators
-
-## Documentation
-
-- [Architecture](./docs/ARCHITECTURE.md) - Kiến trúc và phân tầng
-- [Components](./docs/COMPONENTS.md) - Danh mục components theo lớp
-- [API Reference](./docs/API.md) - API đầy đủ (to be generated)
-
-
-## Examples
-
-See [examples/](./examples/) for complete working examples.
-
-## License
-
-Apache-2.0
+- **Bắt buộc** phải import ít nhất một **organism** từ lớp 3.
+- Có thể import từ:
+  - **Atoms (lớp 1)**
+  - **Molecules (lớp 2)**
+  - **Organisms (lớp 3)**
+  - **intra-layer** (cùng interactive/lớp 4)
+- Là module orchestration, mode manager, và hệ thống cao nhất.
+- Ví dụ: `interactive-mode`, `tui`, `extensions`.
 
 ---
 
-<p align="center">Built with ❤️ for the pi ecosystem</p>
+**Quy tắc phân loại:**
+1. Phân từ dưới lên: atoms trước, sau đó molecules, organisms, interactive.
+2. Nếu file không đủ điều kiện cho lớp X (ví dụ: không import molecule), đưa về lớp dưới (ví dụ: molecules).
+3. Mỗi lớp có thư mục riêng: `src/atoms/`, `src/molecules/`, `src/organisms/`, `src/interactive/`.
+4. Export thông qua index.js trong từng thư mục.

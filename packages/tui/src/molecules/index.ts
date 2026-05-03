@@ -9,15 +9,10 @@ export * from './tree-view.js';
 // Input & Controls
 export * from './input.js';
 export * from './countdown-timer.js';
-
-// Editors
-export * from './editor.js';
-
-// Overlays (toast, debug-overlay moved to atoms)
-export * from './modal.js';
-export * from './context-menu.js';
 export * from './loader.js';
-export * from './login-dialog.js';
+
+// Forms
+export * from './form.js';
 
 // Chrome (footer, stats-footer, keybinding-hints moved to atoms)
 // No exports in this category remain
@@ -40,7 +35,6 @@ export * from './tree-selector.js';
 export * from './scoped-models-selector.js';
 export * from './user-message-selector.js';
 
-// Panels (layout-inspector moved to atoms)
-export * from './debug-panel.js';
+// Panels (all moved to atoms; debug-panel moved to organisms)
 
 // Messages (all moved to atoms; diff also moved)
