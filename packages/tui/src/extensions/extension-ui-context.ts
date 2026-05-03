@@ -5,10 +5,10 @@
  * This interface mirrors the capabilities available to built-in components.
  */
 
-import type { TerminalUI } from '../components/tui.js';
-import type { UIElement } from '../components/base.js';
-import type { Theme } from '../components/themes.js';
-import type { AutocompleteProvider, AutocompleteItem } from '../components/autocomplete.js';
+import type { TerminalUI } from '../interactive/tui.js';
+import type { UIElement } from '../atoms/base.js';
+import type { Theme } from '../atoms/themes.js';
+import type { AutocompleteProvider, AutocompleteItem } from '../atoms/autocomplete.js';
 
 /**
  * Options for extension widget placement
