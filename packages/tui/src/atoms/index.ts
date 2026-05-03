@@ -35,3 +35,49 @@ export {
 export * from './terminal-image.js';
 export * from './state-serializer.js';
 export type * from './types-atoms.js';
+
+// Primitive UI components (moved from molecules)
+export * from './text.js';
+export * from './spacer.js';
+export * from './divider.js';
+export * from './badge.js';
+export * from './rating.js';
+export * from './daxnuts.js';
+export * from './armin.js';
+export * from './animations.js';
+export * from './progress-bar.js';
+export * from './stepper.js';
+
+// Additional primitive UI components
+export * from './visual-truncate.js';
+export * from './dynamic-border.js';
+export * from './auth-selector-status.js';
+export * from './user-message.js';
+export * from './tool-execution.js';
+
+// Layout primitives
+export * from './box.js';
+export * from './flex.js';
+export * from './grid.js';
+
+// Text & display primitives
+export * from './truncated-text.js';
+export * from './markdown.js';
+export * from './toast.js';
+export * from './breadcrumbs.js';
+export * from './table.js';
+
+// Message primitives (simple)
+export * from './branch-summary-message.js';
+export * from './compaction-summary-message.js';
+export * from './skill-invocation-message.js';
+export * from './earendil-announcement.js';
+export * from './diff.js';
+
+// Chrome primitives
+export * from './footer.js';
+export * from './stats-footer.js';
+
+// Overlay/panel primitives
+export * from './debug-overlay.js';
+export * from './layout-inspector.js';

@@ -6,8 +6,8 @@
  */
 
 import { TerminalUI } from '../interactive/tui.js';
-import { ToolExecutionMessage } from '../molecules/tool-execution.js';
-import type { ToolCallInfo } from '../molecules/tool-execution.js';
+import { ToolExecutionMessage } from '../atoms/tool-execution.js';
+import type { ToolCallInfo } from '../atoms/tool-execution.js';
 
 interface AgentToolBridgeOptions {
   /** Height in rows */

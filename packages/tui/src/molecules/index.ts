@@ -1,47 +1,28 @@
 // Molecules: Simple UI components (L2)
 
-// Layout
-export * from './box.js';
-export * from './flex.js';
-export * from './grid.js';
+// Layout (only split-pane remains; box, flex, grid moved to atoms)
 export * from './split-pane.js';
-export * from './spacer.js';
-export * from './divider.js';
-export * from './dynamic-border.js';
 
-// Text & Display
-export * from './text.js';
-export * from './truncated-text.js';
-export * from './breadcrumbs.js';
-export * from './markdown.js';
-export * from './table.js';
+// Text & Display (only tree-view remains; breadcrumbs, table moved to atoms)
 export * from './tree-view.js';
-export * from './visual-truncate.js';
 
 // Input & Controls
 export * from './input.js';
-export * from './progress-bar.js';
-export * from './rating.js';
-export * from './stepper.js';
 export * from './countdown-timer.js';
 
 // Editors
 export * from './editor.js';
 
-// Overlays
+// Overlays (toast, debug-overlay moved to atoms)
 export * from './modal.js';
-export * from './toast.js';
 export * from './context-menu.js';
 export * from './loader.js';
-export * from './debug-overlay.js';
 export * from './login-dialog.js';
 
-// Chrome
-export * from './footer.js';
-export * from './stats-footer.js';
-export * from './keybinding-hints.js';
+// Chrome (footer, stats-footer, keybinding-hints moved to atoms)
+// No exports in this category remain
 
-// Selectors
+// Selectors (all remain)
 export * from './config-selector.js';
 export * from './extension-selector.js';
 export * from './extension-input.js';
@@ -58,24 +39,8 @@ export * from './show-images-selector.js';
 export * from './tree-selector.js';
 export * from './scoped-models-selector.js';
 export * from './user-message-selector.js';
-export * from './auth-selector-status.js';
 
-// Panels
+// Panels (layout-inspector moved to atoms)
 export * from './debug-panel.js';
-export * from './layout-inspector.js';
 
-// Messages
-export * from './user-message.js';
-export * from './tool-execution.js';
-export * from './branch-summary-message.js';
-export * from './compaction-summary-message.js';
-export * from './skill-invocation-message.js';
-export * from './diff.js';
-
-// Misc
-export * from './badge.js';
-export * from './daxnuts.js';
-export * from './earendil-announcement.js';
-export * from './armin.js';
-export * from './animations.js';
-
+// Messages (all moved to atoms; diff also moved)

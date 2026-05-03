@@ -28,8 +28,8 @@ import {
   ElementContainer,
 } from '../atoms/base.js';
 import { darkTheme } from '../atoms/themes.js';
-import { DebugOverlay } from '../molecules/debug-overlay.js';
-import { LayoutInspector } from '../molecules/layout-inspector.js';
+import { DebugOverlay } from '../atoms/debug-overlay.js';
+import { LayoutInspector } from '../atoms/layout-inspector.js';
 
 import { visibleWidth, truncateText, wrapText, sliceByColumn, extractOverlaySegments, wrapTextWithAnsi } from '../atoms/internal-utils.js';
 import { isImageLine, getCellDimensions, setCellDimensions } from '../atoms/terminal-image.js';

@@ -1,5 +1,5 @@
 import type { UIElement, RenderContext } from '../atoms/base.js';
-import { Markdown } from '../molecules/markdown.js';
+import { Markdown } from '../atoms/markdown.js';
 
 export interface AssistantMessageOptions {
   content?: string; // markdown string

@@ -1,5 +1,5 @@
 import type { UIElement, RenderContext } from '../atoms/base.js';
-import { Text } from '../molecules/text.js';
+import { Text } from '../atoms/text.js';
 import { wrapText, visibleWidth } from '../atoms/internal-utils.js';
 
 export interface BashExecutionMessageOptions {

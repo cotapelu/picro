@@ -6,7 +6,7 @@
 
 import type { UIElement, RenderContext } from '../atoms/base.js';
 import { ElementContainer } from '../atoms/base.js';
-import { Text } from '../molecules/text.js';
+import { Text } from '../atoms/text.js';
 
 export interface FormField {
   /** Field label (displayed above input) */
