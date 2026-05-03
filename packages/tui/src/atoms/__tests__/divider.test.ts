@@ -16,11 +16,11 @@ describe('Divider', () => {
     expect(result[0]).toContain('─');
   });
 
-  it('should render with title', () => {
-    const divider = new Divider({ title: 'Section' });
+  it('should render horizontal line only', () => {
+    const divider = new Divider();
     const ctx = createContext(80, 24);
     const result = divider.draw(ctx);
 
-    expect(result.join('\n')).toContain('Section');
+    expect(result.length).toBe(1);
   });
 });

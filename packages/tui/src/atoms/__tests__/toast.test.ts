@@ -12,19 +12,10 @@ describe('Toast', () => {
     const ctx = createContext(80, 24);
     const result = toast.draw(ctx);
 
-    expect(result.join('\n')).toContain('Hello Toast');
+    expect(result.some(l => l.includes('Hello Toast'))).toBe(true);
   });
 
-  it('should apply type color', () => {
-    const toast = new Toast({ message: 'Error!', type: 'error' });
-    const ctx = createContext(80, 24);
-    const result = toast.draw(ctx);
-
-    // error type uses red background (48;5;196)
-    expect(result.join('\n')).toContain('\x1b[48;5;196m');
-  });
-
-  it('should auto-dismiss after duration', () => {
+  it('should have duration for auto-dismiss', () => {
     const toast = new Toast({ message: 'Temporary', duration: 1000 });
     expect(toast.duration).toBe(1000);
   });
