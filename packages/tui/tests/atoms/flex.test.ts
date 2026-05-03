@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { Flex } from '../flex.js';
-import { Text } from '../text.js';
-import type { RenderContext } from '../base.js';
+import { Flex } from '../src/atoms/flex.js';
+import { Text } from '../src/atoms/text.js';
+import type { RenderContext } from '../src/atoms/base.js';
 
 function createContext(width = 80, height = 24): RenderContext {
   return { width, height };

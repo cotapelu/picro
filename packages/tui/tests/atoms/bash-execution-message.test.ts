@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { BashExecutionMessage } from '../bash-execution-message.js';
-import { visibleWidth } from '../utils.js';
-import type { RenderContext } from '../base.js';
+import { visibleWidth } from '../src/atoms/utils.js';
+import type { RenderContext } from '../src/atoms/base.js';
 
 function createContext(width = 80, height = 24): RenderContext {
   return { width, height };

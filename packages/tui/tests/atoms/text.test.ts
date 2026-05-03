@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Text } from '../text.js';
+import { Text } from '../src/atoms/text.js';
 
 function createContext(width = 80, height = 24) {
   return { width, height };

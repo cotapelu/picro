@@ -6,7 +6,7 @@ import {
   KeyEvent,
   CURSOR_MARKER,
   ElementContainer,
-} from '../base.js';
+} from '../src/atoms/base.js';
 
 // Mock context factory
 function createContext(width = 80, height = 24): RenderContext {
