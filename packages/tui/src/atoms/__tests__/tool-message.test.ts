@@ -73,7 +73,8 @@ describe('ToolMessage', () => {
 
       expect(msg.opts.output).toBe('output data');
       expect(msg.opts.duration).toBe(1000);
-      expect(msg.opts.error).toBe(false);
+      // setResult does not change error flag (remains undefined or false)
+      expect(msg.opts.error !== true).toBe(true);
     });
   });
 

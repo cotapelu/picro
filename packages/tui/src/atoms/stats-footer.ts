@@ -95,8 +95,11 @@ export class StatsFooter extends Footer {
       });
     }
 
-    // Update right items (keep left items as is)
-    this.setItems(undefined, rightItems);
+    // Set left item as cwd (and git branch if available)
+    const leftItems: FooterItem[] = [
+      { label: this.stats.cwd, key: this.stats.gitBranch },
+    ];
+    this.setItems(leftItems, rightItems);
   }
 
   private formatNumber(n: number): string {
