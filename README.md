@@ -28,55 +28,32 @@ git clone <repo>
 cd picro
 npm install
 
-# Build all packages
+# Build all packages + main app
 npm run build
 
-# Build and run the TUI example
-npm run build:example
-npm run start:example
-
-# Or run the simple agent (non-TUI)
-npx tsx src/simple-agent.ts
+# Run the agent TUI
+npm start
 
 # Run tests
 npm test
 ```
 
 
-## Examples
+## Running the Agent
 
-### TUI Example (`src/main.ts`)
-
-Full-featured terminal UI integrating agent + TUI:
+After building, run the interactive agent:
 
 ```bash
-npm run build:example
-npm run start:example
+npm start
 ```
 
-Features:
-- Real-time message display (user, assistant, tool calls)
-- Interactive input with auto-submit
-- Event-driven updates from agent
-- Status bar and notifications
-- Keyboard shortcuts (Ctrl+C to quit)
+This launches the TUI-based AI agent with chat interface, tool execution, and session management.
 
-### Simple Agent (`src/simple-agent.ts`)
-
-Script-style agent usage without TUI:
-
-```bash
-npx tsx src/simple-agent.ts
-```
-
-### Exploring the Packages
-
-- [@picro/agent](./packages/agent/README.md) - Agent architecture, classes, APIs
-- [@picro/tui](./packages/tui/README.md) - Terminal UI components, atoms/molecules/organisms
+## Architecture
 
 ```
 ┌─────────────────┐
-│   Coding Agent  │ ← High-level API (TUI + Agent + LLM)
+│   Main App      │ ← src/main.ts (InteractiveMode TUI)
 ├─────────────────┤
 │   @picro/tui    │ ← Terminal UI components, rendering
 │   @picro/agent  │ ← Agent session, tools, execution
