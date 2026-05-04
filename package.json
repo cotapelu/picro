@@ -13,6 +13,8 @@
     "build:memory": "cd packages/memory && npm run build",
     "build:tui": "cd packages/tui && npm run build",
     "build:coding-agent": "cd packages/coding-agent && npm run build",
+    "build:example": "tsc -p src/tsconfig.json",
+    "start:example": "node src/dist/main.js",
     "clean": "cd packages/llm && npm run clean && cd ../agent && npm run clean && cd ../memory && npm run clean && cd ../tui && rm -rf dist && cd ../coding-agent && rm -rf dist",
     "dev": "npm run dev:llm",
     "dev:llm": "cd packages/llm && npm run dev",
