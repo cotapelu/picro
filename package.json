@@ -1,34 +1,15 @@
 {
-  "name": "@picro/monorepo",
+  "name": "@picro/picro",
   "version": "0.0.1",
-  "description": "Monorepo for AI agent packages",
+  "description": "picro agnent",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
-    "build": "npm run build:packages && npm run build:app",
-    "build:packages": "npm run build:llm && npm run build:tui && npm run build:memory && npm run build:agent",
-    "build:llm": "cd packages/llm && npm run build",
-    "build:agent": "cd packages/agent && npm run build",
-    "build:memory": "cd packages/memory && npm run build",
-    "build:tui": "cd packages/tui && npm run build",
-    "build:app": "tsc -p src/tsconfig.json",
-    "clean": "cd packages/llm && npm run clean && cd ../agent && npm run clean && cd ../memory && npm run clean && cd ../tui && rm -rf dist && cd ../.. && rm -rf src/dist",
-    "dev": "npm run dev:llm",
-    "dev:llm": "cd packages/llm && npm run dev",
-    "dev:agent": "cd packages/agent && npm run dev",
-    "dev:memory": "cd packages/memory && npm run dev",
-    "dev:tui": "cd packages/tui && npm run dev",
-    "test": "npm run test:llm && npm run test:agent && npm run test:memory",
-    "test:llm": "cd packages/llm && npm run test",
-    "test:agent": "cd packages/agent && npm run test",
-    "test:memory": "cd packages/memory && npm run test",
-    "test:tui": "cd packages/tui && npm run test",
-    "start": "node src/dist/main.js"
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "dev": "tsc --watch"
   },
   "keywords": [
-    "monorepo",
+    "picro",
     "ai",
     "agent",
     "llm"
@@ -39,6 +20,16 @@
     "node": ">=20.0.0"
   },
   "devDependencies": {
+    "@types/node": "^25.6.0",
+    "highlight.js": "^11.11.1",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "arabic-reshaper": "^1.1.0",
+    "openai": "^6.35.0",
+    "partial-json": "^0.1.7",
+    "strip-ansi": "^7.2.0"
   }
 }
