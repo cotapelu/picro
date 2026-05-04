@@ -9,8 +9,13 @@ bạn phải đọc code tham khảo và đối chiếu với code đang làm. n
  và packages/tui/llm-context/tui-agent
  mà không được copy code vì vi phạm bản quyền. bạn phải đọc code tham khảo và đối chiếu với code đang làm.
 
-BẮT BUỘC PHẢI NHỚ: MỖI LLM-CONTEXT CÓ 2 THƯ MỤC CON TRONG ĐÓ. KẾ THỪA LẪN NHAU. PHẢI ĐỌC HẾT.
+
+BẮT BUỘC PHẢI NHỚ: MỖI LLM-CONTEXT ở trên CÓ 2 THƯ MỤC CON TRONG ĐÓ. KẾ THỪA LẪN NHAU. PHẢI ĐỌC HẾT.
 bắt đầu phân tích và phát triển code đi. phải phân tích và so sánh mọi dòng code.
+
+- đối với app tổng, nó nằm trong thư mục src ở root của dự án, trong đó hàm main.ts là hàm chính, ngoài ra còn có cli.ts. tham khảo mọi dòng code ở thư mục src/llm-context/coding-agent
+mà không được copy code vì vi phạm bản quyền. phải đọc code tham khảo vào đối chiếu với code đang làm.
+
 
 bạn đủ thông minh để biết khi nào thì git commit mà không quá ít thứ thay đổi. nhưng cũng đừng để quá nhiều thay đổi mà không commit. 
 nhưng phải nhớ git commit.

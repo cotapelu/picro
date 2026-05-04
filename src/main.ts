@@ -1,28 +1,126 @@
 /**
- * Agent + InteractiveMode Demo
+ * Agent + InteractiveMode (Full Integration)
  *
- * Highest-level TUI integration using InteractiveMode.
- * This is the RECOMMENDED approach for building agent UIs.
+ * Highest-level TUI integration.
+ * AgentInteractiveMode wraps InteractiveMode and automatically connects
+ * to AgentSessionRuntime.
  *
- * Features:
- * - Built-in chat layout (messages, input, footer)
- * - Message types: user, assistant, tool
- * - Status updates, widgets, dialogs
- * - Simple event-driven architecture
- *
- * Run: npm run start:example
+ * Run: npm start
  */
 
 import { createAgentSessionRuntime } from '@picro/agent';
-import type { AgentSessionRuntime } from '@picro/agent';
+import type { AgentSessionRuntime, AgentSession } from '@picro/agent';
 
 import { InteractiveMode } from '@picro/tui';
 import { TerminalUI, ProcessTerminal } from '@picro/tui';
 
-async function main(): Promise<void> {
-  console.log('🚀 Agent + InteractiveMode\n');
+// ============================================================================
+// AgentInteractiveMode - Glue layer (top-level TUI class)
+// ============================================================================
 
-  // Create agent runtime (high-level API)
+/**
+ * AgentInteractiveMode connects an AgentSessionRuntime to InteractiveMode.
+ *
+ * It automatically:
+ * - Forwards user input to session.prompt()
+ * - Subscribes to session events and updates UI
+ * - Manages status, messages, tool display
+ */
+class AgentInteractiveMode extends InteractiveMode {
+  private runtime: AgentSessionRuntime;
+  private session: AgentSession;
+
+  constructor(runtime: AgentSessionRuntime, options: {
+    tui: TerminalUI;
+    inputPlaceholder?: string;
+    initialStatus?: string;
+  }) {
+    super({
+      tui: options.tui,
+      inputPlaceholder: options.inputPlaceholder ?? 'Type a message... (Ctrl+C to quit)',
+      initialStatus: options.initialStatus ?? 'Ready',
+      onUserInput: (text: string) => this.handleUserInput(text),
+    });
+
+    this.runtime = runtime;
+    this.session = runtime.session;
+    this.setupAgentEvents();
+  }
+
+  /**
+   * Handle user input: forward to agent
+   */
+  private async handleUserInput(text: string): Promise<void> {
+    try {
+      await this.session.prompt(text);
+    } catch (error: any) {
+      this.setStatus(`❌ ${error.message}`);
+    }
+  }
+
+  /**
+   * Subscribe to agent events and update UI
+   */
+  private setupAgentEvents(): void {
+    this.session.subscribe((event: any) => {
+      const t = event.type;
+
+      // Agent lifecycle
+      if (t === 'agent:start') this.setStatus('🤖 Running...');
+      if (t === 'agent:end') this.setStatus('✅ Ready');
+      if (t === 'turn:start') this.setStatus(`Turn ${event.turnIndex}...`);
+
+      // User message (echo)
+      if (t === 'message:end' && event.role === 'user') {
+        const text = event.content?.map((b: any) => b.text || '').join('').trim();
+        if (text) this.addUserMessage(text);
+      }
+
+      // Assistant message
+      if (t === 'message:end' && event.role === 'assistant') {
+        const text = event.content?.map((b: any) => b.text || '').join('').trim();
+        if (text) this.addAssistantMessage(text);
+      }
+
+      // Tool start
+      if (t === 'tool:call:start' || t === 'toolcall_start') {
+        const name = event.toolCall?.name || event.toolName || 'tool';
+        this.addToolMessage(name, 'Executing...');
+      }
+
+      // Tool end
+      if (t === 'tool:call:end' || t === 'toolcall_end') {
+        const result = event.toolResult || event.result;
+        const ok = result?.success ?? false;
+        const out = result?.output?.toString().slice(0, 500) || '';
+        this.addToolMessage(
+          ok ? '✓ Success' : '✗ Failed',
+          out,
+          result?.exitCode
+        );
+      }
+
+      // Progress
+      if (t === 'tool:progress') {
+        this.setStatus(event.message?.slice(0, 50) || '...');
+      }
+
+      // Error
+      if (t === 'error') {
+        this.setStatus(`❌ ${event.error?.message || 'Error'}`);
+      }
+    });
+  }
+}
+
+// ============================================================================
+// Main Entry Point
+// ============================================================================
+
+async function main(): Promise<void> {
+  console.log('🚀 Agent InteractiveMode Demo\n');
+
+  // 1. Create agent runtime (high-level API)
   const runtime = await createAgentSessionRuntime(
     async () => ({
       session: null as any,
@@ -41,81 +139,26 @@ async function main(): Promise<void> {
   console.log('✅ Agent ready');
   console.log('🎨 Starting InteractiveMode...\n');
 
-  // Create InteractiveMode (top-level TUI)
-  const interactive = new InteractiveMode({
-    tui: new TerminalUI(new ProcessTerminal()),
-    inputPlaceholder: 'Type a message... (Ctrl+C to quit)',
+  // 2. Create TerminalUI (core TUI)
+  const terminal = new ProcessTerminal();
+  const tui = new TerminalUI(terminal);
+
+  // 3. Create AgentInteractiveMode (glue + top-level)
+  const interactive = new AgentInteractiveMode(runtime, {
+    tui,
+    inputPlaceholder: 'Ask anything... (Ctrl+C to quit)',
     initialStatus: 'Ready',
-    onUserInput: async (text: string) => {
-      // Forward user input to agent
-      try {
-        await runtime.session.prompt(text);
-      } catch (error: any) {
-        interactive.setStatus(`❌ ${error.message}`);
-      }
-    },
   });
 
-  // Subscribe to agent events to update chat UI
-  const session = runtime.session;
+  console.log('✨ Ready! Type your message.\n');
+  console.log('─────────────────────────────────────');
 
-  session.subscribe((event: any) => {
-    const t = event.type;
-
-    // Status
-    if (t === 'agent:start') interactive.setStatus('🤖 Running...');
-    if (t === 'agent:end') interactive.setStatus('✅ Ready');
-    if (t === 'turn:start') interactive.setStatus(`Turn ${event.turnIndex}...`);
-
-    // User message
-    if (t === 'message:end' && event.role === 'user') {
-      const text = event.content?.map((b: any) => b.text || '').join('').trim();
-      if (text) interactive.addUserMessage(text);
-    }
-
-    // Assistant message
-    if (t === 'message:end' && event.role === 'assistant') {
-      const text = event.content?.map((b: any) => b.text || '').join('').trim();
-      if (text) interactive.addAssistantMessage(text);
-    }
-
-    // Tool start
-    if (t === 'tool:call:start' || t === 'toolcall_start') {
-      const name = event.toolCall?.name || event.toolName || 'tool';
-      interactive.addToolMessage(name, 'Executing...');
-    }
-
-    // Tool end
-    if (t === 'tool:call:end' || t === 'toolcall_end') {
-      const result = event.toolResult || event.result;
-      const ok = result?.success ?? false;
-      const out = result?.output?.toString().slice(0, 500) || '';
-      interactive.addToolMessage(
-        ok ? '✓ Success' : '✗ Failed',
-        out,
-        result?.exitCode
-      );
-    }
-
-    // Progress
-    if (t === 'tool:progress') {
-      interactive.setStatus(event.message?.slice(0, 50) || '...');
-    }
-
-    // Error
-    if (t === 'error') {
-      interactive.setStatus(`❌ ${event.error?.message || 'Error'}`);
-    }
-  });
-
-  console.log('✨ Ready! Type your message and press Enter.');
-  console.log('   Press Ctrl+C to exit.\n');
-
-  // Start interactive loop (blocks)
+  // 4. Run (blocking event loop)
   await interactive.run();
 }
 
+// Error handling
 main().catch((err) => {
-  console.error('Fatal error:', err);
+  console.error('\n❌ Fatal error:', err);
   process.exit(1);
 });
