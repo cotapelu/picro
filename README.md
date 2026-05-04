@@ -91,11 +91,10 @@ npx tsx src/simple-agent.ts
 
 ```
 packages/
-├── tui/          # Terminal UI library
-├── agent/        # Core agent logic
-├── llm/          # LLM integration
-├── memory/       # Memory/vector storage
-└── coding-agent/ # Combined wrapper (optional)
+├── tui/      # Terminal UI library
+├── agent/    # Core agent logic
+├── llm/      # LLM integration
+└── memory/   # Memory/vector storage
 ```
 
 
