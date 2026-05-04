@@ -31,12 +31,48 @@ npm install
 # Build all packages
 npm run build
 
+# Build and run the TUI example
+npm run build:example
+npm run start:example
+
+# Or run the simple agent (non-TUI)
+npx tsx src/simple-agent.ts
+
 # Run tests
 npm test
 ```
 
 
-## Architecture
+## Examples
+
+### TUI Example (`src/main.ts`)
+
+Full-featured terminal UI integrating agent + TUI:
+
+```bash
+npm run build:example
+npm run start:example
+```
+
+Features:
+- Real-time message display (user, assistant, tool calls)
+- Interactive input with auto-submit
+- Event-driven updates from agent
+- Status bar and notifications
+- Keyboard shortcuts (Ctrl+C to quit)
+
+### Simple Agent (`src/simple-agent.ts`)
+
+Script-style agent usage without TUI:
+
+```bash
+npx tsx src/simple-agent.ts
+```
+
+### Exploring the Packages
+
+- [@picro/agent](./packages/agent/README.md) - Agent architecture, classes, APIs
+- [@picro/tui](./packages/tui/README.md) - Terminal UI components, atoms/molecules/organisms
 
 ```
 ┌─────────────────┐
