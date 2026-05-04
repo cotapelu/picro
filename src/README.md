@@ -1,170 +1,108 @@
 # Agent + TUI Integration Examples
 
-This directory contains examples showing how to combine `@picro/agent` and `@picro/tui` to build terminal-based AI agent interfaces.
+This directory contains minimal examples showing how to combine `@picro/agent` and `@picro/tui`.
 
-## Examples
+## Example
 
-### 1. Basic Integration (`main.ts`)
+### `main.ts` (InteractiveMode)
 
-Full-featured agent TUI with:
-- Message display (user, assistant, tool outputs)
-- Input field with submit button
-- Real-time status updates
-- Toast notifications
-- Keyboard shortcuts (Ctrl+C to quit)
-- Auto-scrolling message history
+The main example using `InteractiveMode` - the highest-level TUI API:
 
-**Run:**
 ```bash
-npm run build
-npm start
+npm run build:example
+npm run start:example
 ```
 
-### 2. Minimal Example (`minimal.ts`)
-
-Simplest possible integration - just a prompt loop:
-
-```typescript
-import { createAgentSessionRuntime } from '@picro/agent';
-import { TerminalUI, Text, Input } from '@picro/tui';
-
-// ... minimal implementation
-```
+Features:
+- Chat UI with user/assistant/tool messages
+- Real-time status updates
+- Event-driven integration
+- Auto-scrolling
+- Keyboard shortcuts (Ctrl+C to quit)
 
 ## Project Structure
 
 ```
 src/
-├── package.json          # Dependencies on @picro/agent and @picro/tui
-├── tsconfig.json          # TypeScript config with path mappings
-├── main.ts               # Full-featured example (see above)
-├── minimal.ts            # Simple prompt loop
-├── AgentTUI.ts           # Glue class connecting agent + TUI
-└── README.md             # This file
+├── main.ts          # Single example file (InteractiveMode)
+├── tsconfig.json    # TypeScript configuration
+├── README.md        # This file
+└── dist/            # Compiled output (gitignored)
 ```
 
-## Architecture
+## How It Works
 
-```
-┌────────────────────────────────────────────────┐
-│              AgentSessionRuntime                │
-│  (from @picro/agent - manages agent lifecycle) │
-└─────────────────┬──────────────────────────────┘
-                  │ owns
-                  ▼
-        ┌─────────────────┐
-        │   AgentSession  │
-        │ (orchestrator)  │
-        └────────┬────────┘
-                 │ emits events
-                 ▼
-        ┌─────────────────┐
-        │    AgentTUI     │ ◄── Glue class
-        │ (event handler) │
-        └────────┬────────┘
-                 │ updates
-                 ▼
-        ┌─────────────────┐
-        │   TerminalUI    │
-        │  (from @picro/  │
-        │      tui)       │
-        └─────────────────┘
-```
+1. **Create AgentSessionRuntime** - High-level agent API
+2. **Create InteractiveMode** - High-level TUI API
+3. **Connect via event subscription** - Agent events update UI
+4. **User input** → `session.prompt()` → Agent events → UI updates
 
-## Key Integration Points
+## Key API
 
-1. **AgentTUI** subscribes to agent events:
-   ```typescript
-   session.onEvent('message:end', (event) => {
-     // Update TUI with assistant message
-     this.addMessage(`Assistant: ${content}`, 'white');
-   });
-   ```
+### AgentSessionRuntime
+- `createAgentSessionRuntime(options)` - Entry point
+- `runtime.session` - The AgentSession
+- `session.prompt(text)` - Send a message
 
-2. **User input** sends prompts to agent:
-   ```typescript
-   this.inputField.onSubmit = async () => {
-     await this.session.prompt(this.inputField.value);
-   };
-   ```
+### InteractiveMode
+- `new InteractiveMode({ tui, inputPlaceholder, onUserInput })` - Constructor
+- `interactive.addUserMessage(text)` - Add user bubble
+- `interactive.addAssistantMessage(text)` - Add assistant bubble
+- `interactive.addToolMessage(name, output)` - Add tool result
+- `interactive.setStatus(text)` - Update footer
+- `interactive.run()` - Start event loop (blocking)
+- `interactive.stop()` - Exit
 
-3. **Tool execution** displays real-time updates:
-   ```typescript
-   session.onEvent('tool_call:start', (event) => {
-     this.addMessage(`🔧 ${event.toolName}`, 'yellow');
-   });
-   ```
-
-## Customization
-
-### Custom UI Components
-
-TUI provides atoms, molecules, organisms, and interactive components:
-
-```typescript
-import { Box, Text, Button, Input, Scrollable } from '@picro/tui';
-
-// Build custom layout
-const layout = new Box({
-  direction: 'vertical',
-  children: [
-    new Text('Custom Header', { bold: true }),
-    new Scrollable({ /* ... */ }),
-  ],
-});
-```
-
-### Custom Agent Configuration
-
-```typescript
-const runtime = await createAgentSessionRuntime({
-  cwd: process.cwd(),
-  model: 'claude-3.5-sonnet',
-  thinkingLevel: 'high',
-  tools: ['bash', 'read', 'write', 'edit', 'ls', 'my-custom-tool'],
-});
-```
-
-### Event Handling
-
-Subscribe to any agent event:
-
-```typescript
-const events = [
-  'agent:start', 'agent:end',
-  'turn:start', 'turn:end',
-  'message:start', 'message:end',
-  'tool_call:start', 'tool_call:end',
-  'tool:progress',
-  'llm:request', 'llm:response',
-  'memory:retrieval',
-  'error',
-];
-```
+### Agent Events Used
+- `message:end` (role: user/assistant) → add message bubbles
+- `tool:call:start` → tool start indicator
+- `tool:call:end` → tool result
+- `agent:start/end` → status updates
+- `error` → error display
 
 ## Building
 
-From the monorepo root:
-
 ```bash
-# Build all packages
+# Build all packages first
 npm run build
 
-# Build only agent and tui
-npm run build:agent && npm run build:tui
+# Build the example
+npm run build:example
 
-# Build and run example
-cd src
-npm install
-npm run build
-npm start
+# Run it
+npm run start:example
 ```
 
-## Next Steps
+## Customization
 
-- Add file browser panel (from TUI atoms/molecules)
-- Implement session switching UI
-- Add model selector dropdown
-- Show tool results in syntax-highlighted panels
-- Add streaming response display
-- Integrate memory panel from TUI
+### Adjust Model/Thinking Level
+
+Edit `main.ts`:
+```typescript
+const runtime = await createAgentSessionRuntime(
+  // ...
+  {
+    model: 'claude-3.5-sonnet',  // or 'gemini-pro', 'gpt-4'
+    thinkingLevel: 'high',       // 'low' | 'medium' | 'high'
+    tools: ['bash', 'read', 'ls'],
+  }
+);
+```
+
+### Add Custom Tools
+
+Register custom tools after runtime creation:
+```typescript
+runtime.session.registerTool({
+  name: 'my-tool',
+  description: 'Does something useful',
+  schema: { type: 'object', properties: { arg: { type: 'string' } } },
+  async execute(input) {
+    return { success: true, result: `You passed: ${input.arg}` };
+  },
+});
+```
+
+### Change UI Layout
+
+InteractiveMode uses built-in chat layout. For custom layouts, use `TerminalUI` directly with Box/Text/Input components.
