@@ -62,6 +62,8 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
   private _services: AgentSessionServices;
   private _cwd: string;
   private _disposed = false;
+  private _beforeSessionInvalidate?: () => void;
+  private _rebindSession?: (sessionPath?: string) => Promise<void>;
 
   constructor(
     agent: any,
@@ -114,13 +116,18 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
    */
   async switchSession(
     sessionPath: string,
-    options?: { cwdOverride?: string }
+    options?: { cwdOverride?: string; withSession?: boolean }
   ): Promise<{ cancelled: boolean }> {
     if (this._disposed) {
       return { cancelled: true };
     }
 
     try {
+      // Call rebind handler if set
+      if (this._rebindSession) {
+        await this._rebindSession(sessionPath);
+      }
+
       const cwd = options?.cwdOverride ?? this._cwd;
       const newSessionManager = SessionManager.open(sessionPath, this._services.sessionDir, cwd);
       
@@ -149,6 +156,11 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
     }
 
     try {
+      // Call before invalidate handler if set
+      if (this._beforeSessionInvalidate) {
+        this._beforeSessionInvalidate();
+      }
+
       const newSessionManager = SessionManager.continueRecent(this._cwd, this._services.sessionDir);
       newSessionManager.newSession({ parentSession: options?.parentSession });
 
@@ -187,13 +199,19 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
         : entryId;
 
       // Create branch summary
-      this._session.sessionManager.branchWithSummary(
+      const result = this._session.sessionManager.branchWithSummary(
         branchFromId,
         `Forked from entry ${entryId}`
       );
 
-      // Session manager is already updated, no need to create new AgentSession
-      return { cancelled: false };
+      // If withSession option is true, create a new AgentSession
+      // (reference does this in InteractiveMode after calling runtime.fork)
+      // But in our runtime, we just return the result; the caller (UI) will handle
+
+      return { 
+        cancelled: false,
+        selectedText: result?.selectedText
+      };
     } catch (error) {
       console.error("Failed to fork session:", error);
       return { cancelled: true };
@@ -246,8 +264,28 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
   async dispose(): Promise<void> {
     if (this._disposed) return;
 
+    // Call before invalidate handler
+    if (this._beforeSessionInvalidate) {
+      this._beforeSessionInvalidate();
+    }
+
     this._session.dispose();
     this._disposed = true;
+  }
+
+  /**
+   * Set a handler that's called before a session is invalidated (new/fork/resume).
+   * Used by UI to clean up extension state.
+   */
+  setBeforeSessionInvalidate(handler: () => void): void {
+    this._beforeSessionInvalidate = handler;
+  }
+
+  /**
+   * Set a handler that's called to rebind extensions when switching sessions.
+   */
+  setRebindSession(handler: (sessionPath?: string) => Promise<void>): void {
+    this._rebindSession = handler;
   }
 }
 
