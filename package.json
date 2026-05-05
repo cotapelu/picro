@@ -2,20 +2,18 @@
   "name": "@picro/picro",
   "version": "0.0.1",
   "description": "picro agnent",
-  "private": true,
+  "private": false,
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/main.js",
-    "dev": "tsc --watch"
   },
   "keywords": [
     "picro",
     "ai",
     "agent",
-    "llm"
+    "llm",
+    "tui"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": "picro",
+  "license": "APACHE",
   "engines": {
     "node": ">=20.0.0"
   },
