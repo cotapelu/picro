@@ -4,6 +4,7 @@
   "description": "picro agnent",
   "private": false,
   "scripts": {
+    "build": "tsc"
   },
   "keywords": [
     "picro",
