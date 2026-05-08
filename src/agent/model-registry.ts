@@ -36,6 +36,7 @@ export interface ModelRegistry {
   isUsingOAuth(model: ModelEntry): boolean;
   getApiKeyAndHeaders(model: ModelEntry): Promise<{ ok: boolean; apiKey?: string; headers?: Record<string, string>; error?: string }>;
   registerProvider(name: string, config: unknown): void;
+  getProviders(): string[];
 }
 
 const PROVIDER_API_KEYS: Record<string, string> = {
@@ -49,6 +50,7 @@ const PROVIDER_API_KEYS: Record<string, string> = {
   mistral: "MISTRAL_API_KEY",
   groq: "GROQ_API_KEY",
   cerebras: "CEREBRAS_API_KEY",
+  nvidia: "NVIDIA_API_KEY",
 };
 
 /**
@@ -88,6 +90,10 @@ export class DefaultModelRegistry implements ModelRegistry {
       all.push(...getModels(provider));
     }
     return all;
+  }
+
+  getProviders(): string[] {
+    return getProviders();
   }
 
   hasConfiguredAuth(model: ModelEntry): boolean {

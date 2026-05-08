@@ -333,12 +333,52 @@ export async function createAgentSessionRuntime(
     sessionManager = SessionManager.continueRecent(cwd, services.sessionDir);
   }
 
+  // Resolve model string to Model object if necessary
+  let resolvedModel: Model | undefined;
+  if (options.model) {
+    if (typeof options.model === 'string') {
+      // Try to find the model in the registry
+      // First, try with the default provider from settings if available
+      const defaultProvider = services.settingsManager.getDefaultProvider();
+      if (defaultProvider) {
+        const model = services.modelRegistry.find(defaultProvider, options.model);
+        if (model) {
+          resolvedModel = model;
+        }
+      }
+      // If not found, search all providers
+      if (!resolvedModel) {
+        const providers = services.modelRegistry.getProviders();
+        for (const provider of providers) {
+          const model = services.modelRegistry.find(provider, options.model);
+          if (model) {
+            resolvedModel = model;
+            break;
+          }
+        }
+      }
+    } else {
+      resolvedModel = options.model;
+    }
+  } else {
+    // Try to get default model from settings (but don't throw if not configured)
+    const defaultProvider = services.settingsManager.getDefaultProvider();
+    const defaultModelId = services.settingsManager.getDefaultModel();
+
+    if (defaultProvider && defaultModelId) {
+      const found = services.modelRegistry.find(defaultProvider, defaultModelId);
+      if (found) {
+        resolvedModel = found;
+      }
+    }
+  }
+
   // Create session from services
   const session = await createAgentSessionFromServices({
     services,
     sessionManager,
     sessionStartEvent: options.sessionStartEvent,
-    model: options.model,
+    model: resolvedModel,
     thinkingLevel: options.thinkingLevel,
     scopedModels: options.scopedModels,
     tools: options.tools,
