@@ -781,4 +781,125 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.chatContainer.clear();
     this.setStatus('History cleared');
   }
+
+  // =========================================================================
+  // Keyboard Shortcuts & Key Bindings
+  // =========================================================================
+
+  private keybindings: Map<string, () => void> = new Map();
+
+  /**
+   * Register a keyboard shortcut
+   */
+  registerKeybinding(key: string, handler: () => void): void {
+    this.keybindings.set(key, handler);
+  }
+
+  /**
+   * Unregister a keyboard shortcut
+   */
+  unregisterKeybinding(key: string): void {
+    this.keybindings.delete(key);
+  }
+
+  // =========================================================================
+  // History Navigation
+  // =========================================================================
+
+  private messageHistory: string[] = [];
+  private historyIndex: number = -1;
+
+  /**
+   * Add to message history
+   */
+  pushHistory(text: string): void {
+    this.messageHistory.push(text);
+    // Keep last 100 messages
+    if (this.messageHistory.length > 100) {
+      this.messageHistory.shift();
+    }
+    this.historyIndex = this.messageHistory.length;
+  }
+
+  /**
+   * Navigate up in history
+   */
+  navigateHistoryUp(): string | undefined {
+    if (this.historyIndex > 0) {
+      this.historyIndex--;
+      return this.messageHistory[this.historyIndex];
+    }
+    return undefined;
+  }
+
+  /**
+   * Navigate down in history
+   */
+  navigateHistoryDown(): string | undefined {
+    if (this.historyIndex < this.messageHistory.length - 1) {
+      this.historyIndex++;
+      return this.messageHistory[this.historyIndex];
+    }
+    this.historyIndex = this.messageHistory.length;
+    return '';
+  }
+
+  // =========================================================================
+  // Tool Execution Widgets
+  // =========================================================================
+
+  private toolWidgets: Map<string, UIElement> = new Map();
+
+  /**
+   * Add tool execution widget
+   */
+  addToolWidget(toolCallId: string, toolName: string, output: string): void {
+    const widget = new ToolMessage({ toolName, output });
+    this.toolWidgets.set(toolCallId, widget);
+    this.chatContainer.append(widget as UIElement);
+    this.tui.requestRender();
+  }
+
+  /**
+   * Update tool widget output
+   */
+  updateToolWidget(toolCallId: string, output: string): void {
+    const widget = this.toolWidgets.get(toolCallId);
+    if (widget) {
+      // Would need to find and update specific tool message
+      this.tui.requestRender();
+    }
+  }
+
+  /**
+   * Remove tool widget
+   */
+  removeToolWidget(toolCallId: string): void {
+    this.toolWidgets.delete(toolCallId);
+  }
+
+  // =========================================================================
+  // Accessibility Support
+  // =========================================================================
+
+  /**
+   * Get accessibility description of current state
+   */
+  getAccessibilityDescription(): string {
+    const parts: string[] = [];
+    
+    if (this.chatContainer.children.length > 0) {
+      parts.push(`${this.chatContainer.children.length} messages`);
+    }
+    
+    if (this.agentState !== 'idle') {
+      parts.push(`Status: ${this.agentState}`);
+    }
+    
+    if (this.pendingOperations.size > 0) {
+      parts.push(`${this.pendingOperations.size} pending operations`);
+    }
+    
+    return parts.join(', ') || 'Ready';
+  }
 }
