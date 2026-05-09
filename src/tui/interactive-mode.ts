@@ -622,4 +622,163 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       this.setStatus(result.cancelled ? 'Fork cancelled' : 'Session forked');
     }
   }
+
+  // =========================================================================
+  // Advanced Features
+  // =========================================================================
+
+  // Agent state tracking
+  private agentState: 'idle' | 'running' | 'paused' | 'error' = 'idle';
+
+  /**
+   * Get current agent state
+   */
+  getAgentState(): 'idle' | 'running' | 'paused' | 'error' {
+    return this.agentState;
+  }
+
+  /**
+   * Set agent state
+   */
+  setAgentState(state: 'idle' | 'running' | 'paused' | 'error'): void {
+    this.agentState = state;
+    switch (state) {
+      case 'running':
+        this.setStatus('Processing...');
+        break;
+      case 'paused':
+        this.setStatus('Paused');
+        break;
+      case 'error':
+        this.setStatus('Error');
+        break;
+      case 'idle':
+        this.statusContainer.clear();
+        break;
+    }
+  }
+
+  // Pending indicator for async operations
+  private pendingOperations: Map<string, { label: string; progress?: number }> = new Map();
+
+  /**
+   * Add pending operation indicator
+   */
+  addPendingOperation(id: string, label: string): void {
+    this.pendingOperations.set(id, { label });
+    this.updatePendingDisplay();
+  }
+
+  /**
+   * Update pending operation progress
+   */
+  updatePendingProgress(id: string, progress: number): void {
+    const op = this.pendingOperations.get(id);
+    if (op) {
+      op.progress = progress;
+      this.updatePendingDisplay();
+    }
+  }
+
+  /**
+   * Remove pending operation
+   */
+  removePendingOperation(id: string): void {
+    this.pendingOperations.delete(id);
+    this.updatePendingDisplay();
+  }
+
+  private updatePendingDisplay(): void {
+    if (this.pendingOperations.size === 0) {
+      this.pendingContainer.clear();
+      return;
+    }
+
+    this.pendingContainer.clear();
+    for (const [id, op] of this.pendingOperations) {
+      const label = op.progress !== undefined ? `${op.label} (${op.progress}%)` : op.label;
+      this.pendingContainer.append(new Text(`⏳ ${label}`) as UIElement);
+    }
+    this.tui.requestRender();
+  }
+
+  // =========================================================================
+  // Extension Points
+  // =========================================================================
+
+  /**
+   * Register extension commands
+   */
+  registerCommands(commands: InteractiveModeCommand[]): void {
+    this.commands.push(...commands);
+    if (this.commandPalette) {
+      this.commandPalette.setCommands(this.commands.map(c => ({
+        id: c.id,
+        label: c.label,
+        shortcut: c.shortcut,
+        description: c.description,
+        category: c.category,
+        onExecute: c.onExecute,
+      })));
+    }
+  }
+
+  /**
+   * Focus editor programmatically
+   */
+  focusEditor(): void {
+    if (this.editor) {
+      this.tui.setFocus(this.editor as UIElement);
+    }
+  }
+
+  /**
+   * Focus chat container
+   */
+  focusChat(): void {
+    if (this.chatContainer.children.length > 0) {
+      const lastChild = this.chatContainer.children[this.chatContainer.children.length - 1];
+      if (lastChild) {
+        this.tui.setFocus(lastChild as UIElement);
+      }
+    }
+  }
+
+  // =========================================================================
+  // Theme Support
+  // =========================================================================
+
+  setTheme(theme: 'dark' | 'light'): void {
+    // Theme switching would update colors in UI elements
+    // Implementation depends on theme system
+  }
+
+  // =========================================================================
+  // Export/Import
+  // =========================================================================
+
+  /**
+   * Export chat history
+   */
+  exportChat(): string {
+    const lines: string[] = [];
+    for (const child of this.chatContainer.children) {
+      if (child instanceof UserMessage) {
+        lines.push(`User: ${(child as any).opts?.text || ''}`);
+      } else if (child instanceof AssistantMessage) {
+        lines.push(`Assistant: ${(child as any).opts?.content || ''}`);
+      } else if (child instanceof ToolMessage) {
+        lines.push(`Tool: ${(child as any).opts?.toolName || ''}`);
+      }
+    }
+    return lines.join('\n');
+  }
+
+  /**
+   * Clear all chat history
+   */
+  clearAllHistory(): void {
+    this.chatContainer.clear();
+    this.setStatus('History cleared');
+  }
 }
