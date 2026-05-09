@@ -164,6 +164,13 @@ describe('InteractiveMode', () => {
     });
   });
 
+  describe('setRightItems()', () => {
+    it('should be callable without error', () => {
+      const mode = new InteractiveMode(tui);
+      expect(() => mode.setRightItems(['item1', 'item2'])).not.toThrow();
+    });
+  });
+
   describe('clearCache()', () => {
     it('should clear cache on all containers', () => {
       const mode = new InteractiveMode(tui);
@@ -178,8 +185,14 @@ describe('InteractiveMode', () => {
       await mode.init();
       
       const mockKey = { raw: 'a' };
-      // Should not throw
       mode.handleKey?.(mockKey);
+    });
+
+    it('should not throw when editor is null', () => {
+      const mode = new InteractiveMode(tui);
+      const mockKey = { raw: 'a' };
+      // Should not throw even without init()
+      expect(() => mode.handleKey?.(mockKey)).not.toThrow();
     });
   });
 
