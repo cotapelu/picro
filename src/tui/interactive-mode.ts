@@ -482,4 +482,144 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     if (component) this.footerContainer.append(component);
     this.tui.requestRender();
   }
+
+  // =========================================================================
+  // Memory Panel Integration
+  // =========================================================================
+
+  private memoryPanel: MemoryPanel | null = null;
+
+  /**
+   * Show memory panel with retrieved memories
+   */
+  showMemoryPanel(memories: MemoryEntry[]): void {
+    this.memoryPanel = new MemoryPanel({
+      memories,
+      onSelect: (memory) => {
+        // Insert memory content into editor
+        this.memoryPanel = null;
+        this.widgetAboveContainer.clear();
+        if (this.editor) {
+          const currentText = this.editor.getText();
+          this.editor.setText(currentText + memory.content);
+        }
+        this.tui.setFocus(this.editor as any);
+        this.tui.requestRender();
+      },
+      onDelete: (id) => {
+        // Handle memory deletion
+        console.log('Delete memory:', id);
+      },
+    });
+    this.widgetAboveContainer.append(this.memoryPanel as any);
+    this.tui.requestRender();
+  }
+
+  // =========================================================================
+  // Debug Panel Integration
+  // =========================================================================
+
+  private debugPanel: DebugPanel | null = null;
+
+  /**
+   * Show debug panel with timing metrics
+   */
+  showDebugPanel(): void {
+    this.debugPanel = new DebugPanel({
+      height: 15,
+    });
+    this.widgetAboveContainer.append(this.debugPanel as any);
+    this.tui.requestRender();
+  }
+
+  /**
+   * Process debug round timing event
+   */
+  onDebugRound(event: DebugRoundEvent): void {
+    this.debugPanel?.onRoundEvent(event);
+  }
+
+  // =========================================================================
+  // File Browser Integration
+  // =========================================================================
+
+  private fileBrowser: FileBrowser | null = null;
+
+  /**
+   * Show file browser with directory entries
+   */
+  showFileBrowser(entries: FileEntry[], onSelect?: (entry: FileEntry) => void): void {
+    this.fileBrowser = new FileBrowser(
+      entries,
+      15,
+      (entry) => {
+        this.fileBrowser = null;
+        this.widgetAboveContainer.clear();
+        onSelect?.(entry);
+        this.tui.requestRender();
+      }
+    );
+    this.widgetAboveContainer.append(this.fileBrowser as any);
+    this.tui.requestRender();
+  }
+
+  // =========================================================================
+  // Modal Dialog Integration
+  // =========================================================================
+
+  /**
+   * Show confirmation modal
+   */
+  async showConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      const modal = new Modal({
+        title,
+        message,
+        type: 'confirm',
+        buttons: [
+          { label: 'Cancel', value: 'cancel' },
+          { label: 'OK', value: 'ok', primary: true },
+        ],
+        onResult: (value) => {
+          this.widgetAboveContainer.remove(modal as any);
+          this.tui.setFocus(this.editor as any);
+          this.tui.requestRender();
+          resolve(value === 'ok');
+        },
+      });
+      this.widgetAboveContainer.append(modal as any);
+      this.tui.setFocus(modal as any);
+      this.tui.requestRender();
+    });
+  }
+
+  // =========================================================================
+  // Thinking Level Management
+  // =========================================================================
+
+  getCurrentThinkingLevel(): 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' {
+    return this.thinkingLevel;
+  }
+
+  setThinkingLevel(level: 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'): void {
+    this.thinkingLevel = level;
+  }
+
+  // =========================================================================
+  // Session Management
+  // =========================================================================
+
+  async createNewSession(): Promise<void> {
+    if (this.runtime) {
+      await this.runtime.newSession();
+      this.setStatus('New session created');
+    }
+  }
+
+  async forkCurrentSession(entryId?: string): Promise<void> {
+    if (this.runtime) {
+      const result = await this.runtime.fork(entryId || '');
+      this.setStatus(result.cancelled ? 'Fork cancelled' : 'Session forked');
+    }
+  }
 }
