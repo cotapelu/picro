@@ -18,6 +18,10 @@ import { Editor } from './organisms/editor';
 import { LoginDialog } from './organisms/login-dialog';
 import { ThinkingSelector } from './organisms/thinking-selector';
 import { CommandPalette } from './organisms/command-palette';
+import { Modal } from './organisms/modal';
+import { MemoryPanel, type MemoryEntry } from './organisms/memory-panel';
+import { DebugPanel, type DebugRoundEvent } from './organisms/debug-panel';
+import { FileBrowser, type FileEntry } from './organisms/file-browser';
 import type { AgentSessionRuntimeInterface, AgentSessionEvent } from '../types/agent-session';
 import type { InteractiveModeOptions } from './interactive-mode-types';
 
