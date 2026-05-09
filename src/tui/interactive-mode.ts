@@ -1300,4 +1300,210 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   private padRight(text: string, width: number): string {
     return text.length < width ? text + ' '.repeat(width - text.length) : text.substring(0, width);
   }
+
+  // =========================================================================
+  // Animation System
+  // =========================================================================
+
+  private animations: Map<string, { frames: string[][]; interval: number; startTime: number }> = new Map();
+  private animationFrameId: number | null = null;
+
+  /**
+   * Register animation
+   */
+  registerAnimation(id: string, frames: string[][], fps: number = 30): void {
+    const interval = 1000 / fps;
+    this.animations.set(id, { frames, interval, startTime: Date.now() });
+  }
+
+  /**
+   * Play animation
+   */
+  playAnimation(id: string): void {
+    const anim = this.animations.get(id);
+    if (anim) {
+      let i = 0;
+      const play = () => {
+        if (i < anim.frames.length) {
+          // Would update UI with frame
+          i++;
+          setTimeout(play, anim.interval);
+        }
+      };
+      play();
+    }
+  }
+
+  /**
+   * Stop animation
+   */
+  stopAnimation(id: string): void {
+    this.animations.delete(id);
+  }
+
+  // =========================================================================
+  // History Navigation
+  // =========================================================================
+
+  private undoStack: string[] = [];
+  private redoStack: string[] = [];
+  private maxHistorySize: number = 100;
+
+  /**
+   * Push to undo history
+   */
+  pushUndoHistory(state: string): void {
+    this.undoStack.push(state);
+    if (this.undoStack.length > this.maxHistorySize) {
+      this.undoStack.shift();
+    }
+    this.redoStack = [];
+  }
+
+  /**
+   * Undo
+   */
+  undo(): string | undefined {
+    const state = this.undoStack.pop();
+    if (state) {
+      this.redoStack.push(state);
+      return state;
+    }
+    return undefined;
+  }
+
+  /**
+   * Redo
+   */
+  redo(): string | undefined {
+    const state = this.redoStack.pop();
+    if (state) {
+      this.undoStack.push(state);
+      return state;
+    }
+    return undefined;
+  }
+
+  /**
+   * Clear history
+   */
+  clearHistory(): void {
+    this.undoStack = [];
+    this.redoStack = [];
+  }
+
+  // =========================================================================
+  // Clipboard Operations
+  // =========================================================================
+
+  private clipboardContent: string = '';
+  private clipboardHistory: string[] = [];
+
+  /**
+   * Copy to clipboard
+   */
+  copy(text: string): void {
+    this.clipboardContent = text;
+    this.clipboardHistory.push(text);
+    if (this.clipboardHistory.length > 10) {
+      this.clipboardHistory.shift();
+    }
+  }
+
+  /**
+   * Paste from clipboard
+   */
+  paste(): string {
+    return this.clipboardContent;
+  }
+
+  /**
+   * Cut to clipboard
+   */
+  cut(text: string): string {
+    this.clipboardContent = text;
+    return '';
+  }
+
+  /**
+   * Get clipboard history
+   */
+  getClipboardHistory(): string[] {
+    return this.clipboardHistory;
+  }
+
+  // =========================================================================
+  // Search Features
+  // =========================================================================
+
+  private searchIndex: Map<string, number[]> = new Map();
+
+  /**
+   * Index content for search
+   */
+  indexContent(content: string, id: string): void {
+    const words = content.toLowerCase().split(/\s+/);
+    words.forEach(word => {
+      if (!this.searchIndex.has(word)) {
+        this.searchIndex.set(word, []);
+      }
+      this.searchIndex.get(word)!.push(parseInt(id));
+    });
+  }
+
+  /**
+   * Search indexed content
+   */
+  search(query: string): number[] {
+    const words = query.toLowerCase().split(/\s+/);
+    const results = new Map<number, number>();
+    words.forEach(word => {
+      const ids = this.searchIndex.get(word) || [];
+      ids.forEach(id => {
+        results.set(id, (results.get(id) || 0) + 1);
+      });
+    });
+    return Array.from(results.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(e => e[0]);
+  }
+
+  /**
+   * Clear search index
+   */
+  clearSearchIndex(): void {
+    this.searchIndex.clear();
+  }
+
+  // =========================================================================
+  // Performance Monitoring
+  // =========================================================================
+
+  private performanceMarks: Map<string, number> = new Map();
+
+  /**
+   * Mark performance point
+   */
+  mark(name: string): void {
+    this.performanceMarks.set(name, performance.now());
+  }
+
+  /**
+   * Measure between marks
+   */
+  measure(name: string, startMark: string, endMark: string): number | undefined {
+    const start = this.performanceMarks.get(startMark);
+    const end = this.performanceMarks.get(endMark);
+    if (start !== undefined && end !== undefined) {
+      return end - start;
+    }
+    return undefined;
+  }
+
+  /**
+   * Clear marks
+   */
+  clearMarks(): void {
+    this.performanceMarks.clear();
+  }
 }
