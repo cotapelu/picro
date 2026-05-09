@@ -1109,4 +1109,195 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   getCustomColor(key: string): string | undefined {
     return this.customColors[key];
   }
+
+  // =========================================================================
+  // Mode Management
+  // =========================================================================
+
+  private modes: Map<string, UIElement> = new Map();
+  private currentMode: string = 'default';
+
+  /**
+   * Register a mode
+   */
+  registerMode(name: string, component: UIElement): void {
+    this.modes.set(name, component);
+  }
+
+  /**
+   * Switch mode
+   */
+  switchMode(name: string): void {
+    if (this.modes.has(name)) {
+      this.currentMode = name;
+      this.tui.requestRender();
+    }
+  }
+
+  /**
+   * Get current mode
+   */
+  getCurrentMode(): string {
+    return this.currentMode;
+  }
+
+  // =========================================================================
+  // Widget Management
+  // =========================================================================
+
+  private widgets: Map<string, UIElement> = new Map();
+
+  /**
+   * Add widget
+   */
+  addWidget(id: string, widget: UIElement, position: 'above' | 'below' = 'above'): void {
+    this.widgets.set(id, widget);
+    if (position === 'above') {
+      this.widgetAboveContainer.append(widget);
+    } else {
+      this.widgetBelowContainer.append(widget);
+    }
+    this.tui.requestRender();
+  }
+
+  /**
+   * Remove widget
+   */
+  removeWidget(id: string): void {
+    const widget = this.widgets.get(id);
+    if (widget) {
+      this.widgetAboveContainer.remove(widget);
+      this.widgetBelowContainer.remove(widget);
+      this.widgets.delete(id);
+      this.tui.requestRender();
+    }
+  }
+
+  /**
+   * Toggle widget visibility
+   */
+  toggleWidget(id: string): void {
+    // Implementation would show/hide widget
+    this.tui.requestRender();
+  }
+
+  // =========================================================================
+  // Event Handling
+  // =========================================================================
+
+  private eventHandlers: Map<string, Array<() => void>> = new Map();
+
+  /**
+   * Subscribe to event
+   */
+  on(event: string, handler: () => void): void {
+    if (!this.eventHandlers.has(event)) {
+      this.eventHandlers.set(event, []);
+    }
+    this.eventHandlers.get(event)!.push(handler);
+  }
+
+  /**
+   * Emit event
+   */
+  emit(event: string): void {
+    this.eventHandlers.get(event)?.forEach(h => h());
+  }
+
+  // =========================================================================
+  // Configuration
+  // =========================================================================
+
+  private config: Record<string, any> = {};
+
+  /**
+   * Set config value
+   */
+  setConfig(key: string, value: any): void {
+    this.config[key] = value;
+  }
+
+  /**
+   * Get config value
+   */
+  getConfig<T>(key: string, defaultValue?: T): T | undefined {
+    return this.config[key] ?? defaultValue;
+  }
+
+  /**
+   * Reset config
+   */
+  resetConfig(): void {
+    this.config = {};
+  }
+
+  // =========================================================================
+  // Debug Features
+  // =========================================================================
+
+  private debugEnabled: boolean = false;
+  private debugOutput: string[] = [];
+
+  /**
+   * Enable debug mode
+   */
+  enableDebug(): void {
+    this.debugEnabled = true;
+    this.showDebugPanel();
+  }
+
+  /**
+   * Disable debug mode
+   */
+  disableDebug(): void {
+    this.debugEnabled = false;
+    this.widgetAboveContainer.clear();
+  }
+
+  /**
+   * Log debug message
+   */
+  debug(message: string): void {
+    if (this.debugEnabled) {
+      this.debugOutput.push(message);
+      this.emit('debug');
+    }
+  }
+
+  // =========================================================================
+  // Utility Methods
+  // =========================================================================
+
+  /**
+   * Center text in width
+   */
+  private centerPad(text: string, width: number): string {
+    const diff = width - text.length;
+    const padLeft = Math.floor(diff / 2);
+    const padRight = diff - padLeft;
+    return ' '.repeat(Math.max(0, padLeft)) + text + ' '.repeat(Math.max(0, padRight));
+  }
+
+  /**
+   * Format milliseconds to human readable
+   */
+  private formatMs(ms: number): string {
+    if (ms < 1000) return `${ms.toFixed(0)}ms`;
+    return `${(ms / 1000).toFixed(1)}s`;
+  }
+
+  /**
+   * Truncate string
+   */
+  private truncate(str: string, max: number): string {
+    if (str.length <= max) return str;
+    return str.substring(0, max - 3) + '...';
+  }
+
+  /**
+   * Pad right
+   */
+  private padRight(text: string, width: number): string {
+    return text.length < width ? text + ' '.repeat(width - text.length) : text.substring(0, width);
+  }
 }
