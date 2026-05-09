@@ -4,7 +4,7 @@
  * Full terminal UI with InteractiveMode for chat interface.
  */
 
-import { createAgentSessionRuntime } from './agent';
+import { createAgentSessionRuntime, type AgentSessionRuntime } from './agent';
 import { TerminalUI, ProcessTerminal, InteractiveMode } from './tui';
 import type { Model } from './llm';
 import * as fs from 'node:fs';
@@ -49,6 +49,25 @@ async function main(): Promise<void> {
 
   console.log('✅ Model configured');
 
+  // Create agent session runtime
+  let runtime: AgentSessionRuntime;
+  
+  try {
+    runtime = await createAgentSessionRuntime(
+      async () => ({ session: null as any, services: null as any, diagnostics: [] }),
+      {
+        cwd: process.cwd(),
+        agentDir: '.picro-agent',
+        model,
+      }
+    );
+    console.log('✅ Runtime created');
+  } catch (err) {
+    console.error('❌ Failed to create runtime:', err);
+    console.log('⚠️  Running in demo mode without backend...\n');
+    runtime = null as any;
+  }
+
   // Create terminal UI
   const terminal = new ProcessTerminal();
   const tui = new TerminalUI(terminal);
@@ -58,6 +77,12 @@ async function main(): Promise<void> {
     inputPlaceholder: 'Type your message...',
     initialStatus: 'Ready',
   });
+
+  // Connect runtime to interactive mode (if runtime exists)
+  if (runtime) {
+    interactive.setRuntime(runtime);
+    console.log('✅ Runtime connected to InteractiveMode');
+  }
 
   console.log('🎨 Starting InteractiveMode...\n');
 

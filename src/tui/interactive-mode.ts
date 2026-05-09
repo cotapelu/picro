@@ -22,11 +22,61 @@ export interface InteractiveModeOptions {
 }
 
 /**
+ * Agent session interface - minimal interface for UI to interact with runtime
+ * This allows main.ts to connect them without circular dependencies
+ */
+export interface AgentSessionInterface {
+  prompt(text: string, options?: { images?: any[] }): Promise<void>;
+  subscribe(listener: (event: AgentSessionEvent) => void): () => void;
+  abort(): void;
+  messages: any[];
+  isStreaming: boolean;
+}
+
+/**
+ * Agent session runtime interface for UI
+ */
+export interface AgentSessionRuntimeInterface {
+  session: AgentSessionInterface;
+  cwd: string;
+  newSession(): Promise<{ cancelled: boolean }>;
+  switchSession(path: string): Promise<{ cancelled: boolean }>;
+  fork(entryId: string): Promise<{ cancelled: boolean; selectedText?: string }>;
+  setBeforeSessionInvalidate(handler: () => void): void;
+  setRebindSession(handler: (sessionPath?: string) => Promise<void>): void;
+}
+
+/**
+ * Agent session event types (subset for UI handling)
+ */
+type AgentSessionEvent = 
+  | { type: 'agent_start' }
+  | { type: 'agent_end' }
+  | { type: 'message_start'; message: { role: string; id?: string } }
+  | { type: 'message_update'; message: { role: string; content?: any[] } }
+  | { type: 'message_end'; message: { role: string; stopReason?: string } }
+  | { type: 'tool_execution_start'; toolCallId: string; toolName: string; args: any }
+  | { type: 'tool_execution_update'; toolCallId: string; partialResult?: any }
+  | { type: 'tool_execution_end'; toolCallId: string; result: any; isError?: boolean }
+  | { type: 'queue_update' }
+  | { type: 'error'; error: string };
+
+/**
  * InteractiveMode is a self-contained UI component that renders the full chat interface.
  * It extends ElementContainer for composition.
  */
 export class InteractiveMode extends ElementContainer implements InteractiveElement {
   isFocused = false;
+
+  // Runtime connection (set via setRuntime())
+  private runtime: AgentSessionRuntimeInterface | null = null;
+
+  // Event subscription cleanup
+  private unsubscribe: (() => void) | null = null;
+
+  // State
+  private isInitialized = false;
+  private running = false;
 
   // Containers
   headerContainer = new ElementContainer();
@@ -50,10 +100,6 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   // Options
   private options: InteractiveModeOptions;
 
-  // State
-  private isInitialized = false;
-  private running = false;
-
   // Input promise controller
   private inputController: { resolve?: (value: string) => void; reject?: (reason?: any) => void } = {};
 
@@ -67,6 +113,13 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
 
     // Setup layout
     this.setupLayout();
+  }
+
+  /**
+   * Set the runtime host - called from main.ts to connect UI to runtime
+   */
+  setRuntime(runtime: AgentSessionRuntimeInterface): void {
+    this.runtime = runtime;
   }
 
   private setupLayout(): void {
@@ -90,10 +143,15 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.editor = new Input({ placeholder: this.options.inputPlaceholder ?? 'Type your message...' });
     this.editorContainer.append(this.editor as UIElement);
 
-    // Setup submit handler
-    (this.editor as any).onSubmit = (text: string) => {
-      if (this.inputController.resolve) this.inputController.resolve(text);
-      this.inputController = {};
+    // Setup submit handler - connected to runtime if available
+    (this.editor as any).onSubmit = async (text: string) => {
+      if (this.runtime) {
+        // Submit to runtime session
+        await this.runtime.session.prompt(text);
+      } else {
+        // Fallback: just display locally (for testing)
+        if (this.inputController.resolve) this.inputController.resolve(text);
+      }
     };
 
     // Build header
@@ -109,15 +167,95 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   async run(): Promise<void> {
     await this.init();
     this.running = true;
-    while (this.running) {
-      try { await this.processInput(); } catch { break; }
+
+    // Subscribe to runtime events if runtime is connected
+    if (this.runtime) {
+      this.unsubscribe = this.runtime.session.subscribe((event: AgentSessionEvent) => {
+        this.handleRuntimeEvent(event);
+      });
     }
+
+    // Main interactive loop - get input and send to runtime
+    while (this.running) {
+      try {
+        const text = await this.getUserInput();
+        if (text && this.running && this.runtime) {
+          await this.runtime.session.prompt(text);
+        }
+      } catch {
+        if (!this.running) break;
+      }
+    }
+  }
+
+  /**
+   * Handle events from the agent session runtime
+   */
+  private handleRuntimeEvent(event: AgentSessionEvent): void {
+    switch (event.type) {
+      case 'message_start':
+        if (event.message.role === 'user') {
+          // User message - could display or skip if already shown
+        }
+        break;
+      case 'message_update':
+        // Streaming update - update UI
+        this.updateStreamingMessage(event.message);
+        break;
+      case 'message_end':
+        // Message complete
+        this.finalizeStreamingMessage(event.message);
+        break;
+      case 'tool_execution_start':
+        this.addToolMessage(event.toolName, 'Executing...');
+        break;
+      case 'tool_execution_update':
+        // Update tool output if available
+        break;
+      case 'tool_execution_end':
+        // Update tool result
+        break;
+      case 'agent_start':
+        this.setStatus('Processing...');
+        break;
+      case 'agent_end':
+        this.statusContainer.clear();
+        break;
+    }
+  }
+
+  private updateStreamingMessage(message: { role: string; content?: any[] }): void {
+    // Extract text from content blocks
+    const text = this.extractTextFromContent(message.content || []);
+    if (text) {
+      this.addAssistantMessage(text);
+    }
+  }
+
+  private finalizeStreamingMessage(message: { role: string; stopReason?: string }): void {
+    // Could add status indicator for stop reason
+    if (message.stopReason === 'error') {
+      this.showError('Agent error occurred');
+    }
+  }
+
+  private extractTextFromContent(content: any[]): string {
+    return content
+      .filter(c => c.type === 'text')
+      .map(c => c.text)
+      .join('');
   }
 
   stop(): void {
     this.running = false;
     if (this.inputController.reject) this.inputController.reject(new Error('Stopped'));
     this.inputController = {};
+
+    // Unsubscribe from runtime
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
   }
 
   private async processInput(): Promise<void> {
@@ -169,6 +307,12 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   setStatus(text: string): void {
     this.statusContainer.clear();
     this.statusContainer.append(new Text(text));
+    this.tui.requestRender();
+  }
+
+  showError(text: string): void {
+    this.statusContainer.clear();
+    this.statusContainer.append(new Text(`Error: ${text}`));
     this.tui.requestRender();
   }
 

@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { InteractiveMode } from './interactive-mode';
+import { InteractiveMode, type AgentSessionRuntimeInterface, type AgentSessionInterface } from './interactive-mode';
 import type { TerminalUI } from './tui';
 
 // Mock TerminalUI
@@ -16,6 +16,25 @@ const createMockTUI = (): TerminalUI => {
     setFocus: vi.fn(),
     getFocusedElement: vi.fn(),
   } as unknown as TerminalUI;
+};
+
+// Mock runtime
+const createMockRuntime = (): AgentSessionRuntimeInterface => {
+  return {
+    session: {
+      prompt: vi.fn().mockResolvedValue(undefined),
+      subscribe: vi.fn().mockReturnValue(() => {}),
+      abort: vi.fn(),
+      messages: [],
+      isStreaming: false,
+    },
+    cwd: '/test',
+    newSession: vi.fn().mockResolvedValue({ cancelled: false }),
+    switchSession: vi.fn().mockResolvedValue({ cancelled: false }),
+    fork: vi.fn().mockResolvedValue({ cancelled: false }),
+    setBeforeSessionInvalidate: vi.fn(),
+    setRebindSession: vi.fn(),
+  };
 };
 
 describe('InteractiveMode', () => {
@@ -56,10 +75,22 @@ describe('InteractiveMode', () => {
 
     it('should append containers to children', () => {
       const mode = new InteractiveMode(tui);
-      // Verify containers are in children array
       expect(mode.children).toContain(mode.headerContainer);
       expect(mode.children).toContain(mode.chatContainer);
       expect(mode.children).toContain(mode.editorContainer);
+    });
+  });
+
+  describe('setRuntime()', () => {
+    it('should accept runtime without error', () => {
+      const mode = new InteractiveMode(tui);
+      const runtime = createMockRuntime();
+      expect(() => mode.setRuntime(runtime)).not.toThrow();
+    });
+
+    it('should allow null runtime initially', () => {
+      const mode = new InteractiveMode(tui);
+      expect(() => mode.setRuntime(null as any)).not.toThrow();
     });
   });
 
@@ -260,6 +291,15 @@ describe('InteractiveMode', () => {
       mode.setWidget('key2', ['Content 2']);
       // Should have 2 widgets
       expect(mode.widgetAboveContainer.children.length).toBe(2);
+    });
+
+    it('should handle null runtime gracefully in run', async () => {
+      const mode = new InteractiveMode(tui);
+      mode.setRuntime(null as any);
+      await mode.init();
+      
+      setTimeout(() => mode.stop(), 10);
+      await mode.run();
     });
   });
 });
