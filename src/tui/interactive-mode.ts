@@ -19,7 +19,7 @@ import { LoginDialog } from './organisms/login-dialog';
 import { ThinkingSelector } from './organisms/thinking-selector';
 import { CommandPalette } from './organisms/command-palette';
 import { Modal } from './organisms/modal';
-import { MemoryPanel, type MemoryEntry } from './organisms/memory-panel';
+import { MemoryPanel, type MemoryEntry } from './molecules/memory-panel';
 import { DebugPanel, type DebugRoundEvent } from './organisms/debug-panel';
 import { FileBrowser, type FileEntry } from './organisms/file-browser';
 import type { AgentSessionRuntimeInterface, AgentSessionEvent } from '../types/agent-session';
@@ -495,7 +495,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   showMemoryPanel(memories: MemoryEntry[]): void {
     this.memoryPanel = new MemoryPanel({
       memories,
-      onSelect: (memory) => {
+      onSelect: (memory: MemoryEntry) => {
         // Insert memory content into editor
         this.memoryPanel = null;
         this.widgetAboveContainer.clear();
@@ -506,7 +506,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
         this.tui.setFocus(this.editor as any);
         this.tui.requestRender();
       },
-      onDelete: (id) => {
+      onDelete: (id: string) => {
         // Handle memory deletion
         console.log('Delete memory:', id);
       },

@@ -1,5 +1,5 @@
 import type { UIElement, RenderContext } from '../atoms/base';
-import { SelectList, type SelectItem } from '../molecules/select-list';
+import { SelectList, type SelectItem } from './select-list';
 
 /**
  * Memory entry (simplified from @picro/memory)

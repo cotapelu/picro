@@ -36,6 +36,9 @@ export * from './tree-selector';
 export * from './scoped-models-selector';
 export * from './user-message-selector';
 
+// Memory
+export * from './memory-panel';
+
 // Panels (all moved to atoms; debug-panel moved to organisms)
 
 // Messages (all moved to atoms; diff also moved)

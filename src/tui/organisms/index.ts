@@ -8,7 +8,6 @@ export * from './login-dialog';
 
 // Panels
 export * from './file-browser';
-export * from './memory-panel';
 export * from './debug-panel';
 export * from './editor';
 
