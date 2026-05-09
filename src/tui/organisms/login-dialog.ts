@@ -6,6 +6,7 @@
 import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
 import { CURSOR_MARKER } from '../atoms/base';
 import { visibleWidth, truncateText } from '../atoms/internal-utils';
+import { Input } from '../molecules/input';
 
 export interface LoginDialogOptions {
   provider?: string;
@@ -25,12 +26,18 @@ export class LoginDialog implements UIElement, InteractiveElement {
   private onCancel?: () => void;
 
   public isFocused = false;
+  private input: Input;
 
   constructor(options: LoginDialogOptions = {}) {
     this.provider = options.provider || 'anthropic';
     this.title = options.title || 'Login';
     this.onSubmit = options.onSubmit;
     this.onCancel = options.onCancel;
+    // Reuse Input molecule for text input
+    this.input = new Input({
+      placeholder: 'Enter API key...',
+      onCancel: () => this.onCancel?.(),
+    });
   }
 
   getApiKey(): string {
