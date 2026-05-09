@@ -4,8 +4,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { InteractiveMode, type AgentSessionRuntimeInterface, type AgentSessionInterface } from './interactive-mode';
+import { InteractiveMode } from './interactive-mode';
 import type { TerminalUI } from './tui';
+import type { AgentSessionRuntimeInterface } from '../types/agent-session';
 
 // Mock TerminalUI
 const createMockTUI = (): TerminalUI => {

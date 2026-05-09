@@ -6,60 +6,16 @@
  * (Clean-room implementation)
  */
 
-import { ElementContainer, type UIElement, type RenderContext, type InteractiveElement, type KeyEvent } from './atoms/base';
+import type { UIElement, RenderContext, InteractiveElement, KeyEvent } from './atoms/base';
 import type { TerminalUI } from './tui';
+import { ElementContainer } from './atoms/base';
 import { Footer } from './atoms/footer';
 import { UserMessage } from './atoms/user-message';
 import { AssistantMessage } from './atoms/assistant-message';
 import { ToolMessage } from './atoms/tool-message';
 import { Text } from './atoms/index';
-
-export interface InteractiveModeOptions {
-  inputPlaceholder?: string;
-  initialStatus?: string;
-  model?: string;
-  thinkingLevel?: 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
-}
-
-/**
- * Agent session interface - minimal interface for UI to interact with runtime
- * This allows main.ts to connect them without circular dependencies
- */
-export interface AgentSessionInterface {
-  prompt(text: string, options?: { images?: any[] }): Promise<void>;
-  subscribe(listener: (event: AgentSessionEvent) => void): () => void;
-  abort(): void;
-  messages: any[];
-  isStreaming: boolean;
-}
-
-/**
- * Agent session runtime interface for UI
- */
-export interface AgentSessionRuntimeInterface {
-  session: AgentSessionInterface;
-  cwd: string;
-  newSession(): Promise<{ cancelled: boolean }>;
-  switchSession(path: string): Promise<{ cancelled: boolean }>;
-  fork(entryId: string): Promise<{ cancelled: boolean; selectedText?: string }>;
-  setBeforeSessionInvalidate(handler: () => void): void;
-  setRebindSession(handler: (sessionPath?: string) => Promise<void>): void;
-}
-
-/**
- * Agent session event types (subset for UI handling)
- */
-type AgentSessionEvent = 
-  | { type: 'agent_start' }
-  | { type: 'agent_end' }
-  | { type: 'message_start'; message: { role: string; id?: string } }
-  | { type: 'message_update'; message: { role: string; content?: any[] } }
-  | { type: 'message_end'; message: { role: string; stopReason?: string } }
-  | { type: 'tool_execution_start'; toolCallId: string; toolName: string; args: any }
-  | { type: 'tool_execution_update'; toolCallId: string; partialResult?: any }
-  | { type: 'tool_execution_end'; toolCallId: string; result: any; isError?: boolean }
-  | { type: 'queue_update' }
-  | { type: 'error'; error: string };
+import type { AgentSessionRuntimeInterface, AgentSessionEvent } from '../types/agent-session';
+import type { InteractiveModeOptions } from './interactive-mode-types';
 
 /**
  * InteractiveMode is a self-contained UI component that renders the full chat interface.
@@ -224,7 +180,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     }
   }
 
-  private updateStreamingMessage(message: { role: string; content?: any[] }): void {
+  private updateStreamingMessage(message: { role: string; content?: unknown[] }): void {
     // Extract text from content blocks
     const text = this.extractTextFromContent(message.content || []);
     if (text) {
@@ -239,10 +195,10 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     }
   }
 
-  private extractTextFromContent(content: any[]): string {
-    return content
-      .filter(c => c.type === 'text')
-      .map(c => c.text)
+  private extractTextFromContent(content: unknown[]): string {
+    return (content as any[])
+      .filter((c: any) => c.type === 'text')
+      .map((c: any) => c.text)
       .join('');
   }
 
@@ -316,7 +272,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.tui.requestRender();
   }
 
-  setRightItems(_items: any[]): void {}
+  setRightItems(_items: unknown[]): void {}
 
   setWidget(_key: string, content: string[] | UIElement | null, options?: { placement?: 'aboveEditor' | 'belowEditor' }): void {
     const container = options?.placement === 'belowEditor' ? this.widgetBelowContainer : this.widgetAboveContainer;
