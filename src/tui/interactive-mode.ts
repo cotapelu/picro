@@ -14,8 +14,24 @@ import { UserMessage } from './atoms/user-message';
 import { AssistantMessage } from './atoms/assistant-message';
 import { ToolMessage } from './atoms/tool-message';
 import { Text } from './atoms/index';
+import { Editor } from './organisms/editor';
+import { LoginDialog } from './organisms/login-dialog';
+import { ThinkingSelector } from './organisms/thinking-selector';
+import { CommandPalette } from './organisms/command-palette';
 import type { AgentSessionRuntimeInterface, AgentSessionEvent } from '../types/agent-session';
 import type { InteractiveModeOptions } from './interactive-mode-types';
+
+/**
+ * Command definition for command palette
+ */
+export interface InteractiveModeCommand {
+  id: string;
+  label: string;
+  shortcut?: string;
+  description?: string;
+  category?: string;
+  onExecute: () => void;
+}
 
 /**
  * InteractiveMode is a self-contained UI component that renders the full chat interface.
@@ -33,6 +49,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   // State
   private isInitialized = false;
   private running = false;
+  private thinkingLevel: 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' = 'off';
 
   // Containers
   headerContainer = new ElementContainer();
@@ -44,8 +61,18 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   widgetBelowContainer = new ElementContainer();
   footerContainer = new ElementContainer();
 
-  // Editor - will be created in init()
-  private editor: any;
+  // Editor - using Editor organism (Tầng 3)
+  private editor: Editor | null = null;
+
+  // Login dialog (organism)
+  private loginDialog: LoginDialog | null = null;
+
+  // Thinking selector (organism)
+  private thinkingSelector: ThinkingSelector | null = null;
+
+  // Command palette (organism)
+  private commandPalette: CommandPalette | null = null;
+  private commands: InteractiveModeCommand[] = [];
 
   // Footer
   footer: Footer;
@@ -67,8 +94,75 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     // Create footer
     this.footer = new Footer({});
 
+    // Setup default commands
+    this.setupDefaultCommands();
+
     // Setup layout
     this.setupLayout();
+  }
+
+  /**
+   * Set up default commands for command palette
+   */
+  private setupDefaultCommands(): void {
+    this.commands = [
+      {
+        id: 'new-session',
+        label: 'New Session',
+        shortcut: 'Ctrl+N',
+        category: 'Session',
+        description: 'Start a new chat session',
+        onExecute: () => this.handleNewSession(),
+      },
+      {
+        id: 'switch-session',
+        label: 'Switch Session',
+        shortcut: 'Ctrl+S',
+        category: 'Session',
+        description: 'Switch to another session',
+        onExecute: () => this.handleSwitchSession(),
+      },
+      {
+        id: 'fork-session',
+        label: 'Fork Session',
+        shortcut: 'Ctrl+F',
+        category: 'Session',
+        description: 'Fork current session',
+        onExecute: () => this.handleForkSession(),
+      },
+      {
+        id: 'thinking',
+        label: 'Thinking Level',
+        shortcut: 'Ctrl+T',
+        category: 'Agent',
+        description: 'Select thinking level',
+        onExecute: () => this.handleThinkingSelector(),
+      },
+      {
+        id: 'login',
+        label: 'Login',
+        shortcut: 'Ctrl+L',
+        category: 'Account',
+        description: 'Set API key',
+        onExecute: () => this.handleLogin(),
+      },
+      {
+        id: 'clear',
+        label: 'Clear Chat',
+        shortcut: 'Ctrl+K',
+        category: 'Edit',
+        description: 'Clear chat history',
+        onExecute: () => this.handleClearChat(),
+      },
+      {
+        id: 'quit',
+        label: 'Quit',
+        shortcut: 'Ctrl+Q',
+        category: 'System',
+        description: 'Exit the application',
+        onExecute: () => this.stop(),
+      },
+    ];
   }
 
   /**
@@ -77,6 +171,17 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   setRuntime(runtime: AgentSessionRuntimeInterface): void {
     this.runtime = runtime;
   }
+
+  /**
+   * Set available thinking levels
+   */
+  setAvailableThinkingLevels(levels: ('off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh')[]): void {
+    this.thinkingAvailableLevels = levels;
+  }
+
+  private thinkingAvailableLevels: ('off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh')[] = [
+    'off', 'minimal', 'low', 'medium', 'high', 'xhigh',
+  ];
 
   private setupLayout(): void {
     super.append(this.headerContainer);
@@ -92,15 +197,15 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   async init(): Promise<void> {
     if (this.isInitialized) return;
 
-    // Import Input dynamically to avoid circular dependency
-    const { Input } = await import('./molecules/input.js');
-
-    // Create editor (Input molecule for chat input)
-    this.editor = new Input({ placeholder: this.options.inputPlaceholder ?? 'Type your message...' });
+    // Create editor (Editor organism - Tầng 3)
+    this.editor = new Editor(undefined, {
+      paddingX: 1,
+      paddingY: 0,
+    });
     this.editorContainer.append(this.editor as UIElement);
 
     // Setup submit handler - connected to runtime if available
-    (this.editor as any).onSubmit = async (text: string) => {
+    this.editor.onSubmit = async (text: string) => {
       if (this.runtime) {
         await this.runtime.session.prompt(text);
       } else {
@@ -108,8 +213,25 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       }
     };
 
+    // Setup escape handler for command palette
+    this.editor.onEscape = () => {
+      this.toggleCommandPalette();
+    };
+
     // Build header
     this.headerContainer.append(new Text('Picro Agent'));
+
+    // Create command palette (organism)
+    this.commandPalette = new CommandPalette({
+      commands: this.commands.map(c => ({
+        id: c.id,
+        label: c.label,
+        shortcut: c.shortcut,
+        description: c.description,
+        category: c.category,
+        onExecute: c.onExecute,
+      })),
+    });
 
     // Start TUI and set focus
     this.tui.start();
@@ -129,7 +251,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       });
     }
 
-    // Main interactive loop - get input and send to runtime
+    // Main interactive loop
     while (this.running) {
       try {
         const text = await this.getUserInput();
@@ -149,15 +271,13 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     switch (event.type) {
       case 'message_start':
         if (event.message.role === 'user') {
-          // User message - could display or skip if already shown
+          // User message already shown in editor
         }
         break;
       case 'message_update':
-        // Streaming update - update UI
         this.updateStreamingMessage(event.message);
         break;
       case 'message_end':
-        // Message complete
         this.finalizeStreamingMessage(event.message);
         break;
       case 'tool_execution_start':
@@ -179,7 +299,6 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   }
 
   private updateStreamingMessage(message: { role: string; content?: unknown[] }): void {
-    // Extract text from content blocks
     const text = this.extractTextFromContent(message.content || []);
     if (text) {
       this.addAssistantMessage(text);
@@ -187,7 +306,6 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   }
 
   private finalizeStreamingMessage(message: { role: string; stopReason?: string }): void {
-    // Could add status indicator for stop reason
     if (message.stopReason === 'error') {
       this.showError('Agent error occurred');
     }
@@ -205,7 +323,6 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     if (this.inputController.reject) this.inputController.reject(new Error('Stopped'));
     this.inputController = {};
 
-    // Unsubscribe from runtime
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
@@ -222,6 +339,77 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   private getUserInput(): Promise<string> {
     return new Promise((resolve, reject) => { this.inputController = { resolve, reject }; });
   }
+
+  // =========================================================================
+  // Command handlers
+  // =========================================================================
+
+  private toggleCommandPalette(): void {
+    // Show/hide command palette in widget container
+    if (this.widgetAboveContainer.children.length > 0) {
+      this.widgetAboveContainer.clear();
+    } else {
+      this.widgetAboveContainer.append(this.commandPalette as any);
+      this.tui.setFocus(this.commandPalette as any);
+    }
+    this.tui.requestRender();
+  }
+
+  private async handleNewSession(): Promise<void> {
+    if (this.runtime) {
+      await this.runtime.newSession();
+    }
+    this.setStatus('New session created');
+  }
+
+  private async handleSwitchSession(): Promise<void> {
+    // Would show session selector organism
+    this.setStatus('Switch session not implemented');
+  }
+
+  private async handleForkSession(): Promise<void> {
+    if (this.runtime) {
+      await this.runtime.fork('');
+    }
+    this.setStatus('Session forked');
+  }
+
+  private handleThinkingSelector(): void {
+    if (this.thinkingSelector) {
+      this.widgetAboveContainer.clear();
+      this.widgetAboveContainer.append(this.thinkingSelector as any);
+      this.tui.setFocus(this.thinkingSelector as any);
+    }
+  }
+
+  private handleLogin(): void {
+    this.loginDialog = new LoginDialog({
+      provider: 'anthropic',
+      title: 'Anthropic API Key',
+      onSubmit: (apiKey) => {
+        // Store API key
+        this.setStatus('API key saved');
+        this.widgetAboveContainer.clear();
+        this.tui.setFocus(this.editor as any);
+      },
+      onCancel: () => {
+        this.widgetAboveContainer.clear();
+        this.tui.setFocus(this.editor as any);
+      },
+    });
+    this.widgetAboveContainer.append(this.loginDialog as any);
+    this.tui.setFocus(this.loginDialog as any);
+    this.tui.requestRender();
+  }
+
+  private handleClearChat(): void {
+    this.chatContainer.clear();
+    this.setStatus('Chat cleared');
+  }
+
+  // =========================================================================
+  // Public API
+  // =========================================================================
 
   draw(context: RenderContext): string[] {
     return super.draw(context);
