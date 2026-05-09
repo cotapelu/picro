@@ -59,8 +59,8 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   // Version
   private version = '0.0.1';
 
-  // Input callback
-  private inputResolve?: (value: string) => void;
+  // Input promise controller
+  private inputController: { resolve?: (value: string) => void; reject?: (reason?: any) => void } = {};
 
   constructor(tui: TerminalUI, options: InteractiveModeOptions = {}) {
     super();
@@ -101,10 +101,10 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
 
     // Setup submit handler
     (this.editor as any).onSubmit = (text: string) => {
-      if (this.inputResolve) {
-        this.inputResolve(text);
-        this.inputResolve = undefined;
+      if (this.inputController.resolve) {
+        this.inputController.resolve(text);
       }
+      this.inputController = {};
     };
 
     // Build header
@@ -126,25 +126,39 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.running = true;
 
     while (this.running) {
-      await this.processInput();
+      try {
+        await this.processInput();
+      } catch {
+        // Stopped
+        break;
+      }
     }
   }
 
   stop(): void {
     this.running = false;
+    // Reject any pending input promise
+    if (this.inputController.reject) {
+      this.inputController.reject(new Error('Stopped'));
+    }
+    this.inputController = {};
   }
 
   private async processInput(): Promise<void> {
-    // Wait for user input
-    const text = await this.getUserInput();
-    if (text) {
-      this.addUserMessage(text);
+    // Wait for user input or stop
+    try {
+      const text = await this.getUserInput();
+      if (text && this.running) {
+        this.addUserMessage(text);
+      }
+    } catch (e) {
+      // Stopped - exit gracefully
     }
   }
 
   private getUserInput(): Promise<string> {
-    return new Promise((resolve) => {
-      this.inputResolve = resolve;
+    return new Promise((resolve, reject) => {
+      this.inputController = { resolve, reject };
     });
   }
 
