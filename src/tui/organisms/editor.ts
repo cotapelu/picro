@@ -1,7 +1,8 @@
 /**
  * Editor Component - Enhanced with Undo/Redo, Kill/Yank, History
- * 
+ *
  * Multi-line text editor using KillRing and UndoStack modules.
+ * Implements UIElement for composition-based UI hierarchy.
  */
 import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../atoms/base';
 import { CURSOR_MARKER } from '../atoms/base';
