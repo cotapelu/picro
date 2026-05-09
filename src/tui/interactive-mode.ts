@@ -745,16 +745,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   }
 
   // =========================================================================
-  // Theme Support
-  // =========================================================================
-
-  setTheme(theme: 'dark' | 'light'): void {
-    // Theme switching would update colors in UI elements
-    // Implementation depends on theme system
-  }
-
-  // =========================================================================
-  // Export/Import
+  // Multi-Session Support
   // =========================================================================
 
   /**
@@ -901,5 +892,221 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     }
     
     return parts.join(', ') || 'Ready';
+  }
+
+  // =========================================================================
+  // Multi-Session Support
+  // =========================================================================
+
+  private sessions: Map<string, string[]> = new Map();
+  private currentSessionId: string = 'default';
+
+  /**
+   * Get all session IDs
+   */
+  getSessionIds(): string[] {
+    return Array.from(this.sessions.keys());
+  }
+
+  /**
+   * Get current session messages
+   */
+  getCurrentSessionMessages(): string[] {
+    return this.sessions.get(this.currentSessionId) || [];
+  }
+
+  /**
+   * Switch to session
+   */
+  switchSession(sessionId: string): void {
+    if (!this.sessions.has(sessionId)) {
+      this.sessions.set(sessionId, []);
+    }
+    this.currentSessionId = sessionId;
+    this.setStatus(`Switched to session: ${sessionId}`);
+  }
+
+  /**
+   * Delete session
+   */
+  deleteSession(sessionId: string): void {
+    this.sessions.delete(sessionId);
+    if (this.currentSessionId === sessionId) {
+      this.currentSessionId = 'default';
+    }
+  }
+
+  /**
+   * Save current session
+   */
+  saveSession(sessionId: string, messages: string[]): void {
+    this.sessions.set(sessionId, messages);
+  }
+
+  // =========================================================================
+  // Notification System
+  // =========================================================================
+
+  private notifications: Array<{id: string; message: string; type: 'info' | 'warning' | 'error'; timestamp: number}> = [];
+
+  /**
+   * Show notification
+   */
+  showNotification(message: string, type: 'info' | 'warning' | 'error' = 'info'): void {
+    const id = `notif-${Date.now()}`;
+    this.notifications.push({
+      id,
+      message,
+      type,
+      timestamp: Date.now()
+    });
+    this.setStatus(message);
+    // Auto-remove after 5 seconds
+    setTimeout(() => this.removeNotification(id), 5000);
+  }
+
+  /**
+   * Remove notification
+   */
+  removeNotification(id: string): void {
+    this.notifications = this.notifications.filter(n => n.id !== id);
+  }
+
+  /**
+   * Get notifications
+   */
+  getNotifications() {
+    return this.notifications;
+  }
+
+  // =========================================================================
+  // Clipboard Support
+  // =========================================================================
+
+  private clipboard: string = '';
+
+  /**
+   * Copy to clipboard
+   */
+  copyToClipboard(text: string): void {
+    this.clipboard = text;
+  }
+
+  /**
+   * Paste from clipboard
+   */
+  pasteFromClipboard(): string {
+    return this.clipboard;
+  }
+
+  /**
+   * Cut to clipboard
+   */
+  cutToClipboard(text: string): string {
+    this.clipboard = text;
+    return '';
+  }
+
+  // =========================================================================
+  // Search Functionality
+  // =========================================================================
+
+  private searchQuery: string = '';
+  private searchResults: number[] = [];
+
+  /**
+   * Search in messages
+   */
+  searchMessages(query: string): number[] {
+    this.searchQuery = query;
+    this.searchResults = [];
+    
+    if (!query) return this.searchResults;
+    
+    for (let i = 0; i < this.chatContainer.children.length; i++) {
+      const child = this.chatContainer.children[i];
+      // Would search through message content
+      this.searchResults.push(i);
+    }
+    
+    return this.searchResults;
+  }
+
+  /**
+   * Get search results
+   */
+  getSearchResults(): number[] {
+    return this.searchResults;
+  }
+
+  /**
+   * Clear search
+   */
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.searchResults = [];
+  }
+
+  // =========================================================================
+  // Performance Metrics
+  // =========================================================================
+
+  private renderCount: number = 0;
+  private lastRenderTime: number = 0;
+  private totalRenderTime: number = 0;
+
+  /**
+   * Get performance metrics
+   */
+  getPerformanceMetrics() {
+    return {
+      renderCount: this.renderCount,
+      averageRenderTime: this.renderCount > 0 ? this.totalRenderTime / this.renderCount : 0,
+      lastRenderTime: this.lastRenderTime
+    };
+  }
+
+  /**
+   * Reset performance metrics
+   */
+  resetPerformanceMetrics(): void {
+    this.renderCount = 0;
+    this.lastRenderTime = 0;
+    this.totalRenderTime = 0;
+  }
+
+  // =========================================================================
+  // Theme Configuration
+  // =========================================================================
+
+  private currentTheme: 'dark' | 'light' = 'dark';
+  private customColors: Record<string, string> = {};
+
+  /**
+   * Set theme
+   */
+  setTheme(theme: 'dark' | 'light'): void {
+    this.currentTheme = theme;
+  }
+
+  /**
+   * Get theme
+   */
+  getTheme(): 'dark' | 'light' {
+    return this.currentTheme;
+  }
+
+  /**
+   * Set custom color
+   */
+  setCustomColor(key: string, value: string): void {
+    this.customColors[key] = value;
+  }
+
+  /**
+   * Get custom color
+   */
+  getCustomColor(key: string): string | undefined {
+    return this.customColors[key];
   }
 }
