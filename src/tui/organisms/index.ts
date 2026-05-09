@@ -1,7 +1,6 @@
 // Organisms: Complex components (L3)
 
 // Overlays
-export * from './cancellable-loader';
 export * from './command-palette';
 export * from './modal';
 export * from './context-menu';

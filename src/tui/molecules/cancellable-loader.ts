@@ -1,4 +1,4 @@
-import { BorderedLoader } from '../molecules/loader';
+import { BorderedLoader } from './loader';
 
 /**
  * CancellableLoader - BorderedLoader with explicit AbortSignal

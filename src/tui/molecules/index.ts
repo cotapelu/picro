@@ -10,6 +10,7 @@ export * from './tree-view';
 export * from './input';
 export * from './countdown-timer';
 export * from './loader';
+export * from './cancellable-loader';
 
 // Forms
 export * from './form';
