@@ -3,6 +3,7 @@
  *
  * Multi-line text editor using KillRing and UndoStack modules.
  * Implements UIElement for composition-based UI hierarchy.
+ * Reuses SelectList molecule for line number selection.
  */
 import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../atoms/base';
 import { CURSOR_MARKER } from '../atoms/base';
@@ -11,6 +12,7 @@ import { KillRing, defaultKillRing } from '../atoms/kill-ring';
 import { UndoRedoManager } from '../atoms/undo-stack';
 import { getKeybindings } from '../atoms/keybindings';
 import { decodeKittyPrintable, matchesKey } from '../atoms/keys';
+import { SelectList, type SelectItem } from '../molecules/select-list';
 
 export interface EditorState {
   lines: string[];

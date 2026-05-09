@@ -1,9 +1,11 @@
 /**
  * Modal/Dialog Component
  * Modal dialog for confirmations and forms
+ * Reuses Input molecule for text input
  */
 import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../atoms/base';
 import { visibleWidth, truncateText, wrapText } from '../atoms/internal-utils';
+import { Input } from '../molecules/input';
 
 export type ModalType = 'confirm' | 'info' | 'warning' | 'error' | 'custom';
 
