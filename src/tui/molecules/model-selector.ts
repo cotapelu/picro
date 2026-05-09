@@ -5,6 +5,7 @@
 
 import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
 import { visibleWidth, truncateText } from '../atoms/internal-utils';
+import { Text } from '../atoms/text';
 
 export interface ModelInfo {
   id: string;
@@ -25,6 +26,7 @@ export class ModelSelector implements UIElement, InteractiveElement {
   private onSelect?: (model: ModelInfo) => void;
   private onCancel?: () => void;
   public isFocused = false;
+  private cache?: string[];
 
   constructor(options: ModelSelectorOptions) {
     this.models = options.models;
@@ -90,6 +92,6 @@ export class ModelSelector implements UIElement, InteractiveElement {
   }
 
   clearCache(): void {
-    // No cache
+    this.cache = undefined;
   }
 }
