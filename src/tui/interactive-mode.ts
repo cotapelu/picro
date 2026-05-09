@@ -95,17 +95,15 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     // Import Input dynamically to avoid circular dependency
     const { Input } = await import('./molecules/input.js');
 
-    // Create editor
+    // Create editor (Input molecule for chat input)
     this.editor = new Input({ placeholder: this.options.inputPlaceholder ?? 'Type your message...' });
     this.editorContainer.append(this.editor as UIElement);
 
     // Setup submit handler - connected to runtime if available
     (this.editor as any).onSubmit = async (text: string) => {
       if (this.runtime) {
-        // Submit to runtime session
         await this.runtime.session.prompt(text);
       } else {
-        // Fallback: just display locally (for testing)
         if (this.inputController.resolve) this.inputController.resolve(text);
       }
     };
