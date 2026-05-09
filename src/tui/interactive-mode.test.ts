@@ -113,7 +113,7 @@ describe('InteractiveMode', () => {
   describe('addToolMessage()', () => {
     it('should add tool message to chat container', () => {
       const mode = new InteractiveMode(tui);
-      mode.addToolMessage('bash', 'ls -la', 0);
+      mode.addToolMessage('bash', 'ls -la');
       
       expect(mode.chatContainer.children.length).toBe(1);
       expect(tui.requestRender).toHaveBeenCalled();
