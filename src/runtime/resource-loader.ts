@@ -11,9 +11,9 @@ import { loadSkills } from "./skills";
 import { loadPromptTemplates } from "./prompt-templates";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { discoverAndLoadExtensions } from "../agent/extensions/loader";
-import { createExtensionRuntime } from "../agent/extensions/runner";
-import { ExtensionRunner } from "../agent/extensions/runner";
+import { discoverAndLoadExtensions } from "../extensions/loader";
+import { createExtensionRuntime } from "../extensions/runner";
+import { ExtensionRunner } from "../extensions/runner";
 
 /**
  * Resource loader interface for loading external resources

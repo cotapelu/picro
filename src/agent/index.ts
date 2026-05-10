@@ -45,10 +45,10 @@ export type {
 
 // Utilities
 export { isContextOverflow } from './pi-ai-shim';
-export { ExtensionRunner, createExtensionRuntime } from './extensions/runner';
+export { ExtensionRunner, createExtensionRuntime } from '../extensions/runner';
 export { DEFAULT_TOOL_TIMEOUT } from './defaults';
-export * from './utils/shell';
-export * from './tools';
+// Tools and utils are available directly from their own modules
+// No re-export here to keep core lean
 
 // Types
 export type {

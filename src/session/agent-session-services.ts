@@ -17,17 +17,17 @@ import { SessionManager } from "../session/session-manager";
 import { Agent } from "../agent/agent";
 import { AgentSession } from "../session/agent-session";
 import { DEFAULT_TOOL_TIMEOUT } from "../agent/defaults";
-import { discoverAndLoadExtensions } from "../agent/extensions/loader";
-import { ExtensionRunner, createExtensionRuntime } from "../agent/extensions/runner";
+import { discoverAndLoadExtensions } from "../extensions/loader";
+import { ExtensionRunner, createExtensionRuntime } from "../extensions/runner";
 import type { ToolDefinition } from "../agent/types";
 
 import {
   createBashToolDefinition,
-  createReadToolDefinition,
-  createWriteToolDefinition,
-  createEditToolDefinition,
-  createLsToolDefinition,
-} from "../agent/tools/index";
+} from "../tools/bash-tool";
+import { createReadToolDefinition } from "../tools/read";
+import { createWriteToolDefinition } from "../tools/write";
+import { createEditToolDefinition } from "../tools/edit";
+import { createLsToolDefinition } from "../tools/ls";
 
 import type { Model } from "../llm";
 
@@ -174,6 +174,7 @@ export async function createAgentSessionFromServices(
   options: CreateAgentSessionFromServicesOptions
 ): Promise<AgentSession> {
   const { services, sessionManager, sessionStartEvent, model, thinkingLevel, scopedModels, tools, noTools, customTools } = options;
+  const cwd = sessionManager.getCwd();
 
   // Determine model to use (can be undefined for interactive mode)
   let resolvedModel: Model | undefined;
@@ -196,7 +197,7 @@ export async function createAgentSessionFromServices(
   const builtInTools: ToolDefinition[] = noTools === "all"
     ? []
     : [
-        wrapBuiltinTool(createBashToolDefinition()),
+        wrapBuiltinTool(createBashToolDefinition(cwd)),
         wrapBuiltinTool(createReadToolDefinition()),
         wrapBuiltinTool(createWriteToolDefinition()),
         wrapBuiltinTool(createEditToolDefinition()),

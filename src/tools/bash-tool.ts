@@ -10,7 +10,7 @@ import { randomBytes } from "node:crypto";
 import { createWriteStream, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ToolDefinition, ToolHandler, ToolContext } from "../types";
+import type { ToolDefinition, ToolHandler, ToolContext } from "../agent/types";
 
 /**
  * Generate a unique temp file path for bash output.

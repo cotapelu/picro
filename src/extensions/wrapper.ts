@@ -3,9 +3,9 @@
  * Extension wrapper utilities - wrap core tools for extension use.
  */
 
-import type { ToolDefinition } from "../types";
+import type { ToolDefinition } from "../agent/types";
 import type { ExtensionRunner } from "./runner";
-import type { AgentTool } from "../agent-types";
+import type { AgentTool } from "../agent/agent-types";
 
 /**
  * Wrap an AgentTool into an extension-compatible tool.
