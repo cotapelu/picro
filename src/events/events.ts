@@ -6,7 +6,7 @@
  * All events extend BaseAgentEvent with common fields.
  */
 
-import type { AgentRuntimeState, AgentRunResult, ToolResult, MemoryEntry } from './types';
+import type { AgentRuntimeState, AgentRunResult, ToolResult, MemoryEntry } from '../agent/types';
 
 // ============================================================================
 // Base Event Interface

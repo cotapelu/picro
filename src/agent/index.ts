@@ -22,8 +22,10 @@ export type {
 } from './types';
 
 // Event System
-export { EventEmitter, createConsoleLogger } from './event-emitter';
-export { createEventBus, type EventBus, type EventBusController } from './event-bus';
+export { EventEmitter, createConsoleLogger } from '../events/event-emitter';
+export { createEventBus, type EventBus, type EventBusController } from '../events/event-bus';
+export { PrioritizedEventEmitter } from '../events/prioritized-event-emitter';
+export { EventRecorder } from '../events/event-recorder';
 export type {
   AgentEvent,
   AgentStartEvent,
@@ -41,7 +43,8 @@ export type {
   LLMResponseEvent,
   MemoryRetrievalEvent,
   ErrorEvent,
-} from './types';
+} from '../events/events';
+export * from '../events/event-guards';
 
 // Utilities
 export { isContextOverflow } from './pi-ai-shim';

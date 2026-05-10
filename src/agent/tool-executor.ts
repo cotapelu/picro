@@ -19,7 +19,7 @@ import type {
   HookResult,
   ToolCallData,
 } from './types';
-import { EventEmitter } from './event-emitter';
+import { EventEmitter } from '../events/event-emitter';
 
 /**
  * Manages tool registration and execution.

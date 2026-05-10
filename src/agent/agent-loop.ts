@@ -20,8 +20,8 @@ import type {
    ToolDefinition,
  } from './types';
 import type { Model } from '../llm';
-import type { AgentEvent } from './events';
- import { EventEmitter } from './event-emitter';
+import type { AgentEvent } from '../events/events';
+ import { EventEmitter } from '../events/event-emitter';
  import { ToolExecutor } from './tool-executor';
  import { ContextBuilder } from './context-manager';
  import { MessageQueue } from './message-queue';

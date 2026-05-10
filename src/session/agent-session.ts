@@ -62,7 +62,7 @@ export type {
   ParsedSkillBlock
 } from "./agent-session-types";
 
-import { EventEmitter } from "../agent/event-emitter";
+import { EventEmitter } from "../events/event-emitter";
 import type { AgentEvent } from "../agent/types";
 
 // ============================================================================

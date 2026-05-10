@@ -20,7 +20,7 @@ import type {
   LLMResponseEvent,
   MemoryRetrievalEvent,
   ErrorEvent,
-} from './types';
+} from '../agent/types';
 
 /**
  * Check if event is AgentStartEvent

@@ -14,7 +14,7 @@ import type {
   MemoryStore,
   LLMResponse,
 } from './types';
-import { EventEmitter } from './event-emitter';
+import { EventEmitter } from '../events/event-emitter';
 import { ToolExecutor } from './tool-executor';
 import { ContextBuilder } from './context-manager';
 import { AgentLoop } from './agent-loop';
