@@ -4,8 +4,8 @@
  * Clean-room implementation inspired by reference.
  */
 
-import type { SessionEntry, BranchSummaryEntry, CompactionEntry } from '../../session/session-manager';
-import type { ConversationTurn } from '../../agent/types';
+import type { SessionEntry, BranchSummaryEntry, CompactionEntry } from '../session/session-manager';
+import type { ConversationTurn } from '../agent/types';
 import {
   createFileOps,
   extractFileOpsFromMessage,

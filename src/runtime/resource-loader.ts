@@ -5,15 +5,15 @@
  * This is a stub implementation - full implementation coming in Phase B
  */
 
-import type { AgentMessage } from "./agent-types";
+import type { AgentMessage } from "../agent/agent-types";
 import type { Skill } from "./skills";
 import { loadSkills } from "./skills";
 import { loadPromptTemplates } from "./prompt-templates";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { discoverAndLoadExtensions } from "./extensions/loader";
-import { createExtensionRuntime } from "./extensions/runner";
-import { ExtensionRunner } from "./extensions/runner";
+import { discoverAndLoadExtensions } from "../agent/extensions/loader";
+import { createExtensionRuntime } from "../agent/extensions/runner";
+import { ExtensionRunner } from "../agent/extensions/runner";
 
 /**
  * Resource loader interface for loading external resources

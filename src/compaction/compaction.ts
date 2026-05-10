@@ -5,14 +5,14 @@
  * Compacts a session by summarizing older entries while preserving recent context.
  */
 
-import { complete } from '../../llm';
-import type { Model } from '../../llm';
+import { complete } from '../llm';
+import type { Model } from '../llm';
 import {
   prepareCompaction,
   type PrepareCompactionResult,
 } from './core';
 import { computeFileLists, formatFileOperations, SUMMARIZATION_SYSTEM_PROMPT } from './utils';
-import type { SessionEntry, CompactionEntry } from '../../session/session-manager';
+import type { SessionEntry, CompactionEntry } from '../session/session-manager';
 
 /**
  * Options for compaction.

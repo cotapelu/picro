@@ -10,9 +10,9 @@ import { join } from "node:path";
 import { homedir } from "node:os";
 
 import { AuthStorage } from "../agent/auth-storage";
-import { SettingsManager } from "../agent/settings-manager";
+import { SettingsManager } from "../runtime/settings-manager";
 import { DefaultModelRegistry } from "../agent/model-registry";
-import { DefaultResourceLoader } from "../agent/resource-loader";
+import { DefaultResourceLoader } from "../runtime/resource-loader";
 import { SessionManager } from "../session/session-manager";
 import { Agent } from "../agent/agent";
 import { AgentSession } from "../session/agent-session";

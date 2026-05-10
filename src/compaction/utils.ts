@@ -4,8 +4,8 @@
  * Clean-room implementation inspired by reference but rewritten.
  */
 
-import type { ConversationTurn } from '../../agent/types';
-import type { SessionEntry } from '../../session/session-manager';
+import type { ConversationTurn } from '../agent/types';
+import type { SessionEntry } from '../session/session-manager';
 
 // ============================================================================
 // File Operations Tracking

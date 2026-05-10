@@ -4,9 +4,9 @@
  * Clean-room implementation inspired by reference.
  */
 
-import { complete } from '../../llm';
-import type { Model } from '../../llm';
-import type { SessionEntry, BranchSummaryEntry } from '../../session/session-manager';
+import { complete } from '../llm';
+import type { Model } from '../llm';
+import type { SessionEntry, BranchSummaryEntry } from '../session/session-manager';
 import { getMessageFromEntry, serializeConversation, formatFileOperations, computeFileLists, createFileOps, extractFileOpsFromMessage } from './utils';
 
 /**

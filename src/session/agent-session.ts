@@ -22,7 +22,7 @@ import type {
 import { Agent } from "../agent/agent";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "../agent/auth-guidance";
 import type { AgentTool } from "../agent/agent-types";
-import { PerformanceTracker } from "../agent/performance-tracker";
+import { PerformanceTracker } from "../runtime/performance-tracker";
 import type { Model } from "../llm";
 import type { ModelEntry } from "../agent/model-registry";
 import type { ModelRegistry } from "../agent/model-registry";
@@ -30,8 +30,8 @@ import type { ModelRegistry } from "../agent/model-registry";
 // Backward compatible alias
 type ModelAny = ModelEntry;
 import type { SessionManager, CompactionEntry, BranchSummaryEntry } from "../session/session-manager";
-import type { SettingsManager } from "../agent/settings-manager";
-import type { ResourceLoader } from "../agent/resource-loader";
+import type { SettingsManager } from "../runtime/settings-manager";
+import type { ResourceLoader } from "../runtime/resource-loader";
 import {
   estimateContextTokens,
   estimateContextUsage,

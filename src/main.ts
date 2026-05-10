@@ -4,7 +4,7 @@
  * Full terminal UI with InteractiveMode for chat interface.
  */
 
-import { createAgentSessionRuntime, type AgentSessionRuntime } from './agent';
+import { createAgentSessionRuntime, type AgentSessionRuntime } from './runtime';
 import { TerminalUI, ProcessTerminal, InteractiveMode } from './tui';
 import type { Model } from './llm';
 import * as fs from 'node:fs';
