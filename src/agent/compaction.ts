@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Compaction - Session context compaction
- * 
+ *
  * Học từ legacy mà KHÔNG copy code:
- * - Token estimation
+ * - Token estimation từ usage và heuristic
  * - Cut point detection
- * - Session summarization
+ * - Compaction preparation
+ * - Summarization (stub)
  */
 
-import type { AgentMessage } from "./agent-types";
+import type { AgentMessage, AssistantMessage } from "./agent-types";
+import type { Usage } from "./pi-ai-shim";
+import type { SessionEntry } from "./session-manager";
 
 // ============================================================================
 // Types
@@ -27,57 +30,131 @@ export const DEFAULT_COMPACTION_SETTINGS: CompactionSettings = {
 };
 
 // ============================================================================
+// File Operation Tracking (re-export from utils)
+// ============================================================================
+
+// These are defined in session-manager but we re-implement minimal versions here
+// to avoid circular deps. In prod they should be shared.
+
+export interface FileOperations {
+  read: Set<string>;
+  written: Set<string>;
+  edited: Set<string>;
+}
+
+export function createFileOps(): FileOperations {
+  return {
+    read: new Set(),
+    written: new Set(),
+    edited: new Set(),
+  };
+}
+
+export function extractFileOpsFromMessage(message: AgentMessage, fileOps: FileOperations): void {
+  if (message.role !== "assistant") return;
+  const content = message.content as any[];
+  for (const block of content) {
+    if (block.type === "toolCall") {
+      const args = block.arguments as Record<string, unknown> | undefined;
+      if (!args) continue;
+      const path = typeof args.path === "string" ? args.path : undefined;
+      if (!path) continue;
+      switch (block.name) {
+        case "read":
+          fileOps.read.add(path);
+          break;
+        case "write":
+          fileOps.written.add(path);
+          break;
+        case "edit":
+          fileOps.edited.add(path);
+          break;
+      }
+    }
+  }
+}
+
+export function computeFileLists(fileOps: FileOperations): { readFiles: string[]; modifiedFiles: string[] } {
+  const modified = new Set([...fileOps.edited, ...fileOps.written]);
+  const readOnly = [...fileOps.read].filter(f => !modified.has(f)).sort();
+  const modifiedFiles = [...modified].sort();
+  return { readFiles: readOnly, modifiedFiles };
+}
+
+export function formatFileOperations(readFiles: string[], modifiedFiles: string[]): string {
+  const sections: string[] = [];
+  if (readFiles.length > 0) sections.push(`<read-files>\n${readFiles.join("\n")}\n</read-files>`);
+  if (modifiedFiles.length > 0) sections.push(`<modified-files>\n${modifiedFiles.join("\n")}\n</modified-files>`);
+  return sections.length ? `\n\n${sections.join("\n\n")}` : "";
+}
+
+// ============================================================================
 // Token Estimation
 // ============================================================================
 
-export function estimateTokens(message: AgentMessage): number {
+export function estimateTokens(message: any): number {
   let chars = 0;
+  const role = message.role as string;
 
-  switch (message.role) {
-    case "user": {
-      const content = message.content;
-      if (typeof content === "string") {
-        chars = content.length;
-      } else if (Array.isArray(content)) {
-        for (const block of content) {
-          if (block.type === "text" && block.text) {
-            chars += block.text.length;
-          }
-        }
-      }
-      return Math.ceil(chars / 4);
-    }
-    case "assistant": {
-      const content = message.content as any[];
+  if (role === 'user') {
+    const content = message.content;
+    if (typeof content === 'string') {
+      chars = content.length;
+    } else if (Array.isArray(content)) {
       for (const block of content) {
-        if (block.type === "text") {
-          chars += block.text?.length || 0;
-        } else if (block.type === "thinking") {
-          chars += block.thinking?.length || 0;
-        } else if (block.type === "toolCall") {
-          chars += (block.name?.length || 0) + JSON.stringify(block.arguments || {}).length;
+        if (block.type === 'text' && block.text) {
+          chars += block.text.length;
         }
       }
-      return Math.ceil(chars / 4);
     }
-    case "tool": {
-      const content = message.content as any;
-      if (typeof content === "string") {
-        chars = content.length;
-      } else if (Array.isArray(content)) {
-        for (const block of content) {
-          if (block.type === "text" && block.text) {
-            chars += block.text.length;
-          }
+    return Math.ceil(chars / 4);
+  }
+
+  if (role === 'assistant') {
+    for (const block of message.content) {
+      if (block.type === 'text') {
+        chars += block.text.length;
+      } else if (block.type === 'thinking') {
+        chars += block.thinking.length;
+      } else if (block.type === 'toolCall') {
+        chars += block.name.length + JSON.stringify(block.arguments).length;
+      }
+    }
+    return Math.ceil(chars / 4);
+  }
+
+  if (role === 'tool' || role === 'toolResult' || role === 'custom') {
+    if (typeof message.content === 'string') {
+      chars = message.content.length;
+    } else {
+      for (const block of message.content) {
+        if (block.type === 'text' && block.text) {
+          chars += block.text.length;
+        }
+        if (block.type === 'image') {
+          chars += 4800;
         }
       }
-      return Math.ceil(chars / 4);
     }
+    return Math.ceil(chars / 4);
+  }
+
+  if (role === 'bashExecution') {
+    chars = (message.command?.length || 0) + (message.output?.length || 0);
+    return Math.ceil(chars / 4);
+  }
+
+  if (role === 'branchSummary' || role === 'compactionSummary') {
+    chars = message.summary?.length || 0;
+    return Math.ceil(chars / 4);
   }
 
   return 0;
 }
 
+/**
+ * Simple total token estimation (sum of per-message estimates).
+ */
 export function estimateContextTokens(messages: AgentMessage[]): number {
   let total = 0;
   for (const msg of messages) {
@@ -125,6 +202,69 @@ export function findCutPoint(
 // Compaction Check
 // ============================================================================
 
+export function calculateContextTokens(usage: any): number {
+  return usage.total ?? usage.totalTokens ?? (usage.input || 0) + (usage.output || 0) + (usage.cacheRead || 0) + (usage.cacheWrite || 0);
+}
+
+/**
+ * Get usage from an assistant message if available.
+ * Skips aborted and error messages.
+ */
+export function getAssistantUsage(msg: AgentMessage): Usage | undefined {
+  if (msg.role === "assistant" && "usage" in msg) {
+    const assistantMsg = msg as AssistantMessage;
+    if (assistantMsg.stopReason !== "aborted" && assistantMsg.stopReason !== "error" && assistantMsg.usage) {
+      return assistantMsg.usage;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Estimate context tokens from messages, using last assistant usage when available.
+ * Returns total tokens, tokens from usage, trailing tokens after usage, and index of last usage.
+ */
+export function estimateContextUsage(messages: AgentMessage[]): {
+  tokens: number;
+  usageTokens: number;
+  trailingTokens: number;
+  lastUsageIndex: number | null;
+} {
+  let lastUsageIndex: number | null = null;
+  let usageTokens = 0;
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const usage = getAssistantUsage(messages[i]);
+    if (usage) {
+      lastUsageIndex = i;
+      usageTokens = calculateContextTokens(usage);
+      break;
+    }
+  }
+
+  let trailingTokens = 0;
+  if (lastUsageIndex !== null) {
+    for (let i = lastUsageIndex + 1; i < messages.length; i++) {
+      trailingTokens += estimateTokens(messages[i]);
+    }
+  } else {
+    // No usage data, estimate all
+    for (const msg of messages) {
+      trailingTokens += estimateTokens(msg);
+    }
+  }
+
+  return {
+    tokens: usageTokens + trailingTokens,
+    usageTokens,
+    trailingTokens,
+    lastUsageIndex,
+  };
+}
+
+/**
+ * Check if compaction should trigger based on context usage.
+ */
 export function shouldCompact(
   contextTokens: number,
   contextWindow: number,
@@ -171,5 +311,177 @@ export async function compactSession(
     summary,
     keptMessages,
     discardedMessages,
+  };
+}
+
+// ============================================================================
+// Compaction Preparation (for advanced compaction with LLM summarization)
+// ============================================================================
+
+export interface CompactionPreparation {
+  firstKeptEntryId: string;
+  messagesToSummarize: AgentMessage[];
+  turnPrefixMessages: AgentMessage[];
+  isSplitTurn: boolean;
+  tokensBefore: number;
+  previousSummary: string | undefined;
+  fileOps: FileOperations;
+  settings: CompactionSettings;
+}
+
+/**
+ * Extract AgentMessage from a SessionEntry.
+ * Returns undefined for entries that don't contribute to LLM context.
+ */
+export function getMessageFromEntry(entry: SessionEntry): AgentMessage | undefined {
+  if (entry.type === "message") {
+    return entry.message;
+  }
+  // Note: custom_message, branch_summary, compaction could be converted to AgentMessage
+  // but for compaction prep we skip them (handled separately)
+  return undefined;
+}
+
+/**
+ * Find indices of valid cut points in entries array.
+ * Returns array of indices that are valid cut positions (user, assistant, custom, bashExecution).
+ */
+export function findValidCutPoints(entries: SessionEntry[]): number[] {
+  const cutPoints: number[] = [];
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    if (entry.type === "message") {
+      const role = entry.message.role;
+      if (role === "user" || role === "assistant") {
+        cutPoints.push(i);
+      }
+    }
+    // Note: could add custom_message, bashExecution if they become AgentMessage
+  }
+  return cutPoints;
+}
+
+/**
+ * Prepare compaction: determine what to summarize, token counts, file ops.
+ * This is the core logic before LLM summarization.
+ */
+export function prepareCompaction(
+  entries: SessionEntry[],
+  settings: CompactionSettings
+): CompactionPreparation | null {
+  // Convert entries to messages for token estimation
+  const messages: AgentMessage[] = [];
+  const entryIndices: number[] = []; // track which entries correspond to which message
+
+  for (let i = 0; i < entries.length; i++) {
+    const msg = getMessageFromEntry(entries[i]);
+    if (msg) {
+      messages.push(msg);
+      entryIndices.push(i);
+    }
+  }
+
+  if (messages.length === 0) return null;
+
+  // Estimate total tokens
+  const estimate = estimateContextUsage(messages);
+  // Don't check shouldCompact here; caller decides
+
+  // Find cut point based on keepRecentTokens
+  const cutPoint = findCutPoint(messages, settings.keepRecentTokens);
+  const firstKeptMessageIndex = cutPoint.firstKeptIndex;
+  const firstKeptEntryIndex = entryIndices[firstKeptMessageIndex];
+  const firstKeptEntry = entries[firstKeptEntryIndex];
+  const firstKeptEntryId = firstKeptEntry.id;
+
+  // Messages to summarize = all before first kept
+  const messagesToSummarize = messages.slice(0, firstKeptMessageIndex);
+
+  // Turn prefix: if cut splits a turn, include the first kept message's earlier parts
+  const turnPrefixMessages: AgentMessage[] = [];
+  if (cutPoint.isSplitTurn && firstKeptMessageIndex > 0) {
+    // In a split turn, we keep the current message but need to summarize its preceding content
+    // This is a simplification: in a real implementation, we would split the turn's content
+    // For now, we treat it as: summarize the previous assistant turn fully
+    // and keep the user message intact
+    // TODO: implement proper turn splitting
+  }
+
+  // Previous summary: find last compaction before firstKeptEntry
+  let previousSummary: string | undefined;
+  for (let i = firstKeptEntryIndex - 1; i >= 0; i--) {
+    const entry = entries[i];
+    if (entry.type === "compaction") {
+      previousSummary = entry.summary;
+      break;
+    }
+  }
+
+  // File operations extraction
+  const fileOps = createFileOps();
+  // From previous compaction (if generated by pi)
+  // TODO: from previous compaction details
+  // From messages
+  for (const msg of messages) {
+    extractFileOpsFromMessage(msg, fileOps);
+  }
+
+  return {
+    firstKeptEntryId,
+    messagesToSummarize,
+    turnPrefixMessages,
+    isSplitTurn: cutPoint.isSplitTurn,
+    tokensBefore: estimate.tokens,
+    previousSummary,
+    fileOps,
+    settings,
+  };
+}
+
+// TODO: Implement generateSummary() that calls LLM with proper prompts
+// This requires LLM API access, model, apiKey, etc.
+
+/**
+ * Core compaction function that generates summary via LLM.
+ * This is a stub - should call LLM API.
+ */
+export async function compact(
+  preparation: CompactionPreparation,
+  _model: any,
+  _apiKey: string,
+  _headers?: Record<string, string>,
+  _customInstructions?: string,
+  _signal?: AbortSignal,
+  _thinkingLevel?: string
+): Promise<{
+  summary: string;
+  firstKeptEntryId: string;
+  tokensBefore: number;
+  details?: { readFiles: string[]; modifiedFiles: string[] };
+}> {
+  const { messagesToSummarize, turnPrefixMessages, isSplitTurn, previousSummary, fileOps, firstKeptEntryId, tokensBefore } = preparation;
+
+  // Stub summarization: just join messages and make a placeholder
+  // Real impl: call LLM with serialized conversation + instructions
+  let summary = "[Stub] ";
+  if (messagesToSummarize.length > 0) {
+    summary += `Summarized ${messagesToSummarize.length} prior messages. `;
+  }
+  if (turnPrefixMessages.length > 0) {
+    summary += `Including ${turnPrefixMessages.length} turn-prefix messages. `;
+  }
+  if (previousSummary) {
+    summary += `Previous summary: ${previousSummary.substring(0, 100)}... `;
+  }
+  summary += "Compaction complete.";
+
+  // Compute file lists
+  const { readFiles, modifiedFiles } = computeFileLists(fileOps);
+
+  return {
+    summary,
+    firstKeptEntryId,
+    tokensBefore,
+    details: { readFiles, modifiedFiles },
   };
 }

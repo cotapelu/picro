@@ -29,11 +29,19 @@ import type { ModelRegistry } from "./model-registry";
 
 // Backward compatible alias
 type ModelAny = ModelEntry;
-import type { SessionManager } from "./session-manager";
+import type { SessionManager, CompactionEntry } from "./session-manager";
 import type { SettingsManager } from "./settings-manager";
 import type { ResourceLoader } from "./resource-loader";
-import { compact as performCompaction, type CompactOptions } from "./compaction/compaction";
-import { shouldCompact, type CompactionThresholds } from "./compaction/core";
+import {
+  estimateContextTokens,
+  shouldCompact,
+  prepareCompaction,
+  compact as performCompaction,
+  calculateContextTokens,
+  type CompactionPreparation,
+  type FileOperations,
+} from "./compaction";
+import { isContextOverflow } from "./pi-ai-shim";
 
 // Re-export types
 export type { AgentSessionEventListener, AgentSessionConfig } from "./agent-session-types";
@@ -136,7 +144,6 @@ export class AgentSession {
   // Compaction state
   private _compactionAbortController: AbortController | undefined;
   private _autoCompactionAbortController: AbortController | undefined;
-  private _autoCompactionTimer: any;
   private _overflowRecoveryAttempted = false;
 
   // Branch summarization state
@@ -240,7 +247,7 @@ export class AgentSession {
 
   /** Whether agent is currently running */
   get isStreaming(): boolean {
-    return this.agent.getState().isRunning;
+    return this._agentState.isRunning;
   }
 
   /** Current effective system prompt */
@@ -278,12 +285,12 @@ export class AgentSession {
 
   /** Full agent state */
   get state(): AgentRuntimeState {
-    return this.agent.getState();
+    return this._agentState;
   }
 
   /** All messages */
   get messages(): any[] {
-    return this.agent.getState().history;
+    return this._agentState.history;
   }
 
   /** Whether compaction or branch summarization is currently running */
@@ -570,7 +577,7 @@ export class AgentSession {
       await this.agent.run(JSON.stringify(customMsg));
     } else {
       // Just add to history
-      const state = this.agent.getState();
+      const state = this._agentState;
       state.history.push(customMsg as any);
     }
   }
@@ -616,114 +623,71 @@ export class AgentSession {
    * Summarizes older conversation entries to keep context within limits.
    */
   async compact(): Promise<void> {
-    if (this.isCompacting) {
-      return;
-    }
+    if (this.isCompacting) return;
 
-    const config = this._config;
-    const compactionConfig = config.compaction ?? {};
-    const enabled = compactionConfig.enabled !== false; // default true
+    const compactionConfig = this._config.compaction ?? {};
+    const enabled = compactionConfig.enabled !== false;
+    if (!enabled) return;
 
-    if (!enabled) {
-      return; // Compaction disabled
-    }
-
+    this._disconnectFromAgent();
+    await this.abort();
     this._compactionAbortController = new AbortController();
-    const signal = this._compactionAbortController.signal;
+    this._emit({ type: 'compaction_start', reason: 'manual' });
 
     try {
-      this._emit({ type: "compaction_start", reason: "manual" });
-
-      // 1. Get model and API key
       const model = this._model;
-      if (!model) {
-        throw new Error("No model selected for compaction");
-      }
+      if (!model) throw new Error('No model selected for compaction');
 
       const auth = await this.modelRegistry.getApiKeyAndHeaders(model);
-      if (!auth.ok || !auth.apiKey) {
-        throw new Error(`No API key configured for ${model.provider}/${model.id}`);
-      }
+      if (!auth.ok || !auth.apiKey) throw new Error(`No API key for ${model.provider}/${model.id}`);
 
-      // 2. Get all session entries
-      const entries = this.sessionManager.getEntries();
+      const entries = this.sessionManager.getBranch();
+      const settings = this.settingsManager.getCompactionSettings();
 
-      // 3. Determine if compaction needed
-      const thresholds: CompactionThresholds = {
-        tokenThreshold: compactionConfig.tokenThreshold ?? 100000,
-        minTokens: compactionConfig.minTokens ?? 50000,
-        maxAfterCompaction: compactionConfig.maxTokens ?? 50000,
-      };
-
-      // Quick token estimation using char/4 approximation
-      // For more accurate count, we could use contextBuilder.estimateHistoryTokens
-      const estimatedTokens = entries.reduce((sum, entry) => {
-        if (entry.type === 'message') {
-          const turn = (entry as any).message as ConversationTurn;
-          const content = this._extractTextFromTurn(turn.content);
-          return sum + Math.ceil(content.length / 4);
-        }
-        return sum;
-      }, 0);
-
-      if (!shouldCompact(estimatedTokens, thresholds)) {
-        this._emit({
-          type: "compaction_end",
-          reason: "manual",
-          result: undefined,
-          aborted: false,
-          willRetry: false,
-        });
+      const preparation = prepareCompaction(entries, settings);
+      if (!preparation) {
+        this._emit({ type: 'compaction_end', reason: 'manual', result: undefined, aborted: false, willRetry: false });
         return;
       }
 
-      // 4. Perform compaction
-      const options: CompactOptions = {
+      const result = await performCompaction(
+        preparation,
         model,
-        apiKey: auth.apiKey,
-        headers: auth.headers,
-        signal,
-        reserveTokens: compactionConfig.reserveTokens ?? 16384,
-      };
+        auth.apiKey,
+        auth.headers,
+        undefined,
+        this._compactionAbortController.signal,
+        this.thinkingLevel
+      );
 
-      const compactionEntry = await performCompaction(entries, options);
+      this.sessionManager.appendCompaction(
+        result.summary,
+        result.firstKeptEntryId,
+        result.tokensBefore,
+        result.details,
+        false
+      );
 
-      // 5. Append compaction entry to session
-      this.sessionManager.appendEntry(compactionEntry);
+      const sessionContext = this.sessionManager.buildSessionContext();
+      this._agentState.messages = sessionContext.messages;
 
       this._emit({
-        type: "compaction_end",
-        reason: "manual",
-        result: {
-          summary: compactionEntry.summary,
-          tokensBefore: estimatedTokens,
-          entriesAdded: 1,
-        },
+        type: 'compaction_end',
+        reason: 'manual',
+        result: { summary: result.summary, tokensBefore: result.tokensBefore, entriesAdded: 1 },
         aborted: false,
         willRetry: false,
       });
     } catch (error: any) {
-      if (signal.aborted) {
-        this._emit({
-          type: "compaction_end",
-          reason: "manual",
-          result: undefined,
-          aborted: true,
-          willRetry: false,
-        });
+      if (this._compactionAbortController?.signal.aborted) {
+        this._emit({ type: 'compaction_end', reason: 'manual', result: undefined, aborted: true, willRetry: false });
       } else {
-        this._emit({
-          type: "compaction_end",
-          reason: "manual",
-          result: undefined,
-          aborted: false,
-          willRetry: false,
-          errorMessage: error.message,
-        });
+        this._emit({ type: 'compaction_end', reason: 'manual', result: undefined, aborted: false, willRetry: false, errorMessage: error.message });
         throw error;
       }
     } finally {
       this._compactionAbortController = undefined;
+      this._reconnectToAgent();
     }
   }
 
@@ -925,9 +889,9 @@ export class AgentSession {
   }
 
   private _findLastAssistantMessage(): any | undefined {
-    const history = this.agent.getState().history;
-    for (let i = history.length - 1; i >= 0; i--) {
-      const msg = history[i];
+    const messages = this._agentState.messages;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
       if (msg.role === "assistant") {
         return msg;
       }
@@ -1011,6 +975,22 @@ export class AgentSession {
     this._processAgentEvent(event);
   };
 
+  // =========================================================================
+  // Agent Connection Management
+  // =========================================================================
+
+  private _disconnectFromAgent(): void {
+    if (this._unsubscribeAgent) {
+      this._unsubscribeAgent();
+      this._unsubscribeAgent = undefined;
+    }
+  }
+
+  private _reconnectToAgent(): void {
+    if (this._unsubscribeAgent) return; // Already connected
+    this._unsubscribeAgent = this.agent.subscribe(this._handleAgentEvent);
+  }
+
   private _createRetryPromiseForAgentEnd(event: any): void {
     if (event.type !== "agent:end" || this._retryPromise) {
       return;
@@ -1021,8 +1001,8 @@ export class AgentSession {
       return;
     }
 
-    const history = this.agent.getState().history;
-    const lastAssistant = this._findLastAssistantInMessages(history);
+    const messages = this._agentState.messages;
+    const lastAssistant = this._findLastAssistantInMessages(messages);
     if (!lastAssistant || !this._isRetryableError(lastAssistant)) {
       return;
     }
@@ -1036,6 +1016,7 @@ export class AgentSession {
   }
 
   private _findLastAssistantInMessages(messages: any[]): any | undefined {
+    // messages is already an array of messages
     for (let i = messages.length - 1; i >= 0; i--) {
       const message = messages[i];
       if (message.role === "assistant") {
@@ -1113,13 +1094,11 @@ export class AgentSession {
         this._performanceTracker.record();
       }
 
-      // Auto-compaction if enabled and context is large
+      // Auto-compaction if enabled (handles both overflow and threshold)
       const compactionConfig = this._config.compaction ?? {};
       const autoCompact = compactionConfig.autoCompact !== false; // default true
-      if (autoCompact && !this.isCompacting) {
-        // Debounce: schedule compaction after a short delay
-        // If a new agent run starts within delay, cancel compaction
-        await this._scheduleAutoCompaction();
+      if (autoCompact && this._lastAssistantMessage) {
+        await this._checkCompaction(this._lastAssistantMessage, false);
       }
     }
   }
@@ -1205,6 +1184,186 @@ export class AgentSession {
     }
   }
 
+  // =========================================================================
+  // Agent state accessors (circumvent strict typing)
+  // =========================================================================
+
+  private get _agentState(): any {
+    return (this.agent as any).state || (this.agent as any).runner?.state || this._agentState;
+  }
+
+  private set _agentState(val: any) {
+    (this.agent as any).state = val;
+  }
+
+  // =========================================================================
+  // Compaction Logic
+  // =========================================================================
+
+  /**
+   * Check if auto-compaction should run based on context usage or overflow.
+   * Called after agent_end.
+   */
+  private async _checkCompaction(assistantMessage: any, skipAbortedCheck = true): Promise<void> {
+    const settings = this.settingsManager.getCompactionSettings();
+    if (!settings.enabled) return;
+
+    // Skip if aborted (user cancelled) unless explicitly checking
+    if (skipAbortedCheck && assistantMessage.stopReason === 'aborted') return;
+
+    const contextWindow = this._model?.contextWindow ?? 0;
+
+    // Skip overflow check if message from different model
+    const sameModel = this._model && assistantMessage.provider === this._model.provider && assistantMessage.model === this._model.id;
+
+    // Skip if this assistant message is older than the latest compaction boundary
+    const compactionEntry = this.sessionManager.getLatestCompactionEntry(this.sessionManager.getBranch());
+    const assistantIsFromBeforeCompaction = compactionEntry && assistantMessage.timestamp <= new Date(compactionEntry.timestamp).getTime();
+    if (assistantIsFromBeforeCompaction) return;
+
+    // Case 1: Overflow - LLM returned context overflow error
+    if (sameModel && isContextOverflow(assistantMessage, contextWindow)) {
+      if (this._overflowRecoveryAttempted) {
+        this._emit({
+          type: 'compaction_end',
+          reason: 'overflow',
+          result: undefined,
+          aborted: false,
+          willRetry: false,
+          errorMessage: 'Context overflow recovery failed after one compact-and-retry attempt. Try reducing context or switching to a larger-context model.',
+        });
+        return;
+      }
+
+      this._overflowRecoveryAttempted = true;
+      // Remove error message from agent state (it remains in session history)
+      const messages = this._agentState.messages;
+      if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
+        this._agentState.messages = messages.slice(0, -1);
+      }
+
+      await this._runAutoCompaction('overflow', true);
+      return;
+    }
+
+    // Case 2: Threshold - context size approaching limit
+    let contextTokens: number;
+    if (assistantMessage.stopReason === 'error') {
+      // Estimate from all messages since no usage data
+      const estimate = estimateContextUsage(this._agentState.messages);
+      if (estimate.lastUsageIndex === null) return; // No usage at all
+      // Verify usage is after latest compaction
+      if (compactionEntry && estimate.lastUsageIndex !== null) {
+        const usageMsg = this._agentState.messages[estimate.lastUsageIndex];
+        if (usageMsg.role === 'assistant' && usageMsg.timestamp <= new Date(compactionEntry.timestamp).getTime()) {
+          return; // Usage is stale (pre-compaction)
+        }
+      }
+      contextTokens = estimate.tokens;
+    } else {
+      contextTokens = calculateContextTokens(assistantMessage.usage);
+    }
+
+    if (shouldCompact(contextTokens, contextWindow, settings)) {
+      await this._runAutoCompaction('threshold', false);
+    }
+  }
+
+  /**
+   * Run auto-compaction with given reason.
+   * @param reason 'overflow' | 'threshold'
+   * @param willRetry If true, calls agent.continue() after compaction
+   */
+  private async _runAutoCompaction(reason: 'overflow' | 'threshold', willRetry: boolean): Promise<void> {
+    if (this.isCompacting) return;
+
+    const entries = this.sessionManager.getBranch();
+    const settings = this.settingsManager.getCompactionSettings();
+
+    this._emit({ type: 'compaction_start', reason });
+    this._autoCompactionAbortController = new AbortController();
+
+    try {
+      const model = this._model;
+      if (!model) {
+        this._emit({ type: 'compaction_end', reason, result: undefined, aborted: false, willRetry });
+        return;
+      }
+
+      const auth = await this.modelRegistry.getApiKeyAndHeaders(model);
+      if (!auth.ok || !auth.apiKey) {
+        this._emit({ type: 'compaction_end', reason, result: undefined, aborted: false, willRetry });
+        return;
+      }
+
+      const preparation = prepareCompaction(entries, settings);
+      if (!preparation) {
+        this._emit({ type: 'compaction_end', reason, result: undefined, aborted: false, willRetry });
+        return;
+      }
+
+      // Call compact (stub for now)
+      const compactResult = await performCompaction(
+        preparation,
+        model,
+        auth.apiKey,
+        auth.headers,
+        undefined,
+        this._autoCompactionAbortController.signal,
+        this.thinkingLevel
+      );
+
+      // Append compaction entry to session
+      this.sessionManager.appendCompaction(
+        compactResult.summary,
+        compactResult.firstKeptEntryId,
+        compactResult.tokensBefore,
+        compactResult.details,
+        false // fromExtension
+      );
+
+      // Rebuild agent state messages from session
+      const sessionContext = this.sessionManager.buildSessionContext();
+      this._agentState.messages = sessionContext.messages;
+
+      this._emit({
+        type: 'compaction_end',
+        reason,
+        result: {
+          summary: compactResult.summary,
+          tokensBefore: compactResult.tokensBefore,
+          entriesAdded: 1,
+        },
+        aborted: false,
+        willRetry,
+      });
+
+      if (willRetry) {
+        // Remove any error message that triggered overflow (already done above, but double-check)
+        setTimeout(() => {
+          this.agent.resume().catch(() => {});
+        }, 0);
+      } else if (this._agentState.isStreaming) {
+        // Kick the loop if queued messages exist
+        setTimeout(() => {
+          this.agent.resume().catch(() => {});
+        }, 0);
+      }
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : 'compaction failed';
+      this._emit({
+        type: 'compaction_end',
+        reason,
+        result: undefined,
+        aborted: false,
+        willRetry,
+        errorMessage: reason === 'overflow' ? `Context overflow recovery failed: ${errorMessage}` : `Auto-compaction failed: ${errorMessage}`,
+      });
+    } finally {
+      this._autoCompactionAbortController = undefined;
+    }
+  }
+
   /**
    * Convert AgentEvent to ExtensionEvent for extension consumption.
    * Returns undefined if event should not be forwarded.
@@ -1215,7 +1374,7 @@ export class AgentSession {
       case 'agent:start':
         return { type: 'agent_start', prompt: event.initialPrompt, model: this._model };
       case 'agent:end':
-        return { type: 'agent_end', messages: this.agent.getState().history, success: event.result?.success };
+        return { type: 'agent_end', messages: this._agentState.messages, success: event.result?.success };
       case 'turn:start':
         return { type: 'turn_start', round: event.round, promptLength: event.promptLength };
       case 'turn:end':
@@ -1236,33 +1395,7 @@ export class AgentSession {
     }
   }
 
-  /**
-   * Schedule auto-compaction after a short delay (debounced).
-   * Cancels if agent starts a new run before delay expires.
-   */
-  private async _scheduleAutoCompaction(): Promise<void> {
-    this._cancelAutoCompaction();
 
-    const delay = 2000; // 2 seconds
-    this._autoCompactionTimer = setTimeout(() => {
-      this._autoCompactionTimer = undefined;
-      // Only compact if agent not running
-      if (!this.agent.getState().isRunning) {
-        this._runAutoCompaction().catch((err) => {
-          console.warn('Auto-compaction failed:', err);
-        });
-      }
-    }, delay);
-  }
-
-  private _cancelAutoCompaction(): void {
-    if (this._autoCompactionTimer) {
-      clearTimeout(this._autoCompactionTimer);
-      this._autoCompactionTimer = undefined;
-    }
-    this._autoCompactionAbortController?.abort();
-    this._autoCompactionAbortController = undefined;
-  }
 
   /**
    * Get performance tracking statistics (if enabled)
@@ -1288,78 +1421,6 @@ export class AgentSession {
     this._performanceTracker?.stop();
   }
 
-  private async _runAutoCompaction(): Promise<void> {
-    if (this.isCompacting) return;
-
-    const entries = this.sessionManager.getEntries();
-    // Estimate tokens quickly
-    let estimatedTokens = 0;
-    for (const entry of entries) {
-      if (entry.type === 'message') {
-        const turn = (entry as any).message as ConversationTurn;
-        const content = this._extractTextFromTurn(turn.content);
-        estimatedTokens += Math.ceil(content.length / 4);
-      }
-    }
-
-    const compactionConfig = this._config.compaction ?? {};
-    const thresholds: CompactionThresholds = {
-      tokenThreshold: compactionConfig.tokenThreshold ?? 100000,
-      minTokens: compactionConfig.minTokens ?? 50000,
-      maxAfterCompaction: compactionConfig.maxTokens ?? 50000,
-    };
-
-    if (!shouldCompact(estimatedTokens, thresholds)) {
-      return;
-    }
-
-    this._autoCompactionAbortController = new AbortController();
-    try {
-      this._emit({ type: 'compaction_start', reason: 'threshold' });
-
-      const model = this._model;
-      if (!model) return;
-
-      const auth = await this.modelRegistry.getApiKeyAndHeaders(model);
-      if (!auth.ok || !auth.apiKey) return;
-
-      const options: CompactOptions = {
-        model,
-        apiKey: auth.apiKey,
-        headers: auth.headers,
-        signal: this._autoCompactionAbortController.signal,
-        reserveTokens: compactionConfig.reserveTokens ?? 16384,
-      };
-
-      const compactionEntry = await performCompaction(entries, options);
-      this.sessionManager.appendEntry(compactionEntry);
-
-      this._emit({
-        type: 'compaction_end',
-        reason: 'threshold',
-        result: {
-          summary: compactionEntry.summary,
-          tokensBefore: estimatedTokens,
-          entriesAdded: 1,
-        },
-        aborted: false,
-        willRetry: false,
-      });
-    } catch (error: any) {
-      if (this._autoCompactionAbortController?.signal.aborted) {
-        this._emit({
-          type: 'compaction_end',
-          reason: 'threshold',
-          result: undefined,
-          aborted: true,
-          willRetry: false,
-        });
-      }
-      // else ignore errors for auto-compaction
-    } finally {
-      this._autoCompactionAbortController = undefined;
-    }
-  }
 }
 
 // ============================================================================

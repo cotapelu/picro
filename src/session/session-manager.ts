@@ -769,6 +769,18 @@ export class SessionManager {
     return buildSessionContext(this.getEntries(), this.leafId, this.byId);
   }
 
+  /**
+   * Find the latest compaction entry in a branch.
+   */
+  getLatestCompactionEntry(branch: SessionEntry[]): CompactionEntry | null {
+    for (let i = branch.length - 1; i >= 0; i--) {
+      if (branch[i].type === 'compaction') {
+        return branch[i] as CompactionEntry;
+      }
+    }
+    return null;
+  }
+
   // ============================================================================
   // Session Export/Import
   // ============================================================================
