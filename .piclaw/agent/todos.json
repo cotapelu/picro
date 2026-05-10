@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "phases": [
+    {
+      "id": "phase-2",
+      "name": "Phase 1: Analyze & Design",
+      "tasks": [
+        {
+          "id": "task-6",
+          "content": "Compare src/agent vs llm-context/coding-agent/core (agent-session)",
+          "status": "completed"
+        },
+        {
+          "id": "task-7",
+          "content": "Compare compaction implementations",
+          "status": "completed"
+        },
+        {
+          "id": "task-8",
+          "content": "Compare extension system",
+          "status": "completed"
+        },
+        {
+          "id": "task-9",
+          "content": "Compare retry logic",
+          "status": "completed"
+        },
+        {
+          "id": "task-10",
+          "content": "Compare model/thinking management",
+          "status": "completed"
+        },
+        {
+          "id": "task-11",
+          "content": "Define upgrade goals and architecture",
+          "status": "in_progress"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Phase 2: Write Failing Tests",
+      "tasks": [
+        {
+          "id": "task-12",
+          "content": "Write tests for auto-compaction (threshold & overflow)",
+          "status": "pending"
+        },
+        {
+          "id": "task-13",
+          "content": "Write tests for retry with backoff",
+          "status": "pending"
+        },
+        {
+          "id": "task-14",
+          "content": "Write tests for branch summarization tree navigation",
+          "status": "pending"
+        },
+        {
+          "id": "task-15",
+          "content": "Write tests for extension event emission",
+          "status": "pending"
+        },
+        {
+          "id": "task-16",
+          "content": "Write tests for bash message flushing",
+          "status": "pending"
+        },
+        {
+          "id": "task-17",
+          "content": "Write tests for tool registry with snippets",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Phase 3: Implement Core Upgrades",
+      "tasks": [
+        {
+          "id": "task-18",
+          "content": "Implement auto-compaction with overflow recovery",
+          "status": "pending"
+        },
+        {
+          "id": "task-19",
+          "content": "Implement robust retry with exponential backoff",
+          "status": "pending"
+        },
+        {
+          "id": "task-20",
+          "content": "Implement branch summarization and tree navigation",
+          "status": "pending"
+        },
+        {
+          "id": "task-21",
+          "content": "Enhance extension event system",
+          "status": "pending"
+        },
+        {
+          "id": "task-22",
+          "content": "Add bash pending message flush",
+          "status": "pending"
+        },
+        {
+          "id": "task-23",
+          "content": "Upgrade tool registry with prompt snippets/guidelines",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Phase 4: Refactor & Optimize",
+      "tasks": [
+        {
+          "id": "task-24",
+          "content": "Remove duplication, simplify code",
+          "status": "pending"
+        },
+        {
+          "id": "task-25",
+          "content": "Profile performance and optimize hotspots",
+          "status": "pending"
+        },
+        {
+          "id": "task-26",
+          "content": "Run full test suite and fix regressions",
+          "status": "pending"
+        },
+        {
+          "id": "task-27",
+          "content": "Final verification and documentation",
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "nextTaskId": 28,
+  "nextPhaseId": 6,
+  "updatedAt": "2026-05-10T00:13:17.866Z"
+}
