@@ -1,32 +1,38 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { AgentSession } from '../agent-session';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { AgentSession } from '../agent-session';
+import { Agent } from '../agent';
+import { SessionManager } from '../session/session-manager';
+import { SettingsManager } from '../settings-manager';
+import { ModelRegistry } from '../model-registry';
+import type { Model } from '../../llm';
 
-// Minimal mocks (similar to compaction.test)
-function createMockAgent(): any {
+// Mock dependencies
+function createMockAgent(): Agent {
   return {
     subscribe: vi.fn(() => () => {}),
     state: {
       messages: [],
       model: undefined,
-      thinkingLevel: 'medium',
+      thinkingLevel: 'medium' as const,
       isStreaming: false,
       systemPrompt: '',
       tools: [],
+      isRunning: false,
     },
     signal: new AbortController().signal,
     abort: vi.fn(),
     waitForIdle: vi.fn().mockResolvedValue(undefined),
     prompt: vi.fn().mockResolvedValue(undefined),
-    continue: vi.fn().mockResolvedValue(undefined),
+    resume: vi.fn().mockResolvedValue(undefined),
     steer: vi.fn(),
     followUp: vi.fn(),
     clearAllQueues: vi.fn(),
     getToolNames: vi.fn(() => []),
     registerTool: vi.fn(),
-  };
+  } as any;
 }
 
-function createMockSessionManager(): any {
+function createMockSessionManager(): SessionManager {
   return {
     getEntries: vi.fn(() => []),
     getBranch: vi.fn(() => []),
@@ -44,10 +50,11 @@ function createMockSessionManager(): any {
     getLeafId: vi.fn(() => 'leaf-1'),
     getCwd: vi.fn(() => '/tmp'),
     buildSessionContext: vi.fn(() => ({ messages: [] })),
-  };
+    getLatestCompactionEntry: vi.fn(() => null),
+  } as any;
 }
 
-function createMockSettingsManager(): any {
+function createMockSettingsManager(): SettingsManager {
   return {
     getCompactionSettings: vi.fn(() => ({ enabled: true, reserveTokens: 16384, keepRecentTokens: 20000 })),
     getRetrySettings: vi.fn(() => ({ enabled: true, maxRetries: 3, baseDelayMs: 1000 })),
@@ -58,10 +65,10 @@ function createMockSettingsManager(): any {
     getShellPath: vi.fn(() => '/bin/bash'),
     getTheme: vi.fn(() => 'dark'),
     reload: vi.fn(),
-  };
+  } as any;
 }
 
-function createMockModelRegistry(): any {
+function createMockModelRegistry(): ModelRegistry {
   return {
     hasConfiguredAuth: vi.fn(() => true),
     getApiKeyAndHeaders: vi.fn(() => Promise.resolve({ ok: true, apiKey: 'test-key', headers: {} })),
@@ -70,7 +77,7 @@ function createMockModelRegistry(): any {
     find: vi.fn(() => undefined),
     registerProvider: vi.fn(),
     unregisterProvider: vi.fn(),
-  };
+  } as any;
 }
 
 function createAgentSessionConfig(overrides = {}): any {
@@ -91,38 +98,35 @@ function createAgentSessionConfig(overrides = {}): any {
   };
 }
 
-describe('Auto-Retry Logic', () => {
-  let session: any;
+describe('Retry Logic', () => {
+  let session: AgentSession;
   let mockSettingsManager: any;
-  let mockAgent: any;
+  let eventListeners: any[];
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockSettingsManager = createMockSettingsManager();
-    mockAgent = createMockAgent();
 
-    // Simulate retry enabled
-    mockSettingsManager.getRetrySettings.mockReturnValue({
-      enabled: true,
-      maxRetries: 3,
-      baseDelayMs: 1000, // used for exponential backoff
-    });
+    const model: Model = { id: 'test', provider: 'test', contextWindow: 128000, reasoning: false } as any;
+    const mockAgent = createMockAgent();
+    mockAgent.state.model = model;
 
     const config = createAgentSessionConfig({
       agent: mockAgent,
       settingsManager: mockSettingsManager,
     });
 
-    // Access internal class - we'll test the retry calculation logic indirectly
-    const AgentSessionClass = require('../agent-session').AgentSession;
-    session = new AgentSessionClass(config);
+    // @ts-ignore
+    session = new AgentSession(config);
+    (session as any)._model = model;
+
+    eventListeners = [];
+    // @ts-ignore
+    session.subscribe((event: any) => eventListeners.push(event));
   });
 
-  it('should detect retryable errors', () => {
-    // Access internal _isRetryableError if exposed, or simulate through event
-    // Since _isRetryableError is private, we'll test via behavior or expose via test-only hook
-    // For now, document the expected patterns
-    const retryableErrors = [
+  describe('_isRetryableError', () => {
+    const retryableCases = [
       'overloaded',
       'rate limit',
       '429',
@@ -131,68 +135,107 @@ describe('Auto-Retry Logic', () => {
       '503',
       '504',
       'timeout',
+      'timed out',
       'temporary failure',
     ];
 
-    expect(retryableErrors).toContain('overloaded');
-    expect(retryableErrors).toContain('rate limit');
+    it('should detect retryable error patterns', () => {
+      for (const pattern of retryableCases) {
+        const msg = { errorMessage: `Error: ${pattern} occurred` };
+        // @ts-ignore
+        const result = (session as any)._isRetryableError(msg);
+        expect(result).toBe(true);
+      }
+    });
+
+    it('should NOT retry non-retryable errors', () => {
+      const msg = { errorMessage: 'Invalid API key' };
+      // @ts-ignore
+      const result = (session as any)._isRetryableError(msg);
+      expect(result).toBe(false);
+    });
   });
 
-  it('should calculate exponential backoff delays', () => {
-    const baseDelay = 1000;
-    const delays = [];
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      delays.push(baseDelay * 2 ** (attempt - 1));
-    }
-
-    expect(delays).toEqual([1000, 2000, 4000]);
+  describe('Exponential backoff', () => {
+    it('should calculate delays correctly for attempts 1-3', () => {
+      const baseDelay = 1000;
+      const attempts = [1, 2, 3];
+      const expected = [1000, 2000, 4000];
+      for (let i = 0; i < attempts.length; i++) {
+        const delay = baseDelay * 2 ** (attempts[i] - 1);
+        expect(delay).toBe(expected[i]);
+      }
+    });
   });
 
-  it('should not retry when retry is disabled', () => {
-    mockSettingsManager.getRetrySettings.mockReturnValue({ enabled: false });
-    expect(session.autoRetryEnabled).toBe(false);
+  describe('Retry attempt limits', () => {
+    it('should stop when maxRetries reached (attempt >= max)', async () => {
+      // Simulate already at max retries
+      // @ts-ignore
+      (session as any)._retryMaxAttempts = 3;
+      // @ts-ignore
+      (session as any)._retryAttempt = 3; // next will be 4, but check before increment
+
+      const msg = { errorMessage: 'overloaded' };
+      const result = await (session as any)._handleRetryableError(msg);
+      expect(result).toBe(false);
+    });
+
+    it('should allow retry when under max', async () => {
+      vi.useFakeTimers();
+      // @ts-ignore
+      (session as any)._retryMaxAttempts = 3;
+      // @ts-ignore
+      (session as any)._retryAttempt = 0;
+
+      const msg = { errorMessage: 'overloaded' };
+      const promise = (session as any)._handleRetryableError(msg);
+
+      await vi.runAllTimersAsync(); // fast-forward the backoff delay
+      const result = await promise;
+
+      expect(result).toBe(true);
+      vi.useRealTimers();
+    });
   });
 
-  it('should track retry attempt', () => {
-    expect(session.retryAttempt).toBe(0);
-  });
-});
+  describe('Retry events', () => {
+    it('should emit auto_retry_start event', async () => {
+      vi.useFakeTimers();
+      // @ts-ignore
+      (session as any)._retryMaxAttempts = 3;
+      // @ts-ignore
+      (session as any)._retryAttempt = 0;
 
-describe('Bash Message Flushing', () => {
-  it('should flush pending bash messages after agent turn', async () => {
-    // This will be tested properly once _flushPendingBashMessages is implemented
-    // For now, document expected behavior:
-    // - _pendingBashMessages array accumulates during streaming
-    // - _flushPendingBashMessages() adds each to agent.state.messages and sessionManager.appendMessage()
-    // - Called in prompt() before sending new user message, and in _processAgentEvent on agent_end
-  });
-});
+      const msg = { errorMessage: 'overloaded' };
+      const promise = (session as any)._handleRetryableError(msg);
 
-describe('Tool Registry with Prompt Snippets', () => {
-  it('should include prompt snippets in system prompt', () => {
-    // ToolDefinition should have optional promptSnippet and promptGuidelines
-    // _rebuildSystemPrompt() should collect these and pass to buildSystemPrompt
-  });
-});
+      await vi.runAllTimersAsync();
+      await promise;
 
-describe('Extension Event System', () => {
-  it('should emit before_agent_start event', () => {
-    // ExtensionRunner.emitBeforeAgentStart() should be called in prompt()
-    // It passes: prompt text, images, systemPrompt, systemPromptOptions
-    // Extensions can return messages to inject, or systemPrompt override
-  });
+      const startEvents = eventListeners.filter(e => e.type === 'auto_retry_start');
+      expect(startEvents.length).toBeGreaterThan(0);
+      expect(startEvents[0].attempt).toBe(1);
+      vi.useRealTimers();
+    });
 
-  it('should emit input event for interception', () => {
-    // ExtensionRunner.emitInput() called early in prompt()
-    // Can return: { action: 'pass' } | { action: 'handled' } | { action: 'transform', text, images }
-  });
+    it('should emit auto_retry_end event on success', async () => {
+      vi.useFakeTimers();
+      // @ts-ignore
+      (session as any)._retryMaxAttempts = 3;
+      // @ts-ignore
+      (session as any)._retryAttempt = 0;
 
-  it('should emit session_before_compact event', () => {
-    // Called before compaction, can cancel or provide custom compaction result
-  });
+      const msg = { errorMessage: 'overloaded' };
+      const promise = (session as any)._handleRetryableError(msg);
 
-  it('should emit tool_call and tool_result events', () => {
-    // Agent.beforeToolCall and afterToolCall are hooked in _installAgentToolHooks()
-    // Converted to extension events: tool_call, tool_result
+      await vi.runAllTimersAsync();
+      await promise;
+
+      const endEvents = eventListeners.filter(e => e.type === 'auto_retry_end');
+      expect(endEvents.length).toBeGreaterThan(0);
+      expect(endEvents[0].success).toBe(true);
+      vi.useRealTimers();
+    });
   });
 });

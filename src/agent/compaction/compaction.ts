@@ -12,7 +12,7 @@ import {
   type PrepareCompactionResult,
 } from './core';
 import { computeFileLists, formatFileOperations, SUMMARIZATION_SYSTEM_PROMPT } from './utils';
-import type { SessionEntry, CompactionEntry } from '../session-manager';
+import type { SessionEntry, CompactionEntry } from '../../session/session-manager';
 
 /**
  * Options for compaction.

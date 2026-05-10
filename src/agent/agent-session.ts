@@ -29,11 +29,12 @@ import type { ModelRegistry } from "./model-registry";
 
 // Backward compatible alias
 type ModelAny = ModelEntry;
-import type { SessionManager, CompactionEntry } from "./session-manager";
+import type { SessionManager, CompactionEntry, BranchSummaryEntry } from "../session/session-manager";
 import type { SettingsManager } from "./settings-manager";
 import type { ResourceLoader } from "./resource-loader";
 import {
   estimateContextTokens,
+  estimateContextUsage,
   shouldCompact,
   prepareCompaction,
   compact as performCompaction,
@@ -42,6 +43,7 @@ import {
   type FileOperations,
 } from "./compaction";
 import { isContextOverflow } from "./pi-ai-shim";
+import { collectEntriesForBranchSummary, generateBranchSummary, type BranchSummaryDetails } from "./branch-summarization";
 
 // Re-export types
 export type { AgentSessionEventListener, AgentSessionConfig } from "./agent-session-types";
@@ -1132,6 +1134,7 @@ export class AgentSession {
       "503",
       "504",
       "timeout",
+      "timed out",
       "temporary failure",
     ];
 

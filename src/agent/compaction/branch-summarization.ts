@@ -6,7 +6,7 @@
 
 import { complete } from '../../llm';
 import type { Model } from '../../llm';
-import type { SessionEntry, BranchSummaryEntry } from '../session-manager';
+import type { SessionEntry, BranchSummaryEntry } from '../../session/session-manager';
 import { getMessageFromEntry, serializeConversation, formatFileOperations, computeFileLists, createFileOps, extractFileOpsFromMessage } from './utils';
 
 /**

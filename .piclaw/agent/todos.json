@@ -44,12 +44,12 @@
         {
           "id": "task-12",
           "content": "Write tests for auto-compaction (threshold & overflow)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-13",
           "content": "Write tests for retry with backoff",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-14",
@@ -138,5 +138,5 @@
   ],
   "nextTaskId": 28,
   "nextPhaseId": 6,
-  "updatedAt": "2026-05-10T00:13:17.866Z"
+  "updatedAt": "2026-05-10T02:57:15.263Z"
 }

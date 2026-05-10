@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { AgentSession } from '../agent-session';
-import type { SessionManager } from '../session-manager';
+import { AgentSession } from '../agent-session';
+import type { SessionManager } from '../../session/session-manager';
 import type { SettingsManager } from '../settings-manager';
 import type { ModelRegistry } from '../model-registry';
 import type { Model } from '../../llm';
@@ -137,9 +137,10 @@ describe('Auto-Compaction with Overflow Recovery', () => {
       modelRegistry: mockModelRegistry,
     });
 
-    // AgentSession requires actual implementation class - we'll test the logic through the compact method
-    // Since AgentSession is complex, we'll mock parts and test behavior
-    session = new (require('../agent-session').AgentSession)(config);
+    // Use imported AgentSession
+    session = new AgentSession(config);
+    // Set model directly (internal _model needs to be set)
+    (session as any)._model = model;
   });
 
   it('should compact when context tokens exceed threshold', async () => {
@@ -150,16 +151,22 @@ describe('Auto-Compaction with Overflow Recovery', () => {
     const model: Model = { id: 'test', provider: 'test', contextWindow: 128000, reasoning: false } as any;
     mockAgent.state.model = model;
 
-    // Simulate messages with high token count (using estimateContextTokens)
-    const manyMessages = [];
+    // Simulate session entries (SessionEntry[]) with messages
+    const manyEntries = [];
     for (let i = 0; i < 100; i++) {
-      manyMessages.push({
-        role: 'user' as const,
-        content: 'x'.repeat(1000), // ~250 tokens each
-        timestamp: Date.now(),
+      manyEntries.push({
+        type: 'message' as const,
+        id: `msg-${i}`,
+        parentId: i === 0 ? null : `msg-${i-1}`,
+        timestamp: new Date().toISOString(),
+        message: {
+          role: 'user' as const,
+          content: 'x'.repeat(1000),
+          timestamp: Date.now(),
+        },
       });
     }
-    mockSessionManager.getBranch.mockReturnValue(manyMessages);
+    mockSessionManager.getBranch.mockReturnValue(manyEntries);
 
     // Act
     await session.compact();

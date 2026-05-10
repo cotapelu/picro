@@ -13,7 +13,7 @@ import { homedir } from "node:os";
 import { AgentSession } from "./agent-session";
 import type { AgentSessionServices } from "./agent-session-services";
 import { createAgentSessionServices, createAgentSessionFromServices } from "./agent-session-services";
-import { SessionManager } from "./session-manager";
+import { SessionManager } from "../session/session-manager";
 import type { Model } from "../llm";
 
 /**

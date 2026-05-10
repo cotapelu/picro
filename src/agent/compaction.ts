@@ -10,8 +10,9 @@
  */
 
 import type { AgentMessage, AssistantMessage } from "./agent-types";
-import type { Usage } from "./pi-ai-shim";
-import type { SessionEntry } from "./session-manager";
+import type { SessionEntry } from "../session/session-manager";
+
+type Usage = AssistantMessage['usage'];
 
 // ============================================================================
 // Types
@@ -203,7 +204,12 @@ export function findCutPoint(
 // ============================================================================
 
 export function calculateContextTokens(usage: any): number {
-  return usage.total ?? usage.totalTokens ?? (usage.input || 0) + (usage.output || 0) + (usage.cacheRead || 0) + (usage.cacheWrite || 0);
+  // usage can be from AgentMessage.usage or any compatible shape
+  return (
+    usage.total ??
+    usage.totalTokens ??
+    ((usage.input || 0) + (usage.output || 0) + (usage.cacheRead || 0) + (usage.cacheWrite || 0))
+  );
 }
 
 /**

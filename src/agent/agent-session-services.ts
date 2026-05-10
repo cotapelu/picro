@@ -13,7 +13,7 @@ import { AuthStorage } from "./auth-storage";
 import { SettingsManager } from "./settings-manager";
 import { DefaultModelRegistry } from "./model-registry";
 import { DefaultResourceLoader } from "./resource-loader";
-import { SessionManager } from "./session-manager";
+import { SessionManager } from "../session/session-manager";
 import { Agent } from "./agent";
 import { AgentSession } from "./agent-session";
 import { DEFAULT_TOOL_TIMEOUT } from "./defaults";

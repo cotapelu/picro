@@ -5,7 +5,7 @@
  */
 
 import type { ConversationTurn } from '../types';
-import type { SessionEntry } from '../session-manager';
+import type { SessionEntry } from '../../session/session-manager';
 
 // ============================================================================
 // File Operations Tracking
