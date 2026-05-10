@@ -13,8 +13,8 @@
  * but with different internal architecture.
  */
 
-import type { 
-  AgentRuntimeState, 
+import type {
+  AgentRuntimeState,
   ThinkingLevel,
   ConversationTurn,
   ToolDefinition
@@ -47,10 +47,10 @@ import { collectEntriesForBranchSummary, generateBranchSummary, type BranchSumma
 
 // Re-export types
 export type { AgentSessionEventListener, AgentSessionConfig } from "./agent-session-types";
-export type { 
-  AgentSessionEvent, 
-  QueueUpdateEvent, 
-  CompactionStartEvent, 
+export type {
+  AgentSessionEvent,
+  QueueUpdateEvent,
+  CompactionStartEvent,
   CompactionEndEvent,
   AutoRetryStartEvent,
   AutoRetryEndEvent,
@@ -147,6 +147,10 @@ export class AgentSession {
   private _compactionAbortController: AbortController | undefined;
   private _autoCompactionAbortController: AbortController | undefined;
   private _overflowRecoveryAttempted = false;
+
+  // Bash execution state
+  private _bashAbortController: AbortController | undefined;
+  private _pendingBashMessages: any[] = [];
 
   // Branch summarization state
   private _branchSummaryAbortController: AbortController | undefined;
@@ -518,6 +522,9 @@ export class AgentSession {
     }
     this._pendingNextTurnMessages = [];
 
+    // Flush any pending bash messages before starting new turn
+    this._flushPendingBashMessages();
+
     // Run the agent
     await this.agent.run(text);
     await this.waitForRetry();
@@ -569,7 +576,7 @@ export class AgentSession {
         content: [{ type: "text", text: JSON.stringify(customMsg) }],
         timestamp: Date.now(),
       };
-      
+
       if (options?.deliverAs === "followUp") {
         this.agent.followUp(turn);
       } else {
@@ -736,9 +743,70 @@ export class AgentSession {
   }
 
   // =========================================================================
-  // Session Management
+  // Bash Execution
   // =========================================================================
 
+  /**
+   * Record a bash execution result in session history.
+   * Used by executeBash and by extensions.
+   */
+  recordBashResult(command: string, output: string, exitCode: number, cancelled: boolean, truncated: boolean, fullOutputPath?: string, options?: { excludeFromContext?: boolean }): void {
+    const bashMessage = {
+      role: "bashExecution" as const,
+      command,
+      output,
+      exitCode,
+      cancelled,
+      truncated,
+      fullOutputPath,
+      timestamp: Date.now(),
+      excludeFromContext: options?.excludeFromContext,
+    };
+
+    if (this._agentState.isStreaming) {
+      this._pendingBashMessages.push(bashMessage);
+    } else {
+      this._agentState.messages.push(bashMessage);
+      this.sessionManager.appendMessage(bashMessage as any);
+    }
+  }
+
+  /**
+   * Cancel running bash command.
+   */
+  abortBash(): void {
+    this._bashAbortController?.abort();
+  }
+
+  /** Whether a bash command is currently running */
+  get isBashRunning(): boolean {
+    return this._bashAbortController !== undefined;
+  }
+
+  /** Whether there are pending bash messages waiting to be flushed */
+  get hasPendingBashMessages(): boolean {
+    return this._pendingBashMessages.length > 0;
+  }
+
+  /**
+   * Flush pending bash messages to agent state and session.
+   * Called after agent turn completes to maintain proper message ordering.
+   */
+  private _flushPendingBashMessages(): void {
+    if (this._pendingBashMessages.length === 0) return;
+
+    for (const bashMessage of this._pendingBashMessages) {
+      this._agentState.messages.push(bashMessage);
+      this.sessionManager.appendMessage(bashMessage as any);
+    }
+
+    this._pendingBashMessages = [];
+  }
+
+  // =========================================================================
+  // Session Management
+  // =========================================================================
+  
   /**
    * Update scoped models for cycling.
    */
@@ -746,6 +814,185 @@ export class AgentSession {
     scopedModels: Array<{ model: Model; thinkingLevel?: ThinkingLevel }>
   ): void {
     this._scopedModels = scopedModels;
+  }
+
+  // =========================================================================
+  // Tree Navigation
+  // =========================================================================
+
+  /**
+   * Navigate to a different node in the session tree.
+   * Unlike fork() which creates a new session file, this stays in the same file.
+   *
+   * @param targetId The entry ID to navigate to
+   * @param options.summarize Whether to summarize abandoned branch
+   * @param options.customInstructions Custom instructions for summarizer
+   * @param options.replaceInstructions If true, customInstructions replaces default prompt
+   * @param options.label Label to attach to the branch summary entry
+   * @returns Object with editorText (if user message) and cancelled status
+   */
+  async navigateTree(
+    targetId: string,
+    options: {
+      summarize?: boolean;
+      customInstructions?: string;
+      replaceInstructions?: boolean;
+      label?: string;
+    } = {}
+  ): Promise<{ editorText?: string; cancelled: boolean; aborted?: boolean; summaryEntry?: BranchSummaryEntry }> {
+    const oldLeafId = this.sessionManager.getLeafId();
+
+    if (targetId === oldLeafId) {
+      return { cancelled: false };
+    }
+
+    const targetEntry = this.sessionManager.getEntry(targetId);
+    if (!targetEntry) {
+      throw new Error(`Entry ${targetId} not found`);
+    }
+
+    if (options.summarize && !this._model) {
+      throw new Error('No model available for summarization');
+    }
+
+    const { entries: entriesToSummarize, commonAncestorId } = collectEntriesForBranchSummary(
+      this.sessionManager,
+      oldLeafId,
+      targetId
+    );
+
+    let customInstructions = options.customInstructions;
+    let replaceInstructions = options.replaceInstructions;
+    let label = options.label;
+
+    // Extension hook: session_before_tree
+    if (this._extensionRunner?.hasHandlers('session_before_tree')) {
+      const preparation = {
+        targetId,
+        oldLeafId,
+        commonAncestorId,
+        entriesToSummarize,
+        userWantsSummary: options.summarize ?? false,
+        customInstructions,
+        replaceInstructions,
+        label,
+      };
+
+      try {
+        const result = await this._extensionRunner.emit({
+          type: 'session_before_tree',
+          preparation,
+        });
+
+        if (result?.cancel) {
+          return { cancelled: true };
+        }
+        if (result?.summary && options.summarize) {
+          const summaryEntryId = this.sessionManager.branchWithSummary(
+            commonAncestorId,
+            result.summary,
+            result.details,
+            true
+          );
+          if (label) {
+            this.sessionManager.appendLabelChange(summaryEntryId, label);
+          }
+          const summaryEntry = this.sessionManager.getEntry(summaryEntryId) as BranchSummaryEntry;
+          return { cancelled: false, summaryEntry };
+        }
+        if (result?.customInstructions !== undefined) customInstructions = result.customInstructions;
+        if (result?.replaceInstructions !== undefined) replaceInstructions = result.replaceInstructions;
+        if (result?.label !== undefined) label = result.label;
+      } catch (err) {
+        // Extension error - continue with default
+      }
+    }
+
+    let summaryText: string | undefined;
+    let summaryDetails: any;
+
+    if (options.summarize && entriesToSummarize.length > 0) {
+      const model = this._model!;
+      const auth = await this.modelRegistry.getApiKeyAndHeaders(model);
+      if (!auth.ok || !auth.apiKey) {
+        throw new Error(`No API key for ${model.provider}/${model.id}`);
+      }
+
+      const result = await generateBranchSummary(entriesToSummarize, {
+        model,
+        apiKey: auth.apiKey,
+        headers: auth.headers,
+        signal: new AbortController().signal,
+        customInstructions,
+        replaceInstructions,
+        reserveTokens: 16384,
+      });
+
+      if (result.aborted) {
+        return { cancelled: true, aborted: true };
+      }
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      summaryText = result.summary;
+      summaryDetails = result.details;
+    }
+
+    let newLeafId: string | null;
+    let editorText: string | undefined;
+
+    if (targetEntry.type === 'message' && targetEntry.message.role === 'user') {
+      newLeafId = targetEntry.parentId;
+      // Extract text from message content
+      const msg = targetEntry.message as any;
+      if (typeof msg.content === 'string') {
+        editorText = msg.content;
+      } else if (Array.isArray(msg.content)) {
+        const textBlocks = msg.content.filter((c: any) => c.type === 'text');
+        editorText = textBlocks.map((c: any) => c.text).join('');
+      }
+    } else if (targetEntry.type === 'custom_message') {
+      newLeafId = targetEntry.parentId;
+      editorText =
+        typeof targetEntry.content === 'string'
+          ? targetEntry.content
+          : (targetEntry.content as any[])
+              .filter(c => c.type === 'text')
+              .map(c => c.text)
+              .join('');
+    } else {
+      newLeafId = targetId;
+    }
+
+    if (summaryText) {
+      const summaryEntryId = this.sessionManager.branchWithSummary(
+        newLeafId,
+        summaryText,
+        summaryDetails,
+        false
+      );
+      if (label) {
+        this.sessionManager.appendLabelChange(summaryEntryId, label);
+      }
+      const summaryEntry = this.sessionManager.getEntry(summaryEntryId) as BranchSummaryEntry;
+    } else if (newLeafId === null) {
+      this.sessionManager.resetLeaf();
+    } else {
+      this.sessionManager.branch(newLeafId);
+    }
+
+    const sessionContext = this.sessionManager.buildSessionContext();
+    this._agentState.messages = sessionContext.messages;
+
+    this._emit({
+      type: 'session_tree',
+      newLeafId: this.sessionManager.getLeafId(),
+      oldLeafId,
+      summaryEntry: summaryText ? undefined : undefined,
+      fromExtension: false,
+    });
+
+    return { cancelled: false, editorText };
   }
 
   /**
@@ -1090,6 +1337,9 @@ export class AgentSession {
       }
 
       this._resolveRetry();
+
+      // Flush any pending bash messages from streaming
+      this._flushPendingBashMessages();
 
       // Record performance metrics if tracking enabled
       if (this._enablePerformanceTracking && this._performanceTracker) {

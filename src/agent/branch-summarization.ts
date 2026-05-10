@@ -6,7 +6,7 @@
  */
 
 import type { AgentMessage } from "./agent-types";
-import type { SessionEntry, SessionManager } from "./session/session-manager";
+import type { SessionEntry, SessionManager } from "../session/session-manager";
 
 // ============================================================================
 // Types
@@ -124,8 +124,9 @@ export function collectEntriesForBranchSummary(
     return { entries: [], commonAncestorId: null };
   }
 
-  const oldPath = new Set(session.getBranch(oldLeafId).map(e => e.id));
-  const targetPath = session.getBranch(targetId);
+  const oldBranch = session.getBranch(oldLeafId) as SessionEntry[];
+  const oldPath = new Set(oldBranch.map(e => e.id));
+  const targetPath = session.getBranch(targetId) as SessionEntry[];
 
   let commonAncestorId: string | null = null;
   for (let i = targetPath.length - 1; i >= 0; i--) {
@@ -261,8 +262,8 @@ export async function generateBranchSummary(
   const { fileOps } = prepareBranchEntries(_entries, reserveTokens);
 
   // Build stub summary
-  const msgCount = _entries.filter(e => e.type === "message" || e.type === "custom_message").length;
-  const summaryParts = [
+  const msgCount = _entries.filter((e: any) => e.type === "message" || e.type === "custom_message").length;
+  const summaryParts: string[] = [
     BRANCH_SUMMARY_PREAMBLE.trim(),
     `\n## Goal\nUser explored ${msgCount} messages in this branch.`,
     `\n## Constraints & Preferences\n(none)`,
@@ -274,7 +275,7 @@ export async function generateBranchSummary(
     summaryParts.push(`\n\nAdditional focus: ${customInstructions}`);
   }
 
-  const summary = summaryParts.join("");
+  let summary = summaryParts.join("");
 
   // File lists
   const { readFiles, modifiedFiles } = computeFileLists(fileOps);

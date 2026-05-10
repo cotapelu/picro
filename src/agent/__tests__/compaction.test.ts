@@ -33,7 +33,7 @@ function createMockAgent(): Agent {
 }
 
 function createMockSessionManager(): SessionManager {
-  const entries = [];
+  const entries: any[] = [];
   return {
     getEntries: vi.fn(() => entries),
     getBranch: vi.fn(() => entries),
