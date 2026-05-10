@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * System prompt construction for AgentSession.
+ * Moved from agent/ to runtime/ because it's UI/runtime specific.
  *
  * Builds the system prompt with:
  * - Tool snippets and guidelines

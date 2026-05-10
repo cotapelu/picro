@@ -9,14 +9,14 @@ import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 
-import { AuthStorage } from "../agent/auth-storage";
+import { AuthStorage } from "./auth-storage";
 import { SettingsManager } from "../runtime/settings-manager";
-import { DefaultModelRegistry } from "../agent/model-registry";
+import { DefaultModelRegistry } from "./model-registry";
 import { DefaultResourceLoader } from "../runtime/resource-loader";
 import { SessionManager } from "../session/session-manager";
 import { Agent } from "../agent/agent";
 import { AgentSession } from "../session/agent-session";
-import { DEFAULT_TOOL_TIMEOUT } from "../agent/defaults";
+import { DEFAULT_TOOL_TIMEOUT } from "./defaults";
 import { discoverAndLoadExtensions } from "../extensions/loader";
 import { ExtensionRunner, createExtensionRuntime } from "../extensions/runner";
 import type { ToolDefinition } from "../agent/types";

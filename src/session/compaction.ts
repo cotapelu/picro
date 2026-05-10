@@ -9,7 +9,7 @@
  * - Summarization (stub)
  */
 
-import type { AgentMessage, AssistantMessage } from "../agent/agent-types";
+import type { AgentMessage, AssistantMessage } from "./agent-types";
 import type { SessionEntry } from "../session/session-manager";
 
 type Usage = AssistantMessage['usage'];

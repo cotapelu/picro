@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * File Mutation Queue - Sequential execution for file write/edit operations
+ * Moved from agent/ to runtime/ as it's not core agent logic.
  */
 
 export interface FileMutation {

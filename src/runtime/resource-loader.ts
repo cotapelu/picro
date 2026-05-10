@@ -5,7 +5,7 @@
  * This is a stub implementation - full implementation coming in Phase B
  */
 
-import type { AgentMessage } from "../agent/agent-types";
+import type { AgentMessage } from "../session/agent-types";
 import type { Skill } from "./skills";
 import { loadSkills } from "./skills";
 import { loadPromptTemplates } from "./prompt-templates";

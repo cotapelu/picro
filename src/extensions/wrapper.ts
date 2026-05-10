@@ -5,7 +5,7 @@
 
 import type { ToolDefinition } from "../agent/types";
 import type { ExtensionRunner } from "./runner";
-import type { AgentTool } from "../agent/agent-types";
+import type { AgentTool } from "../session/agent-types";
 
 /**
  * Wrap an AgentTool into an extension-compatible tool.

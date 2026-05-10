@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Resolve configuration values that may be shell commands, environment variables, or literals.
+ * Moved from agent/ to session/ because it's used by auth-storage.
  *
  * Supports:
  * - "!command" - execute shell command and use stdout (cached)

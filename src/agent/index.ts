@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * @picro/agent - Core Agent Library (pure logic, no session persistence)
+ *
+ * This is the lowest-level agent module. It contains only the core
+ * agent execution logic without any session persistence, UI, or runtime concerns.
+ *
+ * Dependencies: None (only uses internal files and ../events, ../llm)
  */
 
 // Agent
@@ -21,7 +26,7 @@ export type {
   FailedToolResult,
 } from './types';
 
-// Event System
+// Event System (Agent emits events)
 export { EventEmitter, createConsoleLogger } from '../events/event-emitter';
 export { createEventBus, type EventBus, type EventBusController } from '../events/event-bus';
 export { PrioritizedEventEmitter } from '../events/prioritized-event-emitter';
@@ -46,14 +51,11 @@ export type {
 } from '../events/events';
 export * from '../events/event-guards';
 
-// Utilities
+// Utilities (agent-specific)
 export { isContextOverflow } from './pi-ai-shim';
 export { ExtensionRunner, createExtensionRuntime } from '../extensions/runner';
-export { DEFAULT_TOOL_TIMEOUT } from './defaults';
-// Tools and utils are available directly from their own modules
-// No re-export here to keep core lean
 
-// Types
+// Core Types
 export type {
   ConversationTurn,
   SystemTurn,
@@ -75,4 +77,23 @@ export type {
   LLMStreamEvent,
   StreamOptions,
   StreamFunction,
+  QueueMode,
 } from './types';
+
+// Components
+export { ContextBuilder } from './context-manager';
+export { MessageQueue } from './message-queue';
+
+// Loop Strategies
+export {
+  LoopStrategyFactory,
+  ReActLoopStrategy,
+  PlanSolveLoopStrategy,
+  ReflectionLoopStrategy,
+  SimpleLoopStrategy,
+  SelfRefineLoopStrategy,
+} from './loop-strategy';
+export type { LoopStrategy } from './loop-strategy';
+
+// Proxy Streaming
+export { createProxyStream, type ProxyOptions } from './proxy-stream';

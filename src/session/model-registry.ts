@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Model Registry - Wrapper around llm package
- * 
+ * Moved from agent/ to session/ because it's used by session services.
+ *
  * Uses @picro/llm MODELS and lookup functions
  */
 

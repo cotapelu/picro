@@ -297,7 +297,7 @@ function getLatestCompactionEntry(entries: SessionEntry[]): CompactionEntry | nu
 // Session Context Building
 // ============================================================================
 
-import { convertSessionMessagesToLlm } from '../agent/convert-to-llm';
+import { convertSessionMessagesToLlm } from './convert-to-llm';
 
 export function buildSessionContext(
   entries: SessionEntry[],

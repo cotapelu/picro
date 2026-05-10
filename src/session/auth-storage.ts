@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Auth Storage - Quản lý API keys và OAuth credentials
- * 
- * Học từ legacy mà KHÔNG copy code:
- * - File locking với proper-lockfile
- * - Runtime overrides
- * - OAuth auto-refresh
- * - Environment variable fallback
+ * Moved from agent/ to session/ because it's session-specific.
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync, chmodSync } from "node:fs";

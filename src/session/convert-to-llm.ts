@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Convert session-specific message types to LLM-compatible Messages.
+ * Moved from agent/ to session/ because it's session-specific.
  *
  * This handles custom message types used in session persistence:
  * - BashExecutionMessage -> user message with formatted output

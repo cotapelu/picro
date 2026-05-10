@@ -1,3 +1,4 @@
+// Type declarations for pi-ai shim
 export interface Usage {
   input: number;
   output: number;
@@ -13,16 +14,4 @@ export interface Usage {
   };
 }
 
-export interface Model {
-  id: string;
-  provider: string;
-  contextWindow: number;
-  reasoning?: boolean;
-}
-
-export function isContextOverflow(message: any, contextWindow: number): boolean {
-  // Simple implementation: check stopReason or usage total > contextWindow
-  if (message.stopReason === 'context_overflow') return true;
-  if (message.usage && message.usage.total && message.usage.total > contextWindow) return true;
-  return false;
-}
+export function isContextOverflow(message: any, contextWindow: number): boolean;

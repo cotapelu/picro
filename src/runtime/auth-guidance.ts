@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Auth Guidance - Messages for auth guidance
+ * Moved from agent/ to runtime/ because it's UI/runtime specific.
  */
 
 /**
@@ -53,6 +54,6 @@ export function formatLoginInstructions(provider: string): string {
     google: "Set GOOGLE_API_KEY environment variable or run 'pi login google'",
     openrouter: "Set OPENROUTER_API_KEY environment variable or run 'pi login openrouter'",
   };
-  
+
   return providerInstructions[provider] ?? `Set API key for ${provider} in auth.json or environment variable`;
 }

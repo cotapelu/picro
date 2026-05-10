@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Agent Types - Extended types for agent module
+ * Moved from agent/ to session/ because these are session-specific message types.
  */
 
 export interface TextContent {
@@ -126,7 +127,8 @@ export interface AgentRuntimeState {
   history: AgentMessage[];
 }
 
-// Re-export from types
-export type { QueueMode } from './types';
-export type { AgentEvent } from './types';
-export type { Agent } from './agent';
+// Re-export from types (core types are still in ../agent/types)
+// These are the Turn-based core types used by the Agent class
+export type { QueueMode } from '../agent/types';
+export type { AgentEvent } from '../agent/types';
+export type { Agent } from '../agent/agent';

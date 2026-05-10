@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Default constants used throughout the agent
+ * Moved from agent/ to session/ because it's used by session services.
  */
 
-import type { ThinkingLevel } from './types';
+import type { ThinkingLevel } from '../agent/types';
 
 /**
  * Default thinking level

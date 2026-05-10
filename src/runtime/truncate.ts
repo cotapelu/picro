@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Truncation Strategies - Advanced output truncation utilities
+ * Moved from agent/ to runtime/ as it's not core agent logic.
  */
 
 /**

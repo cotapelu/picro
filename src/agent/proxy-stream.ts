@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Proxy stream function for routing LLM calls through a server.
- * Different types, but similar purpose to pi-agent-legacy.
+ * Moved from agent/ to runtime/ as it's not core agent logic.
  */
 
 import type { LLMStreamEvent, AssistantTurn } from './types';
-import type { Model } from '../llm';
 
 export interface ProxyOptions {
   authToken: string;
@@ -22,8 +21,8 @@ export interface ProxyOptions {
  */
 export function createProxyStream(
   options: ProxyOptions
-): (model: Model, context: any, streamOptions?: any) => AsyncIterable<LLMStreamEvent> {
-  return async function* (model: Model, context: any, streamOptions?: any): AsyncIterable<LLMStreamEvent> {
+): (model: any, context: any, streamOptions?: any) => AsyncIterable<LLMStreamEvent> {
+  return async function* (model: any, context: any, streamOptions?: any): AsyncIterable<LLMStreamEvent> {
     const partial: AssistantTurn = {
       role: 'assistant',
       content: [],
@@ -177,7 +176,6 @@ function processProxyEvent(
       };
 
     case 'toolcall_delta':
-      // Simplified: just create tool call block
       const existingIdx = partial.content.findIndex(
         (c: any) => c.type === 'toolCall' && c.id === event.id
       );

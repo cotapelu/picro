@@ -4,7 +4,7 @@
  */
 
 import type { AgentRuntimeState } from "../agent/types";
-import type { ModelEntry } from "../agent/model-registry";
+import type { ModelEntry } from "./model-registry";
 import type { ToolDefinition } from "../agent/types";
 
 // ============================================================================

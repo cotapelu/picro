@@ -20,12 +20,12 @@ import type {
   ToolDefinition
 } from "../agent/types";
 import { Agent } from "../agent/agent";
-import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "../agent/auth-guidance";
-import type { AgentTool } from "../agent/agent-types";
+import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "../runtime/auth-guidance";
+import type { AgentTool } from "./agent-types";
 import { PerformanceTracker } from "../runtime/performance-tracker";
 import type { Model } from "../llm";
-import type { ModelEntry } from "../agent/model-registry";
-import type { ModelRegistry } from "../agent/model-registry";
+import type { ModelEntry } from "./model-registry";
+import type { ModelRegistry } from "./model-registry";
 
 // Backward compatible alias
 type ModelAny = ModelEntry;
@@ -43,7 +43,7 @@ import {
   type FileOperations,
 } from "../session/compaction";
 import { isContextOverflow } from "../agent/pi-ai-shim";
-import { buildSystemPrompt } from "../agent/system-prompt";
+import { buildSystemPrompt } from "../runtime/system-prompt";
 import { collectEntriesForBranchSummary, generateBranchSummary, type BranchSummaryDetails } from "../session/branch-summarization";
 
 // Re-export types

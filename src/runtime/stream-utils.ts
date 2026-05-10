@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Stream utilities for handling async iterables.
- * Different implementation names but similar functionality.
+ * Moved from agent/ to runtime/ as it's not core agent logic.
  */
 
 // No specific type import needed; generic functions work with any stream

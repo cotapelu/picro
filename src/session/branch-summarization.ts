@@ -5,7 +5,7 @@
  * Generates summaries of abandoned branches when navigating session tree.
  */
 
-import type { AgentMessage } from "../agent/agent-types";
+import type { AgentMessage } from "./agent-types";
 import type { SessionEntry, SessionManager } from "../session/session-manager";
 
 // ============================================================================

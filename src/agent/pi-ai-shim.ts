@@ -1,5 +1,8 @@
-// Shim for pi-ai types and utilities
-// This provides minimal implementations for runtime
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Shim for pi-ai types and utilities.
+ * This provides minimal implementations for runtime compatibility.
+ */
 
 export interface Usage {
   input: number;
