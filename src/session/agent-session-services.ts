@@ -9,17 +9,17 @@ import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 
-import { AuthStorage } from "./auth-storage";
-import { SettingsManager } from "./settings-manager";
-import { DefaultModelRegistry } from "./model-registry";
-import { DefaultResourceLoader } from "./resource-loader";
+import { AuthStorage } from "../agent/auth-storage";
+import { SettingsManager } from "../agent/settings-manager";
+import { DefaultModelRegistry } from "../agent/model-registry";
+import { DefaultResourceLoader } from "../agent/resource-loader";
 import { SessionManager } from "../session/session-manager";
-import { Agent } from "./agent";
-import { AgentSession } from "./agent-session";
-import { DEFAULT_TOOL_TIMEOUT } from "./defaults";
-import { discoverAndLoadExtensions } from "./extensions/loader";
-import { ExtensionRunner, createExtensionRuntime } from "./extensions/runner";
-import type { ToolDefinition } from "./types";
+import { Agent } from "../agent/agent";
+import { AgentSession } from "../session/agent-session";
+import { DEFAULT_TOOL_TIMEOUT } from "../agent/defaults";
+import { discoverAndLoadExtensions } from "../agent/extensions/loader";
+import { ExtensionRunner, createExtensionRuntime } from "../agent/extensions/runner";
+import type { ToolDefinition } from "../agent/types";
 
 import {
   createBashToolDefinition,
@@ -27,7 +27,7 @@ import {
   createWriteToolDefinition,
   createEditToolDefinition,
   createLsToolDefinition,
-} from "./tools/index";
+} from "../agent/tools/index";
 
 import type { Model } from "../llm";
 

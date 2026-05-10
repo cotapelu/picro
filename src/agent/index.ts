@@ -126,21 +126,21 @@ export type {
 // ============================================================================
 // Agent Session (NEW - Phase A)
 // ============================================================================
-export { AgentSession, parseSkillBlock } from './agent-session';
-export type { AgentSessionConfig, AgentSessionEventListener, AgentSessionEvent } from './agent-session-types';
-export type { QueueUpdateEvent, CompactionStartEvent, CompactionEndEvent, AutoRetryStartEvent, AutoRetryEndEvent, CompactionResult, PromptOptions, ModelCycleResult, SessionStats, ParsedSkillBlock } from './agent-session-types';
+export { AgentSession, parseSkillBlock } from '../session/agent-session';
+export type { AgentSessionConfig, AgentSessionEventListener, AgentSessionEvent } from '../session/agent-session-types';
+export type { QueueUpdateEvent, CompactionStartEvent, CompactionEndEvent, AutoRetryStartEvent, AutoRetryEndEvent, CompactionResult, PromptOptions, ModelCycleResult, SessionStats, ParsedSkillBlock } from '../session/agent-session-types';
 
 // ============================================================================
 // Agent Session Runtime (NEW - Phase A)
 // ============================================================================
-export { AgentSessionRuntime, createAgentSessionRuntime } from './agent-session-runtime';
-export type { AgentSessionRuntimeDiagnostic, CreateAgentSessionRuntimeFactory, CreateAgentSessionRuntimeResult, SessionStartEvent } from './agent-session-runtime';
+export { AgentSessionRuntime, createAgentSessionRuntime } from '../runtime/agent-session-runtime';
+export type { AgentSessionRuntimeDiagnostic, CreateAgentSessionRuntimeFactory, CreateAgentSessionRuntimeResult, SessionStartEvent } from '../runtime/agent-session-runtime';
 
 // ============================================================================
 // Agent Session Services (NEW - Phase A)
 // ============================================================================
-export { createAgentSessionServices, createAgentSessionFromServices } from './agent-session-services';
-export type { CreateAgentSessionServicesOptions, CreateAgentSessionFromServicesOptions, AgentSessionServices } from './agent-session-services';
+export { createAgentSessionServices, createAgentSessionFromServices } from '../session/agent-session-services';
+export type { CreateAgentSessionServicesOptions, CreateAgentSessionFromServicesOptions, AgentSessionServices } from '../session/agent-session-services';
 
 // ============================================================================
 // Resource Loader (NEW - Phase B)

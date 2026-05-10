@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AgentSession } from '../agent-session';
+import { AgentSession } from '../../session/agent-session';
 import { Agent } from '../agent';
 import { SessionManager } from '../../session/session-manager';
 import { SettingsManager } from '../settings-manager';

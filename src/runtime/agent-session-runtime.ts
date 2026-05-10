@@ -10,9 +10,9 @@ import { existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { homedir } from "node:os";
 
-import { AgentSession } from "./agent-session";
-import type { AgentSessionServices } from "./agent-session-services";
-import { createAgentSessionServices, createAgentSessionFromServices } from "./agent-session-services";
+import { AgentSession } from "../session/agent-session";
+import type { AgentSessionServices } from "../session/agent-session-services";
+import { createAgentSessionServices, createAgentSessionFromServices } from "../session/agent-session-services";
 import { SessionManager } from "../session/session-manager";
 import type { Model } from "../llm";
 
@@ -307,7 +307,7 @@ export async function createAgentSessionRuntime(
     scopedModels?: Array<{ model: any; thinkingLevel?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" }>;
     tools?: string[];
     noTools?: "all" | "builtin";
-    customTools?: import("./types.js").ToolDefinition[];
+    customTools?: import("../agent/types").ToolDefinition[];
   }
 ): Promise<AgentSessionRuntime> {
   const cwd = options.cwd;

@@ -3,9 +3,9 @@
  * AgentSession Types - Type definitions for AgentSession module
  */
 
-import type { AgentRuntimeState } from "./types";
-import type { ModelEntry } from "./model-registry";
-import type { ToolDefinition } from "./types";
+import type { AgentRuntimeState } from "../agent/types";
+import type { ModelEntry } from "../agent/model-registry";
+import type { ToolDefinition } from "../agent/types";
 
 // ============================================================================
 // Configuration Types

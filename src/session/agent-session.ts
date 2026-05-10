@@ -18,20 +18,20 @@ import type {
   ThinkingLevel,
   ConversationTurn,
   ToolDefinition
-} from "./types";
-import { Agent } from "./agent";
-import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "./auth-guidance";
-import type { AgentTool } from "./agent-types";
-import { PerformanceTracker } from "./performance-tracker";
+} from "../agent/types";
+import { Agent } from "../agent/agent";
+import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "../agent/auth-guidance";
+import type { AgentTool } from "../agent/agent-types";
+import { PerformanceTracker } from "../agent/performance-tracker";
 import type { Model } from "../llm";
-import type { ModelEntry } from "./model-registry";
-import type { ModelRegistry } from "./model-registry";
+import type { ModelEntry } from "../agent/model-registry";
+import type { ModelRegistry } from "../agent/model-registry";
 
 // Backward compatible alias
 type ModelAny = ModelEntry;
 import type { SessionManager, CompactionEntry, BranchSummaryEntry } from "../session/session-manager";
-import type { SettingsManager } from "./settings-manager";
-import type { ResourceLoader } from "./resource-loader";
+import type { SettingsManager } from "../agent/settings-manager";
+import type { ResourceLoader } from "../agent/resource-loader";
 import {
   estimateContextTokens,
   estimateContextUsage,
@@ -42,8 +42,8 @@ import {
   type CompactionPreparation,
   type FileOperations,
 } from "../session/compaction";
-import { isContextOverflow } from "./pi-ai-shim";
-import { buildSystemPrompt } from "./system-prompt";
+import { isContextOverflow } from "../agent/pi-ai-shim";
+import { buildSystemPrompt } from "../agent/system-prompt";
 import { collectEntriesForBranchSummary, generateBranchSummary, type BranchSummaryDetails } from "../session/branch-summarization";
 
 // Re-export types
@@ -62,8 +62,8 @@ export type {
   ParsedSkillBlock
 } from "./agent-session-types";
 
-import { EventEmitter } from "./event-emitter";
-import type { AgentEvent } from "./types";
+import { EventEmitter } from "../agent/event-emitter";
+import type { AgentEvent } from "../agent/types";
 
 // ============================================================================
 // Constants
