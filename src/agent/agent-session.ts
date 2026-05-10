@@ -41,9 +41,10 @@ import {
   calculateContextTokens,
   type CompactionPreparation,
   type FileOperations,
-} from "./compaction";
+} from "../session/compaction";
 import { isContextOverflow } from "./pi-ai-shim";
-import { collectEntriesForBranchSummary, generateBranchSummary, type BranchSummaryDetails } from "./branch-summarization";
+import { buildSystemPrompt } from "./system-prompt";
+import { collectEntriesForBranchSummary, generateBranchSummary, type BranchSummaryDetails } from "../session/branch-summarization";
 
 // Re-export types
 export type { AgentSessionEventListener, AgentSessionConfig } from "./agent-session-types";
@@ -166,6 +167,8 @@ export class AgentSession {
   // Tool registry
   private _toolRegistry: Map<string, AgentTool> = new Map();
   private _toolDefinitions: Map<string, ToolDefinition> = new Map();
+  private _toolPromptSnippets: Map<string, string> = new Map();
+  private _toolPromptGuidelines: Map<string, string[]> = new Map();
 
   // System prompt
   private _baseSystemPrompt = "";
@@ -356,14 +359,23 @@ export class AgentSession {
     return this._toolDefinitions.get(name);
   }
 
+  /** Build system prompt from current tool snippets and guidelines */
+  private _buildSystemPrompt(): string {
+    return buildSystemPrompt({
+      selectedTools: this.getActiveToolNames(),
+      toolSnippets: Object.fromEntries(this._toolPromptSnippets),
+      promptGuidelines: Array.from(this._toolPromptGuidelines.values()).flat(),
+      cwd: this._cwd,
+      contextFiles: this.resourceLoader.getAgentsFiles()?.agentsFiles,
+      skills: this.resourceLoader.getSkills()?.skills,
+      appendSystemPrompt: this.resourceLoader.getAppendSystemPrompt()?.join("\n\n"),
+    });
+  }
+
   /**
    * Set active tools by name.
    */
   setActiveToolsByName(toolNames: string[]): void {
-    // Unregister all current tools
-    for (const name of this.agent.getToolNames()) {
-      // Current agent doesn't have unregister, so we just add new ones
-    }
     // Register the new tools
     for (const name of toolNames) {
       const def = this._toolDefinitions.get(name);
@@ -371,6 +383,9 @@ export class AgentSession {
         this.agent.registerTool(def);
       }
     }
+    // Rebuild system prompt with updated tool set
+    this._baseSystemPrompt = this._buildSystemPrompt();
+    this._agentState.systemPrompt = this._baseSystemPrompt;
   }
 
   // =========================================================================

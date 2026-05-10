@@ -4,7 +4,7 @@
  * Clean-room implementation inspired by reference but rewritten.
  */
 
-import type { ConversationTurn } from '../types';
+import type { ConversationTurn } from '../../agent/types';
 import type { SessionEntry } from '../../session/session-manager';
 
 // ============================================================================

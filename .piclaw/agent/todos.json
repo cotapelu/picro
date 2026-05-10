@@ -2,141 +2,48 @@
   "version": 1,
   "phases": [
     {
-      "id": "phase-2",
-      "name": "Phase 1: Analyze & Design",
+      "id": "phase-7",
+      "name": "Phase 5: Final Integration & Polish",
       "tasks": [
         {
-          "id": "task-6",
-          "content": "Compare src/agent vs llm-context/coding-agent/core (agent-session)",
+          "id": "task-41",
+          "content": "Integrate buildSystemPrompt for tool snippets/guidelines",
           "status": "completed"
         },
         {
-          "id": "task-7",
-          "content": "Compare compaction implementations",
+          "id": "task-42",
+          "content": "Add comprehensive extension event tests",
           "status": "completed"
         },
         {
-          "id": "task-8",
-          "content": "Compare extension system",
+          "id": "task-43",
+          "content": "Run full test suite and ensure 100% pass",
           "status": "completed"
         },
         {
-          "id": "task-9",
-          "content": "Compare retry logic",
-          "status": "completed"
-        },
-        {
-          "id": "task-10",
-          "content": "Compare model/thinking management",
-          "status": "completed"
-        },
-        {
-          "id": "task-11",
-          "content": "Define upgrade goals and architecture",
+          "id": "task-44",
+          "content": "Profile and optimize critical paths",
           "status": "in_progress"
-        }
-      ]
-    },
-    {
-      "id": "phase-3",
-      "name": "Phase 2: Write Failing Tests",
-      "tasks": [
-        {
-          "id": "task-12",
-          "content": "Write tests for auto-compaction (threshold & overflow)",
-          "status": "completed"
         },
         {
-          "id": "task-13",
-          "content": "Write tests for retry with backoff",
-          "status": "completed"
-        },
-        {
-          "id": "task-14",
-          "content": "Write tests for branch summarization tree navigation",
-          "status": "completed"
-        },
-        {
-          "id": "task-15",
-          "content": "Write tests for extension event emission",
+          "id": "task-45",
+          "content": "Remove any remaining code duplication",
           "status": "pending"
         },
         {
-          "id": "task-16",
-          "content": "Write tests for bash message flushing",
+          "id": "task-46",
+          "content": "Document public API and usage examples",
           "status": "pending"
         },
         {
-          "id": "task-17",
-          "content": "Write tests for tool registry with snippets",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "phase-4",
-      "name": "Phase 3: Implement Core Upgrades",
-      "tasks": [
-        {
-          "id": "task-18",
-          "content": "Implement auto-compaction with overflow recovery",
-          "status": "pending"
-        },
-        {
-          "id": "task-19",
-          "content": "Implement robust retry with exponential backoff",
-          "status": "pending"
-        },
-        {
-          "id": "task-20",
-          "content": "Implement branch summarization and tree navigation",
-          "status": "pending"
-        },
-        {
-          "id": "task-21",
-          "content": "Enhance extension event system",
-          "status": "pending"
-        },
-        {
-          "id": "task-22",
-          "content": "Add bash pending message flush",
-          "status": "pending"
-        },
-        {
-          "id": "task-23",
-          "content": "Upgrade tool registry with prompt snippets/guidelines",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "phase-5",
-      "name": "Phase 4: Refactor & Optimize",
-      "tasks": [
-        {
-          "id": "task-24",
-          "content": "Remove duplication, simplify code",
-          "status": "pending"
-        },
-        {
-          "id": "task-25",
-          "content": "Profile performance and optimize hotspots",
-          "status": "pending"
-        },
-        {
-          "id": "task-26",
-          "content": "Run full test suite and fix regressions",
-          "status": "pending"
-        },
-        {
-          "id": "task-27",
-          "content": "Final verification and documentation",
+          "id": "task-47",
+          "content": "Final integration test with real LLM (if available)",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 28,
-  "nextPhaseId": 6,
-  "updatedAt": "2026-05-10T03:31:18.547Z"
+  "nextTaskId": 48,
+  "nextPhaseId": 8,
+  "updatedAt": "2026-05-10T04:14:56.282Z"
 }

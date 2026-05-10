@@ -5,7 +5,7 @@ import type { SettingsManager } from '../settings-manager';
 import type { ModelRegistry } from '../model-registry';
 import type { Model } from '../../llm';
 import type { Agent } from '../agent';
-import { DEFAULT_COMPACTION_SETTINGS } from '../compaction';
+import { DEFAULT_COMPACTION_SETTINGS } from '../../session/compaction';
 
 // Mock dependencies
 function createMockAgent(): Agent {

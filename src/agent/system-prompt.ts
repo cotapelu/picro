@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * System prompt construction
+ * System prompt construction for AgentSession.
+ *
+ * Builds the system prompt with:
+ * - Tool snippets and guidelines
+ * - Project context files
+ * - Skills
+ * - Date and working directory
  */
 
-// Placeholder paths - in a full implementation these would come from config
-const DEFAULT_DOCS_PATH = "docs/";
-const DEFAULT_EXAMPLES_PATH = "examples/";
-const DEFAULT_README_PATH = "README.md";
-
-/**
- * Options for building system prompt
- */
 export interface BuildSystemPromptOptions {
   /** Custom system prompt (replaces default) */
   customPrompt?: string;
-  /** Tools to include in prompt (default: ["read", "bash", "edit", "write"]) */
+  /** Tools to include in prompt */
   selectedTools?: string[];
   /** One-line tool snippets keyed by tool name */
   toolSnippets?: Record<string, string>;
@@ -27,26 +25,10 @@ export interface BuildSystemPromptOptions {
   /** Pre-loaded context files */
   contextFiles?: Array<{ path: string; content: string }>;
   /** Pre-loaded skills */
-  skills?: any[]; // Skill type placeholder
+  skills?: Array<{ name: string; description: string; filePath: string }>;
 }
 
-/**
- * Format skills for prompt (simplified)
- */
-function formatSkillsForPrompt(skills: any[]): string {
-  if (skills.length === 0) return '';
-
-  let result = '\n\n# Available Skills\n\n';
-  for (const skill of skills) {
-    const name = skill.name || skill.fileName || 'Unknown';
-    result += `## ${name}\n\n${skill.description || 'No description'}\n\n`;
-  }
-  return result;
-}
-
-/**
- * Build the system prompt
- */
+/** Build the system prompt */
 export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
   const {
     customPrompt,
@@ -55,86 +37,74 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
     promptGuidelines,
     appendSystemPrompt,
     cwd,
-    contextFiles = [],
-    skills = [],
+    contextFiles,
+    skills,
   } = options;
 
-  const promptCwd = cwd.replace(/\\/g, '/');
+  const promptCwd = cwd.replace(/\\/g, "/");
 
   const now = new Date();
-  const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const date = now.toISOString().split("T")[0];
 
-  const appendSection = appendSystemPrompt ? `\n\n${appendSystemPrompt}` : '';
+  const appendSection = appendSystemPrompt ? `\n\n${appendSystemPrompt}` : "";
 
-  // If custom prompt provided, use it as base
   if (customPrompt) {
     let prompt = customPrompt;
-
-    if (appendSection) {
-      prompt += appendSection;
-    }
-
-    // Append project context files
-    if (contextFiles.length > 0) {
-      prompt += '\n\n# Project Context\n\n';
-      prompt += 'Project-specific instructions and guidelines:\n\n';
+    if (appendSection) prompt += appendSection;
+    if (contextFiles && contextFiles.length > 0) {
+      prompt += "\n\n# Project Context\n\n";
       for (const { path: filePath, content } of contextFiles) {
         prompt += `## ${filePath}\n\n${content}\n\n`;
       }
     }
-
-    // Append skills
-    if (skills.length > 0) {
+    if (skills && skills.length > 0) {
       prompt += formatSkillsForPrompt(skills);
     }
-
-    // Add date and cwd
     prompt += `\nCurrent date: ${date}`;
     prompt += `\nCurrent working directory: ${promptCwd}`;
-
     return prompt;
   }
 
-  // Build default system prompt
-  const tools = selectedTools || ['read', 'bash', 'edit', 'write'];
-  const visibleTools = toolSnippets
-    ? tools.filter((name) => !!toolSnippets[name])
-    : tools;
-
-  const toolsList = visibleTools.length > 0
-    ? visibleTools.map((name) => `- ${name}: ${toolSnippets?.[name] || '(no description)'}`).join('\n')
-    : '(none)';
+  // Build tools list (only show tools that have snippets)
+  const tools = selectedTools || ["read", "bash", "edit", "write"];
+  const visibleTools = tools.filter((name) => toolSnippets?.[name]);
+  const toolsList =
+    visibleTools.length > 0
+      ? visibleTools.map((name) => `- ${name}: ${toolSnippets![name]}`).join("\n")
+      : "(none)";
 
   // Build guidelines
+  const guidelinesList: string[] = [];
   const guidelinesSet = new Set<string>();
   const addGuideline = (g: string) => {
-    if (g.trim().length > 0) guidelinesSet.add(g.trim());
+    if (guidelinesSet.has(g)) return;
+    guidelinesSet.add(g);
+    guidelinesList.push(g);
   };
 
-  const hasBash = tools.includes('bash');
-  const hasGrep = tools.includes('grep');
-  const hasFind = tools.includes('find');
-  const hasLs = tools.includes('ls');
-  const hasRead = tools.includes('read');
+  // Tool-specific guidelines
+  const hasBash = tools.includes("bash");
+  const hasGrep = tools.includes("grep");
+  const hasFind = tools.includes("find");
+  const hasLs = tools.includes("ls");
 
   if (hasBash && !hasGrep && !hasFind && !hasLs) {
-    addGuideline('Use bash for file operations like ls, rg, find');
+    addGuideline("Use bash for file operations like ls, rg, find");
   } else if (hasBash && (hasGrep || hasFind || hasLs)) {
-    addGuideline('Prefer grep/find/ls tools over bash for file exploration (faster, respects .gitignore)');
+    addGuideline("Prefer grep/find/ls tools over bash for file exploration (faster, respects .gitignore)");
   }
 
-  for (const guideline of promptGuidelines ?? []) {
-    addGuideline(guideline);
+  // Custom guidelines
+  for (const guideline of promptGuidelines || []) {
+    const normalized = guideline.trim();
+    if (normalized) addGuideline(normalized);
   }
 
-  addGuideline('Be concise in your responses');
-  addGuideline('Show file paths clearly when working with files');
+  // Always include
+  addGuideline("Be concise in your responses");
+  addGuideline("Show file paths clearly when working with files");
 
-  const guidelines = Array.from(guidelinesSet).map((g) => `- ${g}`).join('\n');
-
-  const readmePath = DEFAULT_README_PATH;
-  const docsPath = DEFAULT_DOCS_PATH;
-  const examplesPath = DEFAULT_EXAMPLES_PATH;
+  const guidelines = guidelinesList.map((g) => `- ${g}`).join("\n");
 
   let prompt = `You are an expert coding assistant operating inside pi, a coding agent harness. You help users by reading files, executing commands, editing code, and writing new files.
 
@@ -147,34 +117,35 @@ Guidelines:
 ${guidelines}
 
 Pi documentation (read only when the user asks about pi itself, its SDK, extensions, themes, skills, or TUI):
-- Main documentation: ${readmePath}
-- Additional docs: ${docsPath}
-- Examples: ${examplesPath}
+- Main documentation: README.md
+- Additional docs: docs/
+- Examples: examples/
 - When asked about: extensions, themes, skills, prompt templates, TUI components, keybindings, SDK integrations, custom providers, adding models, pi packages
 - When working on pi topics, read the docs and examples, and follow .md cross-references before implementing
-- Always read pi .md files completely and follow links to related docs`;
+- Always read pi .md files completely and follow links to related docs (e.g., tui.md for TUI API details)`;
 
-  if (appendSection) {
-    prompt += appendSection;
-  }
-
-  // Append project context files
-  if (contextFiles.length > 0) {
-    prompt += '\n\n# Project Context\n\n';
-    prompt += 'Project-specific instructions and guidelines:\n\n';
+  if (appendSection) prompt += appendSection;
+  if (contextFiles && contextFiles.length > 0) {
+    prompt += "\n\n# Project Context\n\n";
     for (const { path: filePath, content } of contextFiles) {
       prompt += `## ${filePath}\n\n${content}\n\n`;
     }
   }
-
-  // Append skills
-  if (hasRead && skills.length > 0) {
+  if (skills && skills.length > 0) {
     prompt += formatSkillsForPrompt(skills);
   }
-
-  // Add date and working directory last
   prompt += `\nCurrent date: ${date}`;
   prompt += `\nCurrent working directory: ${promptCwd}`;
 
   return prompt;
+}
+
+/** Format skills for prompt inclusion */
+function formatSkillsForPrompt(skills: Array<{ name: string; description: string; filePath: string }>): string {
+  let text = "\n# Available Skills\n\n";
+  text += "Use /skill:<name> args to invoke a skill. Skills are reusable templates for common tasks.\n\n";
+  for (const skill of skills) {
+    text += `## ${skill.name}\n${skill.description}\n\n`;
+  }
+  return text;
 }

@@ -5,7 +5,7 @@
  */
 
 import type { SessionEntry, BranchSummaryEntry, CompactionEntry } from '../../session/session-manager';
-import type { ConversationTurn } from '../types';
+import type { ConversationTurn } from '../../agent/types';
 import {
   createFileOps,
   extractFileOpsFromMessage,
