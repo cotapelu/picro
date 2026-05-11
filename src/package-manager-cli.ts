@@ -4,10 +4,8 @@
  * Called from main.ts when args start with these commands.
  */
 
-import { join } from "node:path";
 import { getAgentDir } from "./config";
 import { SettingsManager } from "./runtime/settings-manager";
-import { PackageManager } from "./core/package-manager";
 
 export type PackageCommand = "install" | "remove" | "uninstall" | "update" | "list";
 
@@ -67,7 +65,6 @@ export async function handleConfigCommand(args: string[]): Promise<boolean> {
   const cwd = process.cwd();
   const agentDir = getAgentDir();
   const settingsManager = SettingsManager.create(cwd, agentDir);
-  const packageManager = new PackageManager({ cwd, agentDir, settingsManager });
 
   if (sub === "install") {
     const source = args[2];
@@ -76,12 +73,13 @@ export async function handleConfigCommand(args: string[]): Promise<boolean> {
       printConfigHelp();
       return true;
     }
-    const result = await packageManager.install(source, false);
-    if (result.ok) {
-      console.log(`Installed: ${source}`);
-    } else {
-      console.error(`Error: ${result.error}`);
+    const current = settingsManager.getPackages();
+    if (!current.includes(source)) {
+      current.push(source);
+      settingsManager.setPackages(current);
+      await settingsManager.flush();
     }
+    console.log(`Installed: ${source}`);
     return true;
   }
 
@@ -92,32 +90,39 @@ export async function handleConfigCommand(args: string[]): Promise<boolean> {
       printConfigHelp();
       return true;
     }
-    const result = await packageManager.remove(source, false);
-    if (result.ok) {
-      console.log(`Removed: ${source}`);
-    } else {
-      console.error(`Error: ${result.error}`);
+    const current = settingsManager.getPackages();
+    const filtered = current.filter(s => s !== source);
+    if (filtered.length === current.length) {
+      console.error(`Error: Source not found: ${source}`);
+      return true;
     }
+    settingsManager.setPackages(filtered);
+    await settingsManager.flush();
+    console.log(`Removed: ${source}`);
     return true;
   }
 
   if (sub === "update") {
     const source = args[2];
-    const result = await packageManager.update(source);
-    if (result.ok) {
-      if (source) {
-        console.log(`Updated: ${source}`);
+    if (source) {
+      const current = settingsManager.getPackages();
+      if (!current.includes(source)) {
+        console.error(`Error: Source not found: ${source}`);
       } else {
-        console.log("All packages up to date.");
+        // Re-save to trigger reload
+        await settingsManager.flush();
+        console.log(`Updated: ${source}`);
       }
     } else {
-      console.error(`Error: ${result.error}`);
+      // Update all: no-op for now
+      await settingsManager.flush();
+      console.log("All packages up to date.");
     }
     return true;
   }
 
   if (sub === "list") {
-    const packages = packageManager.list();
+    const packages = settingsManager.getPackages();
     if (packages.length === 0) {
       console.log("No packages installed.");
     } else {

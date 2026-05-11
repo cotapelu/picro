@@ -14,7 +14,7 @@ import { processFileArguments, type ProcessedFiles } from "./cli/file-processor"
 import { buildInitialMessage, type InitialMessageResult } from "./cli/initial-message";
 import { listModels } from "./cli/list-models";
 import { selectSession, type SessionsLoader } from "./cli/session-picker";
-import { getMissingSessionCwdIssue, MissingSessionCwdError } from "./core/session-cwd";
+import { getMissingSessionCwdIssue, MissingSessionCwdError } from "./session/session-cwd";
 import { createAgentSessionServices, type AgentSessionServices } from "./session/agent-session-services";
 import { createAgentSessionFromServices, type SessionStartEvent } from "./session/agent-session-services";
 import { SessionManager } from "./session/session-manager";

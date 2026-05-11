@@ -3,8 +3,11 @@
   "version": "0.0.1",
   "description": "picro agnent",
   "private": false,
+  "bin": {
+    "picro": "./dist/main.js"
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/main.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },
