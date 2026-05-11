@@ -75,7 +75,7 @@ export class AgentLoop {
   }
 
   private createInitialState(): AgentRuntimeState {
-    return {
+    const state: AgentRuntimeState = {
       round: 0,
       totalToolCalls: 0,
       totalTokens: 0,
@@ -86,6 +86,9 @@ export class AgentLoop {
       history: [],
       metadata: {},
     };
+    // Alias messages to history for backward compatibility
+    (state as any).messages = state.history;
+    return state;
   }
 
    /**

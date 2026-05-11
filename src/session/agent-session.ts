@@ -693,7 +693,7 @@ export class AgentSession {
       );
 
       const sessionContext = this.sessionManager.buildSessionContext();
-      this._agentState.messages = sessionContext.messages;
+      this._agentState.history = sessionContext.messages;
 
       this._emit({
         type: 'compaction_end',
@@ -781,7 +781,7 @@ export class AgentSession {
     if (this._agentState.isStreaming) {
       this._pendingBashMessages.push(bashMessage);
     } else {
-      this._agentState.messages.push(bashMessage);
+      this._agentState.history.push(bashMessage);
       this.sessionManager.appendMessage(bashMessage as any);
     }
   }
@@ -811,7 +811,7 @@ export class AgentSession {
     if (this._pendingBashMessages.length === 0) return;
 
     for (const bashMessage of this._pendingBashMessages) {
-      this._agentState.messages.push(bashMessage);
+      this._agentState.history.push(bashMessage);
       this.sessionManager.appendMessage(bashMessage as any);
     }
 
@@ -997,7 +997,7 @@ export class AgentSession {
     }
 
     const sessionContext = this.sessionManager.buildSessionContext();
-    this._agentState.messages = sessionContext.messages;
+    this._agentState.history = sessionContext.messages;
 
     this._emit({
       type: 'session_tree',
@@ -1153,7 +1153,7 @@ export class AgentSession {
   }
 
   private _findLastAssistantMessage(): any | undefined {
-    const messages = this._agentState.messages;
+    const messages = this._agentState.history;
     for (let i = messages.length - 1; i >= 0; i--) {
       const msg = messages[i];
       if (msg.role === "assistant") {
@@ -1265,7 +1265,7 @@ export class AgentSession {
       return;
     }
 
-    const messages = this._agentState.messages;
+    const messages = this._agentState.history;
     const lastAssistant = this._findLastAssistantInMessages(messages);
     if (!lastAssistant || !this._isRetryableError(lastAssistant)) {
       return;
@@ -1457,7 +1457,11 @@ export class AgentSession {
   // =========================================================================
 
   private get _agentState(): any {
-    return (this.agent as any).state || (this.agent as any).runner?.state || this._agentState;
+    const state = (this.agent as any).state || (this.agent as any).runner?.state || this._agentState;
+    if (state && !state.messages && state.history) {
+      state.messages = state.history; // alias for compatibility
+    }
+    return state;
   }
 
   private set _agentState(val: any) {
@@ -1505,9 +1509,9 @@ export class AgentSession {
 
       this._overflowRecoveryAttempted = true;
       // Remove error message from agent state (it remains in session history)
-      const messages = this._agentState.messages;
+      const messages = this._agentState.history;
       if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
-        this._agentState.messages = messages.slice(0, -1);
+        this._agentState.history = messages.slice(0, -1);
       }
 
       await this._runAutoCompaction('overflow', true);
@@ -1518,11 +1522,11 @@ export class AgentSession {
     let contextTokens: number;
     if (assistantMessage.stopReason === 'error') {
       // Estimate from all messages since no usage data
-      const estimate = estimateContextUsage(this._agentState.messages);
+      const estimate = estimateContextUsage(this._agentState.history);
       if (estimate.lastUsageIndex === null) return; // No usage at all
       // Verify usage is after latest compaction
       if (compactionEntry && estimate.lastUsageIndex !== null) {
-        const usageMsg = this._agentState.messages[estimate.lastUsageIndex];
+        const usageMsg = this._agentState.history[estimate.lastUsageIndex];
         if (usageMsg.role === 'assistant' && usageMsg.timestamp <= new Date(compactionEntry.timestamp).getTime()) {
           return; // Usage is stale (pre-compaction)
         }
@@ -1592,7 +1596,7 @@ export class AgentSession {
 
       // Rebuild agent state messages from session
       const sessionContext = this.sessionManager.buildSessionContext();
-      this._agentState.messages = sessionContext.messages;
+      this._agentState.history = sessionContext.messages;
 
       this._emit({
         type: 'compaction_end',
@@ -1642,7 +1646,7 @@ export class AgentSession {
       case 'agent:start':
         return { type: 'agent_start', prompt: event.initialPrompt, model: this._model };
       case 'agent:end':
-        return { type: 'agent_end', messages: this._agentState.messages, success: event.result?.success };
+        return { type: 'agent_end', messages: this._agentState.history, success: event.result?.success };
       case 'turn:start':
         return { type: 'turn_start', round: event.round, promptLength: event.promptLength };
       case 'turn:end':
