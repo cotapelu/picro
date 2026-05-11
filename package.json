@@ -7,7 +7,7 @@
     "picro": "./dist/main.js"
   },
   "scripts": {
-    "build": "tsc && chmod +x dist/main.js",
+    "build": "tsc && echo '#!/usr/bin/env node' | cat - dist/main.js > dist/main.js.tmp && mv dist/main.js.tmp dist/main.js && chmod +x dist/main.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },

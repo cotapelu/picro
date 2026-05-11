@@ -2,79 +2,48 @@
   "version": 1,
   "phases": [
     {
-      "id": "phase-26",
-      "name": "All Features Complete",
+      "id": "phase-28",
+      "name": "Phân tích và viết test TUI",
       "tasks": [
         {
-          "id": "task-121",
-          "content": "Core CLI infrastructure (config, timings, file-processor, initial-message, list-models, session-picker, session-cwd, print-mode, rpc-mode, main.ts)",
+          "id": "task-133",
+          "content": "Phân tích cấu trúc atoms/molecules/organisms",
           "status": "completed"
         },
         {
-          "id": "task-122",
-          "content": "Resource Loader with extensions, skills, prompts, themes, context files",
-          "status": "completed"
+          "id": "task-134",
+          "content": "Viết test cho atoms (60 files)",
+          "status": "in_progress"
         },
         {
-          "id": "task-123",
-          "content": "Migrations (auth, sessions, commands->prompts)",
-          "status": "completed"
+          "id": "task-135",
+          "content": "Viết test cho molecules (26 files)",
+          "status": "pending"
         },
         {
-          "id": "task-124",
-          "content": "Package manager CLI (install/remove/update/list)",
-          "status": "completed"
+          "id": "task-136",
+          "content": "Viết test cho organisms (8 files)",
+          "status": "pending"
         },
         {
-          "id": "task-125",
-          "content": "All tests passing (201)",
-          "status": "completed"
+          "id": "task-137",
+          "content": "Viết test cho tui.ts, index.ts, extension-ui-context.ts",
+          "status": "pending"
         },
         {
-          "id": "task-126",
-          "content": "Build successful, no TypeScript errors",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-27",
-      "name": "Final Validation Phase",
-      "tasks": [
-        {
-          "id": "task-127",
-          "content": "Run full test suite and verify 100% pass",
-          "status": "completed"
+          "id": "task-138",
+          "content": "Viết thêm test cho interactive-mode.ts",
+          "status": "pending"
         },
         {
-          "id": "task-128",
-          "content": "Check TypeScript build for any warnings or errors",
-          "status": "completed"
-        },
-        {
-          "id": "task-129",
-          "content": "Verify all required CLI flags work correctly",
-          "status": "completed"
-        },
-        {
-          "id": "task-130",
-          "content": "Review code for any overengineering or bloat",
-          "status": "completed"
-        },
-        {
-          "id": "task-131",
-          "content": "Ensure all public APIs are properly typed and documented",
-          "status": "completed"
-        },
-        {
-          "id": "task-132",
-          "content": "Final git status check and commit any uncommitted changes",
-          "status": "completed"
+          "id": "task-139",
+          "content": "Verify coverage và fix hole",
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 133,
-  "nextPhaseId": 28,
-  "updatedAt": "2026-05-11T07:54:06.916Z"
+  "nextTaskId": 140,
+  "nextPhaseId": 29,
+  "updatedAt": "2026-05-11T09:07:05.262Z"
 }
