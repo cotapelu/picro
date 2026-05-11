@@ -4,6 +4,7 @@
  */
 
 import { existsSync, readFileSync } from 'fs';
+import { resolveReadPath, validatePathWithinBase } from './path-utils';
 
 /**
  * Read tool input
@@ -16,8 +17,10 @@ export interface ReadToolInput {
 
 /**
  * Create read tool definition
+ *
+ * @param cwd - Working directory to resolve relative paths against
  */
-export function createReadToolDefinition() {
+export function createReadToolDefinition(cwd: string) {
   return {
     name: 'read',
     description: 'Read contents of a file',
@@ -25,11 +28,19 @@ export function createReadToolDefinition() {
     async execute(input: ReadToolInput): Promise<any> {
       const { path: filePath, maxLines, offset = 0 } = input;
 
-      if (!existsSync(filePath)) {
+      // Resolve path safely within cwd
+      const resolvedPath = resolveReadPath(filePath, cwd);
+
+      // Validate the resolved path is within cwd (security)
+      if (!validatePathWithinBase(resolvedPath, cwd)) {
+        throw new Error(`Access denied: Path outside working directory`);
+      }
+
+      if (!existsSync(resolvedPath)) {
         throw new Error(`File not found: ${filePath}`);
       }
 
-      let content = readFileSync(filePath, 'utf8');
+      let content = readFileSync(resolvedPath, 'utf8');
       const lines = content.split('\n');
 
       // Apply offset and maxLines

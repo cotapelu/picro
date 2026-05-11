@@ -4,7 +4,8 @@
  */
 
 import { readdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
+import { resolveToCwd, validatePathWithinBase } from './path-utils';
 
 /**
  * Ls tool input
@@ -28,14 +29,24 @@ export interface LsEntry {
 
 /**
  * Create ls tool definition
+ *
+ * @param cwd - Working directory to resolve relative paths against
  */
-export function createLsToolDefinition() {
+export function createLsToolDefinition(cwd: string) {
   return {
     name: 'ls',
     description: 'List directory contents',
     schema: {},
     async execute(input: LsToolInput): Promise<any> {
       const { path: dirPath = '.', recursive = false, includeHidden = false } = input;
+
+      // Resolve directory path safely within cwd
+      const resolvedDir = resolveToCwd(dirPath, cwd);
+
+      // Validate the resolved directory is within cwd (security)
+      if (!validatePathWithinBase(resolvedDir, cwd)) {
+        throw new Error(`Access denied: Path outside working directory`);
+      }
 
       const entries: LsEntry[] = [];
 
@@ -70,7 +81,7 @@ export function createLsToolDefinition() {
         }
       };
 
-      walk(dirPath, 0);
+      walk(resolvedDir, 0);
 
       return {
         entries,

@@ -4,7 +4,8 @@
  */
 
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { dirname } from 'path';
+import { dirname, resolve } from 'path';
+import { resolveToCwd, validatePathWithinBase } from './path-utils';
 
 /**
  * Write tool input
@@ -18,8 +19,10 @@ export interface WriteToolInput {
 
 /**
  * Create write tool definition
+ *
+ * @param cwd - Working directory to resolve relative paths against
  */
-export function createWriteToolDefinition() {
+export function createWriteToolDefinition(cwd: string) {
   return {
     name: 'write',
     description: 'Write content to a file',
@@ -27,14 +30,22 @@ export function createWriteToolDefinition() {
     async execute(input: WriteToolInput): Promise<any> {
       const { path: filePath, content, append = false, createDirs = true } = input;
 
+      // Resolve path safely within cwd
+      const resolvedPath = resolveToCwd(filePath, cwd);
+
+      // Validate the resolved path is within cwd (security)
+      if (!validatePathWithinBase(resolvedPath, cwd)) {
+        throw new Error(`Access denied: Path outside working directory`);
+      }
+
       if (createDirs) {
-        const dir = dirname(filePath);
+        const dir = dirname(resolvedPath);
         if (!existsSync(dir)) {
           mkdirSync(dir, { recursive: true });
         }
       }
 
-      writeFileSync(filePath, content, append ? { flag: 'a' } : { flag: 'w' });
+      writeFileSync(resolvedPath, content, append ? { flag: 'a' } : { flag: 'w' });
 
       return {
         success: true,

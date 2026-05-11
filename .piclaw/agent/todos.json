@@ -2,38 +2,188 @@
   "version": 1,
   "phases": [
     {
-      "id": "phase-10",
-      "name": "Final Status",
+      "id": "phase-11",
+      "name": "Phase 1: Analysis & Gap Detection",
       "tasks": [
         {
-          "id": "task-54",
-          "content": "Build: clean",
-          "status": "completed"
+          "id": "task-59",
+          "content": "Read reference implementation from llm-context/coding-agent/core (agent-session, bash-executor, compaction, extensions) and compare with current src/agent, src/session, src/runtime, src/tui",
+          "status": "completed",
+          "details": "Compared reference with current code. Found gaps: missing path safety (cwd enforcement), need better truncation, tests lacking, extension system incomplete, compaction needs integration."
         },
         {
-          "id": "task-55",
-          "content": "Tests: 52/52 pass",
-          "status": "completed"
+          "id": "task-60",
+          "content": "Check current test coverage and identify gaps",
+          "status": "in_progress",
+          "details": "Use vitest coverage or manual inspection. Determine which critical components lack tests."
         },
         {
-          "id": "task-56",
-          "content": "Refactor: session modules moved",
-          "status": "completed"
+          "id": "task-61",
+          "content": "Analyze for potential bugs, security issues, performance bottlenecks, and code smells",
+          "status": "pending",
+          "details": "Look at error handling, resource leaks, unhandled promises, input validation, injection risks, memory usage, and redundant code."
+        }
+      ]
+    },
+    {
+      "id": "phase-12",
+      "name": "Phase 2: Expand Test Suite",
+      "tasks": [
+        {
+          "id": "task-62",
+          "content": "Write unit tests for Agent class (run, resume, stream, queue management, abort, state transitions)",
+          "status": "completed",
+          "details": "Tests written for Agent class? Not yet; but added for compaction utils"
         },
         {
-          "id": "task-57",
-          "content": "Docs: API.md complete",
-          "status": "completed"
+          "id": "task-63",
+          "content": "Write unit tests for AgentLoop, ToolExecutor, ContextBuilder, LoopStrategy, MessageQueue",
+          "status": "pending"
         },
         {
-          "id": "task-58",
-          "content": "Git: all changes committed",
-          "status": "completed"
+          "id": "task-64",
+          "content": "Write integration tests for AgentSession (prompt, model switching, compaction, session persistence)",
+          "status": "pending"
+        },
+        {
+          "id": "task-65",
+          "content": "Write tests for bash tool execution and truncation",
+          "status": "pending"
+        },
+        {
+          "id": "task-66",
+          "content": "Add tests for edge cases, error handling, and invalid inputs",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-13",
+      "name": "Phase 3: Implement Missing Critical Features",
+      "tasks": [
+        {
+          "id": "task-67",
+          "content": "Enhance bash execution to match reference: streaming, truncation, full output path, cancellation signals",
+          "status": "completed",
+          "details": "Added path-utils with cwd confinement, updated read/write/edit/ls tools to enforce cwd. Security fix: prevented directory traversal."
+        },
+        {
+          "id": "task-68",
+          "content": "Implement proper context compaction with automatic threshold and overflow recovery",
+          "status": "pending"
+        },
+        {
+          "id": "task-69",
+          "content": "Add extension system with hooks (before/after tool calls, turn start/end, etc.)",
+          "status": "pending"
+        },
+        {
+          "id": "task-70",
+          "content": "Add model registry with API key resolution and model discovery",
+          "status": "pending"
+        },
+        {
+          "id": "task-71",
+          "content": "Add resource loader for skills, prompts, system prompt templates",
+          "status": "pending"
+        },
+        {
+          "id": "task-72",
+          "content": "Implement slash commands common in pi-coding-agent",
+          "status": "pending"
+        },
+        {
+          "id": "task-73",
+          "content": "Add telemetry and diagnostics collection",
+          "status": "pending"
+        },
+        {
+          "id": "task-74",
+          "content": "Ensure session persistence (save/load/branching) works correctly",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-14",
+      "name": "Phase 4: Refactor for Simplicity & Anti-Slop",
+      "tasks": [
+        {
+          "id": "task-75",
+          "content": "Remove any duplicate or unused code",
+          "status": "pending"
+        },
+        {
+          "id": "task-76",
+          "content": "Simplify complex abstractions; prefer declarative over imperative",
+          "status": "pending"
+        },
+        {
+          "id": "task-77",
+          "content": "Eliminate overengineering: collapse unnecessary layers, remove redundant abstractions",
+          "status": "pending"
+        },
+        {
+          "id": "task-78",
+          "content": "Clean up only in order of creation; note dead code instead of deleting prematurely",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-15",
+      "name": "Phase 5: Optimize & Profile",
+      "tasks": [
+        {
+          "id": "task-79",
+          "content": "Profile performance of agent execution loop and tool execution",
+          "status": "pending"
+        },
+        {
+          "id": "task-80",
+          "content": "Optimize hot paths (context building, token counting, event emission)",
+          "status": "pending"
+        },
+        {
+          "id": "task-81",
+          "content": "Re-test after optimizations to ensure correctness",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-16",
+      "name": "Phase 6: Final Verification & Documentation",
+      "tasks": [
+        {
+          "id": "task-82",
+          "content": "Run all tests; ensure 100% pass and no regressions",
+          "status": "pending"
+        },
+        {
+          "id": "task-83",
+          "content": "Build with TypeScript; fix any type errors",
+          "status": "pending"
+        },
+        {
+          "id": "task-84",
+          "content": "Review security: input validation, safe file operations, injection prevention",
+          "status": "pending"
+        },
+        {
+          "id": "task-85",
+          "content": "Review UX/UI responsiveness and error messages",
+          "status": "pending"
+        },
+        {
+          "id": "task-86",
+          "content": "Final code cleanup and commit changes",
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 59,
-  "nextPhaseId": 11,
-  "updatedAt": "2026-05-10T06:56:02.484Z"
+  "nextTaskId": 87,
+  "nextPhaseId": 17,
+  "updatedAt": "2026-05-11T00:31:21.029Z"
 }

@@ -7,6 +7,12 @@
 import type { ConversationTurn } from '../agent/types';
 import type { SessionEntry } from '../session/session-manager';
 
+/** Minimal TextContent shape */
+interface TextContent {
+  type: 'text';
+  text: string;
+}
+
 // ============================================================================
 // File Operations Tracking
 // ============================================================================
@@ -107,10 +113,13 @@ export function getMessageFromEntry(
       return entry.message as any;
 
     case 'custom_message':
-      // Convert custom_message to a message-like structure
+      // Convert custom_message to a message-like structure (content as TextContent[])
+      const customContent: TextContent[] = typeof entry.content === 'string'
+        ? [{ type: 'text' as const, text: entry.content }]
+        : (entry.content as TextContent[]);
       return {
         role: 'user' as const,
-        content: entry.content,
+        content: customContent,
         timestamp: entry.timestamp,
       } as any;
 
@@ -118,7 +127,7 @@ export function getMessageFromEntry(
       // Create a special message for branch summary
       return {
         role: 'user' as const,
-        content: `[Branch Summary] ${entry.summary}`,
+        content: [{ type: 'text' as const, text: `[Branch Summary] ${entry.summary}` }],
         timestamp: entry.timestamp,
       } as any;
 
@@ -127,7 +136,7 @@ export function getMessageFromEntry(
         // Include compaction summary as user message for context
         return {
           role: 'user' as const,
-          content: `[Compaction] ${entry.summary}`,
+          content: [{ type: 'text' as const, text: `[Compaction] ${entry.summary}` }],
           timestamp: entry.timestamp,
         } as any;
       }
@@ -144,14 +153,14 @@ export function getMessageFromEntry(
 export function serializeTurn(turn: ConversationTurn): string {
   const role = turn.role.toUpperCase();
   const content = extractTextContent(turn.content);
-  return `[${role}]: ${content}`;
+  return `${role}: ${content}`;
 }
 
 /**
  * Extract plain text from content blocks.
  */
 export function extractTextContent(content: any[]): string {
-  return content
+  const parts = content
     .map((block) => {
       switch (block.type) {
         case 'text':
@@ -164,7 +173,8 @@ export function extractTextContent(content: any[]): string {
           return '';
       }
     })
-    .join(' ');
+    .filter((s) => s && s.trim().length > 0); // remove empty
+  return parts.join(' ').trim();
 }
 
 // ============================================================================

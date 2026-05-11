@@ -4,6 +4,7 @@
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { resolveToCwd, validatePathWithinBase } from './path-utils';
 
 /**
  * Edit tool input
@@ -17,8 +18,10 @@ export interface EditToolInput {
 
 /**
  * Create edit tool definition
+ *
+ * @param cwd - Working directory to resolve relative paths against
  */
-export function createEditToolDefinition() {
+export function createEditToolDefinition(cwd: string) {
   return {
     name: 'edit',
     description: 'Replace text in a file',
@@ -26,11 +29,19 @@ export function createEditToolDefinition() {
     async execute(input: EditToolInput): Promise<any> {
       const { path: filePath, oldString, newString, dryRun = false } = input;
 
-      if (!existsSync(filePath)) {
+      // Resolve path safely within cwd
+      const resolvedPath = resolveToCwd(filePath, cwd);
+
+      // Validate the resolved path is within cwd (security)
+      if (!validatePathWithinBase(resolvedPath, cwd)) {
+        throw new Error(`Access denied: Path outside working directory`);
+      }
+
+      if (!existsSync(resolvedPath)) {
         throw new Error(`File not found: ${filePath}`);
       }
 
-      const original = readFileSync(filePath, 'utf8');
+      const original = readFileSync(resolvedPath, 'utf8');
       const index = original.indexOf(oldString);
 
       if (index === -1) {
@@ -51,7 +62,7 @@ export function createEditToolDefinition() {
         };
       }
 
-      writeFileSync(filePath, modified, 'utf8');
+      writeFileSync(resolvedPath, modified, 'utf8');
 
       return {
         success: true,

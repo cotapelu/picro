@@ -198,10 +198,10 @@ export async function createAgentSessionFromServices(
     ? []
     : [
         wrapBuiltinTool(createBashToolDefinition(cwd)),
-        wrapBuiltinTool(createReadToolDefinition()),
-        wrapBuiltinTool(createWriteToolDefinition()),
-        wrapBuiltinTool(createEditToolDefinition()),
-        wrapBuiltinTool(createLsToolDefinition()),
+        wrapBuiltinTool(createReadToolDefinition(cwd)),
+        wrapBuiltinTool(createWriteToolDefinition(cwd)),
+        wrapBuiltinTool(createEditToolDefinition(cwd)),
+        wrapBuiltinTool(createLsToolDefinition(cwd)),
       ];
 
   // Create Agent with built-in tools only (model can be undefined)
