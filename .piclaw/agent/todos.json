@@ -14,14 +14,14 @@
         {
           "id": "task-60",
           "content": "Check current test coverage and identify gaps",
-          "status": "in_progress",
-          "details": "Use vitest coverage or manual inspection. Determine which critical components lack tests."
+          "status": "completed",
+          "details": "Coverage expanded: added unit tests for compaction utils (32) and file tools (22). Total tests 84."
         },
         {
           "id": "task-61",
           "content": "Analyze for potential bugs, security issues, performance bottlenecks, and code smells",
-          "status": "pending",
-          "details": "Look at error handling, resource leaks, unhandled promises, input validation, injection risks, memory usage, and redundant code."
+          "status": "completed",
+          "details": "Fixed bugs: serializeTurn brackets, extractTextContent empty filters, message conversion (branch_summary, compaction, custom_message) to array content; fixed type mismatches in tests; enhanced security: path confinement for file tools with cwd validation and resolveReadPath; added path utils."
         }
       ]
     },
@@ -38,7 +38,7 @@
         {
           "id": "task-63",
           "content": "Write unit tests for AgentLoop, ToolExecutor, ContextBuilder, LoopStrategy, MessageQueue",
-          "status": "pending"
+          "status": "in_progress"
         },
         {
           "id": "task-64",
@@ -185,5 +185,5 @@
   ],
   "nextTaskId": 87,
   "nextPhaseId": 17,
-  "updatedAt": "2026-05-11T00:31:21.029Z"
+  "updatedAt": "2026-05-11T01:16:20.568Z"
 }
