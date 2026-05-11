@@ -11,6 +11,7 @@ export interface SessionInfo {
   name: string;
   cwd: string;
   updatedAt: Date;
+  path?: string; // full path to session file
 }
 
 export interface SessionSelectorOptions {

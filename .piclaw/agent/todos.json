@@ -2,192 +2,90 @@
   "version": 1,
   "phases": [
     {
-      "id": "phase-11",
-      "name": "Phase 1: Analysis & Gap Detection",
+      "id": "phase-20",
+      "name": "Phase 1: Analysis Complete",
       "tasks": [
         {
-          "id": "task-59",
-          "content": "Read reference implementation from llm-context/coding-agent/core (agent-session, bash-executor, compaction, extensions) and compare with current src/agent, src/session, src/runtime, src/tui",
-          "status": "completed",
-          "details": "Compared reference with current code. Found gaps: missing path safety (cwd enforcement), need better truncation, tests lacking, extension system incomplete, compaction needs integration."
+          "id": "task-90",
+          "content": "Analyzed current codebase (src/) and reference (llm-context/coding-agent)",
+          "status": "completed"
         },
         {
-          "id": "task-60",
-          "content": "Check current test coverage and identify gaps",
-          "status": "completed",
-          "details": "Coverage expanded: compaction utils (32), file tools (22), ToolExecutor (23), ContextBuilder (14), AgentLoop (9). Total 124 tests."
+          "id": "task-91",
+          "content": "Identified missing components: cli/file-processor, cli/initial-message, cli/list-models, cli/session-picker, core/session-cwd, migrations, modes/print&rpc, package-manager-cli, config, timings, resource-loader completion",
+          "status": "completed"
         },
         {
-          "id": "task-61",
-          "content": "Analyze for potential bugs, security issues, performance bottlenecks, and code smells",
-          "status": "completed",
-          "details": "Analyzed codebase, fixed security issues (path traversal), bugs in utils, improved type safety. No major performance bottlenecks identified yet."
+          "id": "task-92",
+          "content": "Assessed existing infrastructure: agent core, tui, runtime (partial), session, settings, extensions (partial), auth, model-registry",
+          "status": "completed"
+        },
+        {
+          "id": "task-93",
+          "content": "Architecture decision: main.ts orchestrates all components; each module TDD with tests",
+          "status": "completed"
         }
       ]
     },
     {
-      "id": "phase-12",
-      "name": "Phase 2: Expand Test Suite",
+      "id": "phase-21",
+      "name": "Phase 2: Core Utilities",
       "tasks": [
         {
-          "id": "task-62",
-          "content": "Write unit tests for Agent class (run, resume, stream, queue management, abort, state transitions)",
-          "status": "completed",
-          "details": "Tests written for Agent class? Not yet; but added for compaction utils"
+          "id": "task-94",
+          "content": "Create src/utils/timings.ts with resetTimings/time/printTimings",
+          "status": "completed"
         },
         {
-          "id": "task-63",
-          "content": "Write unit tests for AgentLoop, ToolExecutor, ContextBuilder, LoopStrategy, MessageQueue",
-          "status": "completed",
-          "details": "Added unit tests for AgentLoop (9), ToolExecutor (23), ContextBuilder (14). MessageQueue not yet tested but can be added later."
+          "id": "task-95",
+          "content": "Create src/config.ts with APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR, VERSION",
+          "status": "completed"
         },
         {
-          "id": "task-64",
-          "content": "Write integration tests for AgentSession (prompt, model switching, compaction, session persistence)",
-          "status": "completed",
-          "details": "Integration tests for AgentSession: lifecycle, prompt flow, events, persistence. Total integration tests 5."
-        },
-        {
-          "id": "task-65",
-          "content": "Write tests for bash tool execution and truncation",
-          "status": "completed",
-          "details": "Bash tool tests exist in file-tools.test.ts covering execution, truncation, cwd confinement."
-        },
-        {
-          "id": "task-66",
-          "content": "Add tests for edge cases, error handling, and invalid inputs",
-          "status": "completed",
-          "details": "Edge cases and error handling are covered across unit and integration tests (129 total). Includes invalid inputs, timeouts, abort, path traversal, missing files, type errors, etc."
+          "id": "task-96",
+          "content": "Check if src/utils/paths.ts needs updates",
+          "status": "completed"
         }
       ]
     },
     {
-      "id": "phase-13",
-      "name": "Phase 3: Implement Missing Critical Features",
+      "id": "phase-22",
+      "name": "Phase 3: CLI Support Modules",
       "tasks": [
         {
-          "id": "task-67",
-          "content": "Enhance bash execution to match reference: streaming, truncation, full output path, cancellation signals",
-          "status": "completed",
-          "details": "Added path-utils with cwd confinement, updated read/write/edit/ls tools to enforce cwd. Security fix: prevented directory traversal."
-        },
-        {
-          "id": "task-68",
-          "content": "Implement proper context compaction with automatic threshold and overflow recovery",
+          "id": "task-97",
+          "content": "Implement src/cli/file-processor.ts to process @file args with image support",
           "status": "in_progress"
         },
         {
-          "id": "task-69",
-          "content": "Add extension system with hooks (before/after tool calls, turn start/end, etc.)",
+          "id": "task-98",
+          "content": "Implement src/cli/initial-message.ts to build initial message from args/files/stdin",
           "status": "pending"
         },
         {
-          "id": "task-70",
-          "content": "Add model registry with API key resolution and model discovery",
+          "id": "task-99",
+          "content": "Implement src/cli/list-models.ts to list models with optional search",
           "status": "pending"
         },
         {
-          "id": "task-71",
-          "content": "Add resource loader for skills, prompts, system prompt templates",
+          "id": "task-100",
+          "content": "Implement src/cli/session-picker.ts for interactive session selection",
           "status": "pending"
         },
         {
-          "id": "task-72",
-          "content": "Implement slash commands common in pi-coding-agent",
+          "id": "task-101",
+          "content": "Implement src/core/session-cwd.ts for cross-project CWD resolution",
           "status": "pending"
         },
         {
-          "id": "task-73",
-          "content": "Add telemetry and diagnostics collection",
-          "status": "pending"
-        },
-        {
-          "id": "task-74",
-          "content": "Ensure session persistence (save/load/branching) works correctly",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "phase-14",
-      "name": "Phase 4: Refactor for Simplicity & Anti-Slop",
-      "tasks": [
-        {
-          "id": "task-75",
-          "content": "Remove any duplicate or unused code",
-          "status": "pending"
-        },
-        {
-          "id": "task-76",
-          "content": "Simplify complex abstractions; prefer declarative over imperative",
-          "status": "pending"
-        },
-        {
-          "id": "task-77",
-          "content": "Eliminate overengineering: collapse unnecessary layers, remove redundant abstractions",
-          "status": "pending"
-        },
-        {
-          "id": "task-78",
-          "content": "Clean up only in order of creation; note dead code instead of deleting prematurely",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "phase-15",
-      "name": "Phase 5: Optimize & Profile",
-      "tasks": [
-        {
-          "id": "task-79",
-          "content": "Profile performance of agent execution loop and tool execution",
-          "status": "pending"
-        },
-        {
-          "id": "task-80",
-          "content": "Optimize hot paths (context building, token counting, event emission)",
-          "status": "pending"
-        },
-        {
-          "id": "task-81",
-          "content": "Re-test after optimizations to ensure correctness",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "phase-16",
-      "name": "Phase 6: Final Verification & Documentation",
-      "tasks": [
-        {
-          "id": "task-82",
-          "content": "Run all tests; ensure 100% pass and no regressions",
-          "status": "pending"
-        },
-        {
-          "id": "task-83",
-          "content": "Build with TypeScript; fix any type errors",
-          "status": "pending"
-        },
-        {
-          "id": "task-84",
-          "content": "Review security: input validation, safe file operations, injection prevention",
-          "status": "pending"
-        },
-        {
-          "id": "task-85",
-          "content": "Review UX/UI responsiveness and error messages",
-          "status": "pending"
-        },
-        {
-          "id": "task-86",
-          "content": "Final code cleanup and commit changes",
+          "id": "task-102",
+          "content": "Write tests for each module and ensure 100% pass",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 87,
-  "nextPhaseId": 17,
-  "updatedAt": "2026-05-11T02:11:48.302Z"
+  "nextTaskId": 103,
+  "nextPhaseId": 23,
+  "updatedAt": "2026-05-11T04:57:00.836Z"
 }

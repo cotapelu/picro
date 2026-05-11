@@ -22,7 +22,9 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+import { readFile, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { getAgentDir } from "../config";
 
 // ============================================================================
 // Constants
@@ -291,6 +293,83 @@ function getLatestCompactionEntry(entries: SessionEntry[]): CompactionEntry | nu
     }
   }
   return null;
+}
+
+/**
+ * Build SessionInfo from a session file.
+ * Extracts metadata, name, first message, message count.
+ */
+export async function buildSessionInfo(filePath: string): Promise<SessionInfo | null> {
+  try {
+    const content = await readFile(filePath, 'utf8');
+    const mtime = await stat(filePath);
+    const lines = content.trim().split('\n').filter(l => l.trim());
+    const entries: FileEntry[] = [];
+    for (const line of lines) {
+      try {
+        entries.push(JSON.parse(line) as FileEntry);
+      } catch {
+        // skip malformed
+      }
+    }
+    if (entries.length === 0) return null;
+
+    const header = entries.find(e => e.type === 'session') as SessionHeader | undefined;
+    if (!header) return null;
+
+    const info: SessionInfo = {
+      path: filePath,
+      id: header.id,
+      cwd: header.cwd,
+      parentSessionPath: header.parentSession,
+      created: new Date(header.timestamp),
+      modified: mtime.mtime,
+      messageCount: 0,
+      firstMessage: '',
+      allMessagesText: '',
+    };
+
+    // Look for SessionInfoEntry to get name
+    for (const entry of entries) {
+      if (entry.type === 'session_info') {
+        const si = entry as SessionInfoEntry;
+        if (si.name) {
+          info.name = si.name;
+          break; // use first name
+        }
+      }
+    }
+
+    // Extract message count and text
+    let first = true;
+    for (const entry of entries) {
+      if (entry.type === 'message') {
+        const msgEntry = entry as SessionMessageEntry;
+        info.messageCount++;
+        const msgText = JSON.stringify(msgEntry.message);
+        info.allMessagesText += msgText + '\n';
+        if (first) {
+          const content = msgEntry.message.content;
+          if (typeof content === 'string') {
+            info.firstMessage = content.substring(0, 200);
+          } else if (Array.isArray(content) && content.length > 0) {
+            // Try to extract text from first content item
+            const firstItem = content[0];
+            if (typeof firstItem === 'string') {
+              info.firstMessage = firstItem.substring(0, 200);
+            } else if (firstItem && typeof firstItem === 'object' && 'text' in firstItem) {
+              info.firstMessage = (firstItem as any).text.substring(0, 200);
+            }
+          }
+          first = false;
+        }
+      }
+    }
+
+    return info;
+  } catch (err) {
+    return null;
+  }
 }
 
 // ============================================================================
@@ -1063,5 +1142,41 @@ export class SessionManager {
 
   static inMemory(cwd: string = process.cwd()): SessionManager {
     return new SessionManager(cwd, "", undefined, false);
+  }
+
+  /**
+   * List sessions in the project's session directory.
+   */
+  static async list(cwd: string, sessionDir?: string): Promise<SessionInfo[]> {
+    const dir = sessionDir ?? getDefaultSessionDir(cwd, getAgentDir());
+    if (!existsSync(dir)) return [];
+    const files = readdirSync(dir).filter(f => f.endsWith('.jsonl'));
+    const infos: SessionInfo[] = [];
+    for (const file of files) {
+      const full = join(dir, file);
+      const info = await buildSessionInfo(full);
+      if (info) infos.push(info);
+    }
+    return infos.sort((a, b) => b.modified.getTime() - a.modified.getTime());
+  }
+
+  /**
+   * List all sessions across all projects under the agent's sessions directory.
+   */
+  static async listAll(): Promise<SessionInfo[]> {
+    const sessionsRoot = join(getAgentDir(), "sessions");
+    if (!existsSync(sessionsRoot)) return [];
+    const projectDirs = readdirSync(sessionsRoot).filter(d => existsSync(join(sessionsRoot, d)));
+    const infos: SessionInfo[] = [];
+    for (const proj of projectDirs) {
+      const dir = join(sessionsRoot, proj);
+      const files = readdirSync(dir).filter(f => f.endsWith('.jsonl'));
+      for (const file of files) {
+        const full = join(dir, file);
+        const info = await buildSessionInfo(full);
+        if (info) infos.push(info);
+      }
+    }
+    return infos.sort((a, b) => b.modified.getTime() - a.modified.getTime());
   }
 }
