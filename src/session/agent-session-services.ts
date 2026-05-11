@@ -59,6 +59,19 @@ export interface CreateAgentSessionServicesOptions {
   modelRegistry?: DefaultModelRegistry;
   extensionFlagValues?: Map<string, boolean | string>;
   resourceLoader?: DefaultResourceLoader;
+  resourceLoaderOptions?: {
+    additionalExtensionPaths?: string[];
+    additionalSkillPaths?: string[];
+    additionalPromptTemplatePaths?: string[];
+    additionalThemePaths?: string[];
+    noExtensions?: boolean;
+    noSkills?: boolean;
+    noPromptTemplates?: boolean;
+    noThemes?: boolean;
+    noContextFiles?: boolean;
+    systemPrompt?: string;
+    appendSystemPrompt?: string[];
+  };
 }
 
 /**
@@ -125,16 +138,56 @@ export async function createAgentSessionServices(
     cwd,
     agentDir,
     settingsManager,
+    ...(options.resourceLoaderOptions ?? {}),
   });
 
   const diagnostics: AgentSessionRuntimeDiagnostic[] = [];
 
-  // Load extensions (best effort, non-fatal)
+  // Reload resources and set up extensions
   let extensionRunner: any;
   try {
-    const result = await discoverAndLoadExtensions({ cwd, agentDir });
-    extensionRunner = new ExtensionRunner(result.runtime);
-    extensionRunner.loadExtensions(result);
+    await resourceLoader.reload();
+    const extensionsResult = resourceLoader.getExtensions();
+    extensionRunner = new ExtensionRunner(extensionsResult.runtime);
+    extensionRunner.loadExtensions(extensionsResult);
+    // Register any providers from extensions
+    for (const { name, config, extensionPath } of extensionsResult.runtime.pendingProviderRegistrations) {
+      try {
+        modelRegistry.registerProvider(name, config);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        diagnostics.push({
+          type: "error",
+          message: `Extension "${extensionPath}" error: ${message}`,
+        });
+      }
+    }
+    extensionsResult.runtime.pendingProviderRegistrations = [];
+    // Apply extension flag values if provided
+    if (options.extensionFlagValues) {
+      const registeredFlags = new Map<string, { type: "boolean" | "string" }>();
+      for (const ext of extensionsResult.extensions) {
+        for (const [name, flag] of ext.flags) {
+          registeredFlags.set(name, { type: flag.type });
+        }
+      }
+      for (const [name, value] of options.extensionFlagValues) {
+        const flag = registeredFlags.get(name);
+        if (!flag) {
+          diagnostics.push({ type: "error", message: `Unknown option: --${name}` });
+          continue;
+        }
+        if (flag.type === "boolean") {
+          extensionsResult.runtime.flagValues.set(name, true);
+        } else {
+          if (typeof value === "string") {
+            extensionsResult.runtime.flagValues.set(name, value);
+          } else {
+            diagnostics.push({ type: "error", message: `Extension flag "--${name}" requires a value` });
+          }
+        }
+      }
+    }
   } catch (error) {
     // Extensions are optional, so ignore errors
     extensionRunner = new ExtensionRunner(createExtensionRuntime());

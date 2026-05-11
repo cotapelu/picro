@@ -127,82 +127,193 @@ export class DefaultResourceLoader implements ResourceLoader {
   private _agentDir: string;
   private _skillsCache?: Skill[];
   private _promptsCache?: any[]; // PromptTemplate[]
+  private _themesCache?: Theme[];
   private _agentsFilesCache?: Array<{ path: string; content: string }>;
   private _extensionsResult?: LoadExtensionsResult;
   private _extensionRunner?: any;
+  private _systemPrompt?: string;
+  private _appendSystemPrompt: string[] = [];
 
   constructor(options: {
     cwd: string;
     agentDir: string;
     settingsManager?: any;
+    additionalExtensionPaths?: string[];
+    additionalSkillPaths?: string[];
+    additionalPromptTemplatePaths?: string[];
+    additionalThemePaths?: string[];
+    noExtensions?: boolean;
+    noSkills?: boolean;
+    noPromptTemplates?: boolean;
+    noThemes?: boolean;
+    noContextFiles?: boolean;
+    systemPrompt?: string;
+    appendSystemPrompt?: string[];
+    // Override functions for testing
+    extensionsOverride?: (base: LoadExtensionsResult) => LoadExtensionsResult;
+    skillsOverride?: (base: { skills: Skill[]; diagnostics: ResourceDiagnostic[] }) => { skills: Skill[]; diagnostics: ResourceDiagnostic[] };
+    promptsOverride?: (base: { prompts: any[]; diagnostics: ResourceDiagnostic[] }) => { prompts: any[]; diagnostics: ResourceDiagnostic[] };
+    themesOverride?: (base: { themes: Theme[]; diagnostics: ResourceDiagnostic[] }) => { themes: Theme[]; diagnostics: ResourceDiagnostic[] };
+    agentsFilesOverride?: (base: Array<{ path: string; content: string }>) => Array<{ path: string; content: string }>;
+    systemPromptOverride?: (base: string | undefined) => string | undefined;
+    appendSystemPromptOverride?: (base: string[]) => string[];
   }) {
     this._cwd = options.cwd;
     this._agentDir = options.agentDir;
-    // Initialize with empty defaults
-    this._extensionsResult = { extensions: [], errors: [], runtime: createExtensionRuntime() };
-    this._extensionRunner = new ExtensionRunner(this._extensionsResult.runtime);
-    this._extensionRunner.loadExtensions(this._extensionsResult);
+    // Store options for reload
+    this._options = options;
+  }
+
+  private _options: any;
+  private _initialized = false;
+
+  async reload(): Promise<void> {
+    // Load extensions
+    let extensionsResult: LoadExtensionsResult;
+    if (this._options.noExtensions) {
+      extensionsResult = { extensions: [], errors: [], runtime: createExtensionRuntime() };
+    } else {
+      try {
+        extensionsResult = await discoverAndLoadExtensions({
+          cwd: this._cwd,
+          agentDir: this._agentDir,
+          additionalPaths: this._options.additionalExtensionPaths,
+        });
+      } catch (error) {
+        extensionsResult = { extensions: [], errors: [{
+          path: 'discoverAndLoadExtensions',
+          error: error instanceof Error ? error.message : String(error)
+        }], runtime: createExtensionRuntime() };
+      }
+    }
+
+    // Apply override if provided
+    if (this._options.extensionsOverride) {
+      extensionsResult = this._options.extensionsOverride(extensionsResult);
+    }
+
+    this._extensionsResult = extensionsResult;
+    this._extensionRunner = new ExtensionRunner(extensionsResult.runtime);
+    this._extensionRunner.loadExtensions(extensionsResult);
+
+    // Load skills
+    if (this._options.noSkills) {
+      this._skillsCache = [];
+    } else {
+      let skills = loadSkills({
+        cwd: this._cwd,
+        agentDir: this._agentDir,
+        skillPaths: this._options.additionalSkillPaths ?? [],
+        includeDefaults: true,
+      });
+      if (this._options.skillsOverride) {
+        const result = this._options.skillsOverride({ skills, diagnostics: [] });
+        skills = result.skills;
+      }
+      this._skillsCache = skills;
+    }
+
+    // Load prompt templates
+    if (this._options.noPromptTemplates) {
+      this._promptsCache = [];
+    } else {
+      let prompts = loadPromptTemplates({
+        cwd: this._cwd,
+        agentDir: this._agentDir,
+        promptPaths: this._options.additionalPromptTemplatePaths ?? [],
+        includeDefaults: true,
+      });
+      if (this._options.promptsOverride) {
+        const result = this._options.promptsOverride({ prompts, diagnostics: [] });
+        prompts = result.prompts;
+      }
+      this._promptsCache = prompts;
+    }
+
+    // Load themes
+    if (this._options.noThemes) {
+      this._themesCache = [];
+    } else {
+      let themesResult = loadThemes({
+        cwd: this._cwd,
+        agentDir: this._agentDir,
+        themePaths: this._options.additionalThemePaths ?? [],
+        includeDefaults: true,
+      });
+      if (this._options.themesOverride) {
+        themesResult = this._options.themesOverride(themesResult);
+      }
+      this._themesCache = themesResult.themes;
+    }
+
+    // Load context files (AGENTS.md, CLAUDE.md)
+    if (this._options.noContextFiles) {
+      this._agentsFilesCache = [];
+    } else {
+      let agentsFiles = loadProjectContextFiles({ cwd: this._cwd, agentDir: this._agentDir });
+      if (this._options.agentsFilesOverride) {
+        agentsFiles = this._options.agentsFilesOverride(agentsFiles);
+      }
+      this._agentsFilesCache = agentsFiles;
+    }
+
+    // System prompt
+    this._systemPrompt = this._options.systemPrompt;
+    this._appendSystemPrompt = this._options.appendSystemPrompt ?? [];
+
+    // Apply overrides
+    if (this._options.systemPromptOverride) {
+      this._systemPrompt = this._options.systemPromptOverride(this._systemPrompt);
+    }
+    if (this._options.appendSystemPromptOverride) {
+      this._appendSystemPrompt = this._options.appendSystemPromptOverride(this._appendSystemPrompt);
+    }
+
+    this._initialized = true;
   }
 
   getExtensions(): LoadExtensionsResult {
-    return {
-      extensions: [],
-      errors: [],
-      runtime: {
-        flagValues: new Map(),
-        pendingProviderRegistrations: [],
-      },
-    };
+    if (!this._initialized) {
+      // Should have been reloaded by constructor
+      return { extensions: [], errors: [], runtime: { flagValues: new Map(), pendingProviderRegistrations: [] } };
+    }
+    return this._extensionsResult!;
   }
 
   getSkills(): { skills: Skill[]; diagnostics: ResourceDiagnostic[] } {
-    if (this._skillsCache === undefined) {
-      this._skillsCache = loadSkills({ cwd: this._cwd, agentDir: this._agentDir, includeDefaults: true });
+    if (!this._initialized) {
+      return { skills: [], diagnostics: [] };
     }
-    return { skills: this._skillsCache, diagnostics: [] };
+    return { skills: this._skillsCache ?? [], diagnostics: [] };
   }
 
   getPrompts(): { prompts: any[]; diagnostics: ResourceDiagnostic[] } {
-    if (this._promptsCache === undefined) {
-      this._promptsCache = loadPromptTemplates({ cwd: this._cwd, agentDir: this._agentDir, promptPaths: [], includeDefaults: true });
+    if (!this._initialized) {
+      return { prompts: [], diagnostics: [] };
     }
-    return { prompts: this._promptsCache, diagnostics: [] };
+    return { prompts: this._promptsCache ?? [], diagnostics: [] };
   }
 
   getThemes(): { themes: Theme[]; diagnostics: ResourceDiagnostic[] } {
-    return { themes: [], diagnostics: [] };
+    if (!this._initialized) {
+      return { themes: [], diagnostics: [] };
+    }
+    return { themes: this._themesCache ?? [], diagnostics: [] };
   }
 
   getAgentsFiles(): { agentsFiles: Array<{ path: string; content: string }> } {
-    if (this._agentsFilesCache === undefined) {
-      this._agentsFilesCache = loadProjectContextFiles({ cwd: this._cwd, agentDir: this._agentDir });
+    if (!this._initialized) {
+      return { agentsFiles: [] };
     }
-    return { agentsFiles: this._agentsFilesCache };
+    return { agentsFiles: this._agentsFilesCache ?? [] };
   }
 
   getSystemPrompt(): string | undefined {
-    return undefined;
+    return this._systemPrompt;
   }
 
   getAppendSystemPrompt(): string[] {
-    return [];
-  }
-
-  async reload(): Promise<void> {
-    // Reload all resources from disk
-    this._skillsCache = loadSkills({ cwd: this._cwd, agentDir: this._agentDir, includeDefaults: true });
-    this._promptsCache = loadPromptTemplates({ cwd: this._cwd, agentDir: this._agentDir, promptPaths: [], includeDefaults: true });
-    this._agentsFilesCache = loadProjectContextFiles({ cwd: this._cwd, agentDir: this._agentDir });
-    // Reload extensions
-    try {
-      this._extensionsResult = await discoverAndLoadExtensions({ cwd: this._cwd, agentDir: this._agentDir });
-      this._extensionRunner = new ExtensionRunner(this._extensionsResult.runtime);
-      this._extensionRunner.loadExtensions(this._extensionsResult);
-    } catch {
-      this._extensionsResult = { extensions: [], errors: [], runtime: createExtensionRuntime() };
-      this._extensionRunner = new ExtensionRunner(this._extensionsResult.runtime);
-      this._extensionRunner.loadExtensions(this._extensionsResult);
-    }
+    return this._appendSystemPrompt;
   }
 }
 
@@ -231,4 +342,17 @@ export function loadProjectContextFiles(options: {
     }
   }
   return files;
+}
+
+/**
+ * Load themes from paths
+ */
+function loadThemes(options: {
+  cwd: string;
+  agentDir: string;
+  themePaths?: string[];
+  includeDefaults?: boolean;
+}): { themes: Theme[]; diagnostics: ResourceDiagnostic[] } {
+  // Stub: no built-in themes yet
+  return { themes: [], diagnostics: [] };
 }

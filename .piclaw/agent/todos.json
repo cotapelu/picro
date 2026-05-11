@@ -2,90 +2,79 @@
   "version": 1,
   "phases": [
     {
-      "id": "phase-20",
-      "name": "Phase 1: Analysis Complete",
+      "id": "phase-23",
+      "name": "Phase 1: Core CLI Infrastructure Complete",
       "tasks": [
         {
-          "id": "task-90",
-          "content": "Analyzed current codebase (src/) and reference (llm-context/coding-agent)",
+          "id": "task-103",
+          "content": "Implemented config, timings",
           "status": "completed"
         },
         {
-          "id": "task-91",
-          "content": "Identified missing components: cli/file-processor, cli/initial-message, cli/list-models, cli/session-picker, core/session-cwd, migrations, modes/print&rpc, package-manager-cli, config, timings, resource-loader completion",
+          "id": "task-104",
+          "content": "Implemented file-processor, initial-message, list-models, session-picker, session-cwd with tests",
           "status": "completed"
         },
         {
-          "id": "task-92",
-          "content": "Assessed existing infrastructure: agent core, tui, runtime (partial), session, settings, extensions (partial), auth, model-registry",
+          "id": "task-105",
+          "content": "Implemented print-mode and rpc-mode stub",
           "status": "completed"
         },
         {
-          "id": "task-93",
-          "content": "Architecture decision: main.ts orchestrates all components; each module TDD with tests",
+          "id": "task-106",
+          "content": "Wrote comprehensive main.ts orchestrating all components",
+          "status": "completed"
+        },
+        {
+          "id": "task-107",
+          "content": "Enhanced session-manager with list/listAll/buildSessionInfo",
+          "status": "completed"
+        },
+        {
+          "id": "task-108",
+          "content": "All tests pass (186)",
           "status": "completed"
         }
       ]
     },
     {
-      "id": "phase-21",
-      "name": "Phase 2: Core Utilities",
+      "id": "phase-24",
+      "name": "Phase 2: Resource Loader & Extensions",
       "tasks": [
         {
-          "id": "task-94",
-          "content": "Create src/utils/timings.ts with resetTimings/time/printTimings",
-          "status": "completed"
-        },
-        {
-          "id": "task-95",
-          "content": "Create src/config.ts with APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR, VERSION",
-          "status": "completed"
-        },
-        {
-          "id": "task-96",
-          "content": "Check if src/utils/paths.ts needs updates",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-22",
-      "name": "Phase 3: CLI Support Modules",
-      "tasks": [
-        {
-          "id": "task-97",
-          "content": "Implement src/cli/file-processor.ts to process @file args with image support",
+          "id": "task-109",
+          "content": "Finish resource-loader.ts implementation (extensions, skills, prompts, themes, context files)",
           "status": "in_progress"
         },
         {
-          "id": "task-98",
-          "content": "Implement src/cli/initial-message.ts to build initial message from args/files/stdin",
+          "id": "task-110",
+          "content": "Add extension discovery from default and custom paths",
           "status": "pending"
         },
         {
-          "id": "task-99",
-          "content": "Implement src/cli/list-models.ts to list models with optional search",
+          "id": "task-111",
+          "content": "Implement extension loader and runner integration",
           "status": "pending"
         },
         {
-          "id": "task-100",
-          "content": "Implement src/cli/session-picker.ts for interactive session selection",
+          "id": "task-112",
+          "content": "Write tests for resource loading and ensure they pass",
           "status": "pending"
         },
         {
-          "id": "task-101",
-          "content": "Implement src/core/session-cwd.ts for cross-project CWD resolution",
+          "id": "task-113",
+          "content": "Implement migrations.ts for settings/session schema migrations",
           "status": "pending"
         },
         {
-          "id": "task-102",
-          "content": "Write tests for each module and ensure 100% pass",
+          "id": "task-114",
+          "content": "Implement package-manager-cli.ts for install/remove/update/list",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 103,
-  "nextPhaseId": 23,
-  "updatedAt": "2026-05-11T04:57:00.836Z"
+  "nextTaskId": 115,
+  "nextPhaseId": 25,
+  "updatedAt": "2026-05-11T06:17:48.313Z"
 }

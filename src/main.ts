@@ -21,6 +21,8 @@ import { SessionManager } from "./session/session-manager";
 import { AgentSessionRuntime } from "./runtime/agent-session-runtime";
 import { getAgentDir, VERSION, getSettingsPath } from "./config";
 import { resetTimings, time, printTimings } from "./utils/timings";
+import { isLocalPath } from "./utils/paths";
+import { runMigrations, showDeprecationWarnings } from "./migrations";
 import type { Model } from "./llm";
 import { ProcessTerminal, TerminalUI } from "./tui";
 import { InteractiveMode } from "./tui/interactive-mode";
