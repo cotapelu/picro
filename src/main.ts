@@ -21,6 +21,7 @@ import { SessionManager } from "./session/session-manager";
 import { AgentSessionRuntime } from "./runtime/agent-session-runtime";
 import { getAgentDir, VERSION, getSettingsPath } from "./config";
 import { resetTimings, time, printTimings } from "./utils/timings";
+import { handleConfigCommand } from "./package-manager-cli";
 import { isLocalPath } from "./utils/paths";
 import { runMigrations, showDeprecationWarnings } from "./migrations";
 import type { Model } from "./llm";
@@ -162,6 +163,12 @@ async function main(): Promise<void> {
   time("total");
 
   const args = process.argv.slice(2);
+
+  // Handle config commands early
+  if (await handleConfigCommand(args)) {
+    return;
+  }
+
   const parsed = parseArgs(args);
   time("parseArgs");
 
@@ -191,6 +198,15 @@ async function main(): Promise<void> {
   // Setup
   const cwd = process.cwd();
   const agentDir = getAgentDir();
+
+  // Run migrations
+  const { migratedAuthProviders, deprecationWarnings } = runMigrations(cwd);
+  if (migratedAuthProviders.length > 0) {
+    console.log(`Migrated auth config for providers: ${migratedAuthProviders.join(", ")}`);
+  }
+  if (appMode === "interactive" && deprecationWarnings.length > 0) {
+    await showDeprecationWarnings(deprecationWarnings);
+  }
 
   // Create services (settings, model registry, resource loader, auth)
   const services = await createAgentSessionServices({

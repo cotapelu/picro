@@ -2,79 +2,43 @@
   "version": 1,
   "phases": [
     {
-      "id": "phase-23",
-      "name": "Phase 1: Core CLI Infrastructure Complete",
+      "id": "phase-25",
+      "name": "Phase 3: Remaining Features",
       "tasks": [
         {
-          "id": "task-103",
-          "content": "Implemented config, timings",
+          "id": "task-115",
+          "content": "Implement package-manager-cli.ts for install/remove/update/list of extensions",
           "status": "completed"
         },
         {
-          "id": "task-104",
-          "content": "Implemented file-processor, initial-message, list-models, session-picker, session-cwd with tests",
-          "status": "completed"
-        },
-        {
-          "id": "task-105",
-          "content": "Implemented print-mode and rpc-mode stub",
-          "status": "completed"
-        },
-        {
-          "id": "task-106",
-          "content": "Wrote comprehensive main.ts orchestrating all components",
-          "status": "completed"
-        },
-        {
-          "id": "task-107",
-          "content": "Enhanced session-manager with list/listAll/buildSessionInfo",
-          "status": "completed"
-        },
-        {
-          "id": "task-108",
-          "content": "All tests pass (186)",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-24",
-      "name": "Phase 2: Resource Loader & Extensions",
-      "tasks": [
-        {
-          "id": "task-109",
-          "content": "Finish resource-loader.ts implementation (extensions, skills, prompts, themes, context files)",
+          "id": "task-116",
+          "content": "Complete migrations.ts with actual migration logic (auth, sessions, commands->prompts)",
           "status": "in_progress"
         },
         {
-          "id": "task-110",
-          "content": "Add extension discovery from default and custom paths",
+          "id": "task-117",
+          "content": "Enhance interactive mode: ensure initial message handling works correctly",
           "status": "pending"
         },
         {
-          "id": "task-111",
-          "content": "Implement extension loader and runner integration",
+          "id": "task-118",
+          "content": "Implement proper RPC mode (or mark as not implemented with clear error)",
           "status": "pending"
         },
         {
-          "id": "task-112",
-          "content": "Write tests for resource loading and ensure they pass",
+          "id": "task-119",
+          "content": "Write tests for migrations and package manager",
           "status": "pending"
         },
         {
-          "id": "task-113",
-          "content": "Implement migrations.ts for settings/session schema migrations",
-          "status": "pending"
-        },
-        {
-          "id": "task-114",
-          "content": "Implement package-manager-cli.ts for install/remove/update/list",
+          "id": "task-120",
+          "content": "Add UX improvements: better error messages, prompts, feedback",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 115,
-  "nextPhaseId": 25,
-  "updatedAt": "2026-05-11T06:17:48.313Z"
+  "nextTaskId": 121,
+  "nextPhaseId": 26,
+  "updatedAt": "2026-05-11T07:19:53.752Z"
 }
