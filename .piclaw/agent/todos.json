@@ -13,27 +13,27 @@
         {
           "id": "task-134",
           "content": "Viết test cho atoms (60 files)",
-          "status": "in_progress"
+          "status": "completed"
         },
         {
           "id": "task-135",
           "content": "Viết test cho molecules (26 files)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-136",
           "content": "Viết test cho organisms (8 files)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-137",
           "content": "Viết test cho tui.ts, index.ts, extension-ui-context.ts",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-138",
           "content": "Viết thêm test cho interactive-mode.ts",
-          "status": "pending"
+          "status": "in_progress"
         },
         {
           "id": "task-139",
@@ -45,5 +45,5 @@
   ],
   "nextTaskId": 140,
   "nextPhaseId": 29,
-  "updatedAt": "2026-05-11T09:07:05.262Z"
+  "updatedAt": "2026-05-11T11:37:46.354Z"
 }
