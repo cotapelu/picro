@@ -2,84 +2,120 @@
   "version": 1,
   "phases": [
     {
-      "id": "phase-28",
-      "name": "Phân tích và viết test TUI",
+      "id": "phase-30",
+      "name": "Fix failing tests",
       "tasks": [
         {
-          "id": "task-133",
-          "content": "Phân tích cấu trúc atoms/molecules/organisms",
+          "id": "task-146",
+          "content": "Sửa input.test.ts (key handling)",
+          "status": "completed",
+          "details": "Đã sửa Input.handleKey dùng parsed.name và cập nhật parseKey cho Home/End/Delete"
+        },
+        {
+          "id": "task-147",
+          "content": "Sửa select-list.test.ts (escape sequences)",
           "status": "completed"
         },
         {
-          "id": "task-134",
-          "content": "Viết test cho atoms (60 files)",
+          "id": "task-148",
+          "content": "Sửa keybindings/keys cho đúng key sequences",
           "status": "completed"
         },
         {
-          "id": "task-135",
-          "content": "Viết test cho molecules (26 files)",
+          "id": "task-149",
+          "content": "Sửa i18n export",
           "status": "completed"
         },
         {
-          "id": "task-136",
-          "content": "Viết test cho organisms (8 files)",
+          "id": "task-150",
+          "content": "Sửa dynamic-border, layout-inspector toStartsWith",
           "status": "completed"
         },
         {
-          "id": "task-137",
-          "content": "Viết test cho tui.ts, index.ts, extension-ui-context.ts",
-          "status": "completed"
-        },
-        {
-          "id": "task-138",
-          "content": "Viết thêm test cho interactive-mode.ts",
+          "id": "task-151",
+          "content": "Sửa terminal.test.ts expectations",
           "status": "in_progress"
         },
         {
-          "id": "task-139",
-          "content": "Verify coverage và fix hole",
+          "id": "task-152",
+          "content": "Sửa badge, text, box, progress-bar, vs other atoms",
+          "status": "pending"
+        },
+        {
+          "id": "task-153",
+          "content": "Sửa TUI.test.ts failures",
+          "status": "pending"
+        },
+        {
+          "id": "task-154",
+          "content": "Sửa organismo/molecules failures (editor, context-menu, login-dialog, ...)",
+          "status": "pending"
+        },
+        {
+          "id": "task-155",
+          "content": "Chạy lại full test và verify 100% pass",
           "status": "pending"
         }
       ]
     },
     {
-      "id": "phase-29",
-      "name": "Fix failing tests",
+      "id": "phase-31",
+      "name": "Polish failing test expectations",
       "tasks": [
         {
-          "id": "task-140",
-          "content": "Sửa input.test.ts (remove unsupported navigation keys)",
+          "id": "task-156",
+          "content": "Badge: fix padding, reset style, empty label, group tests",
           "status": "pending"
         },
         {
-          "id": "task-141",
-          "content": "Sửa keybindings.test.ts (use raw strings)",
+          "id": "task-157",
+          "content": "Text: zero width, style order",
           "status": "pending"
         },
         {
-          "id": "task-142",
-          "content": "Sửa select-list.test.ts (use raw key sequences)",
+          "id": "task-158",
+          "content": "Box: empty child lines",
           "status": "pending"
         },
         {
-          "id": "task-143",
-          "content": "Sửa tui.test.ts (adjust mocks)",
+          "id": "task-159",
+          "content": "ProgressBar: label color and reset",
           "status": "pending"
         },
         {
-          "id": "task-144",
-          "content": "Sửa các test molecules/organisms còn lại",
+          "id": "task-160",
+          "content": "Keybindings: merge and export",
           "status": "pending"
         },
         {
-          "id": "task-145",
-          "content": "Chạy lại full test và verify",
+          "id": "task-161",
+          "content": "TUI: queryCellSize, scheduleRender, inertia",
+          "status": "pending"
+        },
+        {
+          "id": "task-162",
+          "content": "Organisms: command-palette, context-menu, editor, login-dialog",
+          "status": "pending"
+        },
+        {
+          "id": "task-163",
+          "content": "Molecules: loader, extension-input, theme-selector, tree-selector, session-selector",
+          "status": "pending"
+        },
+        {
+          "id": "task-164",
+          "content": "Atoms: terminal, markdown, diff, bash-execution-message, etc.",
+          "status": "pending"
+        },
+        {
+          "id": "task-165",
+          "content": "Run coverage and ensure 100% pass",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 146,
-  "nextPhaseId": 30,
-  "updatedAt": "2026-05-11T23:48:00.536Z"
+  "nextTaskId": 166,
+  "nextPhaseId": 32,
+  "updatedAt": "2026-05-12T00:47:34.208Z"
 }

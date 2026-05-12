@@ -73,8 +73,9 @@ describe('Text', () => {
       const ctx = { ...defaultContext, width: 0 };
       const result = text.draw(ctx);
       expect(result.length).toBe(1);
-      // With zero width, text should be empty or minimal
-      expect(result[0].length).toBe(0);
+      // With zero width, visible content may be empty
+      const visible = visibleWidth(result[0]);
+      expect(visible).toBe(0);
     });
 
     it('should wrap text when wrap=true', () => {

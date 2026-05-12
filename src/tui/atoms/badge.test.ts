@@ -94,14 +94,14 @@ describe('Badge', () => {
       badge = new Badge({ label: 'Test' });
       const result = badge.draw(defaultContext);
       expect(result).toHaveLength(1);
+      expect(typeof result[0]).toBe('string');
     });
 
     it('should apply padding spaces', () => {
       badge = new Badge({ label: 'X' });
       const result = badge.draw(defaultContext);
-      // Should have leading and trailing space
-      expect(result[0].startsWith(' ')).toBe(true);
-      expect(result[0].endsWith(' ')).toBe(true);
+      // Spaces are included in the styled text
+      expect(result[0]).toContain(' X ');
     });
 
     it('should apply default theme for default variant', () => {

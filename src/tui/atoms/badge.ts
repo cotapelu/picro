@@ -98,8 +98,8 @@ export class BadgeGroup implements UIElement {
   private badges: Badge[];
   private separator: string;
 
-  constructor(badges: Badge[], separator = ' ') {
-    this.badges = badges;
+  constructor(badges?: Badge[], separator = ' ') {
+    this.badges = badges || [];
     this.separator = separator;
   }
 
@@ -114,6 +114,7 @@ export class BadgeGroup implements UIElement {
   clearCache(): void {}
 
   draw(_context: RenderContext): string[] {
+    if (this.badges.length === 0) return [];
     const rendered = this.badges.map(b => b.draw({ width: 80, height: 1 })[0] ?? '');
     const line = rendered.join(this.separator);
     return [line];
