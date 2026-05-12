@@ -59,7 +59,10 @@ export class ExtensionInput implements UIElement, InteractiveElement {
     if (data === '\r' || data === '\n') { this.onSubmit?.(this.value); return; }
     if (data === '\x1b') { this.onCancel?.(); return; }
     if (data === '\x7f' || data === '\b') { this.value = this.value.slice(0, -1); return; }
-    if (data.length === 1 && !data.startsWith('\x1b')) { this.value += data; }
+    // Only accept printable characters (ASCII 32-126)
+    if (data.length === 1 && data >= ' ' && data <= '~') {
+      this.value += data;
+    }
   }
 
   clearCache(): void { }
