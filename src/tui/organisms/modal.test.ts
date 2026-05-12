@@ -19,6 +19,12 @@ function createKeyEvent(raw: string, name?: string): KeyEvent {
 }
 
 function normalizeKeyName(name: string): string {
+  // Handle raw control characters
+  if (name === '\r' || name === '\n') return 'Enter';
+  if (name === '\x1b') return 'Escape';
+  if (name === '\x7f') return 'Backspace';
+  // Leave other controls like Ctrl+C (\x03) as-is to match raw case in Modal
+
   const map: Record<string, string> = {
     'enter': 'Enter',
     'return': 'Enter',
