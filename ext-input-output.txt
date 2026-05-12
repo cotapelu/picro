@@ -1,0 +1,98 @@
+
+> @picro/picro@0.0.1 test
+> vitest run src/tui/molecules/extension-input.test.ts --reporter=verbose
+
+
+ RUN  v4.1.5 /home/quangtynu/Qcoder/picro
+
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > constructor > should create with default options 4ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > constructor > should accept custom label 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > constructor > should accept defaultValue 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > constructor > should accept onSubmit and onCancel 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > constructor > should default isFocused to false 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should render bordered box 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should display label centered 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should display current value 0ms
+ × src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should show cursor block when focused 7ms
+   → expected false to be true // Object.is equality
+ × src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should show underscore when not focused 1ms
+   → expected false to be true // Object.is equality
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should include help text at bottom 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should pad empty lines to fill height 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should blink cursor on successive draws 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should submit on Enter 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should submit on Ctrl+M? 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should cancel on Escape 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should backspace on Backspace or Delete? Actually code uses  or  0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should insert printable characters 0ms
+ × src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should ignore other control sequences 1ms
+   → expected 'Hi\u0001' to be 'Hi' // Object.is equality
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > clearCache() > should be no-op 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > edge cases > should handle empty value 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > edge cases > should handle very long value 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > edge cases > should handle unicode 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > edge cases > should handle narrow width terminal 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > edge cases > should handle height less than required lines 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should show cursor block when focused
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/molecules/extension-input.test.ts:102:56
+    100|       input.isFocused = true;
+    101|       const result1 = input.draw(defaultContext);
+    102|       expect(result1.some(line => line.includes('█'))).toBe(true);
+       |                                                        ^
+    103|       // Next draw should blink cursor to underscore
+    104|       const result2 = input.draw(defaultContext);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should show underscore when not focused
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/molecules/extension-input.test.ts:111:55
+    109|       input.isFocused = false;
+    110|       const result = input.draw(defaultContext);
+    111|       expect(result.some(line => line.includes('_'))).toBe(true);
+       |                                                       ^
+    112|     });
+    113|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should ignore other control sequences
+AssertionError: expected 'Hi\u0001' to be 'Hi' // Object.is equality
+
+Expected: "Hi"
+Received: "Hi"
+
+ ❯ src/tui/molecules/extension-input.test.ts:179:30
+    177|     it('should ignore other control sequences', () => {
+    178|       input.handleKey(createKeyEvent('\x01')); // Ctrl+A
+    179|       expect(input['value']).toBe('Hi'); // unchanged
+       |                              ^
+    180|     });
+    181|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 22 passed (25)
+   Start at  08:28:46
+   Duration  220ms (transform 47ms, setup 0ms, import 62ms, tests 25ms, environment 0ms)
+

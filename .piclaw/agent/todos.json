@@ -2,120 +2,68 @@
   "version": 1,
   "phases": [
     {
-      "id": "phase-30",
-      "name": "Fix failing tests",
+      "id": "phase-33",
+      "name": "Polishing failing tests",
       "tasks": [
         {
-          "id": "task-146",
-          "content": "Sửa input.test.ts (key handling)",
-          "status": "completed",
-          "details": "Đã sửa Input.handleKey dùng parsed.name và cập nhật parseKey cho Home/End/Delete"
-        },
-        {
-          "id": "task-147",
-          "content": "Sửa select-list.test.ts (escape sequences)",
-          "status": "completed"
-        },
-        {
-          "id": "task-148",
-          "content": "Sửa keybindings/keys cho đúng key sequences",
-          "status": "completed"
-        },
-        {
-          "id": "task-149",
-          "content": "Sửa i18n export",
-          "status": "completed"
-        },
-        {
-          "id": "task-150",
-          "content": "Sửa dynamic-border, layout-inspector toStartsWith",
-          "status": "completed"
-        },
-        {
-          "id": "task-151",
-          "content": "Sửa terminal.test.ts expectations",
+          "id": "task-176",
+          "content": "Fix badge tests (padding, reset, empty, group)",
           "status": "in_progress"
         },
         {
-          "id": "task-152",
-          "content": "Sửa badge, text, box, progress-bar, vs other atoms",
+          "id": "task-177",
+          "content": "Fix text tests (zero width, style)",
           "status": "pending"
         },
         {
-          "id": "task-153",
-          "content": "Sửa TUI.test.ts failures",
+          "id": "task-178",
+          "content": "Fix box tests (empty lines)",
           "status": "pending"
         },
         {
-          "id": "task-154",
-          "content": "Sửa organismo/molecules failures (editor, context-menu, login-dialog, ...)",
+          "id": "task-179",
+          "content": "Fix progress-bar tests",
           "status": "pending"
         },
         {
-          "id": "task-155",
-          "content": "Chạy lại full test và verify 100% pass",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "phase-31",
-      "name": "Polish failing test expectations",
-      "tasks": [
-        {
-          "id": "task-156",
-          "content": "Badge: fix padding, reset style, empty label, group tests",
+          "id": "task-180",
+          "content": "Fix TUI tests (queryCellSize, scheduling, inertia)",
           "status": "pending"
         },
         {
-          "id": "task-157",
-          "content": "Text: zero width, style order",
+          "id": "task-181",
+          "content": "Fix keybindings tests",
+          "status": "completed"
+        },
+        {
+          "id": "task-182",
+          "content": "Fix terminal tests",
+          "status": "completed"
+        },
+        {
+          "id": "task-183",
+          "content": "Fix remaining atoms (markdown, diff, bash msg, etc.)",
           "status": "pending"
         },
         {
-          "id": "task-158",
-          "content": "Box: empty child lines",
+          "id": "task-184",
+          "content": "Fix molecules (loader, extension-input, theme-selector, tree-selector, session-selector)",
           "status": "pending"
         },
         {
-          "id": "task-159",
-          "content": "ProgressBar: label color and reset",
+          "id": "task-185",
+          "content": "Fix organisms (editor, command-palette, context-menu, login-dialog)",
           "status": "pending"
         },
         {
-          "id": "task-160",
-          "content": "Keybindings: merge and export",
-          "status": "pending"
-        },
-        {
-          "id": "task-161",
-          "content": "TUI: queryCellSize, scheduleRender, inertia",
-          "status": "pending"
-        },
-        {
-          "id": "task-162",
-          "content": "Organisms: command-palette, context-menu, editor, login-dialog",
-          "status": "pending"
-        },
-        {
-          "id": "task-163",
-          "content": "Molecules: loader, extension-input, theme-selector, tree-selector, session-selector",
-          "status": "pending"
-        },
-        {
-          "id": "task-164",
-          "content": "Atoms: terminal, markdown, diff, bash-execution-message, etc.",
-          "status": "pending"
-        },
-        {
-          "id": "task-165",
-          "content": "Run coverage and ensure 100% pass",
+          "id": "task-186",
+          "content": "Run full test suite and ensure 100% pass",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 166,
-  "nextPhaseId": 32,
-  "updatedAt": "2026-05-12T00:47:34.208Z"
+  "nextTaskId": 187,
+  "nextPhaseId": 34,
+  "updatedAt": "2026-05-12T01:19:38.369Z"
 }

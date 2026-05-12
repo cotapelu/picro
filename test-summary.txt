@@ -1,0 +1,2684 @@
+
+> @picro/picro@0.0.1 test
+> vitest run --run
+
+
+ RUN  v4.1.5 /home/quangtynu/Qcoder/picro
+
+ ❯ src/tui/molecules/extension-input.test.ts (25 tests | 3 failed) 31ms
+       × should ignore other control sequences 6ms
+       × should handle empty value 4ms
+       × should handle height less than required lines 1ms
+ ❯ src/tui/molecules/loader.test.ts (26 tests | 3 failed) 39ms
+       × should call onAbort on Escape 5ms
+       × should clear spinner interval on abort 2ms
+       × should not clear interval multiple times 2ms
+ ❯ src/tui/atoms/toast.test.ts (23 tests | 1 failed) 46ms
+       × should render bordered box with message 13ms
+ ❯ src/tui/organisms/editor.test.ts (25 tests | 15 failed) 54ms
+       × should accept custom options 11ms
+       × should call onChange callback when setText 4ms
+       × should insert at cursor position 1ms
+       × should update cursor position after insert 1ms
+       × should move cursor left with ArrowLeft 3ms
+       × should move cursor right with ArrowRight 1ms
+       × should handle backspace to delete before cursor 3ms
+       × should handle delete to delete after cursor 2ms
+       × should insert newline with Enter 2ms
+       × should handle Home/End 1ms
+       × should call onSubmit when configured 1ms
+       × should call onEscape when configured 1ms
+       × should render lines with cursor marker when focused 3ms
+       × should apply scroll offset 1ms
+       × should clear history 1ms
+ ❯ src/tui/atoms/markdown.test.ts (22 tests | 2 failed) 53ms
+       × should render italic text 14ms
+       × should render code blocks with syntax highlighting 20ms
+ ❯ src/tui/tui.test.ts (63 tests | 3 failed) 81ms
+       × should query cell size for images 8ms
+       × should schedule render if not already scheduled 2ms
+       × should accumulate velocity 6ms
+ ❯ src/tui/molecules/countdown-timer.test.ts (19 tests | 3 failed) 47ms
+       × should call onTick on each tick 7ms
+       × should clear interval 9ms
+       × should be safe to call multiple times 2ms
+ ❯ src/tui/organisms/context-menu.test.ts (27 tests | 10 failed) 46ms
+       × should return null if selected item is disabled 11ms
+       × should render a bordered box 5ms
+       × should apply custom theme 1ms
+       × should respect requested width 2ms
+       × should move selection up/down 1ms
+       × should not select disabled items on navigation? Actually it can select but getSelectedItem returns null 2ms
+       × should call onSelect when pressing Enter on enabled item 2ms
+       × should call onClose on Escape 1ms
+       × should skip disabled items when trying to select? Not required; but getSelectedItem returns null 1ms
+       × should handle empty items array 1ms
+ ❯ src/tui/organisms/login-dialog.test.ts (29 tests | 4 failed) 39ms
+       × should add cursor marker when focused and in input stage 11ms
+       × should ignore non-printable keys in input stage 2ms
+       × should handle unicode in apiKey 1ms
+       × should handle narrow width 1ms
+ ❯ src/tui/molecules/tree-selector.test.ts (19 tests | 7 failed) 44ms
+       × should flatten tree respecting expandedDirs 12ms
+       × should indent children with spaces 3ms
+       × should show selected with ▶ prefix 6ms
+       × should call onSelect on Enter 2ms
+       × should call onCancel on Escape 1ms
+       × should clear any stored cache 3ms
+       × should handle deep nesting 1ms
+ ❯ src/tui/molecules/theme-selector.test.ts (27 tests | 2 failed) 36ms
+       × should truncate lines to width 10ms
+       × should handle very long theme names 2ms
+ ❯ src/tui/molecules/model-selector.test.ts (18 tests | 3 failed) 34ms
+       × should render a bordered box 11ms
+       × should format context window in K/M 2ms
+       × should truncate long lines 5ms
+ ❯ src/tui/atoms/diff.test.ts (17 tests | 2 failed) 28ms
+     × should identify context lines 10ms
+     × should include line numbers when showLineNumbers true 2ms
+ ❯ src/tui/atoms/bash-execution-message.test.ts (9 tests | 4 failed) 26ms
+       × should show spinner when running 12ms
+       × should show exit code when complete 2ms
+       × should indicate truncation if truncated 2ms
+       × should pad lines to full width 1ms
+ ❯ src/tui/molecules/settings-selector.test.ts (18 tests | 2 failed) 27ms
+       × should render a bordered box 10ms
+       × should limit visible items by height 1ms
+ ❯ src/tui/atoms/keys.test.ts (24 tests | 1 failed) 26ms
+       × should not misinterpret other control codes 12ms
+ ❯ src/tui/molecules/input.test.ts (38 tests | 1 failed) 36ms
+       × should respect maxWidth for rendering 6ms
+ ❯ src/tui/atoms/terminal.test.ts (35 tests | 7 failed) 1057ms
+       × should write correct escape sequence 14ms
+       × should write clear from cursor escape 2ms
+       × should send query and return promise 508ms
+       × should reject on invalid response 504ms
+       × should destroy stdin buffer 1ms
+       × should handle large terminal dimensions 1ms
+       × should handle empty writes 1ms
+ ❯ src/tui/molecules/session-selector.test.ts (26 tests | 2 failed) 41ms
+       × should render a bordered box 11ms
+       × should limit visible sessions based on height 2ms
+ ❯ src/tui/molecules/extension-editor.test.ts (23 tests | 4 failed) 40ms
+       × should render a bordered box 13ms
+       × should not show cursor marker when not focused 2ms
+       × should fill remaining vertical space 3ms
+       × should handle backspace 5ms
+ ❯ src/tui/organisms/debug-panel.test.ts (17 tests | 5 failed) 36ms
+       × should keep only last N rounds based on height 8ms
+       × should render a bordered box 6ms
+       × should show run metrics when showRun=true and data present 2ms
+       × should respect width 2ms
+       × should handle zero width context 1ms
+ ❯ src/tui/molecules/oauth-selector.test.ts (11 tests | 1 failed) 27ms
+       × should render a bordered box 10ms
+ ❯ src/tui/atoms/internal-utils.test.ts (27 tests | 3 failed) 31ms
+       × should handle multiple ANSI codes 11ms
+       × should extract substring by visible columns 3ms
+       × should skip zero-width chars 1ms
+ ❯ src/tui/atoms/stdin-buffer.test.ts (10 tests | 2 failed) 30ms
+       × should flush buffer on timeout 15ms
+       × should clear buffer on destroy 2ms
+ ❯ src/tui/interactive-mode.extra.test.ts (13 tests | 2 failed) 48ms
+       × should handle command palette on Ctrl+P 7ms
+       × should show thinking selector on Ctrl+T 3ms
+ ❯ src/tui/molecules/session-selector-search.test.ts (11 tests | 1 failed) 37ms
+       × should filter results based on searchQuery 12ms
+ ❯ src/tui/atoms/terminal-image.test.ts (17 tests | 5 failed) 34ms
+       × should detect Kitty terminal 13ms
+       × should detect iTerm2 1ms
+       × should detect WezTerm 2ms
+       × should cache capabilities 5ms
+       × should reset cache on resetCapabilitiesCache 1ms
+ ❯ src/tui/atoms/flex.test.ts (11 tests | 1 failed) 35ms
+       × should pad shorter children with empty lines 19ms
+ ❯ src/tui/molecules/config-selector.test.ts (13 tests | 1 failed) 33ms
+       × should handle long values 6ms
+ ❯ src/tui/atoms/stepper.test.ts (18 tests | 1 failed) 29ms
+       × should handle empty steps 14ms
+ ❯ src/tui/molecules/scoped-models-selector.test.ts (8 tests | 2 failed) 27ms
+       × should truncate long model names 8ms
+       × should navigate and select 4ms
+ ❯ src/tui/atoms/grid.test.ts (10 tests | 2 failed) 32ms
+       × should arrange children in a single row for one column 15ms
+       × should add row gap between rows 3ms
+ ❯ src/tui/molecules/memory-panel.test.ts (16 tests | 7 failed) 38ms
+       × should build SelectList items from memories 14ms
+       × should truncate long content 1ms
+       × should handle memory with missing score 1ms
+       × should handle memory with missing metadata 1ms
+       × should handle very long content 1ms
+       × should handle unicode content 1ms
+       × should handle maxDisplay larger than memories 1ms
+ ❯ src/tui/atoms/i18n.test.ts (11 tests | 2 failed) 25ms
+       × should add new locale 11ms
+       × should support positional arguments 2ms
+ ❯ src/tui/atoms/table.test.ts (8 tests | 2 failed) 18ms
+       × should render rows with aligned columns 9ms
+       × should include headers if provided 1ms
+ ❯ src/tui/atoms/auth-selector-status.test.ts (6 tests | 1 failed) 22ms
+       × should show email if provided 11ms
+ ❯ src/tui/atoms/fuzzy.test.ts (8 tests | 3 failed) 24ms
+     × should match exact string 12ms
+     × should match subsequence 2ms
+     × should return matches indices 4ms
+ ❯ src/tui/atoms/skill-invocation-message.test.ts (6 tests | 1 failed) 21ms
+       × should render bordered box 11ms
+ ❯ src/tui/atoms/custom-message.test.ts (12 tests | 1 failed) 26ms
+       × should handle array content with text type 12ms
+ ❯ src/tui/atoms/divider.test.ts (4 tests | 3 failed) 23ms
+     × should respect width 7ms
+     × should accept custom character 4ms
+     × should render empty line when width=0 4ms
+ ❯ src/tui/atoms/text.test.ts (33 tests | 2 failed) 46ms
+       × should handle zero width gracefully 16ms
+       × should combine multiple styles 4ms
+ ❯ src/tui/atoms/layout-inspector.test.ts (4 tests | 1 failed) 19ms
+     × should truncate long stats lines 9ms
+ ❯ src/tui/atoms/autocomplete.test.ts (11 tests | 2 failed) 25ms
+       × should return empty if directory does not exist 5ms
+       × should return files in directory if query ends with / 1ms
+ ❯ src/tui/atoms/badge.test.ts (35 tests | 1 failed) 37ms
+       × should reset style at end 9ms
+ ❯ src/tui/atoms/earendil-announcement.test.ts (3 tests | 1 failed) 18ms
+     × should adjust width based on context 10ms
+ ❯ src/tui/atoms/progress-bar.test.ts (31 tests | 2 failed) 35ms
+       × should apply label color 12ms
+       × should reset color at end 3ms
+ ❯ src/tui/organisms/command-palette.test.ts (0 test)
+ ❯ src/tui/organisms/modal.test.ts (0 test)
+ ❯ src/tui/organisms/thinking-selector.test.ts (0 test)
+ ❯ src/tui/molecules/select-list.test.ts (0 test)
+ ❯ src/tui/atoms/types.test.ts (0 test)
+ ❯ src/tui/molecules/settings-list.test.ts (0 test)
+ ❯ src/tui/molecules/index.test.ts (7 tests | 1 failed) 14ms
+     × should export Loader 6ms
+ ❯ src/tui/atoms/index.test.ts (8 tests | 2 failed) 17ms
+     × should export Terminal interface 6ms
+     × should export Input 1ms
+ ❯ src/tui/molecules/split-pane.test.ts (0 test)
+ ❯ src/tui/molecules/tree-view.test.ts (0 test)
+file:///home/quangtynu/node_modules/@vitest/utils/dist/serialize.js:48
+	if (typeof Buffer !== "undefined" && val instanceof Buffer) {
+	                                         ^
+
+TypeError: Right-hand side of 'instanceof' is not callable
+    at serializeValue (file:///home/quangtynu/node_modules/@vitest/utils/dist/serialize.js:48:43)
+    at catchError (file:///home/quangtynu/node_modules/vitest/dist/chunks/init.D98-gwRW.js:106:17)
+    at process.uncaughtException (file:///home/quangtynu/node_modules/vitest/dist/chunks/init.D98-gwRW.js:113:35)
+    at process.emit (node:events:508:28)
+    at process.emit (/home/quangtynu/node_modules/vitest/suppress-warnings.cjs:21:18)
+    at process._fatalException (node:internal/process/execution:159:25)
+
+Node.js v24.14.0
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tui/organisms/command-palette.test.ts [ src/tui/organisms/command-palette.test.ts ]
+Error: Transform failed with 1 error:
+/home/quangtynu/Qcoder/picro/src/tui/organisms/command-palette.test.ts:162:40: ERROR: Unterminated string literal
+  Plugin: vite:esbuild
+  File: /home/quangtynu/Qcoder/picro/src/tui/organisms/command-palette.test.ts:162:40
+  
+  Unterminated string literal
+  160 |      it('should call onSelect and onExecute on Enter', () => {
+  161 |        // By default, selectList selectedIndex=0 -> New Session
+  162 |        palette.handleKey(createKeyEvent('', 'enter'));
+      |                                          ^
+  163 |        expect(onSelect).toHaveBeenCalledWith(commands[0]);
+  164 |        expect(commands[0].onExecute).toHaveBeenCalled();
+  
+ ❯ failureErrorWithLog ../../node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/145]⎯
+
+ FAIL  src/tui/organisms/modal.test.ts [ src/tui/organisms/modal.test.ts ]
+Error: Transform failed with 1 error:
+/home/quangtynu/Qcoder/picro/src/tui/organisms/modal.test.ts:177:55: ERROR: Expected ")" but found "h"
+  Plugin: vite:esbuild
+  File: /home/quangtynu/Qcoder/picro/src/tui/organisms/modal.test.ts:177:55
+  
+  Expected ")" but found "h"
+  175 |      });
+  176 |  
+  177 |      it('should move selection left with Left arrow or 'h'', () => {
+      |                                                         ^
+  178 |        modal.handleKey(createKeyEvent('001b[D', 'left'));
+  179 |        expect(modal['selectedIndex']).toBe(0); // already at 0
+  
+ ❯ failureErrorWithLog ../../node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/145]⎯
+
+ FAIL  src/tui/organisms/thinking-selector.test.ts [ src/tui/organisms/thinking-selector.test.ts ]
+Error: Transform failed with 1 error:
+/home/quangtynu/Qcoder/picro/src/tui/organisms/thinking-selector.test.ts:118:37: ERROR: Unterminated string literal
+  Plugin: vite:esbuild
+  File: /home/quangtynu/Qcoder/picro/src/tui/organisms/thinking-selector.test.ts:118:37
+  
+  Unterminated string literal
+  116 |        // Manually simulate selection change
+  117 |        sl['selectedIndex'] = 0;
+  118 |        sl.handleKey?.(createKeyEvent('', 'enter'));
+      |                                       ^
+  119 |        expect(onSelect).toHaveBeenCalledWith('off');
+  120 |      });
+  
+ ❯ failureErrorWithLog ../../node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/145]⎯
+
+ FAIL  src/tui/atoms/types.test.ts [ src/tui/atoms/types.test.ts ]
+Error: Transform failed with 1 error:
+/home/quangtynu/Qcoder/picro/src/tui/atoms/types.test.ts:15:0: ERROR: Expected ")" but found "}"
+  Plugin: vite:esbuild
+  File: /home/quangtynu/Qcoder/picro/src/tui/atoms/types.test.ts:15:0
+  
+  Expected ")" but found "}"
+  13 |      expect(true).toBe(true);
+  14 |    }
+  15 |  });
+     |  ^
+  
+ ❯ failureErrorWithLog ../../node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/145]⎯
+
+ FAIL  src/tui/molecules/select-list.test.ts [ src/tui/molecules/select-list.test.ts ]
+Error: Transform failed with 1 error:
+/home/quangtynu/Qcoder/picro/src/tui/molecules/select-list.test.ts:225:45: ERROR: Unterminated string literal
+  Plugin: vite:esbuild
+  File: /home/quangtynu/Qcoder/picro/src/tui/molecules/select-list.test.ts:225:45
+  
+  Unterminated string literal
+  223 |          const onSelect = vi.fn();
+  224 |          selectList['onSelect'] = onSelect;
+  225 |          selectList.handleKey(createKeyEvent('
+      |                                               ^
+  226 |  ', 'enter'));
+  227 |          expect(onSelect).toHaveBeenCalledWith('a'); // first item
+  
+ ❯ failureErrorWithLog ../../node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/145]⎯
+
+ FAIL  src/tui/molecules/settings-list.test.ts [ src/tui/molecules/settings-list.test.ts ]
+Error: Transform failed with 1 error:
+/home/quangtynu/Qcoder/picro/src/tui/molecules/settings-list.test.ts:100:45: ERROR: Unterminated string literal
+  Plugin: vite:esbuild
+  File: /home/quangtynu/Qcoder/picro/src/tui/molecules/settings-list.test.ts:100:45
+  
+  Unterminated string literal
+  98  |        settingsList['onChange'] = onChange;
+  99  |        const originalValue = settingsList['items'][0].currentValue;
+  100 |        settingsList.handleKey(createKeyEvent('', 'enter'));
+      |                                               ^
+  101 |        expect(onChange).toHaveBeenCalledWith('theme', expect.not.stringMatching(originalValue));
+  102 |      });
+  
+ ❯ failureErrorWithLog ../../node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/145]⎯
+
+ FAIL  src/tui/molecules/split-pane.test.ts [ src/tui/molecules/split-pane.test.ts ]
+Error: Transform failed with 1 error:
+/home/quangtynu/Qcoder/picro/src/tui/molecules/split-pane.test.ts:250:38: ERROR: Unterminated string literal
+  Plugin: vite:esbuild
+  File: /home/quangtynu/Qcoder/picro/src/tui/molecules/split-pane.test.ts:250:38
+  
+  Unterminated string literal
+  248 |      it('should ignore other keys', () => {
+  249 |        const initial = split['position'];
+  250 |        split.handleKey(createKeyEvent('', 'enter'));
+      |                                        ^
+  251 |        expect(split['position']).toBe(initial);
+  252 |      });
+  
+ ❯ failureErrorWithLog ../../node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/145]⎯
+
+ FAIL  src/tui/molecules/tree-view.test.ts [ src/tui/molecules/tree-view.test.ts ]
+Error: Transform failed with 1 error:
+/home/quangtynu/Qcoder/picro/src/tui/molecules/tree-view.test.ts:297:41: ERROR: Unterminated string literal
+  Plugin: vite:esbuild
+  File: /home/quangtynu/Qcoder/picro/src/tui/molecules/tree-view.test.ts:297:41
+  
+  Unterminated string literal
+  295 |        treeView = new TreeView({ data: treeData });
+  296 |        const initial = treeData[0].expanded;
+  297 |        treeView.handleKey(createKeyEvent('', 'enter'));
+      |                                           ^
+  298 |        expect(treeData[0].expanded).toBe(!initial);
+  299 |      });
+  
+ ❯ failureErrorWithLog ../../node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/145]⎯
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 137 ⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > command palette > should handle command palette on Ctrl+P
+TypeError: mode.handleCommandPalette is not a function
+ ❯ src/tui/interactive-mode.extra.test.ts:120:12
+    118|   describe('command palette', () => {
+    119|     it('should handle command palette on Ctrl+P', () => {
+    120|       mode.handleCommandPalette();
+       |            ^
+    121|       // showPanel called
+    122|       expect(tui.showPanel).toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/145]⎯
+
+ FAIL  src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > thinking selector > should show thinking selector on Ctrl+T
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/tui/interactive-mode.extra.test.ts:129:29
+    127|     it('should show thinking selector on Ctrl+T', () => {
+    128|       mode.handleThinkingSelector();
+    129|       expect(tui.showPanel).toHaveBeenCalled();
+       |                             ^
+    130|     });
+    131|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/145]⎯
+
+ FAIL  src/tui/tui.test.ts > TerminalUI > start() > should query cell size for images
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/tui/tui.test.ts:130:42
+    128|     it('should query cell size for images', () => {
+    129|       tui.start();
+    130|       expect(mockTerminal.queryCellSize).toHaveBeenCalled();
+       |                                          ^
+    131|     });
+    132|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/145]⎯
+
+ FAIL  src/tui/tui.test.ts > TerminalUI > requestRender() > should schedule render if not already scheduled
+AssertionError: expected undefined to be defined
+ ❯ src/tui/tui.test.ts:192:34
+    190|     it('should schedule render if not already scheduled', () => {
+    191|       tui.requestRender();
+    192|       expect(tui['renderTimer']).toBeDefined();
+       |                                  ^
+    193|     });
+    194|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/145]⎯
+
+ FAIL  src/tui/tui.test.ts > TerminalUI > handleWheelScroll() / inertial scrolling > should accumulate velocity
+AssertionError: expected -0.92 to be -1 // Object.is equality
+
+- Expected
++ Received
+
+- -1
++ -0.92
+
+ ❯ src/tui/tui.test.ts:372:44
+    370|     it('should accumulate velocity', () => {
+    371|       tui.handleWheelScroll(-1);
+    372|       expect(tui['inertiaScrollVelocity']).toBe(-1);
+       |                                            ^
+    373|     });
+    374|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/145]⎯
+
+ FAIL  src/tui/organisms/context-menu.test.ts > ContextMenu > getSelectedItem() > should return null if selected item is disabled
+AssertionError: expected { id: 'select-all', …(2) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "id": "select-all",
+  "label": "Select All",
+  "shortcut": "Ctrl+A",
+}
+
+ ❯ src/tui/organisms/context-menu.test.ts:84:19
+     82|       menu['selectedIndex'] = 3; // Delete is disabled
+     83|       const sel = menu.getSelectedItem();
+     84|       expect(sel).toBeNull();
+       |                   ^
+     85|     });
+     86|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/145]⎯
+
+ FAIL  src/tui/organisms/context-menu.test.ts > ContextMenu > draw() > should render a bordered box
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/organisms/context-menu.test.ts:109:41
+    107|     it('should render a bordered box', () => {
+    108|       const result = menu.draw(defaultContext);
+    109|       expect(result[0].startsWith('┌')).toBe(true);
+       |                                         ^
+    110|       expect(result[result.length - 1].startsWith('┘')).toBe(true);
+    111|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/145]⎯
+
+ FAIL  src/tui/organisms/context-menu.test.ts > ContextMenu > draw() > should apply custom theme
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/organisms/context-menu.test.ts:134:56
+    132|       menu = new ContextMenu({ items, theme: { bgColor: (s) => `\x1b[4…
+    133|       const result = menu.draw(defaultContext);
+    134|       expect(result.some(l => l.includes('\x1b[41m'))).toBe(true);
+       |                                                        ^
+    135|     });
+    136|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/145]⎯
+
+ FAIL  src/tui/organisms/context-menu.test.ts > ContextMenu > draw() > should respect requested width
+AssertionError: expected 39 to be less than or equal to 30
+ ❯ src/tui/organisms/context-menu.test.ts:141:26
+    139|       const result = menu.draw(defaultContext);
+    140|       result.forEach(l => {
+    141|         expect(l.length).toBeLessThanOrEqual(30);
+       |                          ^
+    142|       });
+    143|     });
+ ❯ src/tui/organisms/context-menu.test.ts:140:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/145]⎯
+
+ FAIL  src/tui/organisms/context-menu.test.ts > ContextMenu > handleKey() > should move selection up/down
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/tui/organisms/context-menu.test.ts:166:37
+    164|     it('should move selection up/down', () => {
+    165|       menu.handleKey(createKeyEvent('down'));
+    166|       expect(menu['selectedIndex']).toBe(1);
+       |                                     ^
+    167|     });
+    168|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/145]⎯
+
+ FAIL  src/tui/organisms/context-menu.test.ts > ContextMenu > handleKey() > should not select disabled items on navigation? Actually it can select but getSelectedItem returns null
+AssertionError: expected +0 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ 0
+
+ ❯ src/tui/organisms/context-menu.test.ts:173:37
+    171|       menu.handleKey(createKeyEvent('down'));
+    172|       menu.handleKey(createKeyEvent('down')); // to Delete (disabled)
+    173|       expect(menu['selectedIndex']).toBe(3);
+       |                                     ^
+    174|       expect(menu.getSelectedItem()).toBeNull();
+    175|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/145]⎯
+
+ FAIL  src/tui/organisms/context-menu.test.ts > ContextMenu > handleKey() > should call onSelect when pressing Enter on enabled item
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/tui/organisms/context-menu.test.ts:180:33
+    178|       // First item has onSelect(fn)
+    179|       menu.handleKey(createKeyEvent('\r'));
+    180|       expect(items[0].onSelect).toHaveBeenCalled();
+       |                                 ^
+    181|     });
+    182|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/145]⎯
+
+ FAIL  src/tui/organisms/context-menu.test.ts > ContextMenu > handleKey() > should call onClose on Escape
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/tui/organisms/context-menu.test.ts:185:23
+    183|     it('should call onClose on Escape', () => {
+    184|       menu.handleKey(createKeyEvent('\x1b'));
+    185|       expect(onClose).toHaveBeenCalled();
+       |                       ^
+    186|     });
+    187|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/145]⎯
+
+ FAIL  src/tui/organisms/context-menu.test.ts > ContextMenu > handleKey() > should skip disabled items when trying to select? Not required; but getSelectedItem returns null
+TypeError: undefined is not a spy or a call to a spy!
+ ❯ src/tui/organisms/context-menu.test.ts:192:37
+    190|       menu['selectedIndex'] = 3;
+    191|       menu.handleKey(createKeyEvent('\r'));
+    192|       expect(items[3].onSelect).not.toHaveBeenCalled();
+       |                                     ^
+    193|     });
+    194|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/145]⎯
+
+ FAIL  src/tui/organisms/context-menu.test.ts > ContextMenu > edge cases > should handle empty items array
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/organisms/context-menu.test.ts:207:41
+    205|       menu = new ContextMenu({ items: [] });
+    206|       const result = menu.draw(defaultContext);
+    207|       expect(result[0].startsWith('┌')).toBe(true);
+       |                                         ^
+    208|     });
+    209|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/145]⎯
+
+ FAIL  src/tui/organisms/debug-panel.test.ts > DebugPanel > onRoundEvent() > should keep only last N rounds based on height
+AssertionError: expected 20 to be less than 20
+ ❯ src/tui/organisms/debug-panel.test.ts:72:44
+     70|         });
+     71|       }
+     72|       expect(panel['roundMetrics'].length).toBeLessThan(20);
+       |                                            ^
+     73|     });
+     74|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/145]⎯
+
+ FAIL  src/tui/organisms/debug-panel.test.ts > DebugPanel > draw() > should render a bordered box
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/organisms/debug-panel.test.ts:117:57
+    115|       const result = panel.draw(defaultContext);
+    116|       expect(result[0].startsWith('┌')).toBe(true);
+    117|       expect(result[result.length - 1].startsWith('┘')).toBe(true);
+       |                                                         ^
+    118|     });
+    119|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/145]⎯
+
+ FAIL  src/tui/organisms/debug-panel.test.ts > DebugPanel > draw() > should show run metrics when showRun=true and data present
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/organisms/debug-panel.test.ts:134:78
+    132|       });
+    133|       const result = panel.draw(defaultContext);
+    134|       expect(result.some(l => l.includes('Total:') && l.includes('1.23…
+       |                                                                              ^
+    135|     });
+    136|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/145]⎯
+
+ FAIL  src/tui/organisms/debug-panel.test.ts > DebugPanel > draw() > should respect width
+AssertionError: expected 33 to be less than or equal to 20
+ ❯ src/tui/organisms/debug-panel.test.ts:153:26
+    151|       const result = panel.draw({ ...defaultContext, width: 20 });
+    152|       result.forEach(l => {
+    153|         expect(l.length).toBeLessThanOrEqual(20);
+       |                          ^
+    154|       });
+    155|     });
+ ❯ src/tui/organisms/debug-panel.test.ts:152:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/145]⎯
+
+ FAIL  src/tui/organisms/debug-panel.test.ts > DebugPanel > edge cases > should handle zero width context
+RangeError: Invalid count value: -2
+ ❯ DebugPanel.draw src/tui/organisms/debug-panel.ts:86:22
+     84|
+     85|     // Border
+     86|     const line = '─'.repeat(width - 2);
+       |                      ^
+     87|     lines.push('┌' + line + '┐');
+     88|
+ ❯ src/tui/organisms/debug-panel.test.ts:179:28
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > constructor > should accept custom options
+AssertionError: expected +0 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 0
+
+ ❯ src/tui/organisms/editor.test.ts:35:29
+     33|     it('should accept custom options', () => {
+     34|       const e = new Editor({ paddingX: 2, paddingY: 1, maxHistorySize:…
+     35|       expect(e['paddingX']).toBe(2);
+       |                             ^
+     36|       expect(e['paddingY']).toBe(1);
+     37|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > getText() / setText() > should call onChange callback when setText
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'Hello' ]
+
+Number of calls: 0
+
+ ❯ src/tui/organisms/editor.test.ts:54:24
+     52|       editor = new Editor({ onChange });
+     53|       editor.setText('Hello');
+     54|       expect(onChange).toHaveBeenCalledWith('Hello');
+       |                        ^
+     55|     });
+     56|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > insertText() > should insert at cursor position
+TypeError: editor.insertText is not a function
+ ❯ src/tui/organisms/editor.test.ts:62:14
+     60|       editor.setText('Hello');
+     61|       editor['cursorCol'] = 5;
+     62|       editor.insertText(' World');
+       |              ^
+     63|       expect(editor.getText()).toBe('Hello World');
+     64|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > insertText() > should update cursor position after insert
+TypeError: editor.insertText is not a function
+ ❯ src/tui/organisms/editor.test.ts:69:14
+     67|       editor.setText('He');
+     68|       editor['cursorCol'] = 2;
+     69|       editor.insertText('llo');
+       |              ^
+     70|       expect(editor['cursorCol']).toBe(5);
+     71|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > handleKey() > should move cursor left with ArrowLeft
+AssertionError: expected 3 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 3
+
+ ❯ src/tui/organisms/editor.test.ts:83:35
+     81|       editor['cursorCol'] = 3;
+     82|       editor.handleKey(createKeyEvent('\x1b[D'));
+     83|       expect(editor['cursorCol']).toBe(2);
+       |                                   ^
+     84|     });
+     85|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > handleKey() > should move cursor right with ArrowRight
+AssertionError: expected 1 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ src/tui/organisms/editor.test.ts:90:35
+     88|       editor['cursorCol'] = 1;
+     89|       editor.handleKey(createKeyEvent('\x1b[C'));
+     90|       expect(editor['cursorCol']).toBe(2);
+       |                                   ^
+     91|     });
+     92|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > handleKey() > should handle backspace to delete before cursor
+AssertionError: expected 'Hello\u007f' to be 'Helo' // Object.is equality
+
+Expected: "Helo"
+Received: "Hello"
+
+ ❯ src/tui/organisms/editor.test.ts:97:32
+     95|       editor['cursorCol'] = 3;
+     96|       editor.handleKey(createKeyEvent('\x7f'));
+     97|       expect(editor.getText()).toBe('Helo');
+       |                                ^
+     98|       expect(editor['cursorCol']).toBe(2);
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > handleKey() > should handle delete to delete after cursor
+AssertionError: expected 'Hello\u001b[3~' to be 'Helo' // Object.is equality
+
+Expected: "Helo"
+Received: "Hello[3~"
+
+ ❯ src/tui/organisms/editor.test.ts:105:32
+    103|       editor['cursorCol'] = 2;
+    104|       editor.handleKey(createKeyEvent('\x1b[3~'));
+    105|       expect(editor.getText()).toBe('Helo');
+       |                                ^
+    106|     });
+    107|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > handleKey() > should insert newline with Enter
+AssertionError: expected 'Line1\r' to be 'Line1\n' // Object.is equality
+
+- Expected
++ Received
+
+- Line1
+-
++ Line1
+
+ ❯ src/tui/organisms/editor.test.ts:112:32
+    110|       editor['cursorCol'] = 5;
+    111|       editor.handleKey(createKeyEvent('\r'));
+    112|       expect(editor.getText()).toBe('Line1\n');
+       |                                ^
+    113|     });
+    114|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > handleKey() > should handle Home/End
+AssertionError: expected 5 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 5
+
+ ❯ src/tui/organisms/editor.test.ts:120:35
+    118|       editor['cursorCol'] = 5;
+    119|       editor.handleKey(createKeyEvent('\x1b[H')); // Home
+    120|       expect(editor['cursorCol']).toBe(0);
+       |                                   ^
+    121|       editor.handleKey(createKeyEvent('\x1b[F')); // End
+    122|       expect(editor['cursorCol']).toBe(5);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > handleKey() > should call onSubmit when configured
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/tui/organisms/editor.test.ts:130:24
+    128|       editor.isFocused = true;
+    129|       editor.handleKey(createKeyEvent('\r'));
+    130|       expect(onSubmit).toHaveBeenCalled();
+       |                        ^
+    131|     });
+    132|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > handleKey() > should call onEscape when configured
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/tui/organisms/editor.test.ts:138:24
+    136|       editor.isFocused = true;
+    137|       editor.handleKey(createKeyEvent('\x1b'));
+    138|       expect(onEscape).toHaveBeenCalled();
+       |                        ^
+    139|     });
+    140|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[40/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > draw() > should render lines with cursor marker when focused
+AssertionError: expected '\u001b[90m───────────────────────────…' to contain '\u001b_pi:c\u0007'
+
+Expected: "_pi:c"
+Received: "[90m────────────────────────────────────────────────────────────────────────────────[0m"
+
+ ❯ src/tui/organisms/editor.test.ts:150:25
+    148|       const result = editor.draw(defaultContext);
+    149|       // Should contain CURSOR_MARKER at appropriate position in line 0
+    150|       expect(result[0]).toContain('\x1b_pi:c\x07');
+       |                         ^
+    151|     });
+    152|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[41/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > draw() > should apply scroll offset
+AssertionError: expected 5 to be less than or equal to 2
+ ❯ src/tui/organisms/editor.test.ts:164:29
+    162|       editor['scrollOffset'] = 2;
+    163|       const result = editor.draw({ ...defaultContext, height: 2 });
+    164|       expect(result.length).toBeLessThanOrEqual(2);
+       |                             ^
+    165|     });
+    166|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[42/145]⎯
+
+ FAIL  src/tui/organisms/editor.test.ts > Editor > history > should clear history
+TypeError: editor.clearHistory is not a function
+ ❯ src/tui/organisms/editor.test.ts:186:14
+    184|     it('should clear history', () => {
+    185|       editor.addToHistory('cmd');
+    186|       editor.clearHistory();
+       |              ^
+    187|       expect(editor['history'].length).toBe(0);
+    188|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[43/145]⎯
+
+ FAIL  src/tui/organisms/login-dialog.test.ts > LoginDialog > draw() > should add cursor marker when focused and in input stage
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/organisms/login-dialog.test.ts:119:67
+    117|       dialog['stage'] = 'input';
+    118|       const result = dialog.draw(defaultContext);
+    119|       expect(result.some(line => line.includes('\x1b_pi:c\x07'))).toBe…
+       |                                                                   ^
+    120|     });
+    121|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[44/145]⎯
+
+ FAIL  src/tui/organisms/login-dialog.test.ts > LoginDialog > handleKey() > should ignore non-printable keys in input stage
+AssertionError: expected '\u0001' to be '' // Object.is equality
+
+- Expected
++ Received
+
++ 
+
+ ❯ src/tui/organisms/login-dialog.test.ts:177:34
+    175|       dialog['stage'] = 'input';
+    176|       dialog.handleKey(createKeyEvent('\x01')); // Ctrl+A
+    177|       expect(dialog.getApiKey()).toBe('');
+       |                                  ^
+    178|     });
+    179|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[45/145]⎯
+
+ FAIL  src/tui/organisms/login-dialog.test.ts > LoginDialog > edge cases > should handle unicode in apiKey
+AssertionError: expected '' to be '😀' // Object.is equality
+
+- Expected
++ Received
+
+- 😀
+
+ ❯ src/tui/organisms/login-dialog.test.ts:215:34
+    213|       dialog['stage'] = 'input';
+    214|       dialog.handleKey(createKeyEvent('😀'));
+    215|       expect(dialog.getApiKey()).toBe('😀');
+       |                                  ^
+    216|     });
+    217|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[46/145]⎯
+
+ FAIL  src/tui/organisms/login-dialog.test.ts > LoginDialog > edge cases > should handle narrow width
+RangeError: Invalid count value: -4
+ ❯ LoginDialog.draw src/tui/organisms/login-dialog.ts:65:43
+     63|
+     64|     const providerLabel = 'Provider: ' + this.provider;
+     65|     lines.push('│ ' + providerLabel + ' '.repeat(borderWidth - provide…
+       |                                           ^
+     66|
+     67|     lines.push('│' + ' '.repeat(borderWidth) + '│');
+ ❯ src/tui/organisms/login-dialog.test.ts:220:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[47/145]⎯
+
+ FAIL  src/tui/atoms/auth-selector-status.test.ts > AuthSelectorStatus > draw() > should show email if provided
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/atoms/auth-selector-status.test.ts:61:64
+     59|       const auth = new AuthSelectorStatus({ statuses });
+     60|       const result = auth.draw(defaultContext);
+     61|       expect(result.some(l => l.includes('test@example.com'))).toBe(tr…
+       |                                                                ^
+     62|     });
+     63|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[48/145]⎯
+
+ FAIL  src/tui/atoms/autocomplete.test.ts > Autocomplete > FilePathAutocompleteProvider > should return empty if directory does not exist
+TypeError: vi.mocked(...).mockRejectedValue is not a function
+ ❯ src/tui/atoms/autocomplete.test.ts:91:46
+     89|
+     90|     it('should return empty if directory does not exist', async () => {
+     91|       vi.mocked(require('fs').promises.stat).mockRejectedValue(new Err…
+       |                                              ^
+     92|       const result = await provider.complete({ query: '/nonexistent/',…
+     93|       expect(result).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[49/145]⎯
+
+ FAIL  src/tui/atoms/autocomplete.test.ts > Autocomplete > FilePathAutocompleteProvider > should return files in directory if query ends with /
+TypeError: vi.mocked(...).mockResolvedValue is not a function
+ ❯ src/tui/atoms/autocomplete.test.ts:97:46
+     95|
+     96|     it('should return files in directory if query ends with /', async …
+     97|       vi.mocked(require('fs').promises.stat).mockResolvedValue({ isDir…
+       |                                              ^
+     98|       vi.mocked(require('fs').promises.readdir).mockResolvedValue(['fi…
+     99|       vi.mocked(require('path').dirname).mockReturnValue('/test');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[50/145]⎯
+
+ FAIL  src/tui/atoms/badge.test.ts > Badge > draw() > should reset style at end
+AssertionError: expected '\u001b[48;5;240m\u001b[37m Test \u001…' to match /\\x1b\[0m$/
+
+- Expected:
+/\\x1b\[0m$/
+
++ Received:
+"[48;5;240m[37m Test [0m"
+
+ ❯ src/tui/atoms/badge.test.ts:150:25
+    148|       badge = new Badge({ label: 'Test' });
+    149|       const result = badge.draw(defaultContext);
+    150|       expect(result[0]).toMatch(/\\x1b\[0m$/);
+       |                         ^
+    151|     });
+    152|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[51/145]⎯
+
+ FAIL  src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > draw() > should show spinner when running
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/atoms/bash-execution-message.test.ts:51:49
+     49|       msg.appendOutput('output');
+     50|       const result = msg.draw(defaultContext);
+     51|       expect(result.some(l => l.includes('⠋'))).toBe(true); // spinner…
+       |                                                 ^
+     52|     });
+     53|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[52/145]⎯
+
+ FAIL  src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > draw() > should show exit code when complete
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/atoms/bash-execution-message.test.ts:58:54
+     56|       msg.setComplete(0, false);
+     57|       const result = msg.draw(defaultContext);
+     58|       expect(result.some(l => l.includes('exit 0'))).toBe(true);
+       |                                                      ^
+     59|     });
+     60|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[53/145]⎯
+
+ FAIL  src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > draw() > should indicate truncation if truncated
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/atoms/bash-execution-message.test.ts:65:59
+     63|       msg.setComplete(0, true);
+     64|       const result = msg.draw(defaultContext);
+     65|       expect(result.some(l => l.includes('(truncated)'))).toBe(true);
+       |                                                           ^
+     66|     });
+     67|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[54/145]⎯
+
+ FAIL  src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > draw() > should pad lines to full width
+AssertionError: expected 89 to be less than or equal to 80
+ ❯ src/tui/atoms/bash-execution-message.test.ts:73:26
+     71|       const result = msg.draw(defaultContext);
+     72|       result.forEach(l => {
+     73|         expect(l.length).toBeLessThanOrEqual(defaultContext.width);
+       |                          ^
+     74|       });
+     75|     });
+ ❯ src/tui/atoms/bash-execution-message.test.ts:72:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[55/145]⎯
+
+ FAIL  src/tui/atoms/custom-message.test.ts > CustomMessage > draw() > should handle array content with text type
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/atoms/custom-message.test.ts:90:76
+     88|       });
+     89|       const result = msg.draw(defaultContext);
+     90|       expect(result.some(l => l.includes('Hello') && l.includes('World…
+       |                                                                            ^
+     91|     });
+     92|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[56/145]⎯
+
+ FAIL  src/tui/atoms/diff.test.ts > parseDiffLine > should identify context lines
+AssertionError: expected 'unchanged ' to be 'unchanged' // Object.is equality
+
+Expected: "unchanged"
+Received: "unchanged "
+
+ ❯ src/tui/atoms/diff.test.ts:49:29
+     47|     const result = parseDiffLine(' unchanged ');
+     48|     expect(result?.type).toBe('context');
+     49|     expect(result?.content).toBe('unchanged');
+       |                             ^
+     50|   });
+     51|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[57/145]⎯
+
+ FAIL  src/tui/atoms/diff.test.ts > Diff > should include line numbers when showLineNumbers true
+AssertionError: expected '            0 \u001b[32madded\u001b[0m' to match /^\s*\d+\s+\d+/
+
+- Expected:
+/^\s*\d+\s+\d+/
+
++ Received:
+"            0 [32madded[0m"
+
+ ❯ src/tui/atoms/diff.test.ts:110:23
+    108|     const result = diff.draw(defaultContext);
+    109|     // prefix should contain numbers
+    110|     expect(result[0]).toMatch(/^\s*\d+\s+\d+/);
+       |                       ^
+    111|   });
+    112|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[58/145]⎯
+
+ FAIL  src/tui/atoms/divider.test.ts > Divider > should respect width
+AssertionError: expected 19 to be less than or equal to 10
+ ❯ src/tui/atoms/divider.test.ts:29:30
+     27|     const narrow = { ...defaultContext, width: 10 };
+     28|     const result = divider.draw(narrow);
+     29|     expect(result[0].length).toBeLessThanOrEqual(10);
+       |                              ^
+     30|   });
+     31|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[59/145]⎯
+
+ FAIL  src/tui/atoms/divider.test.ts > Divider > should accept custom character
+AssertionError: expected '\u001b[90m───────────────────────────…' to contain '='
+
+Expected: "="
+Received: "[90m────────────────────────────────────────────────────────────────────────────────[0m"
+
+ ❯ src/tui/atoms/divider.test.ts:35:23
+     33|     const divider = new Divider({ char: '=' });
+     34|     const result = divider.draw(defaultContext);
+     35|     expect(result[0]).toContain('=');
+       |                       ^
+     36|   });
+     37|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[60/145]⎯
+
+ FAIL  src/tui/atoms/divider.test.ts > Divider > should render empty line when width=0
+AssertionError: expected 9 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 9
+
+ ❯ src/tui/atoms/divider.test.ts:42:30
+     40|     const ctx = { ...defaultContext, width: 0 };
+     41|     const result = divider.draw(ctx);
+     42|     expect(result[0].length).toBe(0);
+       |                              ^
+     43|   });
+     44| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[61/145]⎯
+
+ FAIL  src/tui/atoms/earendil-announcement.test.ts > EarendilAnnouncementComponent > should adjust width based on context
+AssertionError: expected 58 to be less than or equal to 40
+ ❯ src/tui/atoms/earendil-announcement.test.ts:29:24
+     27|     const result = comp.draw({ ...defaultContext, width: 40 });
+     28|     result.forEach(l => {
+     29|       expect(l.length).toBeLessThanOrEqual(40);
+       |                        ^
+     30|     });
+     31|   });
+ ❯ src/tui/atoms/earendil-announcement.test.ts:28:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[62/145]⎯
+
+ FAIL  src/tui/atoms/flex.test.ts > Flex > draw() - row > should pad shorter children with empty lines
+AssertionError: expected [ 'AB', 'C' ] to deeply equal [ 'AB', ' C' ]
+
+- Expected
++ Received
+
+  [
+    "AB",
+-   " C",
++   "C",
+  ]
+
+ ❯ src/tui/atoms/flex.test.ts:83:22
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[63/145]⎯
+
+ FAIL  src/tui/atoms/fuzzy.test.ts > fuzzyMatch > should match exact string
+AssertionError: expected 0.5454545454545454 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 0.5454545454545454
+
+ ❯ src/tui/atoms/fuzzy.test.ts:21:27
+     19|     const result = fuzzyMatch('Hello World', 'Hello World');
+     20|     expect(result).not.toBeNull();
+     21|     expect(result?.score).toBe(0); // perfect
+       |                           ^
+     22|   });
+     23|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[64/145]⎯
+
+ FAIL  src/tui/atoms/fuzzy.test.ts > fuzzyMatch > should match subsequence
+AssertionError: expected null not to be null
+ ❯ src/tui/atoms/fuzzy.test.ts:26:24
+     24|   it('should match subsequence', () => {
+     25|     const result = fuzzyMatch('Hello World', 'hll');
+     26|     expect(result).not.toBeNull();
+       |                        ^
+     27|     expect(result?.score).toBeGreaterThan(0);
+     28|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[65/145]⎯
+
+ FAIL  src/tui/atoms/fuzzy.test.ts > fuzzyMatch > should return matches indices
+AssertionError: expected undefined to deeply equal [ +0, 2, 4 ]
+
+- Expected:
+[
+  0,
+  2,
+  4,
+]
+
++ Received:
+undefined
+
+ ❯ src/tui/atoms/fuzzy.test.ts:39:29
+     37|   it('should return matches indices', () => {
+     38|     const result = fuzzyMatch('abcde', 'ace');
+     39|     expect(result?.matches).toEqual([0, 2, 4]);
+       |                             ^
+     40|   });
+     41|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[66/145]⎯
+
+ FAIL  src/tui/atoms/grid.test.ts > Grid > draw() > should arrange children in a single row for one column
+AssertionError: expected [ …(2) ] to deeply equal [ 'A', 'B' ]
+
+- Expected
++ Received
+
+  [
+-   "A",
+-   "B",
++   "A                                                                               ",
++   "B                                                                               ",
+  ]
+
+ ❯ src/tui/atoms/grid.test.ts:58:22
+     56|       grid.append(createChild(['B']));
+     57|       const result = grid.draw(defaultContext);
+     58|       expect(result).toEqual(['A', 'B']);
+       |                      ^
+     59|     });
+     60|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[67/145]⎯
+
+ FAIL  src/tui/atoms/grid.test.ts > Grid > draw() > should add row gap between rows
+AssertionError: expected [ …(4) ] to deeply equal [ 'A', '', '', 'B' ]
+
+- Expected
++ Received
+
+  [
+-   "A",
++   "A                                                                               ",
+    "",
+    "",
+-   "B",
++   "B                                                                               ",
+  ]
+
+ ❯ src/tui/atoms/grid.test.ts:76:22
+     74|       grid.append(createChild(['B']));
+     75|       const result = grid.draw(defaultContext);
+     76|       expect(result).toEqual(['A', '', '', 'B']); // rowgap=2 => two e…
+       |                      ^
+     77|     });
+     78|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[68/145]⎯
+
+ FAIL  src/tui/atoms/i18n.test.ts > I18n > register() > should add new locale
+AssertionError: expected 'OK' to be 'D\'accord' // Object.is equality
+
+Expected: "D'accord"
+Received: "OK"
+
+ ❯ src/tui/atoms/i18n.test.ts:27:38
+     25|       const i18n = new I18n();
+     26|       i18n.register('fr', { ok: 'D\'accord' });
+     27|       expect(i18n.t('ok', {}, 'fr')).toBe('D\'accord');
+       |                                      ^
+     28|     });
+     29|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[69/145]⎯
+
+ FAIL  src/tui/atoms/i18n.test.ts > I18n > t() > should support positional arguments
+AssertionError: expected 'greeting' to be 'Hello Alice, you have 5 messages' // Object.is equality
+
+Expected: "Hello Alice, you have 5 messages"
+Received: "greeting"
+
+ ❯ src/tui/atoms/i18n.test.ts:69:22
+     67|       i18n.register('test', { greeting: 'Hello {0}, you have {1} messa…
+     68|       const result = i18n.t('greeting', 'Alice', 5, 'test');
+     69|       expect(result).toBe('Hello Alice, you have 5 messages');
+       |                      ^
+     70|     });
+     71|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[70/145]⎯
+
+ FAIL  src/tui/atoms/index.test.ts > atoms/index.ts exports > should export Terminal interface
+AssertionError: expected undefined to be defined
+ ❯ src/tui/atoms/index.test.ts:21:28
+     19|
+     20|   it('should export Terminal interface', () => {
+     21|     expect(Atoms.Terminal).toBeDefined();
+       |                            ^
+     22|   });
+     23|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[71/145]⎯
+
+ FAIL  src/tui/atoms/index.test.ts > atoms/index.ts exports > should export Input
+AssertionError: expected undefined to be defined
+ ❯ src/tui/atoms/index.test.ts:42:25
+     40|
+     41|   it('should export Input', () => {
+     42|     expect(Atoms.Input).toBeDefined();
+       |                         ^
+     43|   });
+     44| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[72/145]⎯
+
+ FAIL  src/tui/atoms/internal-utils.test.ts > internal-utils > visibleWidth > should handle multiple ANSI codes
+AssertionError: expected 15 to be 12 // Object.is equality
+
+- Expected
++ Received
+
+- 12
++ 15
+
+ ❯ src/tui/atoms/internal-utils.test.ts:78:31
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[73/145]⎯
+
+ FAIL  src/tui/atoms/internal-utils.test.ts > internal-utils > sliceByColumn > should extract substring by visible columns
+AssertionError: expected 'llo' to be 'He' // Object.is equality
+
+Expected: "He"
+Received: "llo"
+
+ ❯ src/tui/atoms/internal-utils.test.ts:138:45
+    136|     it('should extract substring by visible columns', () => {
+    137|       // Simple ASCII
+    138|       expect(sliceByColumn('Hello', 2, 10)).toBe('He');
+       |                                             ^
+    139|     });
+    140|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[74/145]⎯
+
+ FAIL  src/tui/atoms/internal-utils.test.ts > internal-utils > sliceByColumn > should skip zero-width chars
+AssertionError: expected 'a\u200c' to be 'ab' // Object.is equality
+
+Expected: "ab"
+Received: "a‌"
+
+ ❯ src/tui/atoms/internal-utils.test.ts:143:38
+    141|     it('should skip zero-width chars', () => {
+    142|       const s = 'a\u200cb'; // a + ZWNJ + b
+    143|       expect(sliceByColumn(s, 0, 2)).toBe('ab'); // ZWNJ is zero width…
+       |                                      ^
+    144|     });
+    145|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[75/145]⎯
+
+ FAIL  src/tui/atoms/keys.test.ts > parseKey > Ctrl+Letter > should not misinterpret other control codes
+AssertionError: expected { raw: '\u0000', type: 'press', …(5) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "alt": false,
+  "ctrl": false,
+  "meta": false,
+  "name": " ",
+  "raw": " ",
+  "shift": false,
+  "type": "press",
+}
+
+ ❯ src/tui/atoms/keys.test.ts:62:17
+     60|       // e.g., \x00 (NUL) is ctrl+@? Not in our 1-26 range.
+     61|       const k = parseKey('\x00');
+     62|       expect(k).toBeNull();
+       |                 ^
+     63|     });
+     64|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[76/145]⎯
+
+ FAIL  src/tui/atoms/layout-inspector.test.ts > LayoutInspector > should truncate long stats lines
+AssertionError: expected 11 to be less than or equal to 10
+ ❯ src/tui/atoms/layout-inspector.test.ts:58:24
+     56|     // All lines should be within width 10
+     57|     result.forEach(l => {
+     58|       expect(l.length).toBeLessThanOrEqual(10);
+       |                        ^
+     59|     });
+     60|   });
+ ❯ src/tui/atoms/layout-inspector.test.ts:57:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[77/145]⎯
+
+ FAIL  src/tui/atoms/markdown.test.ts > Markdown > draw() > should render italic text
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/atoms/markdown.test.ts:73:55
+     71|       const result = markdown.draw(defaultContext);
+     72|       // italic uses dim (2)
+     73|       expect(result.some(l => l.includes('\x1b[2m'))).toBe(true);
+       |                                                       ^
+     74|     });
+     75|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[78/145]⎯
+
+ FAIL  src/tui/atoms/markdown.test.ts > Markdown > draw() > should render code blocks with syntax highlighting
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/atoms/markdown.test.ts:86:53
+     84|       markdown = new Markdown('```js\nconst x = 1;\n```');
+     85|       const result = markdown.draw(defaultContext);
+     86|       expect(result.some(l => l.includes('const'))).toBe(true);
+       |                                                     ^
+     87|     });
+     88|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[79/145]⎯
+
+ FAIL  src/tui/atoms/progress-bar.test.ts > ProgressBar > draw() > should apply label color
+AssertionError: expected '                     50% \u001b[32m██…' to contain '\u001b[33m'
+
+Expected: "[33m"
+Received: "                     50% [32m██████████[90m░░░░░░░░░░[0m                     "
+
+ ❯ src/tui/atoms/progress-bar.test.ts:164:25
+    162|       bar = new ProgressBar({ percent: 50, labelColor: '\x1b[33m' });
+    163|       const result = bar.draw(defaultContext);
+    164|       expect(result[0]).toContain('\x1b[33m');
+       |                         ^
+    165|     });
+    166|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[80/145]⎯
+
+ FAIL  src/tui/atoms/progress-bar.test.ts > ProgressBar > draw() > should reset color at end
+AssertionError: expected '                     50% \u001b[32m██…' to match /\\x1b\[0m$/
+
+- Expected:
+/\\x1b\[0m$/
+
++ Received:
+"                     50% [32m██████████[90m░░░░░░░░░░[0m                     "
+
+ ❯ src/tui/atoms/progress-bar.test.ts:170:25
+    168|       bar = new ProgressBar({ percent: 50 });
+    169|       const result = bar.draw(defaultContext);
+    170|       expect(result[0]).toMatch(/\\x1b\[0m$/);
+       |                         ^
+    171|     });
+    172|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[81/145]⎯
+
+ FAIL  src/tui/atoms/skill-invocation-message.test.ts > SkillInvocationMessage > draw() > should render bordered box
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/atoms/skill-invocation-message.test.ts:30:57
+     28|       const result = msg.draw(defaultContext);
+     29|       expect(result[0].startsWith('┌')).toBe(true);
+     30|       expect(result[result.length - 1].startsWith('┘')).toBe(true);
+       |                                                         ^
+     31|     });
+     32|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[82/145]⎯
+
+ FAIL  src/tui/atoms/stdin-buffer.test.ts > stdin-buffer > StdinBuffer class > should flush buffer on timeout
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'abc' ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   "abc",
++   "a",
+  ]
+
+  2nd vi.fn() call:
+
+  [
+-   "abc",
++   "b",
+  ]
+
+  3rd vi.fn() call:
+
+  [
+-   "abc",
++   "c",
+  ]
+
+
+Number of calls: 3
+
+ ❯ src/tui/atoms/stdin-buffer.test.ts:74:22
+     72|       vi.useFakeTimers();
+     73|       vi.advanceTimersByTime(20);
+     74|       expect(onData).toHaveBeenCalledWith('abc');
+       |                      ^
+     75|       vi.useRealTimers();
+     76|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[83/145]⎯
+
+ FAIL  src/tui/atoms/stdin-buffer.test.ts > stdin-buffer > StdinBuffer class > should clear buffer on destroy
+AssertionError: expected "vi.fn()" to be called 1 times, but got 3 times
+ ❯ src/tui/atoms/stdin-buffer.test.ts:83:22
+     81|       // After destroy, further processing should not emit
+     82|       buffer.process('xyz');
+     83|       expect(onData).toHaveBeenCalledTimes(1); // only flush once befo…
+       |                      ^
+     84|     });
+     85|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[84/145]⎯
+
+ FAIL  src/tui/atoms/stepper.test.ts > Stepper > edge cases > should handle empty steps
+AssertionError: expected [ '' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "",
++ ]
+
+ ❯ src/tui/atoms/stepper.test.ts:138:44
+    136|     it('should handle empty steps', () => {
+    137|       const stepper = new Stepper({ steps: [], currentStep: 0 });
+    138|       expect(stepper.draw(defaultContext)).toEqual([]);
+       |                                            ^
+    139|     });
+    140|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[85/145]⎯
+
+ FAIL  src/tui/atoms/table.test.ts > Table > draw() > should render rows with aligned columns
+AssertionError: expected 'A   BB' to be 'A  BB' // Object.is equality
+
+Expected: "A  BB"
+Received: "A   BB"
+
+ ❯ src/tui/atoms/table.test.ts:35:25
+     33|       // Determine expected column widths: col0 max(1,3)=3, col1 max(2…
+     34|       // So rows should be: 'A  BB' (A padded to 3) then 'CCC DD' (CCC…
+     35|       expect(result[0]).toBe('A  BB'); // A + 2 spaces = 3 cols? Actua…
+       |                         ^
+     36|       expect(result[1]).toBe('CCC DD');
+     37|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[86/145]⎯
+
+ FAIL  src/tui/atoms/table.test.ts > Table > draw() > should include headers if provided
+AssertionError: expected 'Name  Age' to be 'Name Age' // Object.is equality
+
+Expected: "Name Age"
+Received: "Name  Age"
+
+ ❯ src/tui/atoms/table.test.ts:42:25
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[87/145]⎯
+
+ FAIL  src/tui/atoms/terminal-image.test.ts > terminal-image > getCapabilities() > should detect Kitty terminal
+AssertionError: expected null to be 'kitty' // Object.is equality
+
+- Expected:
+"kitty"
+
++ Received:
+null
+
+ ❯ src/tui/atoms/terminal-image.test.ts:34:27
+     32|       vi.stubEnv('KITTY_WINDOW_ID', '123');
+     33|       const caps = getCapabilities();
+     34|       expect(caps.images).toBe('kitty');
+       |                           ^
+     35|     });
+     36|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[88/145]⎯
+
+ FAIL  src/tui/atoms/terminal-image.test.ts > terminal-image > getCapabilities() > should detect iTerm2
+AssertionError: expected null to be 'iterm2' // Object.is equality
+
+- Expected:
+"iterm2"
+
++ Received:
+null
+
+ ❯ src/tui/atoms/terminal-image.test.ts:40:27
+     38|       vi.stubEnv('ITERM_SESSION_ID', '456');
+     39|       const caps = getCapabilities();
+     40|       expect(caps.images).toBe('iterm2');
+       |                           ^
+     41|     });
+     42|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[89/145]⎯
+
+ FAIL  src/tui/atoms/terminal-image.test.ts > terminal-image > getCapabilities() > should detect WezTerm
+AssertionError: expected null to be 'kitty' // Object.is equality
+
+- Expected:
+"kitty"
+
++ Received:
+null
+
+ ❯ src/tui/atoms/terminal-image.test.ts:46:27
+     44|       vi.stubEnv('WEZTERM_PANE', '123');
+     45|       const caps = getCapabilities();
+     46|       expect(caps.images).toBe('kitty'); // wezterm uses kitty protocol
+       |                           ^
+     47|     });
+     48|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[90/145]⎯
+
+ FAIL  src/tui/atoms/terminal-image.test.ts > terminal-image > getCapabilities() > should cache capabilities
+AssertionError: expected { Object (images, trueColor, ...) } to be { Object (images, trueColor, ...) } // Object.is equality
+
+If it should pass with deep equality, replace "toBe" with "toStrictEqual"
+
+Expected: { Object (images, trueColor, ...) }
+Received: serializes to the same string
+
+
+Compared values have no visual difference.
+
+ ❯ src/tui/atoms/terminal-image.test.ts:58:21
+     56|       const caps1 = getCapabilities();
+     57|       const caps2 = getCapabilities();
+     58|       expect(caps1).toBe(caps2); // same object reference (we return c…
+       |                     ^
+     59|     });
+     60|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[91/145]⎯
+
+ FAIL  src/tui/atoms/terminal-image.test.ts > terminal-image > getCapabilities() > should reset cache on resetCapabilitiesCache
+ReferenceError: resetCapabilitiesCache is not defined
+ ❯ src/tui/atoms/terminal-image.test.ts:65:7
+     63|       setCapabilities({ images: 'kitty', trueColor: true, hyperlinks: …
+     64|       getCapabilities(); // returns overridden
+     65|       resetCapabilitiesCache();
+       |       ^
+     66|       const caps = getCapabilities();
+     67|       expect(caps.images).not.toBe('kitty');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[92/145]⎯
+
+ FAIL  src/tui/atoms/terminal.test.ts > ProcessTerminal > moveTo() > should write correct escape sequence
+AssertionError: expected "vi.fn()" to be called with arguments: [ '\u001b[6;11H' ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   "[6;11H",
++   "[5;10H",
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/tui/atoms/terminal.test.ts:133:32
+    131|     it('should write correct escape sequence', () => {
+    132|       term.moveTo(5, 10);
+    133|       expect(mockStdout.write).toHaveBeenCalledWith('\x1b[6;11H');
+       |                                ^
+    134|     });
+    135|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[93/145]⎯
+
+ FAIL  src/tui/atoms/terminal.test.ts > ProcessTerminal > clearFromCursor() > should write clear from cursor escape
+AssertionError: expected "vi.fn()" to be called with arguments: [ '\u001b[0J' ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   "[0J",
++   "[J",
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/tui/atoms/terminal.test.ts:159:32
+    157|     it('should write clear from cursor escape', () => {
+    158|       term.clearFromCursor();
+    159|       expect(mockStdout.write).toHaveBeenCalledWith('\x1b[0J');
+       |                                ^
+    160|     });
+    161|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[94/145]⎯
+
+ FAIL  src/tui/atoms/terminal.test.ts > ProcessTerminal > queryCellSize() > should send query and return promise
+AssertionError: expected { width: 9, height: 18 } to deeply equal { width: 80, height: 24 }
+
+- Expected
++ Received
+
+  {
+-   "height": 24,
+-   "width": 80,
++   "height": 18,
++   "width": 9,
+  }
+
+ ❯ src/tui/atoms/terminal.test.ts:200:22
+    198|       term['stdinBuffer']?.emit('data', '\x1b[6;24;80t');
+    199|       const result = await promise;
+    200|       expect(result).toEqual({ width: 80, height: 24 });
+       |                      ^
+    201|     });
+    202|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[95/145]⎯
+
+ FAIL  src/tui/atoms/terminal.test.ts > ProcessTerminal > queryCellSize() > should reject on invalid response
+AssertionError: promise resolved "{ width: 9, height: 18 }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "height": 18,
++   "width": 9,
+  }
+
+ ❯ src/tui/atoms/terminal.test.ts:207:27
+    205|       const promise = term.queryCellSize();
+    206|       term['stdinBuffer']?.emit('data', 'invalid');
+    207|       await expect(promise).rejects.toThrow();
+       |                           ^
+    208|     });
+    209|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[96/145]⎯
+
+ FAIL  src/tui/atoms/terminal.test.ts > ProcessTerminal > stop() > should destroy stdin buffer
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/tui/atoms/terminal.test.ts:253:33
+    251|       term.start(onInput, onResize);
+    252|       term.stop();
+    253|       expect(mockStdin.destroy).toHaveBeenCalled();
+       |                                 ^
+    254|     });
+    255|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[97/145]⎯
+
+ FAIL  src/tui/atoms/terminal.test.ts > ProcessTerminal > edge cases > should handle large terminal dimensions
+TypeError: Cannot set property columns of #<Object> which has only a getter
+ ❯ src/tui/atoms/terminal.test.ts:283:18
+    281|
+    282|     it('should handle large terminal dimensions', () => {
+    283|       mockStdout.columns = 200;
+       |                  ^
+    284|       mockStdout.rows = 50;
+    285|       expect(term.columns).toBe(200);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[98/145]⎯
+
+ FAIL  src/tui/atoms/terminal.test.ts > ProcessTerminal > edge cases > should handle empty writes
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "",
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/tui/atoms/terminal.test.ts:300:36
+    298|     it('should handle empty writes', () => {
+    299|       term.write('');
+    300|       expect(mockStdout.write).not.toHaveBeenCalled();
+       |                                    ^
+    301|     });
+    302|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[99/145]⎯
+
+ FAIL  src/tui/atoms/text.test.ts > Text > draw() > should handle zero width gracefully
+AssertionError: expected 5 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 5
+
+ ❯ src/tui/atoms/text.test.ts:78:23
+     76|       // With zero width, visible content may be empty
+     77|       const visible = visibleWidth(result[0]);
+     78|       expect(visible).toBe(0);
+       |                       ^
+     79|     });
+     80|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[100/145]⎯
+
+ FAIL  src/tui/atoms/text.test.ts > Text > draw() > should combine multiple styles
+AssertionError: expected '\u001b[32;1;4mStyled\u001b[0m' to contain '\u001b[1;32;4m'
+
+Expected: "[1;32;4m"
+Received: "[32;1;4mStyled[0m"
+
+ ❯ src/tui/atoms/text.test.ts:169:20
+    167|       const result = text.draw(defaultContext);
+    168|       const line = result[0];
+    169|       expect(line).toContain('\x1b[1;32;4m');
+       |                    ^
+    170|       expect(line).toContain('\x1b[0m');
+    171|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[101/145]⎯
+
+ FAIL  src/tui/atoms/toast.test.ts > Toast > draw() > should render bordered box with message
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/atoms/toast.test.ts:108:41
+    106|       const toast = new Toast({ message: 'Hello', width: 30 });
+    107|       const result = toast.draw(defaultContext);
+    108|       expect(result[0].startsWith('┌')).toBe(true);
+       |                                         ^
+    109|       expect(result.some(l => l.includes('Hello'))).toBe(true);
+    110|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[102/145]⎯
+
+ FAIL  src/tui/molecules/config-selector.test.ts > ConfigSelector > edge cases > should handle long values
+RangeError: Invalid count value: -161
+ ❯ ConfigSelector.draw src/tui/molecules/config-selector.ts:49:35
+     47|       const prefix = isSelected ? '▶ ' : '  ';
+     48|       const line = prefix + item.key + ' = ' + String(item.value);
+     49|       lines.push('│' + line + ' '.repeat(borderWidth - line.length) + …
+       |                                   ^
+     50|     }
+     51|
+ ❯ src/tui/molecules/config-selector.test.ts:123:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[103/145]⎯
+
+ FAIL  src/tui/molecules/countdown-timer.test.ts > CountdownTimer > tick behavior > should call onTick on each tick
+AssertionError: expected "vi.fn()" to be called 2 times, but got 1 times
+ ❯ src/tui/molecules/countdown-timer.test.ts:65:22
+     63|     it('should call onTick on each tick', () => {
+     64|       vi.advanceTimersByTime(1000);
+     65|       expect(onTick).toHaveBeenCalledTimes(2); // initial + 1 tick
+       |                      ^
+     66|       vi.advanceTimersByTime(1000);
+     67|       expect(onTick).toHaveBeenCalledTimes(3);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[104/145]⎯
+
+ FAIL  src/tui/molecules/countdown-timer.test.ts > CountdownTimer > dispose() > should clear interval
+AssertionError: expected "clearInterval" to be called with arguments: [ undefined ]
+
+Received:
+
+  1st clearInterval call:
+
+  [
+-   undefined,
++   {
++     "hasRef": [Function hasRef],
++     "ref": [Function ref],
++     "refed": true,
++     "refresh": [Function refresh],
++     "unref": [Function unref],
++     Symbol(Symbol.toPrimitive): [Function [Symbol.toPrimitive]],
++   },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/tui/molecules/countdown-timer.test.ts:105:32
+    103|       timer = new CountdownTimer(10000, onTick, onExpire);
+    104|       timer.dispose();
+    105|       expect(clearIntervalSpy).toHaveBeenCalledWith(timer['intervalId'…
+       |                                ^
+    106|     });
+    107|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[105/145]⎯
+
+ FAIL  src/tui/molecules/countdown-timer.test.ts > CountdownTimer > dispose() > should be safe to call multiple times
+AssertionError: expected "clearInterval" to be called 2 times, but got 1 times
+ ❯ src/tui/molecules/countdown-timer.test.ts:113:32
+    111|       timer.dispose();
+    112|       timer.dispose();
+    113|       expect(clearIntervalSpy).toHaveBeenCalledTimes(2);
+       |                                ^
+    114|     });
+    115|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[106/145]⎯
+
+ FAIL  src/tui/molecules/extension-editor.test.ts > ExtensionEditor > draw() > should render a bordered box
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/molecules/extension-editor.test.ts:69:57
+     67|       const result = editor.draw(defaultContext);
+     68|       expect(result[0].startsWith('┌')).toBe(true);
+     69|       expect(result[result.length - 1].startsWith('┘')).toBe(true);
+       |                                                         ^
+     70|     });
+     71|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[107/145]⎯
+
+ FAIL  src/tui/molecules/extension-editor.test.ts > ExtensionEditor > draw() > should not show cursor marker when not focused
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/molecules/extension-editor.test.ts:93:63
+     91|       editor.isFocused = false;
+     92|       const result = editor.draw(defaultContext);
+     93|       expect(result.every(l => !l.includes('\x1b_pi:c\x07'))).toBe(tru…
+       |                                                               ^
+     94|     });
+     95|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[108/145]⎯
+
+ FAIL  src/tui/molecules/extension-editor.test.ts > ExtensionEditor > draw() > should fill remaining vertical space
+AssertionError: expected 32 to be 30 // Object.is equality
+
+- Expected
++ Received
+
+- 30
++ 32
+
+ ❯ src/tui/molecules/extension-editor.test.ts:108:29
+    106|     it('should fill remaining vertical space', () => {
+    107|       const result = editor.draw({ ...defaultContext, height: 30 });
+    108|       expect(result.length).toBe(30);
+       |                             ^
+    109|     });
+    110|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[109/145]⎯
+
+ FAIL  src/tui/molecules/extension-editor.test.ts > ExtensionEditor > handleKey() > should handle backspace
+AssertionError: expected 'Hell\nWorld' to be 'Hello\nWorld' // Object.is equality
+
+- Expected
++ Received
+
+- Hello
++ Hell
+  World
+
+ ❯ src/tui/molecules/extension-editor.test.ts:149:33
+    147|       editor['cursorCol'] = 5;
+    148|       editor.handleKey(createKeyEvent('\x7f'));
+    149|       expect(editor['content']).toBe('Hello\nWorld');
+       |                                 ^
+    150|     });
+    151|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[110/145]⎯
+
+ FAIL  src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should ignore other control sequences
+AssertionError: expected 'Hi\u0001' to be 'Hi' // Object.is equality
+
+Expected: "Hi"
+Received: "Hi"
+
+ ❯ src/tui/molecules/extension-input.test.ts:167:30
+    165|     it('should ignore other control sequences', () => {
+    166|       input.handleKey(createKeyEvent('\x01')); // Ctrl+A
+    167|       expect(input['value']).toBe('Hi'); // unchanged
+       |                              ^
+    168|     });
+    169|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[111/145]⎯
+
+ FAIL  src/tui/molecules/extension-input.test.ts > ExtensionInput > edge cases > should handle empty value
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/molecules/extension-input.test.ts:183:55
+    181|       input.isFocused = true;
+    182|       const result = input.draw(defaultContext);
+    183|       expect(result.some(line => line.includes('_'))).toBe(true);
+       |                                                       ^
+    184|     });
+    185|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[112/145]⎯
+
+ FAIL  src/tui/molecules/extension-input.test.ts > ExtensionInput > edge cases > should handle height less than required lines
+AssertionError: expected 7 to be less than or equal to 3
+ ❯ src/tui/molecules/extension-input.test.ts:211:29
+    209|       input = new ExtensionInput();
+    210|       const result = input.draw(tiny);
+    211|       expect(result.length).toBeLessThanOrEqual(3);
+       |                             ^
+    212|     });
+    213|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[113/145]⎯
+
+ FAIL  src/tui/molecules/index.test.ts > molecules/index.ts exports > should export Loader
+AssertionError: expected undefined to be defined
+ ❯ src/tui/molecules/index.test.ts:23:30
+     21|
+     22|   it('should export Loader', () => {
+     23|     expect(Molecules.Loader).toBeDefined();
+       |                              ^
+     24|   });
+     25|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[114/145]⎯
+
+ FAIL  src/tui/molecules/input.test.ts > Input > draw() > should respect maxWidth for rendering
+AssertionError: expected 12 to be less than or equal to 7
+ ❯ src/tui/molecules/input.test.ts:152:32
+    150|       const result = input.draw(defaultContext);
+    151|       // The rendered line should be truncated
+    152|       expect(result[0].length).toBeLessThanOrEqual(7); // some margin
+       |                                ^
+    153|     });
+    154|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[115/145]⎯
+
+ FAIL  src/tui/molecules/loader.test.ts > BorderedLoader > handleKey() > should call onAbort on Escape
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/tui/molecules/loader.test.ts:157:23
+    155|       loader = new BorderedLoader(mockTUI, {}, 'Loading...', onAbort);
+    156|       loader.handleKey(createKeyEvent('001b', 'escape'));
+    157|       expect(onAbort).toHaveBeenCalled();
+       |                       ^
+    158|     });
+    159|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[116/145]⎯
+
+ FAIL  src/tui/molecules/loader.test.ts > BorderedLoader > handleKey() > should clear spinner interval on abort
+AssertionError: expected "clearInterval" to be called with arguments: [ { refed: true, …(4), …(1) } ]
+
+Number of calls: 0
+
+ ❯ src/tui/molecules/loader.test.ts:170:29
+    168|       const clearInterval = vi.spyOn(globalThis, 'clearInterval');
+    169|       loader.handleKey(createKeyEvent('001b', 'escape'));
+    170|       expect(clearInterval).toHaveBeenCalledWith(loader['spinnerInterv…
+       |                             ^
+    171|     });
+    172|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[117/145]⎯
+
+ FAIL  src/tui/molecules/loader.test.ts > BorderedLoader > handleKey() > should not clear interval multiple times
+AssertionError: expected "clearInterval" to be called 1 times, but got 0 times
+ ❯ src/tui/molecules/loader.test.ts:177:29
+    175|       loader.handleKey(createKeyEvent('001b', 'escape'));
+    176|       loader.handleKey(createKeyEvent('001b', 'escape')); // second ca…
+    177|       expect(clearInterval).toHaveBeenCalledTimes(1);
+       |                             ^
+    178|     });
+    179|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[118/145]⎯
+
+ FAIL  src/tui/molecules/memory-panel.test.ts > MemoryPanel > constructor > should build SelectList items from memories
+AssertionError: expected [] to have a length of 3 but got +0
+
+- Expected
++ Received
+
+- 3
++ 0
+
+ ❯ src/tui/molecules/memory-panel.test.ts:51:21
+     49|       panel = new MemoryPanel({ memories, maxDisplay: 5 });
+     50|       const items = panel['items'];
+     51|       expect(items).toHaveLength(3); // all memories included
+       |                     ^
+     52|       expect(items[0].value).toBe('1');
+     53|       expect(items[0].label).toContain('90%'); // score * 100
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[119/145]⎯
+
+ FAIL  src/tui/molecules/memory-panel.test.ts > MemoryPanel > constructor > should truncate long content
+TypeError: Cannot read properties of undefined (reading 'label')
+ ❯ src/tui/molecules/memory-panel.test.ts:59:39
+     57|     it('should truncate long content', () => {
+     58|       panel = new MemoryPanel({ memories, maxDisplay: 1 });
+     59|       const label = panel['items'][0].label;
+       |                                       ^
+     60|       // The third memory content should be truncated
+     61|       expect(label).toContain('...');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[120/145]⎯
+
+ FAIL  src/tui/molecules/memory-panel.test.ts > MemoryPanel > edge cases > should handle memory with missing score
+TypeError: Cannot read properties of undefined (reading 'label')
+ ❯ src/tui/molecules/memory-panel.test.ts:116:39
+    114|       const memWithoutScore: MemoryEntry[] = [{ id: 'x', content: 'No …
+    115|       panel = new MemoryPanel({ memories: memWithoutScore });
+    116|       const label = panel['items'][0].label;
+       |                                       ^
+    117|       expect(label).not.toContain('%');
+    118|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[121/145]⎯
+
+ FAIL  src/tui/molecules/memory-panel.test.ts > MemoryPanel > edge cases > should handle memory with missing metadata
+TypeError: Cannot read properties of undefined (reading 'label')
+ ❯ src/tui/molecules/memory-panel.test.ts:123:39
+    121|       const memWithoutMeta: MemoryEntry[] = [{ id: 'x', content: 'No m…
+    122|       panel = new MemoryPanel({ memories: memWithoutMeta });
+    123|       const label = panel['items'][0].label;
+       |                                       ^
+    124|       expect(label).not.toContain('[');
+    125|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[122/145]⎯
+
+ FAIL  src/tui/molecules/memory-panel.test.ts > MemoryPanel > edge cases > should handle very long content
+TypeError: Cannot read properties of undefined (reading 'label')
+ ❯ src/tui/molecules/memory-panel.test.ts:131:32
+    129|       const mem: MemoryEntry[] = [{ id: 'x', content: longContent }];
+    130|       panel = new MemoryPanel({ memories: mem, maxDisplay: 1 });
+    131|       expect(panel['items'][0].label.length).toBeLessThan(100); // tru…
+       |                                ^
+    132|     });
+    133|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[123/145]⎯
+
+ FAIL  src/tui/molecules/memory-panel.test.ts > MemoryPanel > edge cases > should handle unicode content
+TypeError: Cannot read properties of undefined (reading 'label')
+ ❯ src/tui/molecules/memory-panel.test.ts:137:32
+    135|       const unicodeMem: MemoryEntry[] = [{ id: 'x', content: '😀😁😂' …
+    136|       panel = new MemoryPanel({ memories: unicodeMem });
+    137|       expect(panel['items'][0].label).toContain('😀');
+       |                                ^
+    138|     });
+    139|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[124/145]⎯
+
+ FAIL  src/tui/molecules/memory-panel.test.ts > MemoryPanel > edge cases > should handle maxDisplay larger than memories
+AssertionError: expected [] to have a length of 3 but got +0
+
+- Expected
++ Received
+
+- 3
++ 0
+
+ ❯ src/tui/molecules/memory-panel.test.ts:142:30
+    140|     it('should handle maxDisplay larger than memories', () => {
+    141|       panel = new MemoryPanel({ memories, maxDisplay: 100 });
+    142|       expect(panel['items']).toHaveLength(memories.length);
+       |                              ^
+    143|     });
+    144|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[125/145]⎯
+
+ FAIL  src/tui/molecules/model-selector.test.ts > ModelSelector > draw() > should render a bordered box
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/molecules/model-selector.test.ts:63:57
+     61|       const result = selector.draw(defaultContext);
+     62|       expect(result[0].startsWith('┌')).toBe(true);
+     63|       expect(result[result.length - 1].startsWith('┘')).toBe(true);
+       |                                                         ^
+     64|     });
+     65|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[126/145]⎯
+
+ FAIL  src/tui/molecules/model-selector.test.ts > ModelSelector > draw() > should format context window in K/M
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/molecules/model-selector.test.ts:81:50
+     79|       const result = selector.draw(defaultContext);
+     80|       expect(result.some(l => l.includes('200K'))).toBe(true);
+     81|       expect(result.some(l => l.includes('8K'))).toBe(true);
+       |                                                  ^
+     82|     });
+     83|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[127/145]⎯
+
+ FAIL  src/tui/molecules/model-selector.test.ts > ModelSelector > draw() > should truncate long lines
+RangeError: Invalid count value: -11
+ ❯ ModelSelector.draw src/tui/molecules/model-selector.ts:63:34
+     61|     lines.push('├' + '─'.repeat(borderWidth) + '┤');
+     62|     const help = '↑↓ navigate  Enter select  Esc cancel';
+     63|     lines.push('│ ' + help + ' '.repeat(borderWidth - help.length - 2)…
+       |                                  ^
+     64|     lines.push('└' + '─'.repeat(borderWidth) + '┘');
+     65|
+ ❯ src/tui/molecules/model-selector.test.ts:100:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[128/145]⎯
+
+ FAIL  src/tui/molecules/oauth-selector.test.ts > OAuthSelector > draw() > should render a bordered box
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/molecules/oauth-selector.test.ts:61:57
+     59|       const result = selector.draw(defaultContext);
+     60|       expect(result[0].startsWith('┌')).toBe(true);
+     61|       expect(result[result.length - 1].startsWith('┘')).toBe(true);
+       |                                                         ^
+     62|     });
+     63|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[129/145]⎯
+
+ FAIL  src/tui/molecules/scoped-models-selector.test.ts > ScopedModelsSelector > draw() > should truncate long model names
+RangeError: Invalid count value: -6
+ ❯ ScopedModelsSelector.draw src/tui/molecules/scoped-models-selector.ts:52:35
+     50|       const scope = '[' + model.scope + ']';
+     51|       const line = prefix + scope + ' ' + truncateText(model.name, 25);
+     52|       lines.push('│' + line + ' '.repeat(borderWidth - line.length) + …
+       |                                   ^
+     53|     }
+     54|
+ ❯ src/tui/molecules/scoped-models-selector.test.ts:67:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[130/145]⎯
+
+ FAIL  src/tui/molecules/scoped-models-selector.test.ts > ScopedModelsSelector > handleKey() > should navigate and select
+AssertionError: expected "vi.fn()" to be called with arguments: [ { id: 'm2', name: 'Model 2', …(2) } ]
+
+Number of calls: 0
+
+ ❯ src/tui/molecules/scoped-models-selector.test.ts:86:24
+     84|       expect(selector['selectedIndex']).toBe(1);
+     85|       selector.handleKey('\r');
+     86|       expect(onSelect).toHaveBeenCalledWith(models[1]);
+       |                        ^
+     87|     });
+     88|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[131/145]⎯
+
+ FAIL  src/tui/molecules/session-selector-search.test.ts > SessionSearchSelector > draw() > should filter results based on searchQuery
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/tui/molecules/session-selector-search.test.ts:69:52
+     67|       const result = selector.draw(defaultContext);
+     68|       expect(result.some(l => l.includes('Alpha'))).toBe(true);
+     69|       expect(result.some(l => l.includes('Beta'))).toBe(false);
+       |                                                    ^
+     70|     });
+     71|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[132/145]⎯
+
+ FAIL  src/tui/molecules/session-selector.test.ts > SessionSelector > draw() > should render a bordered box
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/molecules/session-selector.test.ts:68:57
+     66|       const result = selector.draw(defaultContext);
+     67|       expect(result[0].startsWith('┌')).toBe(true);
+     68|       expect(result[result.length - 1].startsWith('┘')).toBe(true);
+       |                                                         ^
+     69|     });
+     70|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[133/145]⎯
+
+ FAIL  src/tui/molecules/session-selector.test.ts > SessionSelector > draw() > should limit visible sessions based on height
+AssertionError: expected 5 to be less than or equal to 3
+ ❯ src/tui/molecules/session-selector.test.ts:109:35
+    107|       // Should only render a few sessions
+    108|       const sessionLines = result.filter(l => l.includes('Sess'));
+    109|       expect(sessionLines.length).toBeLessThanOrEqual(3);
+       |                                   ^
+    110|     });
+    111|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[134/145]⎯
+
+ FAIL  src/tui/molecules/settings-selector.test.ts > SettingsSelector > draw() > should render a bordered box
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/molecules/settings-selector.test.ts:62:57
+     60|       const result = selector.draw(defaultContext);
+     61|       expect(result[0].startsWith('┌')).toBe(true);
+     62|       expect(result[result.length - 1].startsWith('┘')).toBe(true);
+       |                                                         ^
+     63|     });
+     64|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[135/145]⎯
+
+ FAIL  src/tui/molecules/settings-selector.test.ts > SettingsSelector > draw() > should limit visible items by height
+AssertionError: expected 6 to be less than 5
+ ❯ src/tui/molecules/settings-selector.test.ts:94:35
+     92|       const result = selector.draw({ ...defaultContext, height: 10 });
+     93|       const settingLines = result.filter(l => l.includes('S'));
+     94|       expect(settingLines.length).toBeLessThan(5);
+       |                                   ^
+     95|     });
+     96|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[136/145]⎯
+
+ FAIL  src/tui/molecules/theme-selector.test.ts > ThemeSelector > draw() > should truncate lines to width
+RangeError: Invalid count value: -18
+ ❯ ThemeSelector.draw src/tui/molecules/theme-selector.ts:70:34
+     68|     lines.push('├' + '─'.repeat(borderWidth) + '┤');
+     69|     const help = '↑↓ select  Enter apply  Esc cancel';
+     70|     lines.push('│ ' + help + ' '.repeat(borderWidth - help.length - 2)…
+       |                                  ^
+     71|     lines.push('└' + '─'.repeat(borderWidth) + '┘');
+     72|
+ ❯ src/tui/molecules/theme-selector.test.ts:125:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[137/145]⎯
+
+ FAIL  src/tui/molecules/theme-selector.test.ts > ThemeSelector > edge cases > should handle very long theme names
+RangeError: Invalid count value: -24
+ ❯ ThemeSelector.draw src/tui/molecules/theme-selector.ts:61:35
+     59|       const currentMark = isCurrent ? ' ●' : '';
+     60|       const line = prefix + theme.name + currentMark;
+     61|       lines.push('│' + line + ' '.repeat(borderWidth - line.length) + …
+       |                                   ^
+     62|     }
+     63|
+ ❯ src/tui/molecules/theme-selector.test.ts:201:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[138/145]⎯
+
+ FAIL  src/tui/molecules/tree-selector.test.ts > TreeSelector > buildVisibleList() > should flatten tree respecting expandedDirs
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tui/molecules/tree-selector.test.ts:83:60
+     81|       expect(nodes.some(n => n.node.name === 'root')).toBe(true);
+     82|       expect(nodes.some(n => n.node.name === 'home')).toBe(true);
+     83|       expect(nodes.some(n => n.node.name === 'file1.txt')).toBe(true);
+       |                                                            ^
+     84|       expect(nodes.some(n => n.node.name === 'docs')).toBe(true);
+     85|       expect(nodes.some(n => n.node.name === 'readme.md' && n.node.pat…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[139/145]⎯
+
+ FAIL  src/tui/molecules/tree-selector.test.ts > TreeSelector > draw() > should indent children with spaces
+AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string
+ ❯ src/tui/molecules/tree-selector.test.ts:110:24
+    108|       // home is depth 1, file1 is depth 2
+    109|       const fileLine = result.find(l => l.includes('file1.txt'));
+    110|       expect(fileLine).toContain('  ');
+       |                        ^
+    111|     });
+    112|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[140/145]⎯
+
+ FAIL  src/tui/molecules/tree-selector.test.ts > TreeSelector > draw() > should show selected with ▶ prefix
+AssertionError: expected undefined to be true // Object.is equality
+
+- Expected:
+true
+
++ Received:
+undefined
+
+ ❯ src/tui/molecules/tree-selector.test.ts:117:38
+    115|       const result = selector.draw(defaultContext);
+    116|       const line = result.find(l => l.includes('file1.txt'));
+    117|       expect(line?.startsWith('│▶')).toBe(true);
+       |                                      ^
+    118|     });
+    119|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[141/145]⎯
+
+ FAIL  src/tui/molecules/tree-selector.test.ts > TreeSelector > handleKey() > should call onSelect on Enter
+AssertionError: expected "vi.fn()" to be called with arguments: [ { name: 'root', …(3) } ]
+
+Number of calls: 0
+
+ ❯ src/tui/molecules/tree-selector.test.ts:157:24
+    155|     it('should call onSelect on Enter', () => {
+    156|       selector.handleKey(createKeyEvent('\r'));
+    157|       expect(onSelect).toHaveBeenCalledWith(selector['visibleNodes'][0…
+       |                        ^
+    158|     });
+    159|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[142/145]⎯
+
+ FAIL  src/tui/molecules/tree-selector.test.ts > TreeSelector > handleKey() > should call onCancel on Escape
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/tui/molecules/tree-selector.test.ts:162:24
+    160|     it('should call onCancel on Escape', () => {
+    161|       selector.handleKey(createKeyEvent('\x1b'));
+    162|       expect(onCancel).toHaveBeenCalled();
+       |                        ^
+    163|     });
+    164|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[143/145]⎯
+
+ FAIL  src/tui/molecules/tree-selector.test.ts > TreeSelector > clearCache() > should clear any stored cache
+AssertionError: expected [ 'test' ] to be undefined
+
+- Expected:
+undefined
+
++ Received:
+[
+  "test",
+]
+
+ ❯ src/tui/molecules/tree-selector.test.ts:171:33
+    169|       selector['cache'] = ['test'];
+    170|       selector.clearCache();
+    171|       expect(selector['cache']).toBeUndefined();
+       |                                 ^
+    172|     });
+    173|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[144/145]⎯
+
+ FAIL  src/tui/molecules/tree-selector.test.ts > TreeSelector > edge cases > should handle deep nesting
+AssertionError: expected 2 to be greater than 5
+ ❯ src/tui/molecules/tree-selector.test.ts:189:47
+    187|       }
+    188|       selector = new TreeSelector({ root: deep });
+    189|       expect(selector['visibleNodes'].length).toBeGreaterThan(5);
+       |                                               ^
+    190|     });
+    191|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[145/145]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.<anonymous> ../../node_modules/vitest/dist/chunks/cli-api.Cjt90eJu.js:3445:22
+ ❯ EventEmitter.emit node:events:508:28
+ ❯ ChildProcess.emitUnexpectedExit ../../node_modules/vitest/dist/chunks/cli-api.Cjt90eJu.js:3012:22
+ ❯ ChildProcess.emit node:events:508:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:294:12
+
+Caused by: Error: Worker exited unexpectedly
+ ❯ ChildProcess.emitUnexpectedExit ../../node_modules/vitest/dist/chunks/cli-api.Cjt90eJu.js:3011:33
+ ❯ ChildProcess.emit node:events:508:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:294:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  56 failed | 56 passed (113)
+      Tests  137 failed | 1318 passed (1463)
+     Errors  1 error
+   Start at  08:20:21
+   Duration  6.65s (transform 5.50s, setup 0ms, import 11.75s, tests 4.18s, environment 22ms)
+
