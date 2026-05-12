@@ -41,9 +41,45 @@
           "status": "pending"
         }
       ]
+    },
+    {
+      "id": "phase-29",
+      "name": "Fix failing tests",
+      "tasks": [
+        {
+          "id": "task-140",
+          "content": "Sửa input.test.ts (remove unsupported navigation keys)",
+          "status": "pending"
+        },
+        {
+          "id": "task-141",
+          "content": "Sửa keybindings.test.ts (use raw strings)",
+          "status": "pending"
+        },
+        {
+          "id": "task-142",
+          "content": "Sửa select-list.test.ts (use raw key sequences)",
+          "status": "pending"
+        },
+        {
+          "id": "task-143",
+          "content": "Sửa tui.test.ts (adjust mocks)",
+          "status": "pending"
+        },
+        {
+          "id": "task-144",
+          "content": "Sửa các test molecules/organisms còn lại",
+          "status": "pending"
+        },
+        {
+          "id": "task-145",
+          "content": "Chạy lại full test và verify",
+          "status": "pending"
+        }
+      ]
     }
   ],
-  "nextTaskId": 140,
-  "nextPhaseId": 29,
-  "updatedAt": "2026-05-11T11:37:46.354Z"
+  "nextTaskId": 146,
+  "nextPhaseId": 30,
+  "updatedAt": "2026-05-11T23:48:00.536Z"
 }

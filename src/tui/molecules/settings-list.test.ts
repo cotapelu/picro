@@ -11,13 +11,13 @@ import { getKeybindings } from '../atoms/keybindings';
 vi.mock('../atoms/keybindings', () => ({
   getKeybindings: () => ({
     matches: (data: string, action: string) => {
-      const map: Record<string, string[]> = {
-        'tui.select.cancel': ['Escape'],
-        'tui.select.confirm': ['Enter'],
-        'tui.select.up': ['ArrowUp', 'k'],
-        'tui.select.down': ['ArrowDown', 'j'],
+      const map: Record<string, Set<string>> = {
+        'tui.select.cancel': new Set(['\u001b', 'Escape']),
+        'tui.select.confirm': new Set(['\r', 'Enter']),
+        'tui.select.up': new Set(['\u001b[A', 'ArrowUp', 'k']),
+        'tui.select.down': new Set(['\u001b[B', 'ArrowDown', 'j']),
       };
-      return map[action]?.includes(data) ?? false;
+      return map[action]?.has(data) ?? false;
     },
   }),
 }));
@@ -97,37 +97,37 @@ describe('SettingsList', () => {
       const onChange = vi.fn();
       settingsList['onChange'] = onChange;
       const originalValue = settingsList['items'][0].currentValue;
-      settingsList.handleKey(createKeyEvent('Enter'));
+      settingsList.handleKey(createKeyEvent('', 'enter'));
       expect(onChange).toHaveBeenCalledWith('theme', expect.not.stringMatching(originalValue));
     });
 
     it('should call onClose on Escape', () => {
       const onClose = vi.fn();
       settingsList['onClose'] = onClose;
-      settingsList.handleKey(createKeyEvent('Escape'));
+      settingsList.handleKey(createKeyEvent('001b', 'escape'));
       expect(onClose).toHaveBeenCalled();
     });
 
     it('should move selection up', () => {
       settingsList['selectedIndex'] = 2;
-      settingsList.handleKey(createKeyEvent('ArrowUp'));
+      settingsList.handleKey(createKeyEvent('001b[A', 'up'));
       expect(settingsList['selectedIndex']).toBe(1);
     });
 
     it('should move selection down', () => {
-      settingsList.handleKey(createKeyEvent('ArrowDown'));
+      settingsList.handleKey(createKeyEvent('001b[B', 'down'));
       expect(settingsList['selectedIndex']).toBe(1);
     });
 
     it('should not move past top', () => {
       settingsList['selectedIndex'] = 0;
-      settingsList.handleKey(createKeyEvent('ArrowUp'));
+      settingsList.handleKey(createKeyEvent('001b[A', 'up'));
       expect(settingsList['selectedIndex']).toBe(0);
     });
 
     it('should not move past bottom', () => {
       settingsList['selectedIndex'] = 2;
-      settingsList.handleKey(createKeyEvent('ArrowDown'));
+      settingsList.handleKey(createKeyEvent('001b[B', 'down'));
       expect(settingsList['selectedIndex']).toBe(2);
     });
 
@@ -136,7 +136,7 @@ describe('SettingsList', () => {
       item.currentValue = 'false';
       const onChange = vi.fn();
       settingsList['onChange'] = onChange;
-      settingsList.handleKey(createKeyEvent('Enter'));
+      settingsList.handleKey(createKeyEvent('', 'enter'));
       expect(onChange).toHaveBeenCalledWith('images', 'true'); // wrapped back to first
     });
   });

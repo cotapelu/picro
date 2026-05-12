@@ -175,32 +175,32 @@ describe('Modal', () => {
     });
 
     it('should move selection left with Left arrow or 'h'', () => {
-      modal.handleKey(createKeyEvent('ArrowLeft'));
+      modal.handleKey(createKeyEvent('001b[D', 'left'));
       expect(modal['selectedIndex']).toBe(0); // already at 0
       // Need at least 2 buttons for left to do something when at index 1.
       modal['selectedIndex'] = 1;
-      modal.handleKey(createKeyEvent('ArrowLeft'));
+      modal.handleKey(createKeyEvent('001b[D', 'left'));
       expect(modal['selectedIndex']).toBe(0);
     });
 
     it('should move selection right with Right arrow or 'l'', () => {
-      modal.handleKey(createKeyEvent('ArrowRight'));
+      modal.handleKey(createKeyEvent('001b[C', 'right'));
       expect(modal['selectedIndex']).toBe(1);
     });
 
     it('should not move past rightmost button', () => {
       modal['selectedIndex'] = 1;
-      modal.handleKey(createKeyEvent('ArrowRight'));
+      modal.handleKey(createKeyEvent('001b[C', 'right'));
       expect(modal['selectedIndex']).toBe(1);
     });
 
     it('should confirm selection on Enter', () => {
-      modal.handleKey(createKeyEvent('Enter'));
+      modal.handleKey(createKeyEvent('', 'enter'));
       expect(onResult).toHaveBeenCalledWith('ok');
     });
 
     it('should call onCancel on Escape', () => {
-      modal.handleKey(createKeyEvent('Escape'));
+      modal.handleKey(createKeyEvent('001b', 'escape'));
       expect(onCancel).toHaveBeenCalled();
     });
 
@@ -211,7 +211,7 @@ describe('Modal', () => {
 
     it('should trigger confirm on first button if Enter at index 0', () => {
       modal['selectedIndex'] = 0;
-      modal.handleKey(createKeyEvent('Enter'));
+      modal.handleKey(createKeyEvent('', 'enter'));
       expect(onResult).toHaveBeenCalledWith('cancel');
     });
   });

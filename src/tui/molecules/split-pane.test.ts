@@ -199,13 +199,13 @@ describe('SplitPane', () => {
 
     it('should move divider right on ArrowRight', () => {
       const initial = split['position'];
-      split.handleKey(createKeyEvent('ArrowRight'));
+      split.handleKey(createKeyEvent('001b[C', 'right'));
       expect(split['position']).toBe(initial + 1);
     });
 
     it('should move divider left on ArrowLeft', () => {
       const initial = split['position'];
-      split.handleKey(createKeyEvent('ArrowLeft'));
+      split.handleKey(createKeyEvent('001b[D', 'left'));
       expect(split['position']).toBe(initial - 1);
     });
 
@@ -214,7 +214,7 @@ describe('SplitPane', () => {
       split.isFocused = true;
       split.draw(defaultContext);
       const initial = split['position'];
-      split.handleKey(createKeyEvent('ArrowDown'));
+      split.handleKey(createKeyEvent('001b[B', 'down'));
       expect(split['position']).toBe(initial + 1);
     });
 
@@ -223,31 +223,31 @@ describe('SplitPane', () => {
       split.isFocused = true;
       split.draw(defaultContext);
       const initial = split['position'];
-      split.handleKey(createKeyEvent('ArrowUp'));
+      split.handleKey(createKeyEvent('001b[A', 'up'));
       expect(split['position']).toBe(initial - 1);
     });
 
     it('should clamp position to minFirst', () => {
       split['position'] = split['minFirst'];
-      split.handleKey(createKeyEvent('ArrowLeft'));
+      split.handleKey(createKeyEvent('001b[D', 'left'));
       expect(split['position']).toBe(split['minFirst']);
     });
 
     it('should clamp position to total - minSecond', () => {
       split['position'] = split['totalSize'] - split['minSecond'];
-      split.handleKey(createKeyEvent('ArrowRight'));
+      split.handleKey(createKeyEvent('001b[C', 'right'));
       expect(split['position']).toBe(split['totalSize'] - split['minSecond']);
     });
 
     it('should clear caches on both children after move', () => {
-      split.handleKey(createKeyEvent('ArrowRight'));
+      split.handleKey(createKeyEvent('001b[C', 'right'));
       expect(first.clearCache).toHaveBeenCalled();
       expect(second.clearCache).toHaveBeenCalled();
     });
 
     it('should ignore other keys', () => {
       const initial = split['position'];
-      split.handleKey(createKeyEvent('Enter'));
+      split.handleKey(createKeyEvent('', 'enter'));
       expect(split['position']).toBe(initial);
     });
   });

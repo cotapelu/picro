@@ -12,15 +12,15 @@ import { getKeybindings } from '../atoms/keybindings';
 vi.mock('../atoms/keybindings', () => ({
   getKeybindings: () => ({
     matches: (data: string, action: string) => {
-      const map: Record<string, string[]> = {
-        'tui.select.cancel': ['Escape', 'Ctrl+C'],
-        'tui.select.confirm': ['Enter'],
-        'tui.select.up': ['ArrowUp', 'k'],
-        'tui.select.down': ['ArrowDown', 'j'],
-        'tui.select.pageup': ['PageUp'],
-        'tui.select.pagedown': ['PageDown'],
+      const map: Record<string, Set<string>> = {
+        'tui.select.cancel': new Set(['\u001b', 'Escape', '\x03', 'Ctrl+C']),
+        'tui.select.confirm': new Set(['\r', 'Enter']),
+        'tui.select.up': new Set(['\u001b[A', 'ArrowUp', 'k']),
+        'tui.select.down': new Set(['\u001b[B', 'ArrowDown', 'j']),
+        'tui.select.pageup': new Set(['\u001b[5~', 'PageUp']),
+        'tui.select.pagedown': new Set(['\u001b[6~', 'PageDown']),
       };
-      return map[action]?.includes(data) ?? false;
+      return map[action]?.has(data) ?? false;
     },
   }),
 }));
@@ -179,41 +179,41 @@ describe('SelectList', () => {
 
     describe('navigation', () => {
       it('should move up with ArrowUp or k', () => {
-        selectList.handleKey(createKeyEvent('ArrowUp'));
+        selectList.handleKey(createKeyEvent('001b[A', 'up'));
         expect(selectList['selectedIndex']).toBe(4); // wraps? actually SelectList doesn't wrap by default? check logic
         // In SelectList, pressing up from 0 stays at 0
         selectList['selectedIndex'] = 2;
-        selectList.handleKey(createKeyEvent('ArrowUp'));
+        selectList.handleKey(createKeyEvent('001b[A', 'up'));
         expect(selectList['selectedIndex']).toBe(1);
       });
 
       it('should move down with ArrowDown or j', () => {
-        selectList.handleKey(createKeyEvent('ArrowDown'));
+        selectList.handleKey(createKeyEvent('001b[B', 'down'));
         expect(selectList['selectedIndex']).toBe(1);
-        selectList.handleKey(createKeyEvent('ArrowDown'));
+        selectList.handleKey(createKeyEvent('001b[B', 'down'));
         expect(selectList['selectedIndex']).toBe(2);
       });
 
       it('should not move past top', () => {
         selectList['selectedIndex'] = 0;
-        selectList.handleKey(createKeyEvent('ArrowUp'));
+        selectList.handleKey(createKeyEvent('001b[A', 'up'));
         expect(selectList['selectedIndex']).toBe(0);
       });
 
       it('should not move past bottom', () => {
         selectList['selectedIndex'] = 4;
-        selectList.handleKey(createKeyEvent('ArrowDown'));
+        selectList.handleKey(createKeyEvent('001b[B', 'down'));
         expect(selectList['selectedIndex']).toBe(4);
       });
 
       it('should page up', () => {
         selectList['selectedIndex'] = 4;
-        selectList.handleKey(createKeyEvent('PageUp'));
+        selectList.handleKey(createKeyEvent('001b[5~', 'pageup'));
         expect(selectList['selectedIndex']).toBeLessThan(4);
       });
 
       it('should page down', () => {
-        selectList.handleKey(createKeyEvent('PageDown'));
+        selectList.handleKey(createKeyEvent('001b[6~', 'pagedown'));
         expect(selectList['selectedIndex']).toBeGreaterThan(0);
       });
     });
@@ -222,14 +222,14 @@ describe('SelectList', () => {
       it('should call onSelect on Enter', () => {
         const onSelect = vi.fn();
         selectList['onSelect'] = onSelect;
-        selectList.handleKey(createKeyEvent('Enter'));
+        selectList.handleKey(createKeyEvent('', 'enter'));
         expect(onSelect).toHaveBeenCalledWith('a'); // first item
       });
 
       it('should call onCancel on Escape', () => {
         const onCancel = vi.fn();
         selectList['onCancel'] = onCancel;
-        selectList.handleKey(createKeyEvent('Escape'));
+        selectList.handleKey(createKeyEvent('001b', 'escape'));
         expect(onCancel).toHaveBeenCalled();
       });
 

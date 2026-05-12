@@ -106,7 +106,7 @@ describe('ThinkingSelector', () => {
 
     it('should forward keys to selectList', () => {
       // Down arrow
-      selector.handleKey(createKeyEvent('ArrowDown'));
+      selector.handleKey(createKeyEvent('001b[B', 'down'));
       const sl = (selector as any)['selectList'];
       expect(sl['selectedIndex']).toBeGreaterThan(0);
     });
@@ -115,7 +115,7 @@ describe('ThinkingSelector', () => {
       const sl = (selector as any)['selectList'];
       // Manually simulate selection change
       sl['selectedIndex'] = 0;
-      sl.handleKey?.(createKeyEvent('Enter'));
+      sl.handleKey?.(createKeyEvent('', 'enter'));
       expect(onSelect).toHaveBeenCalledWith('off');
     });
   });

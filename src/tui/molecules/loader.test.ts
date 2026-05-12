@@ -153,7 +153,7 @@ describe('BorderedLoader', () => {
     it('should call onAbort on Escape', () => {
       const onAbort = vi.fn();
       loader = new BorderedLoader(mockTUI, {}, 'Loading...', onAbort);
-      loader.handleKey(createKeyEvent('Escape'));
+      loader.handleKey(createKeyEvent('001b', 'escape'));
       expect(onAbort).toHaveBeenCalled();
     });
 
@@ -166,14 +166,14 @@ describe('BorderedLoader', () => {
 
     it('should clear spinner interval on abort', () => {
       const clearInterval = vi.spyOn(globalThis, 'clearInterval');
-      loader.handleKey(createKeyEvent('Escape'));
+      loader.handleKey(createKeyEvent('001b', 'escape'));
       expect(clearInterval).toHaveBeenCalledWith(loader['spinnerInterval']);
     });
 
     it('should not clear interval multiple times', () => {
       const clearInterval = vi.spyOn(globalThis, 'clearInterval');
-      loader.handleKey(createKeyEvent('Escape'));
-      loader.handleKey(createKeyEvent('Escape')); // second call
+      loader.handleKey(createKeyEvent('001b', 'escape'));
+      loader.handleKey(createKeyEvent('001b', 'escape')); // second call
       expect(clearInterval).toHaveBeenCalledTimes(1);
     });
   });

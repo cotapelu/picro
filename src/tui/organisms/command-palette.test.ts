@@ -153,20 +153,20 @@ describe('CommandPalette', () => {
     });
 
     it('should call onCancel on Escape', () => {
-      palette.handleKey(createKeyEvent('Escape'));
+      palette.handleKey(createKeyEvent('001b', 'escape'));
       expect(onCancel).toHaveBeenCalled();
     });
 
     it('should call onSelect and onExecute on Enter', () => {
       // By default, selectList selectedIndex=0 -> New Session
-      palette.handleKey(createKeyEvent('Enter'));
+      palette.handleKey(createKeyEvent('', 'enter'));
       expect(onSelect).toHaveBeenCalledWith(commands[0]);
       expect(commands[0].onExecute).toHaveBeenCalled();
     });
 
     it('should delegate other keys to SelectList', () => {
       // ArrowDown to move selection
-      palette.handleKey(createKeyEvent('ArrowDown'));
+      palette.handleKey(createKeyEvent('001b[B', 'down'));
       // The internal selectList selectedIndex should have changed.
       const sl = palette.getSelectList() as any;
       expect(sl.selectedIndex).toBe(1);
@@ -215,7 +215,7 @@ describe('CommandPalette', () => {
 
     it('should call onExecute even if onSelect not provided', () => {
       palette = new CommandPalette({ commands: [{ id: 'test', label: 'Test', onExecute: vi.fn() }] });
-      palette.handleKey(createKeyEvent('Enter'));
+      palette.handleKey(createKeyEvent('', 'enter'));
       expect(commands[0].onExecute).toHaveBeenCalled();
     });
   });

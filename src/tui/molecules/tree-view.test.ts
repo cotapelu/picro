@@ -11,16 +11,17 @@ import { matchesKey } from '../atoms/keys';
 // Mock matchesKey
 vi.mock('../atoms/keys', () => ({
   matchesKey: (raw: string, action: string) => {
-    const map: Record<string, string[]> = {
-      up: ['ArrowUp', 'k'],
-      down: ['ArrowDown', 'j'],
-      pageup: ['PageUp'],
-      pagedown: ['PageDown'],
-      enter: ['Enter'],
-      left: ['ArrowLeft', 'h'],
-      right: ['ArrowRight', 'l'],
+    const map: Record<string, Set<string>> = {
+      up: new Set(['\u001b[A', 'ArrowUp', 'k']),
+      down: new Set(['\u001b[B', 'ArrowDown', 'j']),
+      pageup: new Set(['\u001b[5~', 'PageUp']),
+      pagedown: new Set(['\u001b[6~', 'PageDown']),
+      enter: new Set(['\r', 'Enter']),
+      left: new Set(['\u001b[D', 'ArrowLeft', 'h']),
+      right: new Set(['\u001b[C', 'ArrowRight', 'l']),
+      escape: new Set(['\u001b', 'Escape']),
     };
-    return map[action]?.includes(raw) ?? false;
+    return map[action]?.has(raw) ?? false;
   },
 }));
 
@@ -256,36 +257,36 @@ describe('TreeView', () => {
     });
 
     it('should move selection up', () => {
-      treeView.handleKey(createKeyEvent('ArrowUp'));
+      treeView.handleKey(createKeyEvent('001b[A', 'up'));
       expect(treeView['selectedIndex']).toBeLessThan(1);
     });
 
     it('should move selection down', () => {
-      treeView.handleKey(createKeyEvent('ArrowDown'));
+      treeView.handleKey(createKeyEvent('001b[B', 'down'));
       expect(treeView['selectedIndex']).toBeGreaterThan(0);
     });
 
     it('should not move past top', () => {
       treeView['selectedIndex'] = 0;
-      treeView.handleKey(createKeyEvent('ArrowUp'));
+      treeView.handleKey(createKeyEvent('001b[A', 'up'));
       expect(treeView['selectedIndex']).toBe(0);
     });
 
     it('should not move past bottom', () => {
       treeView['selectedIndex'] = treeView['visibleNodes'].length - 1;
-      treeView.handleKey(createKeyEvent('ArrowDown'));
+      treeView.handleKey(createKeyEvent('001b[B', 'down'));
       expect(treeView['selectedIndex']).toBe(treeView['visibleNodes'].length - 1);
     });
 
     it('should page up', () => {
       treeView['selectedIndex'] = 5;
-      treeView.handleKey(createKeyEvent('PageUp'));
+      treeView.handleKey(createKeyEvent('001b[5~', 'pageup'));
       expect(treeView['selectedIndex']).toBeLessThan(5);
     });
 
     it('should page down', () => {
       treeView['selectedIndex'] = 0;
-      treeView.handleKey(createKeyEvent('PageDown'));
+      treeView.handleKey(createKeyEvent('001b[6~', 'pagedown'));
       expect(treeView['selectedIndex']).toBeGreaterThan(0);
     });
 
@@ -293,7 +294,7 @@ describe('TreeView', () => {
       treeData[0].expanded = false;
       treeView = new TreeView({ data: treeData });
       const initial = treeData[0].expanded;
-      treeView.handleKey(createKeyEvent('Enter'));
+      treeView.handleKey(createKeyEvent('', 'enter'));
       expect(treeData[0].expanded).toBe(!initial);
     });
 
@@ -301,7 +302,7 @@ describe('TreeView', () => {
       const onToggle = vi.fn();
       treeData[0].expanded = false;
       treeView = new TreeView({ data: treeData, onToggle });
-      treeView.handleKey(createKeyEvent('Enter'));
+      treeView.handleKey(createKeyEvent('', 'enter'));
       expect(onToggle).toHaveBeenCalledWith(treeData[0], true);
     });
 
@@ -310,21 +311,21 @@ describe('TreeView', () => {
       treeView = new TreeView({ data: treeData, onSelect });
       // Select leaf (index 2)
       treeView['selectedIndex'] = 2;
-      treeView.handleKey(createKeyEvent('Enter'));
+      treeView.handleKey(createKeyEvent('', 'enter'));
       expect(onSelect).toHaveBeenCalledWith(treeData[2]);
     });
 
     it('should expand with Right arrow if collapsed', () => {
       treeData[0].expanded = false;
       treeView = new TreeView({ data: treeData });
-      treeView.handleKey(createKeyEvent('ArrowRight'));
+      treeView.handleKey(createKeyEvent('001b[C', 'right'));
       expect(treeData[0].expanded).toBe(true);
     });
 
     it('should not expand with Right arrow if already expanded', () => {
       treeData[0].expanded = true;
       treeView = new TreeView({ data: treeData });
-      treeView.handleKey(createKeyEvent('ArrowRight'));
+      treeView.handleKey(createKeyEvent('001b[C', 'right'));
       // no change
       expect(treeData[0].expanded).toBe(true);
     });
@@ -332,7 +333,7 @@ describe('TreeView', () => {
     it('should collapse with Left arrow if expanded', () => {
       treeData[0].expanded = true;
       treeView = new TreeView({ data: treeData });
-      treeView.handleKey(createKeyEvent('ArrowLeft'));
+      treeView.handleKey(createKeyEvent('001b[D', 'left'));
       expect(treeData[0].expanded).toBe(false);
     });
 
@@ -341,7 +342,7 @@ describe('TreeView', () => {
       treeView = new TreeView({ data: treeData });
       // Move to a child
       treeView['selectedIndex'] = 1; // Child 1.1
-      treeView.handleKey(createKeyEvent('ArrowLeft'));
+      treeView.handleKey(createKeyEvent('001b[D', 'left'));
       // Should select parent (root1)? Actually logic: if current has children and expanded, collapse; else move to ancestor
       // Since child has no children, it should try to move to ancestor
       // The visibleNodes[1] is child, depth=1. It should find closest node with depth < 1, which is root (depth 0)
@@ -427,7 +428,7 @@ describe('TreeView', () => {
     it('should handle nodes without children array', () => {
       const data = [{ id: 'leaf', label: 'Leaf' }];
       treeView = new TreeView({ data });
-      treeView.handleKey(createKeyEvent('ArrowRight'));
+      treeView.handleKey(createKeyEvent('001b[C', 'right'));
       // Should not crash
     });
   });

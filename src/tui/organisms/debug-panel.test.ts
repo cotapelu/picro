@@ -102,7 +102,7 @@ describe('DebugPanel', () => {
   describe('handleKey()', () => {
     it('should be defined but no-op for Escape', () => {
       panel = new DebugPanel();
-      expect(() => panel.handleKey?.(createKeyEvent('Escape'))).not.toThrow();
+      expect(() => panel.handleKey?.(createKeyEvent('001b', 'escape'))).not.toThrow();
     });
   });
 

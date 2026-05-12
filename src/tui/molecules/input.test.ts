@@ -13,10 +13,10 @@ const defaultContext: RenderContext = {
   theme: {},
 };
 
-function createKeyEvent(name: string, modifiers: Partial<KeyEvent['modifiers']> = {}): KeyEvent {
+function createKeyEvent(raw: string, name?: string, modifiers: Partial<KeyEvent['modifiers']> = {}): KeyEvent {
   return {
-    raw: name,
-    name,
+    raw,
+    name: name || raw,
     modifiers: {
       ctrl: false,
       alt: false,
@@ -165,7 +165,7 @@ describe('Input', () => {
       input = new Input({ value: 'Hello' });
       input.isFocused = true;
       input['cursorPos'] = 3;
-      input.handleKey(createKeyEvent('ArrowLeft'));
+      input.handleKey(createKeyEvent('\u001b[D', 'left'));
       expect(input['cursorPos']).toBe(2);
     });
 
@@ -173,7 +173,7 @@ describe('Input', () => {
       input = new Input({ value: 'Hello' });
       input.isFocused = true;
       input['cursorPos'] = 1;
-      input.handleKey(createKeyEvent('ArrowRight'));
+      input.handleKey(createKeyEvent('\u001b[C', 'right'));
       expect(input['cursorPos']).toBe(2);
     });
 
@@ -181,7 +181,7 @@ describe('Input', () => {
       input = new Input({ value: 'Hi' });
       input.isFocused = true;
       input['cursorPos'] = 0;
-      input.handleKey(createKeyEvent('ArrowLeft'));
+      input.handleKey(createKeyEvent('\u001b[D', 'left'));
       expect(input['cursorPos']).toBe(0);
     });
 
@@ -189,7 +189,7 @@ describe('Input', () => {
       input = new Input({ value: 'Hi' });
       input.isFocused = true;
       input['cursorPos'] = 2;
-      input.handleKey(createKeyEvent('ArrowRight'));
+      input.handleKey(createKeyEvent('\u001b[C', 'right'));
       expect(input['cursorPos']).toBe(2);
     });
 
@@ -206,7 +206,7 @@ describe('Input', () => {
       input = new Input({ value: 'Hello' });
       input.isFocused = true;
       input['cursorPos'] = 3;
-      input.handleKey(createKeyEvent('Backspace'));
+      input.handleKey(createKeyEvent('', 'backspace'));
       expect(input.getValue()).toBe('Helo');
     });
 
@@ -214,7 +214,7 @@ describe('Input', () => {
       input = new Input({ value: 'Hello' });
       input.isFocused = true;
       input['cursorPos'] = 2;
-      input.handleKey(createKeyEvent('Delete'));
+      input.handleKey(createKeyEvent('\u001b[3~', 'delete'));
       expect(input.getValue()).toBe('Helo');
     });
 
@@ -222,7 +222,7 @@ describe('Input', () => {
       const onSubmit = vi.fn();
       input = new Input({ onSubmit });
       input.isFocused = true;
-      input.handleKey(createKeyEvent('Enter'));
+      input.handleKey(createKeyEvent('\r', 'enter'));
       expect(onSubmit).toHaveBeenCalledWith('');
     });
 
@@ -230,7 +230,7 @@ describe('Input', () => {
       const onCancel = vi.fn();
       input = new Input({ onCancel });
       input.isFocused = true;
-      input.handleKey(createKeyEvent('Escape'));
+      input.handleKey(createKeyEvent('\u001b', 'escape'));
       expect(onCancel).toHaveBeenCalled();
     });
 
@@ -238,7 +238,7 @@ describe('Input', () => {
       const onAutocomplete = vi.fn();
       input = new Input({ onAutocompleteRequested: onAutocomplete });
       input.isFocused = true;
-      input.handleKey(createKeyEvent('Tab'));
+      input.handleKey(createKeyEvent('\t', 'tab'));
       expect(onAutocomplete).toHaveBeenCalled();
     });
 
@@ -246,7 +246,7 @@ describe('Input', () => {
       input = new Input({ value: 'Hello' });
       input.isFocused = true;
       input['cursorPos'] = 3;
-      input.handleKey(createKeyEvent('Home'));
+      input.handleKey(createKeyEvent('\u001b[H', 'home'));
       expect(input['cursorPos']).toBe(0);
     });
 
@@ -254,7 +254,7 @@ describe('Input', () => {
       input = new Input({ value: 'Hello' });
       input.isFocused = true;
       input['cursorPos'] = 1;
-      input.handleKey(createKeyEvent('End'));
+      input.handleKey(createKeyEvent('\u001b[F', 'end'));
       expect(input['cursorPos']).toBe(5);
     });
   });
