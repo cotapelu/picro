@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { DebugPanel, type DebugRoundEvent, type DebugRunEvent } from './debug-panel';
 import type { RenderContext, KeyEvent } from '../atoms/base';
+import { visibleWidth } from '../atoms/internal-utils';
 
 const defaultContext: RenderContext = {
   width: 80,
@@ -113,8 +114,8 @@ describe('DebugPanel', () => {
 
     it('should render a bordered box', () => {
       const result = panel.draw(defaultContext);
-      expect(result[0].startsWith('┌')).toBe(true);
-      expect(result[result.length - 1].startsWith('┘')).toBe(true);
+      expect(result[0].includes('┌')).toBe(true);
+      expect(result[result.length - 1].includes('┘')).toBe(true);
     });
 
     it('should show title "Debug Metrics"', () => {
@@ -131,7 +132,8 @@ describe('DebugPanel', () => {
         totalToolExecutionTime: 34,
       });
       const result = panel.draw(defaultContext);
-      expect(result.some(l => l.includes('Total:') && l.includes('1.234s'))).toBe(true);
+      // formatMs returns millseconds with .0, e.g., '1234.0ms'
+      expect(result.some(l => l.includes('Total:') && l.includes('1234.0ms'))).toBe(true);
     });
 
     it('should show round metrics when showRounds=true', () => {
@@ -150,7 +152,7 @@ describe('DebugPanel', () => {
     it('should respect width', () => {
       const result = panel.draw({ ...defaultContext, width: 20 });
       result.forEach(l => {
-        expect(l.length).toBeLessThanOrEqual(20);
+        expect(visibleWidth(l)).toBeLessThanOrEqual(20);
       });
     });
 

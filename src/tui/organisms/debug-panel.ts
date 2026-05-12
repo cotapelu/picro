@@ -48,9 +48,10 @@ export class DebugPanel implements UIElement, InteractiveElement {
    */
   onRoundEvent(event: DebugRoundEvent): void {
     this.roundMetrics.push(event);
-    // Keep only last N rounds
-    if (this.roundMetrics.length > this.options.height - 5) {
-      this.roundMetrics = this.roundMetrics.slice(-(this.options.height - 5));
+    // Keep only last N rounds based on height (reserve space for other UI elements)
+    const limit = Math.max(1, this.options.height - 5);
+    if (this.roundMetrics.length > limit) {
+      this.roundMetrics = this.roundMetrics.slice(-limit);
     }
   }
 
@@ -79,11 +80,12 @@ export class DebugPanel implements UIElement, InteractiveElement {
   clearCache(): void {}
 
   draw(context: RenderContext): string[] {
-    const width = Math.min(this.options.width, context.width);
+    const width = Math.max(2, Math.min(this.options.width, context.width));
+    const contentWidth = width - 2;
     const lines: string[] = [];
 
     // Border
-    const line = '─'.repeat(width - 2);
+    const line = '─'.repeat(contentWidth);
     lines.push('┌' + line + '┐');
 
     // Title
@@ -126,7 +128,7 @@ export class DebugPanel implements UIElement, InteractiveElement {
       for (let i = startIdx; i < this.roundMetrics.length; i++) {
         const evt = this.roundMetrics[i]!;
         const short = `R${evt.round}: C${this.formatShort(evt.contextBuildingTime)} M${this.formatShort(evt.memoryRetrievalTime)} L${this.formatShort(evt.llmRequestTime)} T${this.formatShort(evt.toolExecutionTime)}`;
-        lines.push('│ ' + short.padEnd(width - 2) + '│');
+        lines.push('│ ' + short.padEnd(width - 4) + ' │');
       }
     }
 
