@@ -123,8 +123,8 @@ describe('Modal', () => {
     it('should render a bordered box', () => {
       const result = modal.draw(defaultContext);
       expect(result.length).toBeGreaterThan(0);
-      expect(result[0].startsWith('┌')).toBe(true);
-      expect(result[result.length - 1].startsWith('└')).toBe(true);
+      expect(result[0].includes('┌')).toBe(true);
+      expect(result[result.length - 1].includes('┘')).toBe(true);
     });
 
     it('should display title', () => {
@@ -159,8 +159,9 @@ describe('Modal', () => {
     it('should respect requested width', () => {
       const result = modal.draw(defaultContext);
       // All lines should be <= width (maybe less due to padding)
+      const vw = require('../atoms/internal-utils').visibleWidth;
       result.forEach(line => {
-        expect(line.length).toBeLessThanOrEqual(defaultContext.width);
+        expect(vw(line)).toBeLessThanOrEqual(defaultContext.width);
       });
     });
 

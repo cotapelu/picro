@@ -95,6 +95,9 @@ export class Modal implements UIElement, InteractiveElement {
     this.message = options.message;
     this.type = options.type ?? 'info';
     this.buttons = options.buttons ?? this.getDefaultButtons();
+    // Pre-select primary button if available
+    const primaryIdx = this.buttons.findIndex(b => b.primary);
+    this.selectedIndex = primaryIdx !== -1 ? primaryIdx : 0;
     this.theme = { ...modalDefaultTheme, ...options.theme };
     this.requestedWidth = options.width ?? 50;
     this.onResult = options.onResult;
@@ -161,6 +164,7 @@ export class Modal implements UIElement, InteractiveElement {
         this.confirm();
         break;
       case 'Escape':
+      case '\x03': // Ctrl+C
         this.onCancel?.();
         break;
       case 'Tab':
@@ -189,8 +193,22 @@ export class Modal implements UIElement, InteractiveElement {
     // Separator
     lines.push(this.theme.borderColor('├' + '─'.repeat(width - 2) + '┤'));
 
-    // Message content (wrapped)
-    const wrapped = wrapText(this.message, contentWidth - 2);
+    // Message content (wrapped with fallback for long words)
+    const maxMsgWidth = Math.max(1, contentWidth - 2);
+    let initialWrapped = wrapText(this.message, maxMsgWidth);
+    // Ensure no line exceeds maxMsgWidth (split long words if needed)
+    const wrapped: string[] = [];
+    for (const line of initialWrapped) {
+      if (visibleWidth(line) <= maxMsgWidth) {
+        wrapped.push(line);
+      } else {
+        let start = 0;
+        while (start < line.length) {
+          wrapped.push(line.slice(start, start + maxMsgWidth));
+          start += maxMsgWidth;
+        }
+      }
+    }
     for (const line of wrapped) {
       const padded = (' ' + line).padEnd(contentWidth);
       lines.push(this.theme.borderColor('│ ') + this.theme.bgColor(this.theme.fgColor(padded)) + this.theme.borderColor(' │'));
