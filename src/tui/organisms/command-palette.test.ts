@@ -30,8 +30,18 @@ const defaultContext: RenderContext = {
   theme: {},
 };
 
-function createKeyEvent(name: string): KeyEvent {
-  return { raw: name, name, modifiers: {} };
+function createKeyEvent(keyName: string): KeyEvent {
+  const keyMap: Record<string, { raw: string; name: string }> = {
+    ArrowDown: { raw: '\x1b[B', name: 'ArrowDown' },
+    ArrowUp: { raw: '\x1b[A', name: 'ArrowUp' },
+    Enter: { raw: '\r', name: 'Enter' },
+    Escape: { raw: '\x1b', name: 'Escape' },
+    PageDown: { raw: '\x1b[6~', name: 'PageDown' },
+    PageUp: { raw: '\x1b[5~', name: 'PageUp' },
+  };
+  const mapped = keyMap[keyName];
+  if (mapped) return { raw: mapped.raw, name: mapped.name, modifiers: {} };
+  return { raw: keyName, name: keyName, modifiers: {} };
 }
 
 describe('CommandPalette', () => {
