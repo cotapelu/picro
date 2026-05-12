@@ -153,6 +153,8 @@ describe('SettingsList', () => {
       item.currentValue = 'false';
       const onChange = vi.fn();
       settingsList['onChange'] = onChange;
+      // Select the second item
+      settingsList['selectedIndex'] = 1;
       settingsList.handleKey(createKeyEvent('\r', 'enter'));
       expect(onChange).toHaveBeenCalledWith('images', 'true'); // wrapped back to first
     });
