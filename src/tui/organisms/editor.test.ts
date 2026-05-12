@@ -16,8 +16,8 @@ vi.mock('../atoms/keybindings', () => ({
         'tui.editor.down': new Set(['\u001b[B', 'ArrowDown', 'j']),
         'tui.editor.left': new Set(['\u001b[D', 'ArrowLeft', 'h']),
         'tui.editor.right': new Set(['\u001b[C', 'ArrowRight', 'l']),
-        'tui.editor.newline': new Set(['\r', 'Enter']),
-        'tui.editor.backspace': new Set(['\x7f', 'Backspace']),
+        'tui.editor.newline': new Set(['Enter', 'Enter']),
+        'tui.editor.backspace': new Set(['Backspace', 'Backspace']),
         'tui.editor.delete': new Set(['\u001b[3~', 'Delete']),
         'tui.editor.escape': new Set(['\u001b', 'Escape', '\x03', 'Ctrl+C']),
         'tui.editor.up': new Set(['\u001b[A', 'ArrowUp']),
@@ -28,7 +28,7 @@ vi.mock('../atoms/keybindings', () => ({
         'tui.editor.end': new Set(['\u001b[F', 'End']),
         'tui.editor.pageup': new Set(['\u001b[5~', 'PageUp']),
         'tui.editor.pagedown': new Set(['\u001b[6~', 'PageDown']),
-        'tui.editor.tab': new Set(['\t', 'Tab']),
+        'tui.editor.tab': new Set(['Tab', 'Tab']),
       };
       return map[action]?.has(data) ?? false;
     },
@@ -47,13 +47,13 @@ function createKeyEvent(keyName: string): KeyEvent {
     ArrowDown: { raw: '\u001b[B', name: 'ArrowDown' },
     ArrowLeft: { raw: '\u001b[D', name: 'ArrowLeft' },
     ArrowRight: { raw: '\u001b[C', name: 'ArrowRight' },
-    Enter: { raw: '\r', name: 'Enter' },
+    Enter: { raw: 'Enter', name: 'Enter' },
     Escape: { raw: '\u001b', name: 'Escape' },
-    Backspace: { raw: '\x7f', name: 'Backspace' },
+    Backspace: { raw: 'Backspace', name: 'Backspace' },
     Delete: { raw: '\u001b[3~', name: 'Delete' },
     Home: { raw: '\u001b[H', name: 'Home' },
     End: { raw: '\u001b[F', name: 'End' },
-    Tab: { raw: '\t', name: 'Tab' },
+    Tab: { raw: 'Tab', name: 'Tab' },
   };
   const mapped = keyMap[keyName];
   if (mapped) return { raw: mapped.raw, name: mapped.name, modifiers: {} };
@@ -122,21 +122,21 @@ describe('Editor', () => {
     it('should move cursor left with ArrowLeft', () => {
       editor.setText('Hello');
       editor.state.cursorCol = 3;
-      editor.handleKey(createKeyEvent('\x1b[D'));
+      editor.handleKey(createKeyEvent('ArrowLeft'));
       expect(editor.state.cursorCol).toBe(2);
     });
 
     it('should move cursor right with ArrowRight', () => {
       editor.setText('Hello');
       editor.state.cursorCol = 1;
-      editor.handleKey(createKeyEvent('\x1b[C'));
+      editor.handleKey(createKeyEvent('ArrowRight'));
       expect(editor.state.cursorCol).toBe(2);
     });
 
     it('should handle backspace to delete before cursor', () => {
       editor.setText('Hello');
       editor.state.cursorCol = 3;
-      editor.handleKey(createKeyEvent('\x7f'));
+      editor.handleKey(createKeyEvent('Backspace'));
       expect(editor.getText()).toBe('Helo');
       expect(editor.state.cursorCol).toBe(2);
     });
@@ -144,14 +144,14 @@ describe('Editor', () => {
     it('should handle delete to delete after cursor', () => {
       editor.setText('Hello');
       editor.state.cursorCol = 2;
-      editor.handleKey(createKeyEvent('\x1b[3~'));
+      editor.handleKey(createKeyEvent('Delete'));
       expect(editor.getText()).toBe('Helo');
     });
 
     it('should insert newline with Enter', () => {
       editor.setText('Line1');
       editor.state.cursorCol = 5;
-      editor.handleKey(createKeyEvent('\r'));
+      editor.handleKey(createKeyEvent('Enter'));
       expect(editor.getText()).toBe('Line1\n');
     });
 
@@ -159,9 +159,9 @@ describe('Editor', () => {
       editor.setText('Hello\nWorld');
       editor.state.cursorLine = 0;
       editor.state.cursorCol = 5;
-      editor.handleKey(createKeyEvent('\x1b[H')); // Home
+      editor.handleKey(createKeyEvent('Home')); // Home
       expect(editor.state.cursorCol).toBe(0);
-      editor.handleKey(createKeyEvent('\x1b[F')); // End
+      editor.handleKey(createKeyEvent('End')); // End
       expect(editor.state.cursorCol).toBe(5);
     });
 
@@ -169,7 +169,7 @@ describe('Editor', () => {
       const onSubmit = vi.fn();
       editor = new Editor({ onSubmit });
       editor.isFocused = true;
-      editor.handleKey(createKeyEvent('\r'));
+      editor.handleKey(createKeyEvent('Enter'));
       expect(onSubmit).toHaveBeenCalled();
     });
 
@@ -177,7 +177,7 @@ describe('Editor', () => {
       const onEscape = vi.fn();
       editor = new Editor({ onEscape });
       editor.isFocused = true;
-      editor.handleKey(createKeyEvent('\x1b'));
+      editor.handleKey(createKeyEvent('Escape'));
       expect(onEscape).toHaveBeenCalled();
     });
   });
