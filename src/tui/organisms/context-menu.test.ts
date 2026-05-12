@@ -13,8 +13,16 @@ const defaultContext: RenderContext = {
   theme: {},
 };
 
-function createKeyEvent(raw: string): KeyEvent {
-  return { raw, name: raw, modifiers: {} };
+function createKeyEvent(keyName: string): KeyEvent {
+  const keyMap: Record<string, { raw: string; name: string }> = {
+    ArrowDown: { raw: '\x1b[B', name: 'ArrowDown' },
+    ArrowUp: { raw: '\x1b[A', name: 'ArrowUp' },
+    Enter: { raw: '\r', name: 'Enter' },
+    Escape: { raw: '\x1b', name: 'Escape' },
+  };
+  const mapped = keyMap[keyName];
+  if (mapped) return { raw: mapped.raw, name: mapped.name, modifiers: {} };
+  return { raw: keyName, name: keyName, modifiers: {} };
 }
 
 describe('ContextMenu', () => {
@@ -162,14 +170,14 @@ describe('ContextMenu', () => {
     });
 
     it('should move selection up/down', () => {
-      menu.handleKey(createKeyEvent('down'));
+      menu.handleKey(createKeyEvent('ArrowDown'));
       expect(menu['selectedIndex']).toBe(1);
     });
 
     it('should not select disabled items on navigation? Actually it can select but getSelectedItem returns null', () => {
-      menu.handleKey(createKeyEvent('down'));
-      menu.handleKey(createKeyEvent('down'));
-      menu.handleKey(createKeyEvent('down')); // to Delete (disabled)
+      menu.handleKey(createKeyEvent('ArrowDown'));
+      menu.handleKey(createKeyEvent('ArrowDown'));
+      menu.handleKey(createKeyEvent('ArrowDown')); // to Delete (disabled)
       expect(menu['selectedIndex']).toBe(3);
       expect(menu.getSelectedItem()).toBeNull();
     });
