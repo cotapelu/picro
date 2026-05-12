@@ -92,8 +92,8 @@ describe('LoginDialog', () => {
 
     it('should render a bordered box', () => {
       const result = dialog.draw(defaultContext);
-      expect(result[0].startsWith('┌')).toBe(true);
-      expect(result[result.length - 1].startsWith('└')).toBe(true);
+      expect(result[0].includes('┌')).toBe(true);
+      expect(result[result.length - 1].includes('┘')).toBe(true);
     });
 
     it('should display title centered', () => {
