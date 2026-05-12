@@ -7,6 +7,34 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Editor } from './editor';
 import type { RenderContext, KeyEvent } from '../atoms/base';
 
+// Mock keybindings for editor
+vi.mock('../atoms/keybindings', () => ({
+  getKeybindings: () => ({
+    matches: (data: string, action: string) => {
+      const map: Record<string, Set<string>> = {
+        'tui.editor.up': new Set(['\u001b[A', 'ArrowUp', 'k']),
+        'tui.editor.down': new Set(['\u001b[B', 'ArrowDown', 'j']),
+        'tui.editor.left': new Set(['\u001b[D', 'ArrowLeft', 'h']),
+        'tui.editor.right': new Set(['\u001b[C', 'ArrowRight', 'l']),
+        'tui.editor.newline': new Set(['\r', 'Enter']),
+        'tui.editor.backspace': new Set(['\x7f', 'Backspace']),
+        'tui.editor.delete': new Set(['\u001b[3~', 'Delete']),
+        'tui.editor.escape': new Set(['\u001b', 'Escape', '\x03', 'Ctrl+C']),
+        'tui.editor.up': new Set(['\u001b[A', 'ArrowUp']),
+        'tui.editor.down': new Set(['\u001b[B', 'ArrowDown']),
+        'tui.editor.left': new Set(['\u001b[D', 'ArrowLeft']),
+        'tui.editor.right': new Set(['\u001b[C', 'ArrowRight']),
+        'tui.editor.home': new Set(['\u001b[H', 'Home']),
+        'tui.editor.end': new Set(['\u001b[F', 'End']),
+        'tui.editor.pageup': new Set(['\u001b[5~', 'PageUp']),
+        'tui.editor.pagedown': new Set(['\u001b[6~', 'PageDown']),
+        'tui.editor.tab': new Set(['\t', 'Tab']),
+      };
+      return map[action]?.has(data) ?? false;
+    },
+  }),
+}));
+
 const defaultContext: RenderContext = {
   width: 80,
   height: 24,
