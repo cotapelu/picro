@@ -92,13 +92,23 @@ export function parseKey(data: string): ParsedKey | null {
 		if (finalChar === 'D') {
 			return { raw: data, type: 'press', name: 'left', ctrl: false, alt: false, shift: false, meta: false };
 		}
-		// PageUp/PageDown: ESC [ 5 ~ / ESC [ 6 ~
+		// Home/End: ESC [ H / ESC [ F
+		if (finalChar === 'H') {
+			return { raw: data, type: 'press', name: 'home', ctrl: false, alt: false, shift: false, meta: false };
+		}
+		if (finalChar === 'F') {
+			return { raw: data, type: 'press', name: 'end', ctrl: false, alt: false, shift: false, meta: false };
+		}
+		// Delete, PageUp/PageDown: ESC [ 3 ~, ESC [ 5 ~, ESC [ 6 ~
 		if (finalChar === '~') {
 			const num = parseInt(inner, 10);
+			if (num === 3) {
+				return { raw: data, type: 'press', name: 'delete', ctrl: false, alt: false, shift: false, meta: false };
+			}
 			if (num === 5) {
 				return { raw: data, type: 'press', name: 'pageup', ctrl: false, alt: false, shift: false, meta: false };
 			}
-			if (num === 6) {
+		if (num === 6) {
 				return { raw: data, type: 'press', name: 'pagedown', ctrl: false, alt: false, shift: false, meta: false };
 			}
 		}
