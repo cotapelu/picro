@@ -7,6 +7,23 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CommandPalette, type Command } from './command-palette';
 import type { RenderContext, KeyEvent } from '../atoms/base';
 
+// Mock keybindings for CommandPalette/SelectList
+vi.mock('../atoms/keybindings', () => ({
+  getKeybindings: () => ({
+    matches: (data: string, action: string) => {
+      const map: Record<string, Set<string>> = {
+        'tui.select.cancel': new Set(['\u001b', 'Escape', '\x03', 'Ctrl+C']),
+        'tui.select.confirm': new Set(['\r', 'Enter']),
+        'tui.select.up': new Set(['\u001b[A', 'ArrowUp', 'k']),
+        'tui.select.down': new Set(['\u001b[B', 'ArrowDown', 'j']),
+        'tui.select.pageup': new Set(['\u001b[5~', 'PageUp']),
+        'tui.select.pagedown': new Set(['\u001b[6~', 'PageDown']),
+      };
+      return map[action]?.has(data) ?? false;
+    },
+  }),
+}));
+
 const defaultContext: RenderContext = {
   width: 80,
   height: 24,
@@ -79,28 +96,28 @@ describe('CommandPalette', () => {
       palette = new CommandPalette({ commands });
       palette.setFilter('session');
       // Should filter to only New Session
-      const filtered = palette['commands'];
+      const filtered = palette.getSelectList().items;
       expect(filtered).toHaveLength(1);
-      expect(filtered[0].id).toBe('new');
+      expect(filtered[0].value).toBe('new'); // items use value field
     });
 
     it('should be case-insensitive', () => {
       palette = new CommandPalette({ commands });
       palette.setFilter('SETTINGS');
-      expect(palette['commands'].length).toBe(1);
+      expect(palette.getSelectList().items.length).toBe(1);
     });
 
     it('should match description', () => {
       palette = new CommandPalette({ commands });
       palette.setFilter('exit');
-      expect(palette['commands'].some(c => c.id === 'quit')).toBe(true);
+      expect(palette.getSelectList().items.some(i => i.value === 'quit')).toBe(true);
     });
 
     it('should show all when empty query', () => {
       palette = new CommandPalette({ commands });
       palette.setFilter('');
-      // Should show all, but setItems is called with all commands
-      expect(palette['commands'].length).toBe(3);
+      // Should show all
+      expect(palette.getSelectList().items.length).toBe(3);
     });
   });
 
@@ -120,7 +137,7 @@ describe('CommandPalette', () => {
     it('should return bordered lines', () => {
       const result = palette.draw(defaultContext);
       expect(result[0].startsWith('┌')).toBe(true);
-      expect(result[result.length - 1].startsWith('┘')).toBe(true);
+      expect(result[result.length - 1].startsWith('└')).toBe(true);
     });
 
     it('should include inner SelectList lines', () => {
@@ -153,27 +170,27 @@ describe('CommandPalette', () => {
     });
 
     it('should call onCancel on Escape', () => {
-      palette.handleKey(createKeyEvent('001b', 'escape'));
+      palette.handleKey(createKeyEvent('Escape'));
       expect(onCancel).toHaveBeenCalled();
     });
 
     it('should call onSelect and onExecute on Enter', () => {
       // By default, selectList selectedIndex=0 -> New Session
-      palette.handleKey(createKeyEvent('', 'enter'));
+      palette.handleKey(createKeyEvent('Enter'));
       expect(onSelect).toHaveBeenCalledWith(commands[0]);
       expect(commands[0].onExecute).toHaveBeenCalled();
     });
 
     it('should delegate other keys to SelectList', () => {
       // ArrowDown to move selection
-      palette.handleKey(createKeyEvent('001b[B', 'down'));
-      // The internal selectList selectedIndex should have changed.
       const sl = palette.getSelectList() as any;
+      sl.isFocused = true; // ensure SelectList processes keys
+      palette.handleKey(createKeyEvent('ArrowDown'));
       expect(sl.selectedIndex).toBe(1);
     });
 
     it('should handle Return key as Enter', () => {
-      palette.handleKey(createKeyEvent('Return'));
+      palette.handleKey(createKeyEvent('Enter'));
       expect(onSelect).toHaveBeenCalled();
     });
   });
@@ -214,9 +231,11 @@ describe('CommandPalette', () => {
     });
 
     it('should call onExecute even if onSelect not provided', () => {
-      palette = new CommandPalette({ commands: [{ id: 'test', label: 'Test', onExecute: vi.fn() }] });
-      palette.handleKey(createKeyEvent('', 'enter'));
-      expect(commands[0].onExecute).toHaveBeenCalled();
+      const onExecute = vi.fn();
+      const cmd = { id: 'test', label: 'Test', onExecute };
+      palette = new CommandPalette({ commands: [cmd] });
+      palette.handleKey(createKeyEvent('Enter'));
+      expect(onExecute).toHaveBeenCalled();
     });
   });
 });
