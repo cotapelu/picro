@@ -97,7 +97,7 @@ describe('SettingsList', () => {
       const onChange = vi.fn();
       settingsList['onChange'] = onChange;
       const originalValue = settingsList['items'][0].currentValue;
-      settingsList.handleKey(createKeyEvent('', 'enter'));
+      settingsList.handleKey(createKeyEvent('\r', 'enter'));
       expect(onChange).toHaveBeenCalledWith('theme', expect.not.stringMatching(originalValue));
     });
 
@@ -136,7 +136,7 @@ describe('SettingsList', () => {
       item.currentValue = 'false';
       const onChange = vi.fn();
       settingsList['onChange'] = onChange;
-      settingsList.handleKey(createKeyEvent('', 'enter'));
+      settingsList.handleKey(createKeyEvent('\r', 'enter'));
       expect(onChange).toHaveBeenCalledWith('images', 'true'); // wrapped back to first
     });
   });

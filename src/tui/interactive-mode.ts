@@ -202,7 +202,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     if (this.isInitialized) return;
 
     // Create editor (Editor organism - Tầng 3)
-    this.editor = new Editor(undefined, {
+    this.editor = new Editor({
       paddingX: 1,
       paddingY: 0,
     });

@@ -247,7 +247,7 @@ describe('SplitPane', () => {
 
     it('should ignore other keys', () => {
       const initial = split['position'];
-      split.handleKey(createKeyEvent('', 'enter'));
+      split.handleKey(createKeyEvent('\r', 'enter'));
       expect(split['position']).toBe(initial);
     });
   });

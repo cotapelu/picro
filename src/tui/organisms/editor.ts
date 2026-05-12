@@ -32,7 +32,7 @@ export interface EditorOptions {
 
 export class Editor implements UIElement, InteractiveElement {
   private state: EditorState = { lines: [''], cursorLine: 0, cursorCol: 0 };
-  private options: Required<EditorOptions>;
+  private options: EditorOptions;
   private paddingX: number;
   private paddingY: number;
   
@@ -61,9 +61,9 @@ export class Editor implements UIElement, InteractiveElement {
       useGlobalKillRing: false,
       ...options,
     };
-    this.paddingX = this.options.paddingX;
-    this.paddingY = this.options.paddingY;
-    this.killRing = this.options.useGlobalKillRing ? defaultKillRing : new KillRing();
+    this.paddingX = this.options.paddingX ?? 0;
+    this.paddingY = this.options.paddingY ?? 0;
+    this.killRing = (this.options.useGlobalKillRing ?? false) ? defaultKillRing : new KillRing();
     this.undoRedoManager = new UndoRedoManager<EditorState>(50);
     this.pushUndo();
     
@@ -97,7 +97,7 @@ export class Editor implements UIElement, InteractiveElement {
     const trimmed = text.trim();
     if (!trimmed || (this.history.length > 0 && this.history[0] === trimmed)) return;
     this.history.unshift(trimmed);
-    if (this.history.length > this.options.maxHistorySize) this.history.pop();
+    if (this.history.length > (this.options.maxHistorySize ?? 100)) this.history.pop();
   }
 
   clearHistory(): void {

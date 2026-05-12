@@ -294,7 +294,7 @@ describe('TreeView', () => {
       treeData[0].expanded = false;
       treeView = new TreeView({ data: treeData });
       const initial = treeData[0].expanded;
-      treeView.handleKey(createKeyEvent('', 'enter'));
+      treeView.handleKey(createKeyEvent('\r', 'enter'));
       expect(treeData[0].expanded).toBe(!initial);
     });
 
@@ -302,7 +302,7 @@ describe('TreeView', () => {
       const onToggle = vi.fn();
       treeData[0].expanded = false;
       treeView = new TreeView({ data: treeData, onToggle });
-      treeView.handleKey(createKeyEvent('', 'enter'));
+      treeView.handleKey(createKeyEvent('\r', 'enter'));
       expect(onToggle).toHaveBeenCalledWith(treeData[0], true);
     });
 
@@ -311,7 +311,7 @@ describe('TreeView', () => {
       treeView = new TreeView({ data: treeData, onSelect });
       // Select leaf (index 2)
       treeView['selectedIndex'] = 2;
-      treeView.handleKey(createKeyEvent('', 'enter'));
+      treeView.handleKey(createKeyEvent('\r', 'enter'));
       expect(onSelect).toHaveBeenCalledWith(treeData[2]);
     });
 

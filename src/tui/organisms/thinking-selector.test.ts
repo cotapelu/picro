@@ -115,7 +115,7 @@ describe('ThinkingSelector', () => {
       const sl = (selector as any)['selectList'];
       // Manually simulate selection change
       sl['selectedIndex'] = 0;
-      sl.handleKey?.(createKeyEvent('', 'enter'));
+      sl.handleKey?.(createKeyEvent('\r', 'enter'));
       expect(onSelect).toHaveBeenCalledWith('off');
     });
   });
