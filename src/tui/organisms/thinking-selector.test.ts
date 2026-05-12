@@ -13,8 +13,14 @@ const defaultContext: RenderContext = {
   theme: {},
 };
 
-function createKeyEvent(raw: string): KeyEvent {
-  return { raw, name: raw, modifiers: {} };
+function createKeyEvent(keyName: string): KeyEvent {
+  const keyMap: Record<string, { raw: string; name: string }> = {
+    ArrowDown: { raw: '\x1b[B', name: 'ArrowDown' },
+    Enter: { raw: '\r', name: 'Enter' },
+  };
+  const mapped = keyMap[keyName];
+  if (mapped) return { raw: mapped.raw, name: mapped.name, modifiers: {} };
+  return { raw: keyName, name: keyName, modifiers: {} };
 }
 
 describe('ThinkingSelector', () => {
@@ -106,7 +112,7 @@ describe('ThinkingSelector', () => {
 
     it('should forward keys to selectList', () => {
       // Down arrow
-      selector.handleKey(createKeyEvent('001b[B', 'down'));
+      selector.handleKey(createKeyEvent('ArrowDown'));
       const sl = (selector as any)['selectList'];
       expect(sl['selectedIndex']).toBeGreaterThan(0);
     });
