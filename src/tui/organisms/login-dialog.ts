@@ -49,7 +49,7 @@ export class LoginDialog implements UIElement, InteractiveElement {
   }
 
   draw(context: RenderContext): string[] {
-    const width = context.width;
+    const width = Math.max(2, context.width); // ensure at least 2 to avoid negative repeats
     const borderWidth = width - 2;
     const lines: string[] = [];
 
@@ -62,17 +62,21 @@ export class LoginDialog implements UIElement, InteractiveElement {
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
     
     const providerLabel = 'Provider: ' + this.provider;
-    lines.push('│ ' + providerLabel + ' '.repeat(borderWidth - providerLabel.length - 1) + '│');
+    const providerPad = Math.max(0, borderWidth - providerLabel.length - 1);
+    lines.push('│ ' + providerLabel + ' '.repeat(providerPad) + '│');
     
     lines.push('│' + ' '.repeat(borderWidth) + '│');
     
     const inputLabel = 'API Key: ';
     const maskedKey = '*'.repeat(this.apiKey.length);
     const displayKey = this.stage === 'input' ? maskedKey : '(press Enter to enter)';
-    const inputLine = inputLabel + displayKey;
-    const inputDisplay = inputLine + (this.isFocused && this.stage === 'input' ? (this.cursorBlink ? '█' : '_') : '');
-    
-    lines.push('│ ' + inputDisplay + ' '.repeat(borderWidth - inputDisplay.length - 1) + '│');
+    let inputDisplay = inputLabel + displayKey;
+    if (this.isFocused && this.stage === 'input') {
+      inputDisplay += this.cursorBlink ? '█' : '_';
+    }
+    const inputPad = Math.max(0, borderWidth - inputDisplay.length - 1);
+    const prefix = (this.isFocused && this.stage === 'input') ? CURSOR_MARKER : '';
+    lines.push('│ ' + prefix + inputDisplay + ' '.repeat(inputPad) + '│');
 
     for (let i = lines.length; i < context.height - 3; i++) {
       lines.push('│' + ' '.repeat(borderWidth) + '│');
@@ -80,7 +84,8 @@ export class LoginDialog implements UIElement, InteractiveElement {
 
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
     const helpText = 'Enter: submit  Esc: cancel';
-    lines.push('│ ' + helpText + ' '.repeat(borderWidth - helpText.length - 2) + '│');
+    const helpPad = Math.max(0, borderWidth - helpText.length - 2);
+    lines.push('│ ' + helpText + ' '.repeat(helpPad) + '│');
     lines.push('└' + '─'.repeat(borderWidth) + '┘');
 
     this.cursorBlink = !this.cursorBlink;
@@ -112,9 +117,14 @@ export class LoginDialog implements UIElement, InteractiveElement {
       return;
     }
 
-    if (this.stage === 'input' && data.length === 1 && !data.startsWith('\x1b')) {
-      this.apiKey += data;
-      this.cursorPos++;
+    if (this.stage === 'input' && !data.startsWith('\x1b')) {
+      // Accept printable characters (including emojis). Ignore control chars.
+      const code = data.charCodeAt(0);
+      if (code >= 32) { // space (32) and above
+        this.apiKey += data;
+        this.cursorPos++;
+      }
+      return;
     }
   }
 
