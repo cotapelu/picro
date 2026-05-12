@@ -41,8 +41,23 @@ const defaultContext: RenderContext = {
   theme: {},
 };
 
-function createKeyEvent(raw: string, name?: string): KeyEvent {
-  return { raw, name: name || raw, modifiers: {} };
+function createKeyEvent(keyName: string): KeyEvent {
+  const keyMap: Record<string, { raw: string; name: string }> = {
+    ArrowUp: { raw: '\u001b[A', name: 'ArrowUp' },
+    ArrowDown: { raw: '\u001b[B', name: 'ArrowDown' },
+    ArrowLeft: { raw: '\u001b[D', name: 'ArrowLeft' },
+    ArrowRight: { raw: '\u001b[C', name: 'ArrowRight' },
+    Enter: { raw: '\r', name: 'Enter' },
+    Escape: { raw: '\u001b', name: 'Escape' },
+    Backspace: { raw: '\x7f', name: 'Backspace' },
+    Delete: { raw: '\u001b[3~', name: 'Delete' },
+    Home: { raw: '\u001b[H', name: 'Home' },
+    End: { raw: '\u001b[F', name: 'End' },
+    Tab: { raw: '\t', name: 'Tab' },
+  };
+  const mapped = keyMap[keyName];
+  if (mapped) return { raw: mapped.raw, name: mapped.name, modifiers: {} };
+  return { raw: keyName, name: keyName, modifiers: {} };
 }
 
 describe('Editor', () => {
