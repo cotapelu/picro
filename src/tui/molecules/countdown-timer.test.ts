@@ -64,7 +64,7 @@ describe('CountdownTimer', () => {
       vi.advanceTimersByTime(1000);
       expect(onTick).toHaveBeenCalledTimes(2); // initial + 1 tick
       vi.advanceTimersByTime(1000);
-      expect(onTick).toHaveBeenCalledTimes(3);
+      expect(onTick).toHaveBeenCalledTimes(3); // initial + 2 ticks
     });
 
     it('should call onRenderRequested on each tick', () => {
@@ -101,16 +101,17 @@ describe('CountdownTimer', () => {
     it('should clear interval', () => {
       const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval');
       timer = new CountdownTimer(10000, onTick, onExpire);
+      const id = timer['intervalId'];
       timer.dispose();
-      expect(clearIntervalSpy).toHaveBeenCalledWith(timer['intervalId']);
+      expect(clearIntervalSpy).toHaveBeenCalledWith(id);
     });
 
     it('should be safe to call multiple times', () => {
       const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval');
       timer = new CountdownTimer(10000, onTick, onExpire);
       timer.dispose();
-      timer.dispose();
-      expect(clearIntervalSpy).toHaveBeenCalledTimes(2);
+      timer.dispose(); // second call should be no-op
+      expect(clearIntervalSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should clear intervalId', () => {
