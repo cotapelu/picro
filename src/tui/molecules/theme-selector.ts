@@ -70,7 +70,8 @@ export class ThemeSelector implements UIElement, InteractiveElement {
 
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
     const help = '↑↓ select  Enter apply  Esc cancel';
-    lines.push('│ ' + help + ' '.repeat(borderWidth - help.length - 2) + '│');
+    const helpPad = Math.max(0, borderWidth - help.length - 2);
+    lines.push('│ ' + help + ' '.repeat(helpPad) + '│');
     lines.push('└' + '─'.repeat(borderWidth) + '┘');
 
     return lines;
