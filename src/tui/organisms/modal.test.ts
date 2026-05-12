@@ -13,8 +13,28 @@ const defaultContext: RenderContext = {
   theme: {},
 };
 
-function createKeyEvent(name: string): KeyEvent {
-  return { raw: name, name, modifiers: {} };
+function createKeyEvent(raw: string, name?: string): KeyEvent {
+  const keyName = name ? normalizeKeyName(name) : normalizeKeyName(raw);
+  return { raw, name: keyName, modifiers: {} };
+}
+
+function normalizeKeyName(name: string): string {
+  const map: Record<string, string> = {
+    'enter': 'Enter',
+    'return': 'Enter',
+    'left': 'ArrowLeft',
+    'right': 'ArrowRight',
+    'up': 'ArrowUp',
+    'down': 'ArrowDown',
+    'backspace': 'Backspace',
+    'delete': 'Delete',
+    'home': 'Home',
+    'end': 'End',
+    'escape': 'Escape',
+    'tab': 'Tab',
+    'space': ' ',
+  };
+  return map[name.toLowerCase()] || name;
 }
 
 describe('Modal', () => {
@@ -175,22 +195,22 @@ describe('Modal', () => {
     });
 
     it("should move selection left with Left arrow or 'h'", () => {
-      modal.handleKey(createKeyEvent('001b[D', 'left'));
+      modal.handleKey(createKeyEvent('[D', 'ArrowLeft'));
       expect(modal['selectedIndex']).toBe(0); // already at 0
       // Need at least 2 buttons for left to do something when at index 1.
       modal['selectedIndex'] = 1;
-      modal.handleKey(createKeyEvent('001b[D', 'left'));
+      modal.handleKey(createKeyEvent('[D', 'ArrowLeft'));
       expect(modal['selectedIndex']).toBe(0);
     });
 
     it("should move selection right with Right arrow or 'l'", () => {
-      modal.handleKey(createKeyEvent('001b[C', 'right'));
+      modal.handleKey(createKeyEvent('[C', 'ArrowRight'));
       expect(modal['selectedIndex']).toBe(1);
     });
 
     it('should not move past rightmost button', () => {
       modal['selectedIndex'] = 1;
-      modal.handleKey(createKeyEvent('001b[C', 'right'));
+      modal.handleKey(createKeyEvent('[C', 'ArrowRight'));
       expect(modal['selectedIndex']).toBe(1);
     });
 
@@ -200,7 +220,7 @@ describe('Modal', () => {
     });
 
     it('should call onCancel on Escape', () => {
-      modal.handleKey(createKeyEvent('001b', 'escape'));
+      modal.handleKey(createKeyEvent('', 'Escape'));
       expect(onCancel).toHaveBeenCalled();
     });
 
