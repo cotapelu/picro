@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SelectList } from './select-list';
 import type { RenderContext, KeyEvent } from '../atoms/base';
 import { getKeybindings } from '../atoms/keybindings';
+import { visibleWidth } from '../atoms/internal-utils';
 
 // Mock keybindings
 vi.mock('../atoms/keybindings', () => ({
@@ -180,7 +181,7 @@ describe('SelectList', () => {
     describe('navigation', () => {
       it('should move up with ArrowUp or k', () => {
         selectList.handleKey(createKeyEvent('[A', 'up'));
-        expect(selectList['selectedIndex']).toBe(4); // wraps? actually SelectList doesn't wrap by default? check logic
+        expect(selectList['selectedIndex']).toBe(0); // wraps? actually SelectList doesn't wrap by default? check logic
         // In SelectList, pressing up from 0 stays at 0
         selectList['selectedIndex'] = 2;
         selectList.handleKey(createKeyEvent('[A', 'up'));
@@ -222,7 +223,7 @@ describe('SelectList', () => {
       it('should call onSelect on Enter', () => {
         const onSelect = vi.fn();
         selectList['onSelect'] = onSelect;
-        selectList.handleKey(createKeyEvent('\r', 'enter'));
+        selectList.handleKey(createKeyEvent('\r', 'Enter'));
         expect(onSelect).toHaveBeenCalledWith('a'); // first item
       });
 
@@ -326,7 +327,7 @@ describe('SelectList', () => {
     });
 
     it('should show "No matches" when filtered empty', () => {
-      selectList.handleKey(createKeyEvent('xyz'));
+      selectList.handleKey(createKeyEvent('z'));
       const result = selectList.draw(defaultContext);
       expect(result[0]).toContain('No matches');
     });
@@ -344,7 +345,7 @@ describe('SelectList', () => {
       const longItems = [{ value: 'long', label: 'A'.repeat(200) }];
       selectList = new SelectList(longItems, 1);
       const result = selectList.draw({ ...defaultContext, width: 20 });
-      expect(result[0].length).toBeLessThanOrEqual(20);
+      expect(visibleWidth(result[0])).toBeLessThanOrEqual(20);
     });
   });
 

@@ -131,7 +131,7 @@ export class SelectList implements UIElement, InteractiveElement {
 		}
 
 		// Type-to-filter: capture printable characters
-		if (data.length === 1 && !key.modifiers && key.name && key.name.length === 1 && data >= ' ' && data <= '~') {
+		if (data.length === 1 && (!key.modifiers || Object.keys(key.modifiers || {}).length === 0) && key.name && key.name.length === 1 && data >= ' ' && data <= '~') {
 			this.filter += data;
 			this.selectedIndex = 0;
 			return;
@@ -148,6 +148,11 @@ export class SelectList implements UIElement, InteractiveElement {
 	draw(context: RenderContext): string[] {
 		const width = context.width;
 		const lines: string[] = [];
+
+		// Edge case: zero or negative visibleRows returns empty
+		if (this.visibleRows <= 0) {
+			return lines;
+		}
 
 		// Filter items if filter is set
 		let displayItems = this.items;
