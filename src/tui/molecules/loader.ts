@@ -83,7 +83,7 @@ export class BorderedLoader implements UIElement, InteractiveElement {
 	}
 
 	handleKey(key: KeyEvent): void {
-		if (key.name === 'Escape' || key.raw === '\x03') {
+		if (key.raw === '\x1b' || key.raw === '\x03' || key.name === 'escape') {
 			this.onAbort?.();
 			clearInterval(this.spinnerInterval);
 		}
