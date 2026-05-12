@@ -22,6 +22,7 @@ export class BorderedLoader implements UIElement, InteractiveElement {
 	private width = 60;
 	private height = 5;
 	private spinnerInterval: any;
+	private aborted = false;
 
 	public isFocused = false;
 	public signal: AbortSignal;
@@ -83,10 +84,10 @@ export class BorderedLoader implements UIElement, InteractiveElement {
 	}
 
 	handleKey(key: KeyEvent): void {
-		if ((key.raw === '\x1b' || key.raw === '\x03' || key.name === 'escape') && this.spinnerInterval) {
+		if (!this.aborted && (key.raw === '\x1b' || key.raw === '\x03' || key.name === 'escape')) {
 			this.onAbort?.();
 			clearInterval(this.spinnerInterval);
-			this.spinnerInterval = undefined;
+			this.aborted = true;
 		}
 	}
 
