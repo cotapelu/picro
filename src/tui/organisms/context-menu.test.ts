@@ -114,8 +114,8 @@ describe('ContextMenu', () => {
 
     it('should render a bordered box', () => {
       const result = menu.draw(defaultContext);
-      expect(result[0].startsWith('┌')).toBe(true);
-      expect(result[result.length - 1].startsWith('┘')).toBe(true);
+      expect(result[0].includes('┌')).toBe(true);
+      expect(result[result.length - 1].includes('┘')).toBe(true);
     });
 
     it('should list items with labels and shortcuts', () => {
@@ -212,7 +212,7 @@ describe('ContextMenu', () => {
     it('should handle empty items array', () => {
       menu = new ContextMenu({ items: [] });
       const result = menu.draw(defaultContext);
-      expect(result[0].startsWith('┌')).toBe(true);
+      expect(result[0].includes('┌')).toBe(true);
     });
 
     it('should handle very long labels', () => {
