@@ -31,7 +31,7 @@ const defaultEnglish: Translation = {
   'tool.error': 'Failed',
 };
 
-class I18n {
+export class I18n {
   private currentLocale = 'en';
   private translations: Map<string, Translation> = new Map();
   private fallback: Translation = defaultEnglish;
