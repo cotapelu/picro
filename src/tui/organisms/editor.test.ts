@@ -101,16 +101,16 @@ describe('Editor', () => {
   describe('insertText()', () => {
     it('should insert at cursor position', () => {
       editor.setText('Hello');
-      editor['cursorCol'] = 5;
+      editor.state.cursorCol = 5;
       editor.insertText(' World');
       expect(editor.getText()).toBe('Hello World');
     });
 
     it('should update cursor position after insert', () => {
       editor.setText('He');
-      editor['cursorCol'] = 2;
+      editor.state.cursorCol = 2;
       editor.insertText('llo');
-      expect(editor['cursorCol']).toBe(5);
+      expect(editor.state.cursorCol).toBe(5);
     });
   });
 
@@ -121,48 +121,48 @@ describe('Editor', () => {
 
     it('should move cursor left with ArrowLeft', () => {
       editor.setText('Hello');
-      editor['cursorCol'] = 3;
+      editor.state.cursorCol = 3;
       editor.handleKey(createKeyEvent('\x1b[D'));
-      expect(editor['cursorCol']).toBe(2);
+      expect(editor.state.cursorCol).toBe(2);
     });
 
     it('should move cursor right with ArrowRight', () => {
       editor.setText('Hello');
-      editor['cursorCol'] = 1;
+      editor.state.cursorCol = 1;
       editor.handleKey(createKeyEvent('\x1b[C'));
-      expect(editor['cursorCol']).toBe(2);
+      expect(editor.state.cursorCol).toBe(2);
     });
 
     it('should handle backspace to delete before cursor', () => {
       editor.setText('Hello');
-      editor['cursorCol'] = 3;
+      editor.state.cursorCol = 3;
       editor.handleKey(createKeyEvent('\x7f'));
       expect(editor.getText()).toBe('Helo');
-      expect(editor['cursorCol']).toBe(2);
+      expect(editor.state.cursorCol).toBe(2);
     });
 
     it('should handle delete to delete after cursor', () => {
       editor.setText('Hello');
-      editor['cursorCol'] = 2;
+      editor.state.cursorCol = 2;
       editor.handleKey(createKeyEvent('\x1b[3~'));
       expect(editor.getText()).toBe('Helo');
     });
 
     it('should insert newline with Enter', () => {
       editor.setText('Line1');
-      editor['cursorCol'] = 5;
+      editor.state.cursorCol = 5;
       editor.handleKey(createKeyEvent('\r'));
       expect(editor.getText()).toBe('Line1\n');
     });
 
     it('should handle Home/End', () => {
       editor.setText('Hello\nWorld');
-      editor['cursorLine'] = 0;
-      editor['cursorCol'] = 5;
+      editor.state.cursorLine = 0;
+      editor.state.cursorCol = 5;
       editor.handleKey(createKeyEvent('\x1b[H')); // Home
-      expect(editor['cursorCol']).toBe(0);
+      expect(editor.state.cursorCol).toBe(0);
       editor.handleKey(createKeyEvent('\x1b[F')); // End
-      expect(editor['cursorCol']).toBe(5);
+      expect(editor.state.cursorCol).toBe(5);
     });
 
     it('should call onSubmit when configured', () => {
@@ -186,8 +186,8 @@ describe('Editor', () => {
     it('should render lines with cursor marker when focused', () => {
       editor.isFocused = true;
       editor.setText('Hello');
-      editor['cursorLine'] = 0;
-      editor['cursorCol'] = 2;
+      editor.state.cursorLine = 0;
+      editor.state.cursorCol = 2;
       const result = editor.draw(defaultContext);
       // Should contain CURSOR_MARKER at appropriate position in line 0
       expect(result[0]).toContain('\x1b_pi:c\x07');
