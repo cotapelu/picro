@@ -88,10 +88,8 @@ describe('KeybindingsManager', () => {
       manager = new KeybindingsManager(defs, { overrides: { 'tui.quit': 'Alt+Q' } });
       manager.registerDefinitions(defs);
       const binding = manager.getBinding('tui.quit');
-      expect(binding?.keys).toContain('Alt+Q');
-      expect(binding?.keys).toContain('Ctrl+Q'); // both?
-      // Actually merging doesn't add default, it preserves override. But we can also have both if user set only one?
-      // Let's check: override replaces default keys entirely (setBinding)
+      // Override replaces defaults
+      expect(binding?.keys).toEqual(['Alt+Q']);
     });
 
     it('should set defaultKeys if no override', () => {
@@ -331,8 +329,9 @@ describe('KeybindingsManager', () => {
 
     it('should not export unchanged bindings', () => {
       const config = manager.exportConfig();
-      expect(config.overrides).toBeUndefined();
-      expect(config.disabled).toBeUndefined();
+      // When nothing changed, overrides and disabled are empty objects/arrays
+      expect(config.overrides).toEqual({});
+      expect(config.disabled).toEqual([]);
     });
 
     it('should handle array overrides', () => {

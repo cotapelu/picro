@@ -234,7 +234,8 @@ describe('Box', () => {
     it('should handle empty child lines', () => {
       box.append(createMockChild(['']));
       const result = box.draw(defaultContext);
-      expect(result.length).toBe(2); // 1 top + 1 bottom padding
+      // One empty content line plus top and bottom padding
+      expect(result.length).toBe(3);
     });
 
     it('should handle children with many lines', () => {
