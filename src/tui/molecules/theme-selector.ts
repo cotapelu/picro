@@ -69,9 +69,14 @@ export class ThemeSelector implements UIElement, InteractiveElement {
     }
 
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
-    const help = '↑↓ select  Enter apply  Esc cancel';
-    const helpPad = Math.max(0, borderWidth - help.length - 2);
-    lines.push('│ ' + help + ' '.repeat(helpPad) + '│');
+    let help = '↑↓ select  Enter apply  Esc cancel';
+    // Ensure help fits within inner width (borderWidth - 1 for left space)
+    const maxHelpLen = Math.max(0, borderWidth - 1);
+    if (help.length > maxHelpLen) {
+      help = truncateText(help, maxHelpLen, '…');
+    }
+    const rightPad = borderWidth - 1 - help.length;
+    lines.push('│ ' + help + ' '.repeat(Math.max(0, rightPad)) + '│');
     lines.push('└' + '─'.repeat(borderWidth) + '┘');
 
     return lines;
