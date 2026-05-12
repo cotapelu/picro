@@ -105,7 +105,8 @@ describe('Toast', () => {
     it('should render bordered box with message', () => {
       const toast = new Toast({ message: 'Hello', width: 30 });
       const result = toast.draw(defaultContext);
-      expect(result[0].startsWith('┌')).toBe(true);
+      // Borders are styled with color codes, so check for presence
+      expect(result[0].includes('┌')).toBe(true);
       expect(result.some(l => l.includes('Hello'))).toBe(true);
     });
 
