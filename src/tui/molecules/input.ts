@@ -156,28 +156,28 @@ export class Input implements UIElement, InteractiveElement {
 		const name = parsed.name;
 
 		// Navigation
-		if (matchesKey(key.raw, 'left') || matchesKey(key.raw, 'ctrl+b')) {
+		if (parsed.name === 'left' || matchesKey(key.raw, 'ctrl+b')) {
 			this.moveCursor(-1);
 			return;
 		}
 
-		if (matchesKey(key.raw, 'right') || matchesKey(key.raw, 'ctrl+f')) {
+		if (parsed.name === 'right' || matchesKey(key.raw, 'ctrl+f')) {
 			this.moveCursor(1);
 			return;
 		}
 
-		if (matchesKey(key.raw, 'home') || matchesKey(key.raw, 'ctrl+a')) {
+		if (parsed.name === 'home' || matchesKey(key.raw, 'ctrl+a')) {
 			this.cursorPos = 0;
 			return;
 		}
 
-		if (matchesKey(key.raw, 'end') || matchesKey(key.raw, 'ctrl+e')) {
+		if (parsed.name === 'end' || matchesKey(key.raw, 'ctrl+e')) {
 			this.cursorPos = this.value.length;
 			return;
 		}
 
 		// History navigation
-		if (matchesKey(key.raw, 'up') && this.history.length > 0) {
+		if (parsed.name === 'up' && this.history.length > 0) {
 			if (this.historyIndex === -1) {
 				this.historyTemp = this.value;
 			}
@@ -190,7 +190,7 @@ export class Input implements UIElement, InteractiveElement {
 			return;
 		}
 
-		if (matchesKey(key.raw, 'down') && this.history.length > 0) {
+		if (parsed.name === 'down' && this.history.length > 0) {
 			if (this.historyIndex > 0) {
 				this.historyIndex--;
 				this.value = this.history[this.history.length - 1 - this.historyIndex] || '';
@@ -204,12 +204,12 @@ export class Input implements UIElement, InteractiveElement {
 		}
 
 		// Editing
-		if (matchesKey(key.raw, 'backspace') || matchesKey(key.raw, 'ctrl+h')) {
+		if (parsed.name === 'backspace' || matchesKey(key.raw, 'ctrl+h')) {
 			this.deleteBeforeCursor();
 			return;
 		}
 
-		if (matchesKey(key.raw, 'delete') || matchesKey(key.raw, 'ctrl+d')) {
+		if (parsed.name === 'delete' || matchesKey(key.raw, 'ctrl+d')) {
 			this.deleteAtCursor();
 			return;
 		}
@@ -225,19 +225,19 @@ export class Input implements UIElement, InteractiveElement {
 		}
 
 		// Submit
-		if (matchesKey(key.raw, 'enter') || matchesKey(key.raw, 'ctrl+m')) {
+		if (parsed.name === 'enter' || matchesKey(key.raw, 'ctrl+m')) {
 			this.onSubmit?.(this.value);
 			return;
 		}
 
 		// Cancel
-		if (matchesKey(key.raw, 'escape') || matchesKey(key.raw, 'ctrl+c')) {
+		if (parsed.name === 'escape' || matchesKey(key.raw, 'ctrl+c')) {
 			this.onCancel?.();
 			return;
 		}
 
 		// Autocomplete
-		if (matchesKey(key.raw, 'tab') && this.onAutocompleteRequested) {
+		if (parsed.name === 'tab' && this.onAutocompleteRequested) {
 			this.onAutocompleteRequested();
 			return;
 		}
