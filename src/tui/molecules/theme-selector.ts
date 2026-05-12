@@ -57,8 +57,11 @@ export class ThemeSelector implements UIElement, InteractiveElement {
       const isCurrent = theme.id === this.currentThemeId;
       const prefix = isSelected ? '▶ ' : '  ';
       const currentMark = isCurrent ? ' ●' : '';
-      const line = prefix + theme.name + currentMark;
-      lines.push('│' + line + ' '.repeat(borderWidth - line.length) + '│');
+      // Truncate theme name to fit within borderWidth
+      const maxNameLen = Math.max(0, borderWidth - prefix.length - currentMark.length);
+      const truncatedName = truncateText(theme.name, maxNameLen, '…');
+      const line = prefix + truncatedName + currentMark;
+      lines.push('│' + line + ' '.repeat(Math.max(0, borderWidth - line.length)) + '│');
     }
 
     while (lines.length < context.height - 3) {
