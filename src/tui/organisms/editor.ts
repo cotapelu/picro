@@ -50,7 +50,7 @@ export class Editor implements UIElement, InteractiveElement {
   public onEscape?: () => void;
   public borderColor: (s: string) => string = (s) => `\x1b[90m${s}\x1b[0m`;
 
-  constructor(_tui?: any, options: EditorOptions = {}) {
+  constructor(options: EditorOptions = {}) {
     this.options = {
       paddingX: 0,
       paddingY: 0,
@@ -58,14 +58,10 @@ export class Editor implements UIElement, InteractiveElement {
       useGlobalKillRing: false,
       ...options,
     };
-    
     this.paddingX = this.options.paddingX;
     this.paddingY = this.options.paddingY;
-    
-    // Use global kill ring or local one
     this.killRing = this.options.useGlobalKillRing ? defaultKillRing : new KillRing();
     this.undoRedoManager = new UndoRedoManager<EditorState>(50);
-    
     this.pushUndo();
   }
 
@@ -99,6 +95,15 @@ export class Editor implements UIElement, InteractiveElement {
   clearHistory(): void {
     this.history = [];
     this.historyIndex = -1;
+  }
+
+  /**
+   * Insert text at cursor position
+   */
+  insertText(text: string): void {
+    this.pushUndo();
+    this.insertTextInternal(text);
+    this.onChange?.(this.getText());
   }
 
   // ========================================================================
