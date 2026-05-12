@@ -242,8 +242,8 @@ export class Input implements UIElement, InteractiveElement {
 			return;
 		}
 
-		// Insert character
-		if (parsed.name && parsed.name.length === 1 && parsed.name >= ' ' && parsed.name <= '~') {
+		// Insert printable character (ignore control sequences)
+		if (parsed.name && parsed.name.length === 1 && parsed.name >= ' ' && parsed.name <= '~' && !parsed.ctrl && !parsed.alt && !parsed.meta) {
 			this.insertChar(parsed.name);
 			return;
 		}
