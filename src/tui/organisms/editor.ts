@@ -96,6 +96,11 @@ export class Editor implements UIElement, InteractiveElement {
     if (this.history.length > this.options.maxHistorySize) this.history.pop();
   }
 
+  clearHistory(): void {
+    this.history = [];
+    this.historyIndex = -1;
+  }
+
   // ========================================================================
   // Undo/Redo
   // ========================================================================
