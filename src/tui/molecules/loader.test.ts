@@ -18,8 +18,23 @@ const defaultContext: RenderContext = {
   theme: {},
 };
 
-function createKeyEvent(name: string): KeyEvent {
-  return { raw: name, name };
+function createKeyEvent(keyName: string): KeyEvent {
+  const keyMap: Record<string, { raw: string; name: string }> = {
+    Escape: { raw: '\u001b', name: 'escape' },
+    Enter: { raw: '\r', name: 'enter' },
+    Backspace: { raw: '\x7f', name: 'backspace' },
+    Delete: { raw: '\u001b[3~', name: 'delete' },
+    Tab: { raw: '\t', name: 'tab' },
+    ArrowUp: { raw: '\u001b[A', name: 'up' },
+    ArrowDown: { raw: '\u001b[B', name: 'down' },
+    ArrowLeft: { raw: '\u001b[D', name: 'left' },
+    ArrowRight: { raw: '\u001b[C', name: 'right' },
+    Home: { raw: '\u001b[H', name: 'home' },
+    End: { raw: '\u001b[F', name: 'end' },
+  };
+  const mapped = keyMap[keyName];
+  if (mapped) return { raw: mapped.raw, name: mapped.name };
+  return { raw: keyName, name: keyName };
 }
 
 describe('BorderedLoader', () => {
@@ -153,7 +168,7 @@ describe('BorderedLoader', () => {
     it('should call onAbort on Escape', () => {
       const onAbort = vi.fn();
       loader = new BorderedLoader(mockTUI, {}, 'Loading...', onAbort);
-      loader.handleKey(createKeyEvent('001b', 'escape'));
+      loader.handleKey(createKeyEvent('Escape'));
       expect(onAbort).toHaveBeenCalled();
     });
 
@@ -166,14 +181,14 @@ describe('BorderedLoader', () => {
 
     it('should clear spinner interval on abort', () => {
       const clearInterval = vi.spyOn(globalThis, 'clearInterval');
-      loader.handleKey(createKeyEvent('001b', 'escape'));
+      loader.handleKey(createKeyEvent('Escape'));
       expect(clearInterval).toHaveBeenCalledWith(loader['spinnerInterval']);
     });
 
     it('should not clear interval multiple times', () => {
       const clearInterval = vi.spyOn(globalThis, 'clearInterval');
-      loader.handleKey(createKeyEvent('001b', 'escape'));
-      loader.handleKey(createKeyEvent('001b', 'escape')); // second call
+      loader.handleKey(createKeyEvent('Escape'));
+      loader.handleKey(createKeyEvent('Escape')); // second call
       expect(clearInterval).toHaveBeenCalledTimes(1);
     });
   });
