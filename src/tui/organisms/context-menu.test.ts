@@ -145,8 +145,9 @@ describe('ContextMenu', () => {
     it('should respect requested width', () => {
       menu = new ContextMenu({ items, width: 30 });
       const result = menu.draw(defaultContext);
+      const vw = require('../atoms/internal-utils').visibleWidth;
       result.forEach(l => {
-        expect(l.length).toBeLessThanOrEqual(30);
+        expect(vw(l)).toBeLessThanOrEqual(30);
       });
     });
 
@@ -174,30 +175,34 @@ describe('ContextMenu', () => {
       expect(menu['selectedIndex']).toBe(1);
     });
 
-    it('should not select disabled items on navigation? Actually it can select but getSelectedItem returns null', () => {
-      menu.handleKey(createKeyEvent('ArrowDown'));
-      menu.handleKey(createKeyEvent('ArrowDown'));
-      menu.handleKey(createKeyEvent('ArrowDown')); // to Delete (disabled)
+    it('should skip disabled items when navigating', () => {
+      // Start at index 0 (Copy)
+      menu.handleKey(createKeyEvent('ArrowDown')); // to Paste (1)
+      menu.handleKey(createKeyEvent('ArrowDown')); // to Delete (2, disabled) -> should skip to Select All (3)
       expect(menu['selectedIndex']).toBe(3);
-      expect(menu.getSelectedItem()).toBeNull();
+      const sel = menu.getSelectedItem();
+      expect(sel).not.toBeNull();
+      expect(sel?.id).toBe('select-all');
     });
 
     it('should call onSelect when pressing Enter on enabled item', () => {
       // First item has onSelect(fn)
-      menu.handleKey(createKeyEvent('\r'));
+      menu.handleKey(createKeyEvent('Enter'));
       expect(items[0].onSelect).toHaveBeenCalled();
     });
 
     it('should call onClose on Escape', () => {
-      menu.handleKey(createKeyEvent('\x1b'));
+      menu.handleKey(createKeyEvent('Escape'));
       expect(onClose).toHaveBeenCalled();
     });
 
-    it('should skip disabled items when trying to select? Not required; but getSelectedItem returns null', () => {
-      // Press Enter on disabled should not call onSelect
-      menu['selectedIndex'] = 3;
-      menu.handleKey(createKeyEvent('\r'));
-      expect(items[3].onSelect).not.toHaveBeenCalled();
+    it('should not call onSelect when Enter pressed on disabled item', () => {
+      // Select the disabled Delete item (index 2 after filtering)
+      menu['selectedIndex'] = 2;
+      menu.handleKey(createKeyEvent('Enter'));
+      // Neither spy onSelect should be called
+      expect(items[0].onSelect).not.toHaveBeenCalled();
+      expect(items[1].onSelect).not.toHaveBeenCalled();
     });
   });
 
