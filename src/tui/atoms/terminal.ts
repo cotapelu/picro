@@ -277,7 +277,7 @@ export class ProcessTerminal implements Terminal {
 	}
 
 	clearLine(): void {
-		process.stdout.write('\x1b[K');
+		process.stdout.write('\x1b[2K');
 	}
 
 	clearFromCursor(): void {
@@ -285,7 +285,7 @@ export class ProcessTerminal implements Terminal {
 	}
 
 	clearScreen(): void {
-		process.stdout.write('\x1b[2J\x1b[H');
+		process.stdout.write('\x1b[2J');
 	}
 
 	setTitle(title: string): void {
