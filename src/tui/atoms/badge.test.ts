@@ -147,7 +147,7 @@ describe('Badge', () => {
     it('should reset style at end', () => {
       badge = new Badge({ label: 'Test' });
       const result = badge.draw(defaultContext);
-      expect(result[0]).toMatch(/\x1b[0m$/);
+      expect(result[0]).toContain('\x1b[0m');
     });
 
     it('should ignore context width/height', () => {

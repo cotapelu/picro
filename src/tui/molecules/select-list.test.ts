@@ -222,15 +222,14 @@ describe('SelectList', () => {
       it('should call onSelect on Enter', () => {
         const onSelect = vi.fn();
         selectList['onSelect'] = onSelect;
-        selectList.handleKey(createKeyEvent('
-', 'enter'));
+        selectList.handleKey(createKeyEvent('\r', 'enter'));
         expect(onSelect).toHaveBeenCalledWith('a'); // first item
       });
 
       it('should call onCancel on Escape', () => {
         const onCancel = vi.fn();
         selectList['onCancel'] = onCancel;
-        selectList.handleKey(createKeyEvent('', 'escape'));
+        selectList.handleKey(createKeyEvent('\x1b', 'escape'));
         expect(onCancel).toHaveBeenCalled();
       });
 

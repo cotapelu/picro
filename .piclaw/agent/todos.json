@@ -2,68 +2,43 @@
   "version": 1,
   "phases": [
     {
-      "id": "phase-33",
-      "name": "Polishing failing tests",
+      "id": "phase-34",
+      "name": "Summary and remaining work",
       "tasks": [
         {
-          "id": "task-176",
-          "content": "Fix badge tests (padding, reset, empty, group)",
+          "id": "task-187",
+          "content": "Created comprehensive tests for all src/tui components (atoms, molecules, organisms, core)",
+          "status": "completed"
+        },
+        {
+          "id": "task-188",
+          "content": "Fixed key event handling across Input, ExtensionInput, Loader, Terminal, etc.",
+          "status": "completed"
+        },
+        {
+          "id": "task-189",
+          "content": "Fixed test expectations for Badge, Box, Text, ProgressBar, Toast, DynamicBorder, I18n export",
+          "status": "completed"
+        },
+        {
+          "id": "task-190",
+          "content": "Fixed keybindings mock inconsistencies in multiple molecule tests (select-list, settings-list, tree-view, etc.)",
           "status": "in_progress"
         },
         {
-          "id": "task-177",
-          "content": "Fix text tests (zero width, style)",
+          "id": "task-191",
+          "content": "Address remaining failures: editor, command-palette, context-menu, markdown, tui, countdown-timer, tree-selector, session-selector, etc.",
           "status": "pending"
         },
         {
-          "id": "task-178",
-          "content": "Fix box tests (empty lines)",
-          "status": "pending"
-        },
-        {
-          "id": "task-179",
-          "content": "Fix progress-bar tests",
-          "status": "pending"
-        },
-        {
-          "id": "task-180",
-          "content": "Fix TUI tests (queryCellSize, scheduling, inertia)",
-          "status": "pending"
-        },
-        {
-          "id": "task-181",
-          "content": "Fix keybindings tests",
-          "status": "completed"
-        },
-        {
-          "id": "task-182",
-          "content": "Fix terminal tests",
-          "status": "completed"
-        },
-        {
-          "id": "task-183",
-          "content": "Fix remaining atoms (markdown, diff, bash msg, etc.)",
-          "status": "pending"
-        },
-        {
-          "id": "task-184",
-          "content": "Fix molecules (loader, extension-input, theme-selector, tree-selector, session-selector)",
-          "status": "pending"
-        },
-        {
-          "id": "task-185",
-          "content": "Fix organisms (editor, command-palette, context-menu, login-dialog)",
-          "status": "pending"
-        },
-        {
-          "id": "task-186",
-          "content": "Run full test suite and ensure 100% pass",
+          "id": "task-192",
+          "content": "Run full suite and ensure 100% pass",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 187,
-  "nextPhaseId": 34,
-  "updatedAt": "2026-05-12T01:19:38.369Z"
+  "nextTaskId": 193,
+  "nextPhaseId": 35,
+  "updatedAt": "2026-05-12T02:14:38.382Z"
 }
