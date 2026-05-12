@@ -179,41 +179,41 @@ describe('SelectList', () => {
 
     describe('navigation', () => {
       it('should move up with ArrowUp or k', () => {
-        selectList.handleKey(createKeyEvent('001b[A', 'up'));
+        selectList.handleKey(createKeyEvent('[A', 'up'));
         expect(selectList['selectedIndex']).toBe(4); // wraps? actually SelectList doesn't wrap by default? check logic
         // In SelectList, pressing up from 0 stays at 0
         selectList['selectedIndex'] = 2;
-        selectList.handleKey(createKeyEvent('001b[A', 'up'));
+        selectList.handleKey(createKeyEvent('[A', 'up'));
         expect(selectList['selectedIndex']).toBe(1);
       });
 
       it('should move down with ArrowDown or j', () => {
-        selectList.handleKey(createKeyEvent('001b[B', 'down'));
+        selectList.handleKey(createKeyEvent('[B', 'down'));
         expect(selectList['selectedIndex']).toBe(1);
-        selectList.handleKey(createKeyEvent('001b[B', 'down'));
+        selectList.handleKey(createKeyEvent('[B', 'down'));
         expect(selectList['selectedIndex']).toBe(2);
       });
 
       it('should not move past top', () => {
         selectList['selectedIndex'] = 0;
-        selectList.handleKey(createKeyEvent('001b[A', 'up'));
+        selectList.handleKey(createKeyEvent('[A', 'up'));
         expect(selectList['selectedIndex']).toBe(0);
       });
 
       it('should not move past bottom', () => {
         selectList['selectedIndex'] = 4;
-        selectList.handleKey(createKeyEvent('001b[B', 'down'));
+        selectList.handleKey(createKeyEvent('[B', 'down'));
         expect(selectList['selectedIndex']).toBe(4);
       });
 
       it('should page up', () => {
         selectList['selectedIndex'] = 4;
-        selectList.handleKey(createKeyEvent('001b[5~', 'pageup'));
+        selectList.handleKey(createKeyEvent('[5~', 'pageup'));
         expect(selectList['selectedIndex']).toBeLessThan(4);
       });
 
       it('should page down', () => {
-        selectList.handleKey(createKeyEvent('001b[6~', 'pagedown'));
+        selectList.handleKey(createKeyEvent('[6~', 'pagedown'));
         expect(selectList['selectedIndex']).toBeGreaterThan(0);
       });
     });
@@ -222,14 +222,15 @@ describe('SelectList', () => {
       it('should call onSelect on Enter', () => {
         const onSelect = vi.fn();
         selectList['onSelect'] = onSelect;
-        selectList.handleKey(createKeyEvent('', 'enter'));
+        selectList.handleKey(createKeyEvent('
+', 'enter'));
         expect(onSelect).toHaveBeenCalledWith('a'); // first item
       });
 
       it('should call onCancel on Escape', () => {
         const onCancel = vi.fn();
         selectList['onCancel'] = onCancel;
-        selectList.handleKey(createKeyEvent('001b', 'escape'));
+        selectList.handleKey(createKeyEvent('', 'escape'));
         expect(onCancel).toHaveBeenCalled();
       });
 
