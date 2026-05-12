@@ -28,8 +28,25 @@ const defaultContext: RenderContext = {
   theme: {},
 };
 
-function createKeyEvent(data: string): KeyEvent {
-  return { raw: data, name: data, modifiers: {} };
+function createKeyEvent(raw: string, name?: string): KeyEvent {
+  const keyName = name ? normalizeKeyName(name) : normalizeKeyName(raw);
+  return { raw, name: keyName, modifiers: {} };
+}
+
+function normalizeKeyName(name: string): string {
+  // Raw control characters
+  if (name === '\r' || name === '\n') return 'Enter';
+  if (name === '\x1b') return 'Escape';
+  if (name === '\x7f') return 'Backspace';
+  const map: Record<string, string> = {
+    'enter': 'Enter', 'return': 'Enter',
+    'left': 'ArrowLeft', 'right': 'ArrowRight',
+    'up': 'ArrowUp', 'down': 'ArrowDown',
+    'backspace': 'Backspace', 'delete': 'Delete',
+    'home': 'Home', 'end': 'End',
+    'escape': 'Escape', 'tab': 'Tab', 'space': ' ',
+  };
+  return map[name.toLowerCase()] || name;
 }
 
 describe('SettingsList', () => {
@@ -104,30 +121,30 @@ describe('SettingsList', () => {
     it('should call onClose on Escape', () => {
       const onClose = vi.fn();
       settingsList['onClose'] = onClose;
-      settingsList.handleKey(createKeyEvent('001b', 'escape'));
+      settingsList.handleKey(createKeyEvent('', 'Escape'));
       expect(onClose).toHaveBeenCalled();
     });
 
     it('should move selection up', () => {
       settingsList['selectedIndex'] = 2;
-      settingsList.handleKey(createKeyEvent('001b[A', 'up'));
+      settingsList.handleKey(createKeyEvent('[A', 'ArrowUp'));
       expect(settingsList['selectedIndex']).toBe(1);
     });
 
     it('should move selection down', () => {
-      settingsList.handleKey(createKeyEvent('001b[B', 'down'));
+      settingsList.handleKey(createKeyEvent('[B', 'ArrowDown'));
       expect(settingsList['selectedIndex']).toBe(1);
     });
 
     it('should not move past top', () => {
       settingsList['selectedIndex'] = 0;
-      settingsList.handleKey(createKeyEvent('001b[A', 'up'));
+      settingsList.handleKey(createKeyEvent('[A', 'ArrowUp'));
       expect(settingsList['selectedIndex']).toBe(0);
     });
 
     it('should not move past bottom', () => {
       settingsList['selectedIndex'] = 2;
-      settingsList.handleKey(createKeyEvent('001b[B', 'down'));
+      settingsList.handleKey(createKeyEvent('[B', 'ArrowDown'));
       expect(settingsList['selectedIndex']).toBe(2);
     });
 
@@ -189,7 +206,7 @@ describe('SettingsList', () => {
     it('should dim non-selected items', () => {
       const result = settingsList.draw(defaultContext);
       // Non-selected items should have dim (2m)
-      const nonSelectedLine = result.find(line => line.includes('Theme') && !line.includes('>'));
+      const nonSelectedLine = result.find(line => line.includes('Show Images') && !line.includes('>'));
       expect(nonSelectedLine).toContain('\x1b[2m');
     });
 
