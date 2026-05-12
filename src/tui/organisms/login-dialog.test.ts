@@ -13,8 +13,15 @@ const defaultContext: RenderContext = {
   theme: {},
 };
 
-function createKeyEvent(raw: string): KeyEvent {
-  return { raw, name: raw, modifiers: {} };
+function createKeyEvent(keyName: string): KeyEvent {
+  const keyMap: Record<string, { raw: string; name: string }> = {
+    Enter: { raw: '\r', name: 'Enter' },
+    Escape: { raw: '\x1b', name: 'Escape' },
+    Backspace: { raw: '\x7f', name: 'Backspace' },
+  };
+  const mapped = keyMap[keyName];
+  if (mapped) return { raw: mapped.raw, name: mapped.name, modifiers: {} };
+  return { raw: keyName, name: keyName, modifiers: {} };
 }
 
 describe('LoginDialog', () => {
@@ -139,28 +146,28 @@ describe('LoginDialog', () => {
 
     it('should advance to input stage on Enter in provider stage', () => {
       expect(dialog['stage']).toBe('provider');
-      dialog.handleKey(createKeyEvent('\r'));
+      dialog.handleKey(createKeyEvent('Enter'));
       expect(dialog['stage']).toBe('input');
     });
 
     it('should submit apiKey on Enter in input stage', () => {
       dialog['stage'] = 'input';
       dialog.setApiKey('mykey');
-      dialog.handleKey(createKeyEvent('\r'));
+      dialog.handleKey(createKeyEvent('Enter'));
       expect(onSubmit).toHaveBeenCalledWith('mykey');
     });
 
     it('should call onCancel on Escape', () => {
-      dialog.handleKey(createKeyEvent('\x1b'));
+      dialog.handleKey(createKeyEvent('Escape'));
       expect(onCancel).toHaveBeenCalled();
     });
 
     it('should handle backspace to delete key chars', () => {
       dialog['stage'] = 'input';
       dialog.setApiKey('abc');
-      dialog.handleKey(createKeyEvent('\x7f'));
+      dialog.handleKey(createKeyEvent('Backspace'));
       expect(dialog.getApiKey()).toBe('ab');
-      dialog.handleKey(createKeyEvent('\b'));
+      dialog.handleKey(createKeyEvent('Backspace'));
       expect(dialog.getApiKey()).toBe('a');
     });
 
@@ -194,7 +201,7 @@ describe('LoginDialog', () => {
     it('should handle empty apiKey submission', () => {
       dialog = new LoginDialog({ onSubmit });
       dialog['stage'] = 'input';
-      dialog.handleKey(createKeyEvent('\r'));
+      dialog.handleKey(createKeyEvent('Enter'));
       expect(onSubmit).toHaveBeenCalledWith('');
     });
 
