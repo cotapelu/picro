@@ -61,10 +61,11 @@ describe('CountdownTimer', () => {
     });
 
     it('should call onTick on each tick', () => {
+      // onTick mock was cleared after timer creation, so initial call not counted
       vi.advanceTimersByTime(1000);
-      expect(onTick).toHaveBeenCalledTimes(2); // initial + 1 tick
+      expect(onTick).toHaveBeenCalledTimes(1); // first tick
       vi.advanceTimersByTime(1000);
-      expect(onTick).toHaveBeenCalledTimes(3); // initial + 2 ticks
+      expect(onTick).toHaveBeenCalledTimes(2); // two ticks total
     });
 
     it('should call onRenderRequested on each tick', () => {

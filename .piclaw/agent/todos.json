@@ -2,43 +2,84 @@
   "version": 1,
   "phases": [
     {
-      "id": "phase-34",
-      "name": "Summary and remaining work",
+      "id": "phase-35",
+      "name": "Test Suite Implementation & Fixes",
       "tasks": [
         {
-          "id": "task-187",
-          "content": "Created comprehensive tests for all src/tui components (atoms, molecules, organisms, core)",
+          "id": "task-193",
+          "content": "Created comprehensive test files for all atoms (60+), molecules (26), organisms (8), core files",
           "status": "completed"
         },
         {
-          "id": "task-188",
-          "content": "Fixed key event handling across Input, ExtensionInput, Loader, Terminal, etc.",
+          "id": "task-194",
+          "content": "Fixed key handling: Input, ExtensionInput, Loader, Terminal, many test key sequences",
           "status": "completed"
         },
         {
-          "id": "task-189",
-          "content": "Fixed test expectations for Badge, Box, Text, ProgressBar, Toast, DynamicBorder, I18n export",
+          "id": "task-195",
+          "content": "Fixed basic atom tests: Badge, Text, Box, ProgressBar, Toast, DynamicBorder, I18n export",
           "status": "completed"
         },
         {
-          "id": "task-190",
-          "content": "Fixed keybindings mock inconsistencies in multiple molecule tests (select-list, settings-list, tree-view, etc.)",
+          "id": "task-196",
+          "content": "Fixed molecule tests: extension-input, loader, countdown-timer, theme-selector, select-list, settings-list",
+          "status": "completed"
+        },
+        {
+          "id": "task-197",
+          "content": "Fixed keybinding mock consistency across tests (select-list, settings-list, tree-view, editor)",
+          "status": "completed"
+        },
+        {
+          "id": "task-198",
+          "content": "Remaining: organisms (editor, command-palette, context-menu), some atoms (markdown, diff, bash-msg, terminal-image, table, etc.), tui.test.ts",
           "status": "in_progress"
         },
         {
-          "id": "task-191",
-          "content": "Address remaining failures: editor, command-palette, context-menu, markdown, tui, countdown-timer, tree-selector, session-selector, etc.",
+          "id": "task-199",
+          "content": "Potential improvements: align expectations with actual rendering, add missing methods (clearHistory), handle truncation/padding edge cases",
           "status": "pending"
         },
         {
-          "id": "task-192",
-          "content": "Run full suite and ensure 100% pass",
+          "id": "task-200",
+          "content": "Run full suite and achieve 100% passing",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-36",
+      "name": "Future work (post-initial)",
+      "tasks": [
+        {
+          "id": "task-201",
+          "content": "Fix remaining organism tests: Editor, CommandPalette, ContextMenu, LoginDialog, ThinkingSelector, FileBrowser",
+          "status": "pending"
+        },
+        {
+          "id": "task-202",
+          "content": "Fix remaining atom tests: Markdown, Diff, BashExecutionMessage, TerminalImage, Table, Autocomplete, Stepper, Grid",
+          "status": "pending"
+        },
+        {
+          "id": "task-203",
+          "content": "Fix core TUI tests (tui.test.ts)",
+          "status": "pending"
+        },
+        {
+          "id": "task-204",
+          "content": "Fix molecule tests: MemoryPanel, SessionSelector, TreeSelector, ScopedModelsSelector, ModelSelector, OAuthSelector",
+          "status": "pending"
+        },
+        {
+          "id": "task-205",
+          "content": "Review and align all test expectations with implementation details",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 193,
-  "nextPhaseId": 35,
-  "updatedAt": "2026-05-12T02:14:38.382Z"
+  "nextTaskId": 206,
+  "nextPhaseId": 37,
+  "updatedAt": "2026-05-12T02:53:36.609Z"
 }
