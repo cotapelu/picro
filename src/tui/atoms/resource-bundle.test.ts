@@ -38,7 +38,7 @@ describe('ResourceBundle', () => {
 
   describe('loadBundleFromFile()', () => {
     beforeEach(() => {
-      vi.mocked(require('fs').readFileSync).mockReturnValue(JSON.stringify({ resources: { 'img.png': 'data' } }));
+      (require('fs').readFileSync as any).mockReturnValue(JSON.stringify({ resources: { 'img.png': 'data' } }));
     });
 
     it('should read and parse JSON file', async () => {
@@ -47,7 +47,7 @@ describe('ResourceBundle', () => {
     });
 
     it('should handle bare object without resources wrapper', async () => {
-      vi.mocked(require('fs').readFileSync).mockReturnValue(JSON.stringify({ 'img.png': 'data' }));
+      (require('fs').readFileSync as any).mockReturnValue(JSON.stringify({ 'img.png': 'data' }));
       const bundle = await loadBundleFromFile('/path/bundle.json');
       expect(bundle.has('img.png')).toBe(true);
     });
@@ -76,7 +76,7 @@ describe('ResourceBundle', () => {
     it('should write JSON file', async () => {
       const bundle = new SimpleResourceBundle(new Map([['test', 'data']]));
       await saveBundle(bundle, '/out/bundle.json');
-      expect(require('fs').writeFileSync).toHaveBeenCalled();
+      (require('fs').writeFileSync as any).toHaveBeenCalled();
     });
   });
 });

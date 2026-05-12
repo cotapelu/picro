@@ -88,16 +88,16 @@ describe('Autocomplete', () => {
     });
 
     it('should return empty if directory does not exist', async () => {
-      vi.mocked(require('fs').promises.stat).mockRejectedValue(new Error());
+      (require('fs').promises.stat as any).mockRejectedValue(new Error());
       const result = await provider.complete({ query: '/nonexistent/', cursorPos: 14, line: '/nonexistent/' });
       expect(result).toHaveLength(0);
     });
 
     it('should return files in directory if query ends with /', async () => {
-      vi.mocked(require('fs').promises.stat).mockResolvedValue({ isDirectory: () => true } as any);
-      vi.mocked(require('fs').promises.readdir).mockResolvedValue(['file1.txt', 'file2.txt']);
-      vi.mocked(require('path').dirname).mockReturnValue('/test');
-      vi.mocked(require('path').basename).mockReturnValue('');
+      (require('fs').promises.stat as any).mockResolvedValue({ isDirectory: () => true } as any);
+      (require('fs').promises.readdir as any).mockResolvedValue(['file1.txt', 'file2.txt']);
+      (require('path').dirname as any).mockReturnValue('/test');
+      (require('path').basename as any).mockReturnValue('');
 
       const result = await provider.complete({ query: '/test/', cursorPos: 6, line: '/test/' });
       expect(result.length).toBeGreaterThan(0);

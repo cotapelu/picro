@@ -7,12 +7,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   getCapabilities,
   setCapabilities,
+  resetCapabilitiesCache,
   isImageLine,
   getCellDimensions,
   setCellDimensions,
   clearRenderCache,
   encodeKitty,
   KITTY_PREFIX,
+  ITERM2_PREFIX,
   ITERM2_PREFIX,
   ScaleMode,
 } from './terminal-image';
