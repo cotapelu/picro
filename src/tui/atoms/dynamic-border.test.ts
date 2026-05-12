@@ -18,8 +18,8 @@ describe('DynamicBorder', () => {
     const border = new DynamicBorder();
     const result = border.draw(defaultContext);
     expect(result).toHaveLength(2);
-    expect(result[0]).toStartsWith('┌');
-    expect(result[1]).toStartsWith('└');
+    expect(result[0]).toMatch(/^┌/);
+    expect(result[1]).toMatch(/^└/);
   });
 
   it('should apply color function if provided', () => {

@@ -24,8 +24,8 @@ describe('LayoutInspector', () => {
     });
     const inspector = new LayoutInspector(getLayoutInfo);
     const result = inspector.draw(defaultContext);
-    expect(result[0]).toStartsWith('┌');
-    expect(result[result.length - 1]).toStartsWith('└');
+    expect(result[0]).toMatch(/^┌/);
+    expect(result[result.length - 1]).toMatch(/^└/);
     expect(result.some(l => l.includes('Terminal: 80x24'))).toBe(true);
     expect(result.some(l => l.includes('Panels: 1'))).toBe(true);
   });
