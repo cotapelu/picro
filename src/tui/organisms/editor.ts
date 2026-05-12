@@ -25,6 +25,9 @@ export interface EditorOptions {
   paddingY?: number;
   maxHistorySize?: number;
   useGlobalKillRing?: boolean;
+  onSubmit?: (text: string) => void;
+  onChange?: (text: string) => void;
+  onEscape?: () => void;
 }
 
 export class Editor implements UIElement, InteractiveElement {
@@ -63,6 +66,11 @@ export class Editor implements UIElement, InteractiveElement {
     this.killRing = this.options.useGlobalKillRing ? defaultKillRing : new KillRing();
     this.undoRedoManager = new UndoRedoManager<EditorState>(50);
     this.pushUndo();
+    
+    // Callbacks
+    this.onSubmit = options.onSubmit;
+    this.onChange = options.onChange;
+    this.onEscape = options.onEscape;
   }
 
   // ========================================================================
