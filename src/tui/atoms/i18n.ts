@@ -62,13 +62,20 @@ export class I18n {
 
   /** Translate a key. Falls back to the key itself if missing. */
   t(key: string, ...args: any[]): string {
-    const localeData = this.translations.get(this.currentLocale) || this.fallback;
+    // Allow locale override as the last argument if it's a registered locale
+    let locale = this.currentLocale;
+    let substitutionArgs: any[] = args;
+    if (args.length > 0 && typeof args[args.length - 1] === 'string' && this.translations.has(args[args.length - 1])) {
+      locale = args[args.length - 1];
+      substitutionArgs = args.slice(0, -1);
+    }
+    const localeData = this.translations.get(locale) || this.fallback;
     let msg = localeData[key] || this.fallback[key] || key;
     // Simple positional substitution: {0}, {1}, ...
-    if (args.length > 0) {
+    if (substitutionArgs.length > 0) {
       msg = msg.replace(/{(\d+)}/g, (match, index) => {
         const idx = parseInt(index, 10);
-        return idx < args.length ? String(args[idx]) : match;
+        return idx < substitutionArgs.length ? String(substitutionArgs[idx]) : match;
       });
     }
     return msg;
