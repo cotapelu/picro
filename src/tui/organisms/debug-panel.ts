@@ -90,7 +90,7 @@ export class DebugPanel implements UIElement, InteractiveElement {
 
     // Title
     const title = ' Debug Metrics ';
-    const titleLine = this.centerPad(title, width);
+    const titleLine = this.centerPad(title, contentWidth);
     lines.push('│' + titleLine + '│');
 
     // Divider
