@@ -27,10 +27,10 @@ function createKeyEvent(raw: string): KeyEvent {
 vi.mock('../atoms/keys', () => ({
   matchesKey: (raw: string, action: string) => {
     const dir: Record<string, string[]> = {
-      right: ['ArrowRight'],
-      left: ['ArrowLeft'],
-      up: ['ArrowUp'],
-      down: ['ArrowDown'],
+      right: ['ArrowRight', '\u001b[C', '001b[C'],
+      left: ['ArrowLeft', '\u001b[D', '001b[D'],
+      up: ['ArrowUp', '\u001b[A', '001b[A'],
+      down: ['ArrowDown', '\u001b[B', '001b[B'],
     };
     return dir[action]?.includes(raw) ?? false;
   },
@@ -177,7 +177,7 @@ describe('SplitPane', () => {
       second.draw.mockReturnValue(['B']);
       const result = split.draw(defaultContext);
       // Each line should combine A + divider + B
-      result[0].should.match(/A.*┼.*B/);
+      expect(result[0]).toMatch(/A.*┼.*B/);
     });
 
     it('should recompute position on each draw (persist after resize)', () => {
