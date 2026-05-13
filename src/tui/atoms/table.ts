@@ -49,9 +49,19 @@ export class Table implements UIElement {
       return txt + ' '.repeat(pad);
     };
 
-    // Build lines
+    // Build lines with conditional spacing
     for (const row of allRows) {
-      const line = row.map((cell, i) => padCell(cell, colWidths[i])).join(' ');
+      let line = '';
+      for (let i = 0; i < colCount; i++) {
+        const rawCell = row[i] ?? '';
+        const trimmed = rawCell.trim();
+        const cellWidth = visibleWidth(trimmed);
+        const padded = padCell(rawCell, colWidths[i]);
+        line += padded;
+        if (i < colCount - 1 && cellWidth === colWidths[i]) {
+          line += ' ';
+        }
+      }
       lines.push(line);
     }
     return lines;
