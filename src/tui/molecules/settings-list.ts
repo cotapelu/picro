@@ -108,7 +108,7 @@ export class SettingsList implements UIElement, InteractiveElement {
 			const value = item.currentValue;
 			const valueStr = this.theme.value ? this.theme.value(`[${value}]`) : `\x1b[32m[${value}]\x1b[0m`;
 
-			const line = prefix + label + ' '.repeat(Math.max(1, width - visibleWidth(prefix + label + value) - 1)) + valueStr;
+			const line = prefix + label + ' '.repeat(Math.max(1, width - (visibleWidth(prefix) + visibleWidth(label) + visibleWidth(`[${value}]`)))) + valueStr;
 			lines.push(truncateText(line, width));
 		}
 
