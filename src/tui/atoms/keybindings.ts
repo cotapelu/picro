@@ -130,10 +130,10 @@ export class KeybindingsManager {
 		const binding = this.definitions.get(bindingId);
 		if (!binding || !binding.enabled) return false;
 
-		// Check context
+		// Check context (if a context is set and current context is defined, they must match)
 		if (binding.context) {
 			const currentContext = this.getCurrentContext();
-			if (binding.context !== currentContext) return false;
+			if (currentContext !== undefined && binding.context !== currentContext) return false;
 		}
 
 		// Parse the key if needed
