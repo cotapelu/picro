@@ -318,10 +318,11 @@ export class Editor implements UIElement, InteractiveElement {
     
     const contentWidth = Math.max(1, width - this.paddingX * 2);
     
-    // Calculate visible range based on cursor position
-    const targetLine = this.state.cursorLine;
-    const maxVisible = Math.max(5, Math.floor((context.height || 24) * 0.3));
+    // Determine max visible lines based on context height (no borders)
+    const maxVisible = (context.height && context.height > 0) ? context.height : 24;
     
+    // Adjust scroll offset to keep cursor visible
+    const targetLine = this.state.cursorLine;
     if (targetLine < this.scrollOffset) {
       this.scrollOffset = targetLine;
     } else if (targetLine >= this.scrollOffset + maxVisible) {
@@ -330,14 +331,6 @@ export class Editor implements UIElement, InteractiveElement {
     
     const visibleStart = this.scrollOffset;
     const visibleEnd = Math.min(this.state.lines.length, visibleStart + maxVisible);
-    
-    // Top border
-    if (this.scrollOffset > 0) {
-      const indicator = `↑ ${this.scrollOffset} more`;
-      lines.push(this.borderColor('─'.repeat(width - indicator.length - 1) + indicator));
-    } else {
-      lines.push(this.borderColor('─'.repeat(width)));
-    }
     
     // Content lines
     for (let i = visibleStart; i < visibleEnd; i++) {
@@ -363,15 +356,6 @@ export class Editor implements UIElement, InteractiveElement {
         
         lines.push(display.substring(0, width).padEnd(width));
       }
-    }
-    
-    // Bottom border
-    const remaining = this.state.lines.length - visibleEnd;
-    if (remaining > 0) {
-      const indicator = `↓ ${remaining} more`;
-      lines.push(this.borderColor('─'.repeat(width - indicator.length - 1) + indicator));
-    } else {
-      lines.push(this.borderColor('─'.repeat(width)));
     }
     
     return lines;
@@ -543,9 +527,7 @@ export class Editor implements UIElement, InteractiveElement {
       this.state.cursorCol = 0;
       this.onChange?.(this.getText());
       
-      if (event.modifiers?.shift || event.modifiers?.ctrl) {
-        this.onSubmit?.(this.getText());
-      }
+      this.onSubmit?.(this.getText());
       return;
     }
     
