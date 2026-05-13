@@ -65,7 +65,7 @@ describe('SessionSelector', () => {
     it('should render a bordered box', () => {
       const result = selector.draw(defaultContext);
       expect(result[0].startsWith('┌')).toBe(true);
-      expect(result[result.length - 1].startsWith('┘')).toBe(true);
+      expect(result[result.length - 1].startsWith('└')).toBe(true);
     });
 
     it('should display title " Sessions "', () => {
@@ -105,7 +105,7 @@ describe('SessionSelector', () => {
       selector = new SessionSelector({ sessions: many });
       const result = selector.draw({ ...defaultContext, height: 10 });
       // Should only render a few sessions
-      const sessionLines = result.filter(l => l.includes('Sess'));
+      const sessionLines = result.filter(l => l.includes('Sess '));
       expect(sessionLines.length).toBeLessThanOrEqual(3);
     });
 

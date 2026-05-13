@@ -44,7 +44,7 @@ export class SessionSelector implements UIElement, InteractiveElement {
     lines.push('│' + titlePad + title + titlePad + '│');
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
 
-    for (let i = 0; i < this.sessions.length && i < context.height - 6; i++) {
+    for (let i = 0; i < this.sessions.length && i < context.height - 7; i++) {
       const session = this.sessions[i]!;
       const isSelected = i === this.selectedIndex;
       const prefix = isSelected ? '▶ ' : '  ';
