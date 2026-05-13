@@ -56,21 +56,19 @@ export class ProgressBar implements UIElement {
     const fillCount = Math.round((this.percent / 100) * this.width);
     const emptyCount = this.width - fillCount;
 
-    // Build bar line
-    const bar = this.fillColor + this.fillChar.repeat(fillCount) + this.emptyColor + this.emptyChar.repeat(emptyCount) + '\x1b[0m';
+    const barFill = this.fillColor + this.fillChar.repeat(fillCount);
+    const barEmpty = this.emptyColor + this.emptyChar.repeat(emptyCount);
+    const bar = barFill + barEmpty;
+
     const label = `${this.percent.toFixed(0)}%`;
+    const coloredLabel = this.labelColor + label + '\x1b[0m';
 
-    // Combine label and bar
-    let line = bar;
-    if (this.showLabel) {
-      line = ` ${label} ${bar} `;
-    }
-    const padding = Math.max(0, totalWidth - line.length);
-    const leftPad = Math.floor(padding / 2);
-    const rightPad = padding - leftPad;
-    line = ' '.repeat(leftPad) + line + ' '.repeat(rightPad);
+    const core = this.showLabel ? ` ${coloredLabel} ${bar}` : bar;
+    const coreLen = core.length;
+    const needed = totalWidth - coreLen - 4; // reserve space for reset
+    const leftPad = needed > 0 ? needed : 0;
+    const line = ' '.repeat(leftPad) + core + '\x1b[0m';
 
-    // If height > 1, pad with empty lines
     const lines: string[] = [line];
     for (let i = 1; i < this.height; i++) {
       lines.push(' '.repeat(totalWidth));

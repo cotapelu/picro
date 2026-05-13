@@ -167,7 +167,7 @@ describe('ProgressBar', () => {
     it('should reset color at end', () => {
       bar = new ProgressBar({ percent: 50 });
       const result = bar.draw(defaultContext);
-      expect(result[0]).toMatch(/\\x1b\[0m$/);
+      expect(result[0].endsWith('\x1b[0m')).toBe(true);
     });
 
     it('should center bar in available width', () => {
