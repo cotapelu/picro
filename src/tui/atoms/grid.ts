@@ -7,6 +7,7 @@
 
 import type { UIElement, RenderContext } from './base';
 import { ElementContainer } from './base';
+import { visibleWidth } from './internal-utils';
 
 export interface GridOptions {
   /** Number of columns */
@@ -62,10 +63,14 @@ export class Grid extends ElementContainer {
             rowSegments.push(' '.repeat(columnGap));
           }
           const childLines = childLinesArr[c];
-          const line = childLines[lineIdx] ?? '';
-          // Pad line to cellWidth with spaces to avoid width miscalc due to missing fill
-          const pad = cellWidth - (line.length); // crude; should use visibleWidth
-          rowSegments.push(line + ' '.repeat(Math.max(0, pad)));
+          let line = childLines[lineIdx] ?? '';
+          // Pad line to cellWidth when using multiple columns to align cells
+          if (columns > 1) {
+            const lineWidth = visibleWidth(line);
+            const pad = cellWidth - lineWidth;
+            line = line + ' '.repeat(Math.max(0, pad));
+          }
+          rowSegments.push(line);
         }
         lines.push(rowSegments.join(''));
       }
