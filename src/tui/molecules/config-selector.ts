@@ -45,7 +45,10 @@ export class ConfigSelector implements UIElement, InteractiveElement {
       const item = this.items[i]!;
       const isSelected = i === this.selectedIndex;
       const prefix = isSelected ? '▶ ' : '  ';
-      const line = prefix + item.key + ' = ' + String(item.value);
+      let line = prefix + item.key + ' = ' + String(item.value);
+      if (line.length > borderWidth) {
+        line = line.slice(0, borderWidth);
+      }
       lines.push('│' + line + ' '.repeat(borderWidth - line.length) + '│');
     }
 
