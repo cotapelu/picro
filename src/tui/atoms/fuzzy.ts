@@ -57,60 +57,38 @@ export function fuzzyMatch(text: string, query: string, options: FuzzyOptions = 
 	
 	if (qry.length === 0) return { score: 0, matches: [] };
 	
-	let score = 0;
+	// Find matches in order
 	const matches: number[] = [];
-	let queryIdx = 0;
-	let prevMatched = false;
-	let prevCharIsSeparator = true; // Start as if previous char is separator for beginning-of-word bonus
-	
-	for (let i = 0; i < str.length && queryIdx < qry.length; i++) {
-		const strChar = str[i];
-		const queryChar = qry[queryIdx];
-		
-		if (strChar === queryChar) {
-			matches.push(i);
-			
-			// Score adjustments
-			if (queryIdx === 0) {
-				// First character match - highly valuable
-				score += 0;
-			} else if (prevMatched) {
-				// Sequential match - good
-				score += 1;
-			} else {
-				// Non-sequential match - worse
-				score += 3;
+	let pos = 0;
+	for (let i = 0; i < qry.length; i++) {
+		const ch = qry[i];
+		let found = false;
+		for (; pos < str.length; pos++) {
+			if (str[pos] === ch) {
+				matches.push(pos);
+				pos++;
+				found = true;
+				break;
 			}
-			
-			// Bonus for matching at word boundaries or camelCase boundaries
-			if (prevCharIsSeparator) {
-				score -= 2; // Bonus for matching start of word
-			}
-			
-			prevMatched = true;
-			queryIdx++;
-		} else {
-			prevMatched = false;
 		}
-		
-		// Update separator flag
-		prevCharIsSeparator = /[\s\-_.\/]/.test(strChar) || 
-			(str[i] !== strChar && strChar.toUpperCase() === str[i]); // camelCase boundary
+		if (!found) {
+			return null;
+		}
 	}
-	
-	// If we didn't match all query characters, it's not a match
-	if (queryIdx < qry.length) {
-		return null;
+
+	// Compute score: total gaps (non-matching characters) between consecutive matches
+	let totalGap = 0;
+	for (let i = 1; i < matches.length; i++) {
+		totalGap += matches[i] - matches[i-1] - 1;
 	}
-	
-	// Normalize score by query length
-	score = score / query.length;
-	
+	// Normalize by text length to keep in [0,1] range
+	const score = totalGap / str.length;
+
 	// Apply threshold
 	if (opts.threshold && score > opts.threshold) {
 		return null;
 	}
-	
+
 	return { score, matches };
 }
 
