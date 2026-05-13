@@ -67,9 +67,9 @@ describe('stdin-buffer', () => {
     });
 
     it('should flush buffer on timeout', async () => {
+      vi.useFakeTimers();
       buffer.process('abc');
       // Fast-forward time
-      vi.useFakeTimers();
       vi.advanceTimersByTime(20);
       expect(onData).toHaveBeenCalledWith('abc');
       vi.useRealTimers();

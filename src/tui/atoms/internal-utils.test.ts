@@ -75,7 +75,7 @@ describe('internal-utils', () => {
 
     it('should handle multiple ANSI codes', () => {
       const s = '\x1b[1;31mBold Red\x1b[0m Normal';
-      expect(visibleWidth(s)).toBe(12); // "Bold Red" (8) + " Normal" (6)? Actually BoldRed=8, space+Normal=6 => total 14? Let's compute: "Bold Red" is 8? B-o-l-d-space-R-e-d = 8. " Normal" = 6. So total 14. But code will skip escapes. So visible = len("Bold Red Normal")? Actually string is "\x1b[1;31mBold Red\x1b[0m Normal". After stripping ANSI: "Bold Red Normal". That's 14 chars. So expect 14.
+      expect(visibleWidth(s)).toBe(15);
     });
   });
 

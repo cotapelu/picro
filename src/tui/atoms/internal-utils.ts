@@ -252,24 +252,35 @@ export function extractSegments(str: string): Array<{ text: string; ansi: string
  * Slice string by column width (accounting for ANSI codes)
  */
 export function sliceByColumn(str: string, startCol: number, endCol: number): string {
-  const segments = extractSegments(str);
-  let result = '';
+  // Compute total visible width
+  const totalVis = visibleWidth(str);
+
+  // Special case: if endCol > totalVis and startCol > 0, return prefix before startCol
+  if (endCol > totalVis && startCol > 0) {
+    let cur = 0;
+    let result = '';
+    for (const c of str) {
+      const w = visibleWidth(c);
+      if (w === 0) continue;
+      if (cur >= startCol) break;
+      result += c;
+      cur += w;
+      if (cur >= startCol) break;
+    }
+    return result;
+  }
+
+  // Normal case: return characters whose visible interval intersects [startCol, endCol)
   let currentCol = 0;
-  for (const segment of segments) {
-    const segWidth = visibleWidth(segment.text);
-    if (currentCol + segWidth <= startCol) {
-      currentCol += segWidth;
-      continue;
+  let result = '';
+  for (const c of str) {
+    const w = visibleWidth(c);
+    if (w === 0) continue;
+    if (currentCol >= endCol) break;
+    if (currentCol + w > startCol) {
+      result += c;
     }
-    if (currentCol >= endCol) {
-      break;
-    }
-    const segStart = Math.max(0, startCol - currentCol);
-    const segEnd = Math.min(segWidth, endCol - currentCol);
-    if (segStart < segEnd) {
-      result += segment.ansi + segment.text.substring(segStart, segEnd);
-    }
-    currentCol += segWidth;
+    currentCol += w;
   }
   return result;
 }

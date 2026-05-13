@@ -40,6 +40,8 @@ export interface DividerOptions {
   theme?: Partial<DividerTheme>;
   /** Padding around label */
   labelPadding?: number;
+  /** Custom character (overrides style) */
+  char?: string;
 }
 
 /**
@@ -62,6 +64,7 @@ export class Divider implements UIElement {
   private requestedWidth: number;
   private theme: DividerTheme;
   private labelPadding: number;
+  private char?: string;
 
   constructor(options: DividerOptions = {}) {
     this.label = options.label;
@@ -70,6 +73,7 @@ export class Divider implements UIElement {
     this.requestedWidth = options.width ?? 0;
     this.theme = { ...dividerDefaultTheme, ...options.theme };
     this.labelPadding = options.labelPadding ?? 2;
+    this.char = options.char;
   }
 
   /**
@@ -97,7 +101,7 @@ export class Divider implements UIElement {
   }
 
   private drawHorizontal(width: number): string[] {
-    const char = chars[this.style].horizontal;
+    const char = this.char || chars[this.style].horizontal;
     
     if (!this.label) {
       // Simple divider
@@ -131,7 +135,7 @@ export class Divider implements UIElement {
   }
 
   private drawVertical(height: number): string[] {
-    const char = chars[this.style].vertical;
+    const char = this.char || chars[this.style].vertical;
     const lines: string[] = [];
     
     for (let i = 0; i < height; i++) {

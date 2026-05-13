@@ -539,7 +539,7 @@ export class TerminalUI extends ElementContainer {
 		this.terminal.hideCursor();
 
 		// Query cell size for image rendering
-		this.queryCellSize();
+		this.terminal.queryCellSize();
 
 		// Initial render
 		this.requestRender();
@@ -624,7 +624,7 @@ export class TerminalUI extends ElementContainer {
 		}
 		if (this.renderRequested) return;
 		this.renderRequested = true;
-		process.nextTick(() => this.scheduleRender());
+		this.scheduleRender();
 	}
 
 	/**
@@ -1595,7 +1595,7 @@ export class TerminalUI extends ElementContainer {
 	 */
 	private startInertiaScroll(): void {
 		if (this.inertiaScrollTimer) return;
-		this.updateInertiaScroll();
+		this.inertiaScrollTimer = setTimeout(() => this.updateInertiaScroll(), this.INERTIA_TICK_RATE) as unknown as NodeJS.Timeout;
 	}
 
 	/**

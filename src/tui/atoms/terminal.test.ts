@@ -23,10 +23,10 @@ const mockStdout = {
   write: vi.fn(),
   on: vi.fn(),
   removeListener: vi.fn(),
-  get width() { return 80; },
-  get height() { return 24; },
-  get columns() { return 80; },
-  get rows() { return 24; },
+  width: 80,
+  height: 24,
+  columns: 80,
+  rows: 24,
   emit: vi.fn(),
 };
 

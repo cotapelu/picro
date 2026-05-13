@@ -27,7 +27,7 @@ describe('SkillInvocationMessage', () => {
       const msg = new SkillInvocationMessage({ name: 'Test', status: 'invoking' });
       const result = msg.draw(defaultContext);
       expect(result[0].startsWith('┌')).toBe(true);
-      expect(result[result.length - 1].startsWith('┘')).toBe(true);
+      expect(result[result.length - 1].startsWith('└')).toBe(true);
     });
 
     it('should show skill name and appropriate icon per status', () => {

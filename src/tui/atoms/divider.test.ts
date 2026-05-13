@@ -6,6 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { Divider } from './divider';
 import type { RenderContext } from './base';
+import { visibleWidth } from './internal-utils';
 
 const defaultContext: RenderContext = {
   width: 80,
@@ -26,7 +27,7 @@ describe('Divider', () => {
     const divider = new Divider();
     const narrow = { ...defaultContext, width: 10 };
     const result = divider.draw(narrow);
-    expect(result[0].length).toBeLessThanOrEqual(10);
+    expect(visibleWidth(result[0])).toBeLessThanOrEqual(10);
   });
 
   it('should accept custom character', () => {
@@ -39,6 +40,6 @@ describe('Divider', () => {
     const divider = new Divider();
     const ctx = { ...defaultContext, width: 0 };
     const result = divider.draw(ctx);
-    expect(result[0].length).toBe(0);
+    expect(visibleWidth(result[0])).toBe(0);
   });
 });

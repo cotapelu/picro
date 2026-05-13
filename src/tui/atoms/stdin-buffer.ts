@@ -157,40 +157,49 @@ export function isCompleteApcSequence(data: string): 'complete' | 'incomplete' {
  */
 export function extractCompleteSequences(buffer: string): { sequences: string[]; remainder: string } {
 	const sequences: string[] = [];
+	const remainParts: string[] = [];
 	let pos = 0;
 
 	while (pos < buffer.length) {
-		const remaining = buffer.slice(pos);
-
-		if (remaining.startsWith(ESC)) {
-			let seqEnd = 1;
-			while (seqEnd <= remaining.length) {
-				const candidate = remaining.slice(0, seqEnd);
-				const status = isCompleteSequence(candidate);
-
-				if (status === 'complete') {
-					sequences.push(candidate);
-					pos += seqEnd;
-					break;
-				} else if (status === 'incomplete') {
-					seqEnd++;
-				} else {
-					sequences.push(candidate);
-					pos += seqEnd;
-					break;
-				}
+	  const escIdx = buffer.indexOf(ESC, pos);
+	  if (escIdx === -1) {
+			// No more escape sequences, rest is remainder
+			remainParts.push(buffer.slice(pos));
+			break;
+		}
+		// Add non-escape part before this escape to remainder
+		if (escIdx > pos) {
+			remainParts.push(buffer.slice(pos, escIdx));
+		}
+		// Try to find a complete escape sequence starting at escIdx
+		let seq: string | null = null;
+		for (let end = escIdx + 1; end <= buffer.length; end++) {
+			const candidate = buffer.slice(escIdx, end);
+			const status = isCompleteSequence(candidate);
+			if (status === 'complete') {
+				seq = candidate;
+				pos = end;
+				break;
+			} else if (status === 'incomplete') {
+				continue;
+			} else {
+				// Not an escape sequence? treat as normal text and skip one char
+				seq = null;
+				pos = escIdx + 1;
+				remainParts.push(buffer[escIdx]);
+				break;
 			}
-
-			if (seqEnd > remaining.length) {
-				return { sequences, remainder: remaining };
-			}
+		}
+		if (seq) {
+			sequences.push(seq);
 		} else {
-			sequences.push(remaining[0]!);
-			pos++;
+			// Incomplete escape sequence, treat as remainder
+			remainParts.push(buffer.slice(pos));
+			break;
 		}
 	}
 
-	return { sequences, remainder: '' };
+	return { sequences, remainder: remainParts.join('') };
 }
 
 /**
@@ -207,6 +216,7 @@ export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {
 	private readonly options: Required<StdinBufferOptions>;
 	private pasteMode = false;
 	private pasteBuffer = '';
+	private destroyed = false;
 
 	constructor(options: StdinBufferOptions = {}) {
 		super();
@@ -218,6 +228,7 @@ export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {
 	 * Called by terminal with process.stdin.on('data').
 	 */
 	public process(data: string | Buffer): void {
+		if (this.destroyed) return;
 		// Clear any pending timeout
 		if (this.timeoutId) {
 			clearTimeout(this.timeoutId);
@@ -267,9 +278,7 @@ export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {
 		if (this.buffer.length > 0) {
 			this.timeoutId = setTimeout(() => {
 				const flushed = this.flush();
-				for (const sequence of flushed) {
-					this.emit('data', sequence);
-				}
+				if (flushed) this.emit('data', flushed);
 			}, this.options.timeout);
 		}
 	}
@@ -327,19 +336,19 @@ export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {
 	/**
 	 * Flush any buffered data
 	 */
-	flush(): string[] {
+	flush(): string {
 		if (this.timeoutId) {
 			clearTimeout(this.timeoutId);
 			this.timeoutId = null;
 		}
 
 		if (this.buffer.length === 0) {
-			return [];
+			return '';
 		}
 
-		const sequences = [this.buffer];
+		const data = this.buffer;
 		this.buffer = '';
-		return sequences;
+		return data;
 	}
 
 	/**
@@ -366,6 +375,12 @@ export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {
 	 * Destroy and cleanup
 	 */
 	destroy(): void {
+		this.destroyed = true;
+		// Flush any remaining buffered data before destroying
+		if (this.buffer.length > 0) {
+			this.emit('data', this.buffer);
+			this.buffer = '';
+		}
 		this.clear();
 		this.removeAllListeners();
 	}

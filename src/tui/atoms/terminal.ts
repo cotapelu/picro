@@ -236,6 +236,8 @@ export class ProcessTerminal implements Terminal {
 
 		// Pause stdin to prevent buffered input being re-interpreted
 		process.stdin.pause();
+		// Destroy stdin to free resources
+		process.stdin.destroy();
 
 		// Restore raw mode state
 		if (process.stdin.setRawMode) {
@@ -244,6 +246,7 @@ export class ProcessTerminal implements Terminal {
 	}
 
 	write(data: string): void {
+		if (data.length === 0) return;
 		process.stdout.write(data);
 	}
 
@@ -265,7 +268,7 @@ export class ProcessTerminal implements Terminal {
 
 	moveTo(row: number, col: number): void {
 		// ANSI escape sequence: move cursor to row, col (1-indexed)
-		process.stdout.write(`\x1b[${row};${col}H`);
+		process.stdout.write(`\x1b[${row + 1};${col + 1}H`);
 	}
 
 	hideCursor(): void {
@@ -281,7 +284,7 @@ export class ProcessTerminal implements Terminal {
 	}
 
 	clearFromCursor(): void {
-		process.stdout.write('\x1b[J');
+		process.stdout.write('\x1b[0J');
 	}
 
 	clearScreen(): void {
@@ -297,7 +300,7 @@ export class ProcessTerminal implements Terminal {
 	 * Uses CSI 16 t to query cell size
 	 */
 	async queryCellSize(): Promise<{ width: number; height: number }> {
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
 			// Default fallback values
 			const fallback = { width: 9, height: 18 };
 
@@ -310,19 +313,22 @@ export class ProcessTerminal implements Terminal {
 			}, 500);
 
 			const onResponse = (data: string) => {
-				// Response format: \x1b[6;row;colR
+				// Response format: \x1b[6;row;colt
 				const match = data.match(/^\x1b\[6;(\d+);(\d+)t$/);
 				if (match) {
 					clearTimeout(timeout);
 					process.stdin.removeListener('data', onResponse);
-					// Note: CSI 16 t actually returns character cell dimensions
-					// Format: \x1b[6;rows;colsR where rows/cols are in pixels
-					// But many terminals don't support this, so we use defaults
-					resolve(fallback);
+					const height = parseInt(match[1], 10);
+					const width = parseInt(match[2], 10);
+					resolve({ width, height });
+				} else {
+					clearTimeout(timeout);
+					process.stdin.removeListener('data', onResponse);
+					reject(new Error('Invalid response'));
 				}
 			};
 
-			process.stdin.on('data', onResponse);
+			this.stdinBuffer?.on('data', onResponse);
 		});
 	}
 

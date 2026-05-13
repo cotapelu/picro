@@ -21,6 +21,7 @@ export const defaultTokenColors: Record<string, string> = {
 	keyword: '\x1b[35m', // magenta
 	string: '\x1b[32m', // green
 	comment: '\x1b[2;33m', // dim yellow
+	emphasis: '\x1b[2m', // dim for italic
 	number: '\x1b[34m', // blue
 	function: '\x1b[36m', // cyan
 	class: '\x1b[36m',
@@ -185,6 +186,8 @@ export class Markdown implements UIElement {
 			keyword: '\x1b[35m', // magenta
 			string: '\x1b[32m', // green
 			comment: '\x1b[2;33m', // dim yellow
+			emphasis: '\x1b[2m', // dim for italic
+			strong: '\x1b[1m', // bold for strong
 			number: '\x1b[34m', // blue
 			function: '\x1b[36m', // cyan
 			class: '\x1b[36m',
@@ -210,7 +213,10 @@ export class Markdown implements UIElement {
 		}
 		try {
 			const result = hljs.highlight(code, { language: lang, ignoreIllegals: true }) as any;
-			const tokens = result.tokens || [];
+			if (!result || !result.tokens) {
+				return code.split('\n');
+			}
+			const tokens = result.tokens;
 			const flat = this.flattenTokens(tokens);
 			// Build lines preserving newlines
 			const lines: string[] = [];
@@ -408,7 +414,7 @@ export class Markdown implements UIElement {
 		// Bold **text**
 		let result = text.replace(/\*\*(.*?)\*\*/g, '\x1b[1m$1\x1b[22m');
 		// Italic *text* (but not **)
-		result = result.replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '\x1b[3m$1\x1b[23m');
+		result = result.replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '\x1b[2m$1\x1b[22m');
 		// Code `text`
 		result = result.replace(/`(.*?)`/g, '\x1b[32m$1\x1b[39m'); // green
 		// Memory citations [digits]

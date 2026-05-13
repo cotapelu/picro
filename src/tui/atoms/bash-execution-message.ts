@@ -8,6 +8,7 @@ export interface BashExecutionMessageOptions {
   exitCode?: number | null;
   isRunning?: boolean;
   isCancelled?: boolean;
+  truncated?: boolean;
   expanded?: boolean;
   truncationInfo?: {
     hiddenLines?: number;

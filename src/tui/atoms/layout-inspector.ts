@@ -3,6 +3,7 @@
  * Visual overlay showing terminal layout and component boundaries
  */
 import type { UIElement, RenderContext } from './base';
+import { truncateText } from './internal-utils';
 
 export interface LayoutInfo {
   panels: Array<{ top: number; left: number; width: number; height: number }>;
@@ -58,7 +59,7 @@ export class LayoutInspector implements UIElement {
       const line = stats[i];
       const row = 1 + i;
       const maxLen = width - 4;
-      const display = line.length <= maxLen ? line : line.substring(0, maxLen) + '…';
+      const display = truncateText(line, maxLen, '…');
       lines[row] = '│ ' + display.padEnd(maxLen) + ' │';
     }
 

@@ -77,6 +77,7 @@ export class Stepper implements UIElement {
   clearCache(): void {}
 
   draw(context: RenderContext): string[] {
+    if (this.steps.length === 0) return [];
     if (this.vertical) {
       return this.drawVertical(context);
     }
