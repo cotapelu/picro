@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Input } from './input';
 import type { RenderContext, KeyEvent } from '../atoms/base';
+import { visibleWidth } from '../atoms/internal-utils';
 
 const defaultContext: RenderContext = {
   width: 80,
@@ -149,7 +150,7 @@ describe('Input', () => {
       input.isFocused = true;
       const result = input.draw(defaultContext);
       // The rendered line should be truncated
-      expect(result[0].length).toBeLessThanOrEqual(7); // some margin
+      expect(visibleWidth(result[0])).toBeLessThanOrEqual(5); // maxWidth
     });
 
     it('should handle empty value when focused', () => {
