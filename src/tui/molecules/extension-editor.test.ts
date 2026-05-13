@@ -66,7 +66,7 @@ describe('ExtensionEditor', () => {
     it('should render a bordered box', () => {
       const result = editor.draw(defaultContext);
       expect(result[0].startsWith('┌')).toBe(true);
-      expect(result[result.length - 1].startsWith('┘')).toBe(true);
+      expect(result[result.length - 1].startsWith('└')).toBe(true);
     });
 
     it('should display title with language', () => {
@@ -146,7 +146,7 @@ describe('ExtensionEditor', () => {
     it('should handle backspace', () => {
       editor['cursorCol'] = 5;
       editor.handleKey(createKeyEvent('\x7f'));
-      expect(editor['content']).toBe('Hello\nWorld');
+      expect(editor['content']).toBe('Hell\nWorld');
     });
 
     it('should handle Enter to insert new line', () => {

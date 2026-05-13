@@ -42,10 +42,10 @@ export class ExtensionEditor implements UIElement, InteractiveElement {
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
 
     const contentLines = this.content.split('\n');
-    for (let i = 0; i < height - 6 && i < contentLines.length; i++) {
+    for (let i = 0; i < height - 7 && i < contentLines.length; i++) {
       const lineNum = String(i + 1).padStart(4);
       let line = lineNum + ' │ ' + contentLines[i];
-      if (i === this.cursorLine) {
+      if (this.isFocused && i === this.cursorLine) {
         const cursorPos = 7 + this.cursorCol;
         if (cursorPos < line.length) {
           line = line.slice(0, cursorPos) + CURSOR_MARKER + line.slice(cursorPos);
@@ -54,14 +54,13 @@ export class ExtensionEditor implements UIElement, InteractiveElement {
       lines.push('│' + line.slice(0, borderWidth) + ' '.repeat(Math.max(0, borderWidth - line.length)) + '│');
     }
 
-    while (lines.length < height - 3) {
+    while (lines.length < height - 4) {
       lines.push('│' + ' '.repeat(borderWidth) + '│');
     }
 
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
     const info = 'Lines: ' + contentLines.length + ' | Col: ' + (this.cursorCol + 1);
     lines.push('│' + info + ' '.repeat(Math.max(0, borderWidth - info.length)) + '│');
-    lines.push('├' + '─'.repeat(borderWidth) + '┤');
     const help = 'Ctrl+S save  Esc cancel';
     lines.push('│ ' + help + ' '.repeat(Math.max(0, borderWidth - help.length - 2)) + '│');
     lines.push('└' + '─'.repeat(borderWidth) + '┘');
