@@ -378,12 +378,18 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.setStatus('Session forked');
   }
 
-  private handleThinkingSelector(): void {
-    if (this.thinkingSelector) {
-      this.widgetAboveContainer.clear();
-      this.widgetAboveContainer.append(this.thinkingSelector as any);
-      this.tui.setFocus(this.thinkingSelector as any);
+  public handleThinkingSelector(): void {
+    if (!this.thinkingSelector) {
+      this.thinkingSelector = new ThinkingSelector({
+        availableLevels: this.thinkingAvailableLevels,
+        currentLevel: this.thinkingLevel,
+        onSelect: (level) => {
+          this.thinkingLevel = level;
+          this.setStatus(`Thinking level set to ${level}`);
+        },
+      });
     }
+    this.tui.showPanel(this.thinkingSelector as any);
   }
 
   private handleLogin(): void {
@@ -404,6 +410,22 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.widgetAboveContainer.append(this.loginDialog as any);
     this.tui.setFocus(this.loginDialog as any);
     this.tui.requestRender();
+  }
+
+  public handleCommandPalette(): void {
+    if (!this.commandPalette) {
+      this.commandPalette = new CommandPalette({
+        commands: this.commands.map(c => ({
+          id: c.id,
+          label: c.label,
+          shortcut: c.shortcut,
+          description: c.description,
+          category: c.category,
+          onExecute: c.onExecute,
+        })),
+      });
+    }
+    this.tui.showPanel(this.commandPalette as any);
   }
 
   private handleClearChat(): void {
