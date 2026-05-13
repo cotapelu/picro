@@ -88,7 +88,10 @@ export function parseDiffLine(line: string): { type: DiffLineType; content: stri
 
   // Context line (space)
   if (line.startsWith(' ') || line === '') {
-    return { type: 'context', content: line.startsWith(' ') ? line.slice(1) : line };
+    let content = line.startsWith(' ') ? line.slice(1) : line;
+    // Trim trailing whitespace for cleaner display
+    content = content.trimEnd();
+    return { type: 'context', content };
   }
 
   return { type: 'context', content: line };
@@ -259,10 +262,10 @@ export class Diff implements UIElement {
             const styledNew = newChanged.replace(/{inverse}(.*?){\/inverse}/g, (_, m) => this.theme.inverseColor(m));
             
             lines.push(this.formatLineIntra('removed', styledOld, removedBuffer.lineNum, null));
-            lines.push(this.formatLineIntra('added', styledNew, null, newLineNum));
+            lines.push(this.formatLineIntra('added', styledNew, removedBuffer.lineNum, newLineNum));
             removedBuffer = null;
           } else {
-            lines.push(this.formatLine('added', parsed.content, null, newLineNum));
+            lines.push(this.formatLine('added', parsed.content, oldLineNum, newLineNum));
           }
           newLineNum++;
           break;
