@@ -12,6 +12,13 @@ import {
   SlashCommandAutocompleteProvider,
   FilePathAutocompleteProvider,
 } from './autocomplete';
+import { afterEach } from 'vitest';
+import { promises as fsPromises } from 'fs';
+import * as path from 'path';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 // Mock fs and path for FilePath provider
 vi.mock('fs', () => ({
@@ -88,16 +95,16 @@ describe('Autocomplete', () => {
     });
 
     it('should return empty if directory does not exist', async () => {
-      (require('fs').promises.stat as any).mockRejectedValue(new Error());
+      vi.spyOn(fsPromises, 'stat').mockRejectedValue(new Error());
       const result = await provider.complete({ query: '/nonexistent/', cursorPos: 14, line: '/nonexistent/' });
       expect(result).toHaveLength(0);
     });
 
     it('should return files in directory if query ends with /', async () => {
-      (require('fs').promises.stat as any).mockResolvedValue({ isDirectory: () => true } as any);
-      (require('fs').promises.readdir as any).mockResolvedValue(['file1.txt', 'file2.txt']);
-      (require('path').dirname as any).mockReturnValue('/test');
-      (require('path').basename as any).mockReturnValue('');
+      vi.spyOn(fsPromises, 'stat').mockResolvedValue({ isDirectory: () => true } as any);
+      vi.spyOn(fsPromises, 'readdir').mockResolvedValue(['file1.txt', 'file2.txt']);
+      vi.spyOn(path, 'dirname').mockReturnValue('/test');
+      vi.spyOn(path, 'basename').mockReturnValue('');
 
       const result = await provider.complete({ query: '/test/', cursorPos: 6, line: '/test/' });
       expect(result.length).toBeGreaterThan(0);
