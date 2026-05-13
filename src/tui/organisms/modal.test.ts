@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Modal, modalDefaultTheme, type ModalButton, type ModalTheme } from './modal';
 import type { RenderContext, KeyEvent } from '../atoms/base';
+import { visibleWidth } from '../atoms/internal-utils';
 
 const defaultContext: RenderContext = {
   width: 80,
@@ -110,9 +111,9 @@ describe('Modal', () => {
       expect(modal['onCancel']).toBe(onCancel);
     });
 
-    it('should initialize selectedIndex to 0', () => {
+    it('should initialize selectedIndex to primary button if available', () => {
       modal = new Modal({ title: 'T', message: 'M', buttons });
-      expect(modal['selectedIndex']).toBe(0);
+      expect(modal['selectedIndex']).toBe(1); // primary button is at index 1
     });
 
     it('should default isFocused to true', () => {
@@ -165,9 +166,8 @@ describe('Modal', () => {
     it('should respect requested width', () => {
       const result = modal.draw(defaultContext);
       // All lines should be <= width (maybe less due to padding)
-      const vw = require('../atoms/internal-utils').visibleWidth;
       result.forEach(line => {
-        expect(vw(line)).toBeLessThanOrEqual(defaultContext.width);
+        expect(visibleWidth(line)).toBeLessThanOrEqual(defaultContext.width);
       });
     });
 
@@ -257,7 +257,7 @@ describe('Modal', () => {
 
   describe('confirm()', () => {
     it('should call onResult with button value', () => {
-      modal = new Modal({ title: 'T', message: 'M', buttons });
+      modal = new Modal({ title: 'T', message: 'M', buttons, onResult });
       modal['selectedIndex'] = 0;
       modal['confirm']();
       expect(onResult).toHaveBeenCalledWith('cancel');
