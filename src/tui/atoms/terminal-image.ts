@@ -115,7 +115,7 @@ export function getCapabilities(): TerminalCapabilities {
   if (!cachedCapabilities) {
     cachedCapabilities = detectCapabilities();
   }
-  return { ...cachedCapabilities };
+  return cachedCapabilities!;
 }
 
 export function resetCapabilitiesCache(): void {

@@ -15,7 +15,6 @@ import {
   encodeKitty,
   KITTY_PREFIX,
   ITERM2_PREFIX,
-  ITERM2_PREFIX,
   ScaleMode,
 } from './terminal-image';
 
@@ -30,6 +29,9 @@ describe('terminal-image', () => {
   });
 
   describe('getCapabilities()', () => {
+    beforeEach(() => {
+      resetCapabilitiesCache();
+    });
     it('should detect Kitty terminal', () => {
       vi.stubEnv('KITTY_WINDOW_ID', '123');
       const caps = getCapabilities();
@@ -50,6 +52,9 @@ describe('terminal-image', () => {
 
     it('should return null images for VSCode', () => {
       vi.stubEnv('TERM_PROGRAM', 'vscode');
+      vi.stubEnv('KITTY_WINDOW_ID', '');
+      vi.stubEnv('WEZTERM_PANE', '');
+      vi.stubEnv('ITERM_SESSION_ID', '');
       const caps = getCapabilities();
       expect(caps.images).toBeNull();
     });
@@ -61,6 +66,10 @@ describe('terminal-image', () => {
     });
 
     it('should reset cache on resetCapabilitiesCache', () => {
+      // Ensure clean environment for detection
+      vi.stubEnv('KITTY_WINDOW_ID', '');
+      vi.stubEnv('WEZTERM_PANE', '');
+      vi.stubEnv('ITERM_SESSION_ID', '');
       getCapabilities();
       setCapabilities({ images: 'kitty', trueColor: true, hyperlinks: true });
       getCapabilities(); // returns overridden
