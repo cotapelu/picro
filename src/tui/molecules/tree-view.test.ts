@@ -12,13 +12,13 @@ import { matchesKey } from '../atoms/keys';
 vi.mock('../atoms/keys', () => ({
   matchesKey: (raw: string, action: string) => {
     const map: Record<string, Set<string>> = {
-      up: new Set(['\u001b[A', 'ArrowUp', 'k']),
-      down: new Set(['\u001b[B', 'ArrowDown', 'j']),
-      pageup: new Set(['\u001b[5~', 'PageUp']),
-      pagedown: new Set(['\u001b[6~', 'PageDown']),
+      up: new Set(['\u001b[A', 'ArrowUp', 'k', '001b[A']),
+      down: new Set(['\u001b[B', 'ArrowDown', 'j', '001b[B']),
+      pageup: new Set(['\u001b[5~', 'PageUp', '001b[5~']),
+      pagedown: new Set(['\u001b[6~', 'PageDown', '001b[6~']),
       enter: new Set(['\r', 'Enter']),
-      left: new Set(['\u001b[D', 'ArrowLeft', 'h']),
-      right: new Set(['\u001b[C', 'ArrowRight', 'l']),
+      left: new Set(['\u001b[D', 'ArrowLeft', 'h', '001b[D']),
+      right: new Set(['\u001b[C', 'ArrowRight', 'l', '001b[C']),
       escape: new Set(['\u001b', 'Escape']),
     };
     return map[action]?.has(raw) ?? false;
@@ -134,6 +134,7 @@ describe('TreeView', () => {
 
     it('should recalculate depth correctly', () => {
       treeData[0].expanded = true;
+      treeData[1].expanded = true; // also expand second root
       treeView = new TreeView({ data: treeData });
       const root1Node = treeView['visibleNodes'].find(v => v.node.id === 'child1');
       expect(root1Node?.depth).toBe(1);
@@ -165,6 +166,11 @@ describe('TreeView', () => {
     });
 
     it('should move scroll down when selectedIndex below viewport', () => {
+      // Expand root nodes to increase visible nodes count
+      treeData[0].expanded = true;
+      treeData[1].expanded = true;
+      treeView.recomputeVisible();
+      treeView.visibleRows = 5;
       treeView['selectedIndex'] = 5;
       treeView['scrollOffset'] = 0;
       treeView.adjustScroll();
@@ -406,6 +412,8 @@ describe('TreeView', () => {
         ],
       };
       treeView = new TreeView({ data: [deep] });
+      // Expand all levels so deep child is visible
+      deep.expanded = true;
       deep.children[0].expanded = true;
       deep.children[0].children[0].expanded = true;
       treeView.recomputeVisible();

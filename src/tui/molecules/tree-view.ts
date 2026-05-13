@@ -192,8 +192,7 @@ export class TreeView implements UIElement, InteractiveElement {
 
   /** Deserialize state */
   deserializeState(state: any): void {
-    if (state.selectedIndex !== undefined) this.selectedIndex = state.selectedIndex;
-    if (state.scrollOffset !== undefined) this.scrollOffset = state.scrollOffset;
+    // Apply expanded state first
     if (state.expanded) {
       const apply = (nodes: TreeViewTreeNode[]) => {
         for (const n of nodes) {
@@ -203,8 +202,11 @@ export class TreeView implements UIElement, InteractiveElement {
       };
       apply(this.data);
     }
+    // Recompute visible nodes based on expanded state
     this.recomputeVisible();
-    this.adjustScroll();
+    // Restore selectedIndex and scrollOffset exactly
+    if (state.selectedIndex !== undefined) this.selectedIndex = state.selectedIndex;
+    if (state.scrollOffset !== undefined) this.scrollOffset = state.scrollOffset;
   }
 
   clearCache(): void {
