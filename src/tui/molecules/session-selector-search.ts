@@ -48,8 +48,12 @@ export class SessionSearchSelector implements UIElement, InteractiveElement {
     lines.push('│' + searchDisplay + ' '.repeat(Math.max(0, borderWidth - searchDisplay.length)) + '│');
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
 
-    for (let i = 0; i < this.results.length && i < context.height - 8; i++) {
-      const result = this.results[i]!;
+    // Filter sessions based on searchQuery (case-insensitive prefix)
+    const filtered = this.searchQuery
+      ? this.sessions.filter(s => s.name.toLowerCase().startsWith(this.searchQuery.toLowerCase()))
+      : this.sessions;
+    for (let i = 0; i < filtered.length && i < context.height - 8; i++) {
+      const result = filtered[i]!;
       const isSelected = i === this.selectedIndex;
       const prefix = isSelected ? '▶ ' : '  ';
       lines.push('│' + prefix + result.name + ' '.repeat(Math.max(0, borderWidth - prefix.length - result.name.length)) + '│');
