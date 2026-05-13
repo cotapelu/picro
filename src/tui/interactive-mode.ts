@@ -387,6 +387,10 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
           this.thinkingLevel = level;
           this.setStatus(`Thinking level set to ${level}`);
         },
+        onCancel: () => {
+          this.widgetAboveContainer.clear();
+          this.tui.setFocus(this.editor as any);
+        },
       });
     }
     this.tui.showPanel(this.thinkingSelector as any);
