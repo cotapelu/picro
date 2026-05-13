@@ -293,7 +293,9 @@ export class ContextMenu implements UIElement, InteractiveElement {
         line = line.slice(0, -shortcutWidth) + ' ' + shortcut;
       }
 
-      const styled = this.theme.borderColor('│ ') + line + this.theme.borderColor(' │');
+      // Apply background color to content
+      const content = this.theme.bgColor(line);
+      const styled = this.theme.borderColor('│') + content + this.theme.borderColor('│');
       
       if (isSelected) {
         lines.push(this.theme.selectedBg(styled));

@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ContextMenu, contextMenuDefaultTheme, type MenuItem } from './context-menu';
 import type { RenderContext, KeyEvent } from '../atoms/base';
+import { visibleWidth } from '../atoms/internal-utils';
 
 const defaultContext: RenderContext = {
   width: 80,
@@ -87,7 +88,8 @@ describe('ContextMenu', () => {
 
     it('should return null if selected item is disabled', () => {
       menu = new ContextMenu({ items });
-      menu['selectedIndex'] = 3; // Delete is disabled
+      // After filtering, items: Copy(0), Paste(1), Delete(2), Select All(3)
+      menu['selectedIndex'] = 2; // Delete is disabled
       const sel = menu.getSelectedItem();
       expect(sel).toBeNull();
     });
@@ -145,9 +147,8 @@ describe('ContextMenu', () => {
     it('should respect requested width', () => {
       menu = new ContextMenu({ items, width: 30 });
       const result = menu.draw(defaultContext);
-      const vw = require('../atoms/internal-utils').visibleWidth;
       result.forEach(l => {
-        expect(vw(l)).toBeLessThanOrEqual(30);
+        expect(visibleWidth(l)).toBeLessThanOrEqual(30);
       });
     });
 
@@ -166,7 +167,7 @@ describe('ContextMenu', () => {
 
   describe('handleKey()', () => {
     beforeEach(() => {
-      menu = new ContextMenu({ items });
+      menu = new ContextMenu({ items, onClose });
       menu.isFocused = true;
     });
 
