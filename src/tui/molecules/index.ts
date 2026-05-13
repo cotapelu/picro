@@ -9,7 +9,7 @@ export * from './tree-view';
 // Input & Controls
 export * from './input';
 export * from './countdown-timer';
-export * from './loader';
+export { BorderedLoader as Loader } from './loader';
 export * from './cancellable-loader';
 
 // Forms
