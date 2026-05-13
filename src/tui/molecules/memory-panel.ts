@@ -38,8 +38,9 @@ export class MemoryPanel implements UIElement {
     this.maxDisplay = options.maxDisplay ?? 10;
     this.onSelect = options.onSelect;
     this.onDelete = options.onDelete;
+    this.items = this.buildItems();
     this.selectList = new SelectList(
-      this.buildItems(),
+      this.items,
       this.maxDisplay,
       {},
       (value) => {
@@ -59,8 +60,8 @@ export class MemoryPanel implements UIElement {
   private buildItems(): SelectItem[] {
     const displayList = this.memories.slice(0, this.maxDisplay);
     return displayList.map(m => {
-      const snippet = this.truncate(m.content, 80);
-      const score = m.score !== undefined ? `[${(m.score * 100).toFixed(0)}%] ` : '';
+      const snippet = this.truncate(m.content, 30);
+      const score = m.score !== undefined ? `${(m.score * 100).toFixed(0)}% ` : '';
       const meta = m.metadata?.source ? `[${m.metadata.source}]` : '';
       const label = `${score}${snippet}${meta}`;
       return {

@@ -55,9 +55,8 @@ describe('MemoryPanel', () => {
     });
 
     it('should truncate long content', () => {
-      panel = new MemoryPanel({ memories, maxDisplay: 1 });
-      const label = panel['items'][0].label;
-      // The third memory content should be truncated
+      panel = new MemoryPanel({ memories, maxDisplay: 3 });
+      const label = panel['items'][2].label; // third memory
       expect(label).toContain('...');
     });
   });
