@@ -60,7 +60,7 @@ describe('ModelSelector', () => {
     it('should render a bordered box', () => {
       const result = selector.draw(defaultContext);
       expect(result[0].startsWith('┌')).toBe(true);
-      expect(result[result.length - 1].startsWith('┘')).toBe(true);
+      expect(result[result.length - 1].startsWith('└')).toBe(true);
     });
 
     it('should display title " Select Model "', () => {

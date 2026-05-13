@@ -49,9 +49,13 @@ export class ModelSelector implements UIElement, InteractiveElement {
       const model = this.models[i]!;
       const isSelected = i === this.selectedIndex;
       const prefix = isSelected ? '▶ ' : '  ';
-      const ctxStr = model.contextWindow >= 1000000 ? (model.contextWindow / 1000000) + 'M' : (model.contextWindow / 1000) + 'K';
-      const line = prefix + model.name + ' [' + model.provider + '] ' + ctxStr;
-      lines.push('│' + truncateText(line, borderWidth) + ' '.repeat(Math.max(0, borderWidth - visibleWidth(line))) + '│');
+      const ctxStr = model.contextWindow >= 1000000
+        ? Math.round(model.contextWindow / 1000000) + 'M'
+        : Math.round(model.contextWindow / 1000) + 'K';
+      let line = prefix + model.name + ' [' + model.provider + '] ' + ctxStr;
+      const truncated = truncateText(line, borderWidth);
+      const pad = Math.max(0, borderWidth - visibleWidth(truncated));
+      lines.push('│' + truncated + ' '.repeat(pad) + '│');
     }
 
     while (lines.length < context.height - 3) {
@@ -59,7 +63,10 @@ export class ModelSelector implements UIElement, InteractiveElement {
     }
 
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
-    const help = '↑↓ navigate  Enter select  Esc cancel';
+    let help = '↑↓ navigate  Enter select  Esc cancel';
+    if (help.length > borderWidth - 2) {
+      help = help.slice(0, borderWidth - 2);
+    }
     lines.push('│ ' + help + ' '.repeat(borderWidth - help.length - 2) + '│');
     lines.push('└' + '─'.repeat(borderWidth) + '┘');
 
