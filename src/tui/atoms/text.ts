@@ -98,6 +98,11 @@ export class Text implements UIElement {
 			return txt;
 		});
 
+		// Handle zero or negative width by returning empty lines
+		if (width <= 0) {
+			return lines.map(() => '');
+		}
+
 		// Apply styling and alignment
 		const styledLines = lines.map(line => this.styleLine(line, width));
 
@@ -147,17 +152,11 @@ export class Text implements UIElement {
 	private applyStyles(text: string): string {
 		const styles: string[] = [];
 
-		if (this.color) {
-			styles.push(String(this.getColorCode(this.color)));
-		}
-
-		if (this.bgColor) {
-			styles.push(String(this.getBgColorCode(this.bgColor)));
-		}
-
 		if (this.bold) styles.push('1');
+		if (this.color) styles.push(String(this.getColorCode(this.color)));
 		if (this.dim) styles.push('2');
 		if (this.underline) styles.push('4');
+		if (this.bgColor) styles.push(String(this.getBgColorCode(this.bgColor)));
 
 		if (styles.length > 0) {
 			return '\x1b[' + styles.join(';') + 'm' + text + '\x1b[0m';
