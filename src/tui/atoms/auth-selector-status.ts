@@ -40,7 +40,8 @@ export class AuthSelectorStatus implements UIElement {
     for (const status of this.statuses) {
       const icon = status.status === 'authenticated' ? '✓' : status.status === 'expired' ? '⚠' : status.status === 'error' ? '✗' : '○';
       const nameCol = status.providerId.padEnd(15);
-      const line = ' ' + icon + ' ' + nameCol + ' ' + status.status;
+      const emailPart = status.email ? ` (${status.email})` : '';
+      const line = ' ' + icon + ' ' + nameCol + ' ' + status.status + emailPart;
       lines.push('│' + line + ' '.repeat(borderWidth - line.length) + '│');
     }
 
