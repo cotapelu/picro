@@ -48,7 +48,10 @@ export class ScopedModelsSelector implements UIElement, InteractiveElement {
       const isSelected = i === this.selectedIndex;
       const prefix = isSelected ? '▶ ' : '  ';
       const scope = '[' + model.scope + ']';
-      const line = prefix + scope + ' ' + truncateText(model.name, 25);
+      let line = prefix + scope + ' ' + truncateText(model.name, 25);
+      if (line.length > borderWidth) {
+        line = line.slice(0, borderWidth);
+      }
       lines.push('│' + line + ' '.repeat(borderWidth - line.length) + '│');
     }
 
@@ -57,7 +60,10 @@ export class ScopedModelsSelector implements UIElement, InteractiveElement {
     }
 
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
-    const help = '↑↓ select  Enter select  Esc cancel';
+    let help = '↑↓ select  Enter select  Esc cancel';
+    if (help.length > borderWidth - 2) {
+      help = help.slice(0, borderWidth - 2);
+    }
     lines.push('│ ' + help + ' '.repeat(borderWidth - help.length - 2) + '│');
     lines.push('└' + '─'.repeat(borderWidth) + '┘');
 

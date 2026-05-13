@@ -82,7 +82,7 @@ describe('ScopedModelsSelector', () => {
     it('should navigate and select', () => {
       selector.handleKey(createKeyEvent('down'));
       expect(selector['selectedIndex']).toBe(1);
-      selector.handleKey('\r');
+      selector.handleKey(createKeyEvent('\r'));
       expect(onSelect).toHaveBeenCalledWith(models[1]);
     });
 
