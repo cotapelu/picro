@@ -6,6 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { BashExecutionMessage } from './bash-execution-message';
 import type { RenderContext } from './base';
+import { visibleWidth } from './internal-utils';
 
 const defaultContext: RenderContext = {
   width: 80,
@@ -70,7 +71,7 @@ describe('BashExecutionMessage', () => {
       msg.appendOutput('output');
       const result = msg.draw(defaultContext);
       result.forEach(l => {
-        expect(l.length).toBeLessThanOrEqual(defaultContext.width);
+        expect(visibleWidth(l)).toBeLessThanOrEqual(defaultContext.width);
       });
     });
   });

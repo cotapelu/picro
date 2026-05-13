@@ -24,14 +24,17 @@ export interface BashExecutionMessageOptions {
 export class BashExecutionMessage implements UIElement {
   private previewLines = 20;
 
-  constructor(private opts: BashExecutionMessageOptions = { command: '' }) {}
+  constructor(private opts: BashExecutionMessageOptions = { command: '' }) {
+    // Default isRunning to true if not explicitly set to false
+    this.opts = { ...this.opts, isRunning: this.opts.isRunning !== false };
+  }
 
   setOutput(output: string): void {
     this.opts = { ...this.opts, output };
   }
 
-  setComplete(exitCode: number | null, cancelled?: boolean): void {
-    this.opts = { ...this.opts, exitCode, isCancelled: cancelled, isRunning: false };
+  setComplete(exitCode: number | null, cancelledOrTruncated?: boolean): void {
+    this.opts = { ...this.opts, exitCode, isRunning: false, truncated: cancelledOrTruncated };
   }
 
   setExpanded(expanded: boolean): void {
@@ -66,6 +69,11 @@ export class BashExecutionMessage implements UIElement {
     // Command header
     const header = `$ ${this.opts.command}`;
     lines.push(' '.repeat(padSize) + statusColor + '\x1b[1m' + header + '\x1b[0m');
+
+    // Spinner when running
+    if (this.opts.isRunning) {
+      lines.push(' '.repeat(padSize) + '\x1b[90m⠋\x1b[0m');
+    }
 
     // Output
     if (this.opts.output) {
@@ -110,18 +118,17 @@ export class BashExecutionMessage implements UIElement {
     } else if (this.opts.isCancelled) {
       statusParts.push('\x1b[33m(cancelled)\x1b[0m');
     } else if (this.opts.exitCode !== undefined && this.opts.exitCode !== null) {
-      if (this.opts.exitCode === 0) {
-        statusParts.push('\x1b[32m✓ Done\x1b[0m');
-      } else {
-        statusParts.push(`\x1b[31m✗ Exit ${this.opts.exitCode}\x1b[0m`);
-      }
+      const codeColor = this.opts.exitCode === 0 ? '\x1b[32m' : '\x1b[31m';
+      statusParts.push(`${codeColor}exit ${this.opts.exitCode}\x1b[0m`);
     }
 
     // Truncation warning
-    if (this.opts.truncationInfo?.truncated && this.opts.truncationInfo.fullPath) {
-      statusParts.push(
-        '\x1b[33mOutput truncated. Full output: ' + this.opts.truncationInfo.fullPath + '\x1b[0m'
-      );
+    if (this.opts.truncated || (this.opts.truncationInfo?.truncated && this.opts.truncationInfo.fullPath)) {
+      if (this.opts.truncationInfo?.fullPath) {
+        statusParts.push('\x1b[33mOutput truncated. Full output: ' + this.opts.truncationInfo.fullPath + '\x1b[0m');
+      } else {
+        statusParts.push('\x1b[33m(truncated)\x1b[0m');
+      }
     }
 
     if (statusParts.length > 0) {
