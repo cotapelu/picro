@@ -42,7 +42,7 @@ export class CustomMessage implements UIElement {
       textContent = this.opts.content
         .filter((c): c is { type: string; text: string } => c.type === 'text')
         .map((c) => c.text)
-        .join('\n');
+        .join(' ');
     }
 
     // Label/header with custom type
