@@ -33,6 +33,24 @@ export class TreeSelector implements UIElement, InteractiveElement {
     this.expandedDirs.add(options.root.path);
     this.onSelect = options.onSelect;
     this.onCancel = options.onCancel;
+    // Auto-expand immediate child directories of root
+    for (const child of this.root.children || []) {
+      if (child.isDirectory) {
+        this.expandedDirs.add(child.path);
+      }
+    }
+    // Auto-expand linear chains (single-directory child cascade)
+    const expandLinear = (node: TreeSelectorTreeNode) => {
+      if (!node.isDirectory) return;
+      const children = node.children || [];
+      if (children.length === 1 && children[0].isDirectory) {
+        this.expandedDirs.add(children[0].path);
+        expandLinear(children[0]);
+      }
+    };
+    for (const child of this.root.children || []) {
+      expandLinear(child);
+    }
     this.buildVisibleList();
   }
 
@@ -70,7 +88,9 @@ export class TreeSelector implements UIElement, InteractiveElement {
       const indent = '  '.repeat(depth);
       const icon = node.isDirectory ? '📁' : '📄';
       const line = prefix + indent + icon + ' ' + node.name;
-      lines.push('│' + truncateText(line, borderWidth) + ' '.repeat(borderWidth - visibleWidth(line)) + '│');
+      const truncated = truncateText(line, borderWidth);
+      const pad = Math.max(0, borderWidth - visibleWidth(truncated));
+      lines.push('│' + truncated + ' '.repeat(pad) + '│');
     }
 
     while (lines.length < context.height - 3) {
@@ -111,6 +131,9 @@ export class TreeSelector implements UIElement, InteractiveElement {
   }
 
   clearCache(): void {
-    // No cache
+    // Remove any dynamically added cache property
+    if ((this as any).cache !== undefined) {
+      delete (this as any).cache;
+    }
   }
 }

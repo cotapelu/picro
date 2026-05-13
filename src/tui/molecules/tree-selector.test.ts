@@ -135,7 +135,7 @@ describe('TreeSelector', () => {
 
   describe('handleKey()', () => {
     beforeEach(() => {
-      selector = new TreeSelector({ root });
+      selector = new TreeSelector({ root, onSelect, onCancel });
       selector.isFocused = true;
     });
 
