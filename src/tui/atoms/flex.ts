@@ -7,6 +7,7 @@
 
 import type { UIElement, RenderContext } from './base';
 import { ElementContainer } from './base';
+import { visibleWidth } from './internal-utils';
 
 export interface FlexOptions {
   /** Direction: row (horizontal) or column (vertical) */
@@ -43,24 +44,40 @@ export class Flex extends ElementContainer {
       }
     } else {
       // Row direction: combine children horizontally line by line
-      // First, gather all child lines (using full context width)
       const allChildrenLines = this.children.map(child => child.draw(context));
-      // Determine max height among children
       const maxHeight = Math.max(...allChildrenLines.map(lines => lines.length));
-      // Pad each child's lines to maxHeight
-      const padded = allChildrenLines.map(lines => {
-        const empty = new Array(maxHeight - lines.length).fill('');
-        return [...lines, ...empty];
+      // Compute column widths for each child (max visible width of its lines)
+      const childWidths = allChildrenLines.map(lines => {
+        if (lines.length === 0) return 0;
+        return Math.max(...lines.map(l => visibleWidth(l)));
       });
-      // Combine horizontally: for each line row, concatenate child lines with gap columns
+      // Pad each child's lines to maxHeight and ensure each line fills its column width
+      const padded = allChildrenLines.map((lines, idx) => {
+        const colWidth = childWidths[idx];
+        // Pad existing lines to colWidth
+        const paddedLines = lines.map(l => {
+          const vw = visibleWidth(l);
+          if (vw < colWidth) {
+            return l + ' '.repeat(colWidth - vw);
+          }
+          return l;
+        });
+        // Add missing lines as spaces of colWidth
+        const missing = maxHeight - lines.length;
+        if (missing > 0) {
+          const empty = ' '.repeat(colWidth);
+          paddedLines.push(...new Array(missing).fill(empty));
+        }
+        return paddedLines;
+      });
+      // Combine horizontally
       for (let row = 0; row < maxHeight; row++) {
         const rowSegments: string[] = [];
         for (let c = 0; c < this.children.length; c++) {
           if (c > 0) {
-            // Add gap of spaces
             rowSegments.push(' '.repeat(gap));
           }
-          rowSegments.push(padded[c][row] || '');
+          rowSegments.push(padded[c][row]);
         }
         lines.push(rowSegments.join(''));
       }
