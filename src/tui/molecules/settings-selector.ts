@@ -43,7 +43,7 @@ export class SettingsSelector implements UIElement, InteractiveElement {
     lines.push('│' + titlePad + title + titlePad + '│');
     lines.push('├' + '─'.repeat(borderWidth) + '┤');
 
-    for (let i = 0; i < this.settings.length && i < context.height - 6; i++) {
+    for (let i = 0; i < this.settings.length && i < context.height - 8; i++) {
       const setting = this.settings[i]!;
       const isSelected = i === this.selectedIndex;
       const prefix = isSelected ? '▶ ' : '  ';
