@@ -106,7 +106,7 @@ export class SettingsList implements UIElement, InteractiveElement {
 			const prefix = isSelected ? '> ' : '  ';
 			const label = isSelected ? (this.theme.selected ? this.theme.selected(item.label) : `\x1b[36m${item.label}\x1b[0m`) : `\x1b[2m${item.label}\x1b[22m`;
 			const value = item.currentValue;
-			const valueStr = this.theme.value ? this.theme.value(`[${value}]`) : `\x1b[33m[${value}]\x1b[0m`;
+			const valueStr = this.theme.value ? this.theme.value(`[${value}]`) : `\x1b[32m[${value}]\x1b[0m`;
 
 			const line = prefix + label + ' '.repeat(Math.max(1, width - visibleWidth(prefix + label + value) - 1)) + valueStr;
 			lines.push(truncateText(line, width));

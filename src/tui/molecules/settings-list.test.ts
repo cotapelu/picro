@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SettingsList } from './settings-list';
 import type { RenderContext, KeyEvent } from '../atoms/base';
 import { getKeybindings } from '../atoms/keybindings';
+import { visibleWidth } from '../atoms/internal-utils';
 
 vi.mock('../atoms/keybindings', () => ({
   getKeybindings: () => ({
