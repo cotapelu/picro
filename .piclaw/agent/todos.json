@@ -370,9 +370,35 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-51",
+      "name": "Add Agent.reset() method for state clearing",
+      "tasks": [
+        {
+          "id": "task-265",
+          "content": "Make AgentLoop.reset() public",
+          "status": "completed"
+        },
+        {
+          "id": "task-266",
+          "content": "Add Agent.reset() method with isRunning check",
+          "status": "completed"
+        },
+        {
+          "id": "task-267",
+          "content": "Write unit test for Agent.reset()",
+          "status": "completed"
+        },
+        {
+          "id": "task-268",
+          "content": "Run tests to ensure no regressions",
+          "status": "completed"
+        }
+      ]
     }
   ],
-  "nextTaskId": 265,
-  "nextPhaseId": 51,
-  "updatedAt": "2026-05-15T10:34:59.035Z"
+  "nextTaskId": 269,
+  "nextPhaseId": 52,
+  "updatedAt": "2026-05-15T10:59:38.090Z"
 }

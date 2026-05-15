@@ -70,7 +70,7 @@ export class AgentLoop {
   }
 
   /** Reset state for new run */
-  private reset(): void {
+  public reset(): void {
     this.state = this.createInitialState();
   }
 

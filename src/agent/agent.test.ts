@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Agent } from './agent';
 import type { AgentConfig, LLMResponse } from './types';
 
@@ -68,5 +68,74 @@ describe('Agent', () => {
     const assistantTurns = state.history.filter(turn => turn.role === 'assistant');
     expect(assistantTurns.length).toBe(1);
     expect(assistantTurns[0].content).toEqual([{ type: 'text', text: 'Mock response' }]);
+  });
+
+  describe('reset', () => {
+    it('should clear history and queues', async () => {
+      const config = createTestConfig();
+      const agent = new Agent(undefined as any, [], config);
+      agent.setLLMProvider(mockLLMProvider);
+
+      // Run once to populate history
+      await agent.run('First');
+      expect(agent.getState().history.length).toBeGreaterThan(0);
+
+      // Add some queued messages
+      agent.steer({ role: 'user', content: [{ type: 'text', text: 'Steered' }], timestamp: Date.now() });
+      agent.followUp({ role: 'user', content: [{ type: 'text', text: 'FollowUp' }], timestamp: Date.now() });
+      expect(agent.hasQueuedMessages()).toBe(true);
+
+      // Reset
+      agent.reset();
+
+      // Verify cleared
+      expect(agent.getState().history).toEqual([]);
+      expect(agent.hasQueuedMessages()).toBe(false);
+    });
+
+    it('should throw if called while running', async () => {
+      const config = createTestConfig();
+      const agent = new Agent(undefined as any, [], config);
+      // Provider that blocks indefinitely unless aborted
+      agent.setLLMProvider((prompt, tools, options) => {
+        return new Promise((resolve, reject) => {
+          const onAbort = () => {
+            reject(new Error('aborted'));
+          };
+          options?.signal?.addEventListener('abort', onAbort, { once: true });
+        });
+      });
+
+      const runPromise = agent.run('Test');
+      // The agent should be running immediately
+      expect(agent.getState().isRunning).toBe(true);
+      // Reset should throw
+      expect(() => agent.reset()).toThrow('Cannot reset agent while it is running');
+
+      // Clean up - abort, then wait for run to terminate (may produce error result, not necessarily reject)
+      agent.abort();
+      const result = await runPromise;
+      expect(result.success).toBe(false);
+      expect(result.stopReason).toBe('aborted');
+    });
+
+    it('should allow reuse after reset', async () => {
+      const config = createTestConfig();
+      const agent = new Agent(undefined as any, [], config);
+      agent.setLLMProvider(mockLLMProvider);
+
+      await agent.run('First');
+      expect(agent.getState().history.length).toBeGreaterThan(0);
+
+      agent.reset();
+      expect(agent.getState().history).toEqual([]);
+
+      await agent.run('Second');
+      expect(agent.getState().history.length).toBeGreaterThan(0);
+      // Check that second prompt is present
+      const userTurn = agent.getState().history.find(t => t.role === 'user');
+      const text = (userTurn!.content as any[]).find(c => c.type === 'text');
+      expect((text as any).text).toBe('Second');
+    });
   });
 });

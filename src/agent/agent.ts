@@ -436,6 +436,19 @@ export class Agent {
     this.runner.abort();
   }
 
+  /**
+   * Reset agent state to pristine, clearing history and queues.
+   * Throws if the agent is currently running.
+   */
+  reset(): void {
+    const state = this.runner.getState();
+    if (state.isRunning) {
+      throw new Error('Cannot reset agent while it is running');
+    }
+    this.runner.reset();
+    this.clearAllQueues();
+  }
+
   // ============================================================================
   // Private methods
   // ============================================================================
