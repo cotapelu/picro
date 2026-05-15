@@ -192,9 +192,35 @@
           "details": "Integration verified: AgentSession calls compact() with model/apiKey from session config. Existing integration tests pass."
         }
       ]
+    },
+    {
+      "id": "phase-44",
+      "name": "Remove dead code: src/compaction/ directory unused",
+      "tasks": [
+        {
+          "id": "task-241",
+          "content": "Verify no production imports from src/compaction/",
+          "status": "completed"
+        },
+        {
+          "id": "task-242",
+          "content": "Remove src/compaction/ directory and its tests",
+          "status": "in_progress"
+        },
+        {
+          "id": "task-243",
+          "content": "Run full test suite to ensure no broken imports",
+          "status": "pending"
+        },
+        {
+          "id": "task-244",
+          "content": "Commit cleanup",
+          "status": "pending"
+        }
+      ]
     }
   ],
-  "nextTaskId": 241,
-  "nextPhaseId": 44,
-  "updatedAt": "2026-05-15T08:26:58.825Z"
+  "nextTaskId": 245,
+  "nextPhaseId": 45,
+  "updatedAt": "2026-05-15T08:34:18.905Z"
 }
