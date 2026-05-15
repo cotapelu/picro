@@ -317,9 +317,10 @@ export class Agent {
 
     // Track completion for waitForIdle()
     const p = this.execute([userTurn], signal);
-    this._currentRunIdlePromise = p;
+    const idle = p.then(() => undefined);
+    this._currentRunIdlePromise = idle;
     p.finally(() => {
-      if (this._currentRunIdlePromise === p) this._currentRunIdlePromise = null;
+      if (this._currentRunIdlePromise === idle) this._currentRunIdlePromise = null;
     });
     return p;
   }
@@ -364,9 +365,10 @@ export class Agent {
 
     // Track completion for waitForIdle()
     const p = this.execute(initialTurns, signal);
-    this._currentRunIdlePromise = p;
+    const idle = p.then(() => undefined);
+    this._currentRunIdlePromise = idle;
     p.finally(() => {
-      if (this._currentRunIdlePromise === p) this._currentRunIdlePromise = null;
+      if (this._currentRunIdlePromise === idle) this._currentRunIdlePromise = null;
     });
     return p;
   }
