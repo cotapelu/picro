@@ -11,8 +11,20 @@
 
 import type { AgentMessage, AssistantMessage } from "./agent-types";
 import type { SessionEntry } from "../session/session-manager";
+import { complete } from "../llm";
+import type { Model } from "../llm";
 
 type Usage = AssistantMessage['usage'];
+
+const SUMMARIZATION_SYSTEM_PROMPT = `You are a summarization assistant. Your task is to create a concise summary of a conversation branch.
+Include:
+- Key decisions, conclusions, and outcomes
+- Important code snippets, file paths, and data values
+- Errors or issues encountered
+- Current state and next steps (if any)
+- Any context needed to continue the conversation without the full transcript.
+
+Keep the summary under 4000 tokens. Be factual and succinct. Do not add commentary.`;
 
 // ============================================================================
 // Types
@@ -73,6 +85,25 @@ export function extractFileOpsFromMessage(message: AgentMessage, fileOps: FileOp
       }
     }
   }
+}
+
+function extractTextContent(content: any[]): string {
+  return content
+    .map((block) => {
+      if (block.type === "text") return block.text;
+      if (block.type === "thinking") return `[Thinking: ${block.thinking}]`;
+      if (block.type === "toolCall") return `[Tool Call: ${block.name}(${JSON.stringify(block.arguments)})]`;
+      return '';
+    })
+    .join(' ');
+}
+
+function serializeConversation(messages: AgentMessage[]): string {
+  return messages.map((msg) => {
+    const role = msg.role.toUpperCase();
+    const text = extractTextContent(msg.content as any[]);
+    return `[${role}]: ${text}`;
+  }).join('\n\n');
 }
 
 export function computeFileLists(fileOps: FileOperations): { readFiles: string[]; modifiedFiles: string[] } {
@@ -467,22 +498,59 @@ export async function compact(
 }> {
   const { messagesToSummarize, turnPrefixMessages, isSplitTurn, previousSummary, fileOps, firstKeptEntryId, tokensBefore } = preparation;
 
-  // Stub summarization: just join messages and make a placeholder
-  // Real impl: call LLM with serialized conversation + instructions
-  let summary = "[Stub] ";
-  if (messagesToSummarize.length > 0) {
-    summary += `Summarized ${messagesToSummarize.length} prior messages. `;
-  }
-  if (turnPrefixMessages.length > 0) {
-    summary += `Including ${turnPrefixMessages.length} turn-prefix messages. `;
-  }
-  if (previousSummary) {
-    summary += `Previous summary: ${previousSummary.substring(0, 100)}... `;
-  }
-  summary += "Compaction complete.";
-
-  // Compute file lists
+  // Compute file lists for details and prompt
   const { readFiles, modifiedFiles } = computeFileLists(fileOps);
+  const fileOpsText = formatFileOperations(readFiles, modifiedFiles);
+
+  // Build LLM prompt
+  const systemPrompt = previousSummary
+    ? `${SUMMARIZATION_SYSTEM_PROMPT}\n\nPrevious summary (for continuity):\n${previousSummary}`
+    : SUMMARIZATION_SYSTEM_PROMPT;
+  const fullSystemPrompt = fileOpsText
+    ? `${systemPrompt}\n\nFiles accessed during this branch:${fileOpsText}`
+    : systemPrompt;
+
+  const userPrompt = `Please summarize the following conversation:\n\n${serializeConversation(messagesToSummarize)}`;
+
+  let summary: string;
+
+  try {
+    const model = _model as Model;
+    const context = {
+      systemPrompt: fullSystemPrompt,
+      messages: [
+        { role: 'user' as const, content: userPrompt, timestamp: Date.now() }
+      ]
+    };
+    const llmResult = await complete(model, context, {
+      maxTokens: 2000,
+      temperature: 0.3,
+      signal: _signal,
+      apiKey: _apiKey,
+      headers: _headers,
+    });
+
+    const content = llmResult.content;
+    if (Array.isArray(content)) {
+      summary = content.map((c: any) => c.text || '').join('').trim();
+    } else if (typeof content === 'string') {
+      summary = content.trim();
+    } else {
+      summary = '';
+    }
+
+    if (!summary) {
+      throw new Error('LLM returned empty summary');
+    }
+  } catch (err) {
+    console.warn('Compaction LLM call failed, using stub summary:', err);
+    // Fallback to a simple stub summary
+    if (messagesToSummarize.length > 0) {
+      summary = `[Stub] Summarized ${messagesToSummarize.length} messages`;
+    } else {
+      summary = '[No messages to summarize]';
+    }
+  }
 
   return {
     summary,
