@@ -503,9 +503,12 @@ export async function compact(
   const fileOpsText = formatFileOperations(readFiles, modifiedFiles);
 
   // Build LLM prompt
-  const systemPrompt = previousSummary
+  let systemPrompt = previousSummary
     ? `${SUMMARIZATION_SYSTEM_PROMPT}\n\nPrevious summary (for continuity):\n${previousSummary}`
     : SUMMARIZATION_SYSTEM_PROMPT;
+  if (_customInstructions) {
+    systemPrompt += `\n\nAdditional instructions:\n${_customInstructions}`;
+  }
   const fullSystemPrompt = fileOpsText
     ? `${systemPrompt}\n\nFiles accessed during this branch:${fileOpsText}`
     : systemPrompt;
@@ -528,6 +531,7 @@ export async function compact(
       signal: _signal,
       apiKey: _apiKey,
       headers: _headers,
+      reasoningEffort: _thinkingLevel as any,
     });
 
     const content = llmResult.content;

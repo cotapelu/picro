@@ -83,4 +83,39 @@ describe('compact (LLM summarization)', () => {
     expect(result.summary).toMatch(/Stub/);
     expect(result.summary).toContain('1 messages');
   });
+
+  it('should include custom instructions in system prompt when provided', async () => {
+    const prep = makePrep([{ role: 'user', content: [{ type: 'text', text: 'test' }], timestamp: Date.now() } as any]);
+    const custom = 'Focus on technical details and code snippets';
+    llmComplete.mockResolvedValue({ content: [{ text: 'Summary' }] });
+    await compact(prep, mockModel, 'key', undefined, custom);
+
+    const call = llmComplete.mock.calls[0];
+    const context = call[1] as any;
+    expect(context.systemPrompt).toContain(custom);
+  });
+
+  it('should pass reasoningEffort to LLM call when provided', async () => {
+    const prep = makePrep([{ role: 'user', content: [{ type: 'text', text: 'test' }], timestamp: Date.now() } as any]);
+    llmComplete.mockResolvedValue({ content: [{ text: 'Summary' }] });
+    await compact(prep, mockModel, 'key', undefined, undefined, undefined, 'high');
+
+    const call = llmComplete.mock.calls[0];
+    const opts = call[2] as any;
+    expect(opts.reasoningEffort).toBe('high');
+  });
 });
+
+// Helper to create CompactionPreparation
+function makePrep(messages: any[]): CompactionPreparation {
+  return {
+    firstKeptEntryId: 'entry1',
+    messagesToSummarize: messages,
+    turnPrefixMessages: [],
+    isSplitTurn: false,
+    tokensBefore: 50,
+    previousSummary: undefined,
+    fileOps: { read: new Set(), written: new Set(), edited: new Set() },
+    settings: { enabled: true, reserveTokens: 16384, keepRecentTokens: 20000 },
+  };
+}

@@ -205,22 +205,50 @@
         {
           "id": "task-242",
           "content": "Remove src/compaction/ directory and its tests",
-          "status": "in_progress"
+          "status": "completed"
         },
         {
           "id": "task-243",
           "content": "Run full test suite to ensure no broken imports",
-          "status": "pending"
+          "status": "completed",
+          "details": "Tests passed (1649), no broken imports"
         },
         {
           "id": "task-244",
           "content": "Commit cleanup",
+          "status": "completed",
+          "details": "Committed cleanup removal of dead compaction package"
+        }
+      ]
+    },
+    {
+      "id": "phase-45",
+      "name": "Enhance compaction with custom instructions and thinking level",
+      "tasks": [
+        {
+          "id": "task-245",
+          "content": "Add custom instructions to compaction system prompt",
+          "status": "in_progress"
+        },
+        {
+          "id": "task-246",
+          "content": "Pass thinking level to LLM complete() call",
+          "status": "pending"
+        },
+        {
+          "id": "task-247",
+          "content": "Update tests to cover custom instructions path",
+          "status": "pending"
+        },
+        {
+          "id": "task-248",
+          "content": "Verify build and tests",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 245,
-  "nextPhaseId": 45,
-  "updatedAt": "2026-05-15T08:34:18.905Z"
+  "nextTaskId": 249,
+  "nextPhaseId": 46,
+  "updatedAt": "2026-05-15T08:40:38.682Z"
 }
