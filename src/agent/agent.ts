@@ -129,11 +129,9 @@ export class Agent {
     }));
   }
 
-  /**
-   * Create LLM provider using llm's complete function
-   */
-  private _createLlmProvider(model: Model) {
-    const llmModel: Model = {
+  /** Prepare model for llm functions */
+  private _prepareModel(model: Model): Model {
+    return {
       id: model.id || model.name,
       name: model.name || model.id,
       api: 'openai-completions',
@@ -145,6 +143,13 @@ export class Agent {
       contextWindow: (model as any).contextWindow || 128000,
       maxTokens: (model as any).maxTokens || 8192,
     };
+  }
+
+  /**
+   * Create LLM provider using llm's complete function
+   */
+  private _createLlmProvider(model: Model) {
+    const llmModel: Model = this._prepareModel(model);
 
     return async (prompt: string, tools: ToolDefinition[], options?: any): Promise<LLMResponse> => {
       const context: Context = {
@@ -181,29 +186,15 @@ export class Agent {
    * Create stream provider using llm's stream function
    */
   private _createStreamProvider(model: Model) {
-    const llmModel: Model = {
-      id: model.id || model.name,
-      name: model.name || model.id,
-      api: 'openai-completions',
-      provider: (model as any).provider || 'openai',
-      baseUrl: (model as any).baseUrl || '',
-      reasoning: (model as any).reasoning || false,
-      input: (model as any).input || ['text'],
-      cost: (model as any).cost || { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-      contextWindow: (model as any).contextWindow || 128000,
-      maxTokens: (model as any).maxTokens || 8192,
-    };
+    const llmModel: Model = this._prepareModel(model);
+    const convert = this._convertToolsToLlm.bind(this);
 
     return async function* (prompt: string, tools: ToolDefinition[], options?: any): AsyncIterable<any> {
       const context: Context = {
         messages: [
           { role: 'user', content: prompt, timestamp: Date.now() }
         ] as Message[],
-        tools: tools.length > 0 ? tools.map(t => ({
-          name: t.name,
-          description: t.description || '',
-          parameters: t.parameters || {},
-        })) : undefined,
+        tools: tools.length > 0 ? convert(tools) : undefined,
       };
 
       const llmOptions: StreamOptions = {

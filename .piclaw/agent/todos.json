@@ -78,9 +78,33 @@
           "details": "Fixed TypeScript errors and test failures, preserved original behavior"
         }
       ]
+    },
+    {
+      "id": "phase-40",
+      "name": "Improve Agent class by extracting duplicated model/tool conversion logic",
+      "tasks": [
+        {
+          "id": "task-225",
+          "content": "Extract model preparation into _prepareModel method",
+          "status": "completed",
+          "details": "Extracted _prepareModel and used _convertToolsToLlm consistently"
+        },
+        {
+          "id": "task-226",
+          "content": "Use _convertToolsToLlm in _createStreamProvider",
+          "status": "completed",
+          "details": "Already using _convertToolsToLlm in _createStreamProvider"
+        },
+        {
+          "id": "task-227",
+          "content": "Verify tests still pass",
+          "status": "completed",
+          "details": "Tests pass: 1686 passed, build successful"
+        }
+      ]
     }
   ],
-  "nextTaskId": 225,
-  "nextPhaseId": 40,
-  "updatedAt": "2026-05-15T07:16:36.455Z"
+  "nextTaskId": 228,
+  "nextPhaseId": 41,
+  "updatedAt": "2026-05-15T07:26:14.723Z"
 }
