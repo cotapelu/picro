@@ -102,9 +102,35 @@
           "details": "Tests pass: 1686 passed, build successful"
         }
       ]
+    },
+    {
+      "id": "phase-41",
+      "name": "Add regression test for Agent.run to ensure user turns are forwarded",
+      "tasks": [
+        {
+          "id": "task-228",
+          "content": "Create src/agent/agent.test.ts with test for Agent.run",
+          "status": "in_progress"
+        },
+        {
+          "id": "task-229",
+          "content": "Mock LLM provider to return a simple response",
+          "status": "pending"
+        },
+        {
+          "id": "task-230",
+          "content": "Verify that the user prompt appears in the agent's state history after run",
+          "status": "pending"
+        },
+        {
+          "id": "task-231",
+          "content": "Run tests and ensure they pass",
+          "status": "pending"
+        }
+      ]
     }
   ],
-  "nextTaskId": 228,
-  "nextPhaseId": 41,
-  "updatedAt": "2026-05-15T07:26:14.723Z"
+  "nextTaskId": 232,
+  "nextPhaseId": 42,
+  "updatedAt": "2026-05-15T07:34:55.319Z"
 }
