@@ -45,6 +45,7 @@ export class Agent {
   private model?: Model;
   private llmProvider?: (prompt: string, tools: any[], options?: any) => Promise<LLMResponse>;
   private streamProvider?: (prompt: string, tools: any[], options?: any) => AsyncIterable<any> | Promise<AsyncIterable<any>>;
+  private _currentRunIdlePromise: Promise<void> | null = null;
 
   /**
    * Constructs a new Agent instance.
@@ -314,7 +315,13 @@ export class Agent {
       timestamp: Date.now(),
     };
 
-    return this.execute([userTurn], signal);
+    // Track completion for waitForIdle()
+    const p = this.execute([userTurn], signal);
+    this._currentRunIdlePromise = p;
+    p.finally(() => {
+      if (this._currentRunIdlePromise === p) this._currentRunIdlePromise = null;
+    });
+    return p;
   }
 
   /**
@@ -339,22 +346,29 @@ export class Agent {
       throw new Error('No conversation history to resume from');
     }
 
+    let initialTurns: ConversationTurn[];
     if (lastTurn.role === 'assistant') {
       // Check steering queue first
       if (this.steeringQueue.hasPending) {
-        const steering = this.steeringQueue.drainAll();
-        return this.execute(steering, signal);
+        initialTurns = this.steeringQueue.drainAll();
+      } else if (this.followUpQueue.hasPending) {
+        // Then check follow-up queue
+        initialTurns = this.followUpQueue.drainAll();
+      } else {
+        throw new Error('Cannot resume: last message is assistant and no queued messages');
       }
-      // Then check follow-up queue
-      if (this.followUpQueue.hasPending) {
-        const followUps = this.followUpQueue.drainAll();
-        return this.execute(followUps, signal);
-      }
-      throw new Error('Cannot resume: last message is assistant and no queued messages');
+    } else {
+      // Continue with empty initial turns (uses existing history)
+      initialTurns = [];
     }
 
-    // Continue with empty initial turns (uses existing history)
-    return this.execute([], signal);
+    // Track completion for waitForIdle()
+    const p = this.execute(initialTurns, signal);
+    this._currentRunIdlePromise = p;
+    p.finally(() => {
+      if (this._currentRunIdlePromise === p) this._currentRunIdlePromise = null;
+    });
+    return p;
   }
 
   /**
@@ -382,8 +396,17 @@ export class Agent {
       timestamp: Date.now(),
     };
 
-    const result = yield* this.streamExecute([userTurn], signal);
-    return result;
+    // Track completion for waitForIdle()
+    let resolveIdle!: () => void;
+    const idlePromise = new Promise<void>((resolve) => { resolveIdle = resolve; });
+    this._currentRunIdlePromise = idlePromise;
+    try {
+      const result = yield* this.streamExecute([userTurn], signal);
+      return result;
+    } finally {
+      resolveIdle();
+      if (this._currentRunIdlePromise === idlePromise) this._currentRunIdlePromise = null;
+    }
   }
 
   /**
@@ -447,6 +470,14 @@ export class Agent {
     }
     this.runner.reset();
     this.clearAllQueues();
+  }
+
+  /**
+   * Wait until the agent becomes idle (no active run and all listeners settled).
+   * Returns a promise that resolves immediately if the agent is already idle.
+   */
+  waitForIdle(): Promise<void> {
+    return this._currentRunIdlePromise ?? Promise.resolve();
   }
 
   // ============================================================================

@@ -138,4 +138,61 @@ describe('Agent', () => {
       expect((text as any).text).toBe('Second');
     });
   });
+
+  describe('waitForIdle', () => {
+    it('should resolve immediately when agent is idle', async () => {
+      const config = createTestConfig();
+      const agent = new Agent(undefined as any, [], config);
+      agent.setLLMProvider(mockLLMProvider);
+
+      await expect(agent.waitForIdle()).resolves.toBeUndefined();
+    });
+
+    it('should resolve after run completes', async () => {
+      const config = createTestConfig();
+      const agent = new Agent(undefined as any, [], config);
+      // Use a slower provider (200ms) to ensure run is still in progress
+      agent.setLLMProvider(async () => {
+        await new Promise(r => setTimeout(r, 200));
+        return mockLLMProvider('', []);
+      });
+
+      const runPromise = agent.run('Test');
+      // While running, idle is pending. We'll check via a flag.
+      let resolved = false;
+      agent.waitForIdle().then(() => { resolved = true; });
+      // Give some time; should not resolve yet
+      await new Promise(r => setTimeout(r, 100));
+      expect(resolved).toBe(false);
+
+      await runPromise;
+      // After completion, new call to waitForIdle should resolve immediately
+      await expect(agent.waitForIdle()).resolves.toBeUndefined();
+      // And the earlier pending call should have resolved
+      expect(resolved).toBe(true);
+    });
+
+    it('should resolve after abort', async () => {
+      const config = createTestConfig();
+      const agent = new Agent(undefined as any, [], config);
+      // Provider that blocks until aborted
+      agent.setLLMProvider((prompt, tools, options) => {
+        return new Promise((resolve, reject) => {
+          const onAbort = () => reject(new Error('aborted'));
+          options?.signal?.addEventListener('abort', onAbort, { once: true });
+        });
+      });
+
+      const runPromise = agent.run('Long');
+      let resolved = false;
+      agent.waitForIdle().then(() => { resolved = true; });
+      await new Promise(r => setTimeout(r, 100));
+      expect(resolved).toBe(false);
+
+      agent.abort();
+      await runPromise;
+      await expect(agent.waitForIdle()).resolves.toBeUndefined();
+      expect(resolved).toBe(true);
+    });
+  });
 });

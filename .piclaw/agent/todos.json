@@ -396,9 +396,30 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-52",
+      "name": "Add Agent.waitForIdle() method",
+      "tasks": [
+        {
+          "id": "task-269",
+          "content": "Add waitForIdle() to Agent class",
+          "status": "in_progress"
+        },
+        {
+          "id": "task-270",
+          "content": "Write unit tests for waitForIdle()",
+          "status": "pending"
+        },
+        {
+          "id": "task-271",
+          "content": "Run tests to ensure no regressions",
+          "status": "pending"
+        }
+      ]
     }
   ],
-  "nextTaskId": 269,
-  "nextPhaseId": 52,
-  "updatedAt": "2026-05-15T10:59:38.090Z"
+  "nextTaskId": 272,
+  "nextPhaseId": 53,
+  "updatedAt": "2026-05-15T11:03:55.433Z"
 }
