@@ -449,7 +449,8 @@ export class Agent {
       this.steeringQueue,
       this.followUpQueue,
       this.llmProvider!,
-      signal
+      signal,
+      initialTurns
     );
   }
 
