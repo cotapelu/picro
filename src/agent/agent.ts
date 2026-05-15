@@ -470,6 +470,7 @@ export class Agent {
     }
     this.runner.reset();
     this.clearAllQueues();
+    this._currentRunIdlePromise = null;
   }
 
   /**
