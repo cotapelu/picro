@@ -36,9 +36,51 @@
           "notes": "All test failures fixed; final run reports 1686 passed, 1 skipped, with a single non-deterministic worker fork error that does not affect functionality."
         }
       ]
+    },
+    {
+      "id": "phase-39",
+      "name": "Refactor AgentLoop for better separation of concerns",
+      "tasks": [
+        {
+          "id": "task-219",
+          "content": "Analyze current AgentLoop.run and AgentLoop.stream duplication and design extraction plan",
+          "status": "completed",
+          "details": "Identified 400+ line methods with large duplication, mutation, mixed concerns"
+        },
+        {
+          "id": "task-220",
+          "content": "Extract core loop logic into pure function runLoopCore with event emitter",
+          "status": "completed",
+          "details": "executeLoop implemented, run and stream refactored, tests passing"
+        },
+        {
+          "id": "task-221",
+          "content": "Refactor AgentLoop.run to use runLoopCore",
+          "status": "completed",
+          "details": "run method now simply calls executeLoop with isStreaming=false"
+        },
+        {
+          "id": "task-222",
+          "content": "Refactor AgentLoop.stream to use runLoopCore with streaming support",
+          "status": "completed",
+          "details": "stream method now simply calls executeLoop with isStreaming=true and yields"
+        },
+        {
+          "id": "task-223",
+          "content": "Update tests to ensure behavior unchanged",
+          "status": "completed",
+          "details": "All tests passing, build successful"
+        },
+        {
+          "id": "task-224",
+          "content": "Review and improve error handling and abort logic",
+          "status": "completed",
+          "details": "Fixed TypeScript errors and test failures, preserved original behavior"
+        }
+      ]
     }
   ],
-  "nextTaskId": 219,
-  "nextPhaseId": 39,
-  "updatedAt": "2026-05-13T08:49:57.424Z"
+  "nextTaskId": 225,
+  "nextPhaseId": 40,
+  "updatedAt": "2026-05-15T07:16:36.455Z"
 }

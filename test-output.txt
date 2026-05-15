@@ -1,0 +1,1706 @@
+
+> @picro/picro@0.0.1 test
+> vitest run --reporter=verbose
+
+
+ RUN  v4.1.5 /home/quangtynu/Qcoder/picro
+
+ ✓ src/cli/file-processor.test.ts > processFileArguments > should process a non-existent file and exit 5ms
+ ✓ src/cli/file-processor.test.ts > processFileArguments > should skip empty file 4ms
+ ✓ src/cli/file-processor.test.ts > processFileArguments > should process text file 3ms
+ ✓ src/cli/file-processor.test.ts > processFileArguments > should process PNG image file 2ms
+ ✓ src/cli/file-processor.test.ts > processFileArguments > should process JPEG image file 2ms
+ ✓ src/cli/file-processor.test.ts > processFileArguments > should process multiple mixed files 3ms
+ ✓ src/cli/file-processor.test.ts > processFileArguments > should respect autoResizeImages option (no-op currently) 2ms
+ ✓ src/cli/file-processor.test.ts > processFileArguments > should handle files with @ prefix stripped by caller 2ms
+ ✓ src/cli/file-processor.test.ts > processFileArguments > should warn on large image when autoResizeImages true 37ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > registration > should register and retrieve a tool 3ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > registration > should register multiple tools 1ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > registration > should overwrite existing tool with same name 2ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > execute > should execute a tool and return successful result 2ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > execute > should return error for unknown tool 1ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > execute > should throw exception from tool handler as error result 1ms
+ ✓ src/agent/agent-loop.test.ts > AgentLoop > state management > should initialize with clean state 5ms
+ ✓ src/agent/agent-loop.test.ts > AgentLoop > state management > should set isRunning during execution 58ms
+ ✓ src/migrations.test.ts > migrations > migrateAuthToAuthJson > should migrate oauth.json to auth.json 12ms
+ ✓ src/migrations.test.ts > migrations > migrateAuthToAuthJson > should migrate settings.json apiKeys 55ms
+ ✓ src/migrations.test.ts > migrations > migrateAuthToAuthJson > should not migrate if auth.json exists 5ms
+ ✓ src/migrations.test.ts > migrations > migrateAuthToAuthJson > should merge both sources 4ms
+ ✓ src/migrations.test.ts > migrations > migrateSessionsFromAgentRoot > should move session file from agent root to sessions/<cwd-hash>/ 5ms
+ ✓ src/migrations.test.ts > migrations > migrateSessionsFromAgentRoot > should skip files without valid session header 5ms
+ ✓ src/migrations.test.ts > migrations > migrateSessionsFromAgentRoot > should not move if target already exists 5ms
+ ✓ src/migrations.test.ts > migrations > migrateCommandsToPrompts > should rename commands/ to prompts/ 2ms
+ ✓ src/migrations.test.ts > migrations > migrateCommandsToPrompts > should not run if prompts/ already exists 2ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > execute > should respect timeout 101ms
+ × src/agent/agent-loop.test.ts > AgentLoop > run > should execute to completion and return result 57ms
+   → expected false to be true // Object.is equality
+ ✓ src/agent/agent-loop.test.ts > AgentLoop > run > should include history in state 52ms
+ ✓ src/tui/tui.test.ts > TerminalUI > constructor > should create instance 6ms
+ ✓ src/tui/tui.test.ts > TerminalUI > constructor > should accept showHardwareCursor option 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > constructor > should initialize default values 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > constructor > should initialize panel stack empty 2ms
+ ✓ src/tui/tui.test.ts > TerminalUI > append() / remove() > should add child to children 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > append() / remove() > should call onMount if present 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > append() / remove() > should request render after append 2ms
+ ✓ src/tui/tui.test.ts > TerminalUI > append() / remove() > should call onUnmount on remove 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > start() > should call terminal.start with handlers 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > start() > should hide cursor 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > start() > should query cell size for images 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > start() > should request initial render 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > stop() > should set stopped flag 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > stop() > should clear render timer 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > stop() > should stop inertial scrolling 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > stop() > should disable synchronized output mode 2ms
+ ✓ src/tui/tui.test.ts > TerminalUI > stop() > should clear key handlers 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > stop() > should move cursor and show cursor 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > stop() > should call terminal.stop() 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > requestRender() > should set renderRequested flag 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > requestRender() > should schedule render if not already scheduled 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > requestRender() > should not schedule duplicate renders 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > requestRender() > should force immediate render if force=true 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > setFocus() > should set focused element and clear old 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > setFocus() > should clear previous focused flag 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > setFocus() > should request render after focus change 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > getFocusedElement() > should return current focused element 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > showPanel() / removePanel() > should show panel and return handle 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > showPanel() / removePanel() > should add panel to stack 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > showPanel() / removePanel() > should set hidden to false 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > showPanel() / removePanel() > should focus panel by default (nonCapturing false) 2ms
+ ✓ src/tui/tui.test.ts > TerminalUI > showPanel() / removePanel() > should not focus if nonCapturing option set 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > showPanel() / removePanel() > should call onMount lifecycle 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > showPanel() / removePanel() > should call removePanel on handle.close() 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > showPanel() / removePanel() > should setHidden and isHidden correctly 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > showPanel() / removePanel() > should setZIndex and getZIndex correctly 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > showPanel() / removePanel() > should bringToFront and sendToBack adjust relative zIndex 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > scroll() / scrollTo() > should scroll by delta 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > scroll() / scrollTo() > should clamp scrollTop to min 0 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > scroll() / scrollTo() > should clamp to max 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > scroll() / scrollTo() > should request render after scroll 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > scroll() / scrollTo() > scrollTo should set absolute position 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > getScrollMetrics() / getScrollMax() > should return scroll metrics 4ms
+ ✓ src/tui/tui.test.ts > TerminalUI > getScrollMetrics() / getScrollMax() > getScrollMax should compute max scrollTop 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > handleWheelScroll() / inertial scrolling > should accumulate velocity 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > handleWheelScroll() / inertial scrolling > should start inertia scroll loop 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > handleKey() - key repeat and chords > should process key handlers 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > registerChord() / unregisterChord() > should register and trigger chord handler 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > registerChord() / unregisterChord() > should unregister chord 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > getRenderMetrics() > should return frame and timing metrics 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > enableMemoryLeakDetection() / getMemoryStats() > should track created/destroyed 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > setDebugOverlay() > should toggle debug overlay 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > setLayoutInspector() > should toggle layout inspector 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > registerComponent() / createComponent() > should register and create component 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > registerComponent() / createComponent() > should return undefined for unknown component 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > getComponentStats() > should return children and panels count 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > getLayoutInfo() > should return layout info 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > setExtensionHook() > should set mount and unmount hooks 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > getShowHardwareCursor() / setShowHardwareCursor() > should toggle and return value 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > setClearOnShrink() / getClearOnShrink() > should get and set 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > getSize() > should return terminal dimensions 2ms
+ ✓ src/tui/tui.test.ts > TerminalUI > isActive() > should return true if not stopped 1ms
+ ✓ src/tui/tui.test.ts > TerminalUI > invalidate() > should call clearCache on all children 1ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > execute > should handle abort signal 102ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > executeAll > should execute multiple tools sequentially when strategy is sequential 2ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > executeAll > should execute multiple tools in parallel when strategy is parallel 53ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > executeAll > should stop execution on abort 51ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > caching > should cache results when enabled 1ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > caching > should not cache when disabled 0ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > caching > should evict oldest entry when cache exceeds size 0ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > hooks > should call beforeToolCall hook 4ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > hooks > should block execution if beforeHook returns block: true 1ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > hooks > should call afterToolCall hook on success 1ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > hooks > should call afterToolCall hook on error 1ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > hooks > should allow afterHook to modify result content 0ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > hooks > should allow afterHook to mark result as error 1ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > event emission > should emit tool:call:start and tool:call:end events 1ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > event emission > should emit tool:error on failure 1ms
+ ✓ src/agent/tool-executor.test.ts > ToolExecutor > clearCache > should clear the cache 0ms
+ ✓ src/agent/agent-loop.test.ts > AgentLoop > run > should respect maxRounds 52ms
+ × src/agent/agent-loop.test.ts > AgentLoop > run > should abort when abort() is called 52ms
+   → expected false to be true // Object.is equality
+ ✓ src/agent/agent-loop.test.ts > AgentLoop > stream > should stream events and return final result 1ms
+ ✓ src/agent/agent-loop.test.ts > AgentLoop > abort > should set isCancelled flag 0ms
+ ✓ src/agent/agent-loop.test.ts > AgentLoop > event emission > should emit agent:start and agent:end 52ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > constructor > should create with tui, theme, message, onAbort 7ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > constructor > should start spinner interval on construction 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > constructor > should create abort signal 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > constructor > should default onAbort to undefined 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > width_ & height_ > should return calculated dimensions 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > setMessage() > should update message and request render 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > draw() > should return 5 lines (bordered box) 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > draw() > should render top border 0ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > draw() > should render bottom border 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > draw() > should render spinner frame on second line 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > draw() > should show cancel hint on fourth line 0ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > draw() > should apply cursor marker when focused 0ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > draw() > should not apply cursor marker when not focused 0ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > draw() > should adjust width based on context 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > draw() > should animate spinner on successive draws 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > handleKey() > should call onAbort on Escape 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > handleKey() > should call onAbort on Ctrl+C 0ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > handleKey() > should clear spinner interval on abort 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > handleKey() > should not clear interval multiple times 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > clearCache() > should be no-op (stateless) 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > dispose() > should clear spinner interval 1ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > dispose() > should be safe to call multiple times 0ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > edge cases > should handle very narrow width 0ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > edge cases > should handle very wide width 0ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > edge cases > should handle very long message 0ms
+ ✓ src/tui/molecules/loader.test.ts > BorderedLoader > edge cases > should handle unicode in message 0ms
+ ✓ src/tools/file-tools.test.ts > Read Tool > should read a simple file 3ms
+ ✓ src/tools/file-tools.test.ts > Read Tool > should read file with offset and maxLines 1ms
+ ✓ src/tools/file-tools.test.ts > Read Tool > should handle file not found 2ms
+ ✓ src/tools/file-tools.test.ts > Read Tool > should resolve relative path within cwd 1ms
+ ✓ src/tools/file-tools.test.ts > Read Tool > should reject path traversal outside cwd 1ms
+ ✓ src/tools/file-tools.test.ts > Read Tool > should reject absolute path outside cwd 1ms
+ ✓ src/tools/file-tools.test.ts > Read Tool > should expand ~ to home directory, but still validate within cwd 1ms
+ ✓ src/tools/file-tools.test.ts > Read Tool > should handle large files with maxLines limit 2ms
+ ✓ src/tools/file-tools.test.ts > Write Tool > should write a new file 5ms
+ ✓ src/tools/file-tools.test.ts > Write Tool > should append to existing file 1ms
+ ✓ src/tools/file-tools.test.ts > Write Tool > should create directories when needed 1ms
+ ✓ src/tools/file-tools.test.ts > Write Tool > should reject path traversal 1ms
+ ✓ src/tools/file-tools.test.ts > Write Tool > should reject write to file outside cwd 1ms
+ ✓ src/tools/file-tools.test.ts > Edit Tool > should replace text in file 8ms
+ ✓ src/tools/file-tools.test.ts > Edit Tool > should return not changed if oldString not found 1ms
+ ✓ src/tools/file-tools.test.ts > Edit Tool > should support dry run 1ms
+ ✓ src/tools/file-tools.test.ts > Edit Tool > should reject path traversal 1ms
+ ✓ src/tools/file-tools.test.ts > Ls Tool > should list current directory 3ms
+ ✓ src/tools/file-tools.test.ts > Ls Tool > should list subdirectory 1ms
+ ✓ src/tools/file-tools.test.ts > Ls Tool > should respect includeHidden flag 1ms
+ ✓ src/tools/file-tools.test.ts > Ls Tool > should reject path traversal 1ms
+ ✓ src/tools/file-tools.test.ts > Ls Tool > should handle non-existent path 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > constructor > should create with default options 6ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > constructor > should accept custom label 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > constructor > should accept defaultValue 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > constructor > should accept onSubmit and onCancel 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > constructor > should default isFocused to false 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should render bordered box 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should display label centered 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should display current value 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should show cursor block when focused 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should show underscore when not focused 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should include help text at bottom 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should pad empty lines to fill height 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > draw() > should blink cursor on successive draws 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should submit on Enter 3ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should submit on Ctrl+M? 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should cancel on Escape 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should backspace on Backspace or Delete? Actually code uses  or  1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should insert printable characters 0ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > handleKey() > should ignore other control sequences 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > clearCache() > should be no-op 2ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > edge cases > should handle empty value 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > edge cases > should handle very long value 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > edge cases > should handle unicode 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > edge cases > should handle narrow width terminal 1ms
+ ✓ src/tui/molecules/extension-input.test.ts > ExtensionInput > edge cases > should handle height less than required lines 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > start() > should store handlers 4ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > start() > should enable raw mode on stdin 2ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > start() > should set encoding to utf8 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > start() > should resume stdin 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > start() > should enable bracketed paste mode 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > start() > should set up resize handler 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > start() > should send SIGWINCH to refresh terminal dimensions 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > start() > should setup stdin buffer 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > start() > should query and enable Kitty protocol 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > write() > should write to stdout 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > get columns/rows > should return stdout dimensions 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > moveBy() > should write correct escape sequence 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > moveTo() > should write correct escape sequence 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > hideCursor() / showCursor() > should hide cursor 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > hideCursor() / showCursor() > should show cursor 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > clearLine() > should write clear line escape 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > clearFromCursor() > should write clear from cursor escape 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > clearScreen() > should write clear screen escape 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > setTitle() > should write title escape sequence 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > queryCellSize() > should send query and return promise 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > queryCellSize() > should reject on invalid response 2ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > writeImage() > should write the image sequence 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > kittyProtocolActive property > should default to false 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > stop() > should set stopped flag 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > stop() > should remove resize listener 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > stop() > should disable bracketed paste mode 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > stop() > should restore raw mode if we set it 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > stop() > should destroy stdin buffer 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > stop() > should resume stdin before destroy 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > drainInput() > should wait for buffer to flush 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > edge cases > should handle multiple writes 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > edge cases > should handle large terminal dimensions 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > edge cases > should handle negative moveBy 0ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > edge cases > should handle zero moveBy 1ms
+ ✓ src/tui/atoms/terminal.test.ts > ProcessTerminal > edge cases > should handle empty writes 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > constructor > should create with commands 6ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > constructor > should format commands into SelectList items 2ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > constructor > should accept visibleRows and theme 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > constructor > should set callbacks 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > constructor > should default visibleRows to 10 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > setCommands() > should replace commands and update SelectList 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > setFilter() > should filter commands by label and description 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > setFilter() > should be case-insensitive 0ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > setFilter() > should match description 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > setFilter() > should show all when empty query 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > getSelectList() > should return the internal SelectList 0ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > draw() > should return bordered lines 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > draw() > should include inner SelectList lines 0ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > draw() > should pad lines to width and add vertical borders 0ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > draw() > should respect width 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > handleKey() > should call onCancel on Escape 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > handleKey() > should call onSelect and onExecute on Enter 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > handleKey() > should delegate other keys to SelectList 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > handleKey() > should handle Return key as Enter 0ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > clearCache() > should be no-op 1ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > edge cases > should handle empty commands array 0ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > edge cases > should handle commands with no description 0ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > edge cases > should handle very narrow width 0ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > edge cases > should handle unicode in labels 0ms
+ ✓ src/tui/organisms/command-palette.test.ts > CommandPalette > edge cases > should call onExecute even if onSelect not provided 0ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > constructor > should calculate seconds from timeoutMs 7ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > constructor > should call onTick immediately with initial seconds 3ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > constructor > should accept optional onRenderRequested 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > constructor > should start interval 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > tick behavior > should decrement seconds each interval 2ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > tick behavior > should call onTick on each tick 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > tick behavior > should call onRenderRequested on each tick 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > tick behavior > should call onExpire when reaches zero 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > tick behavior > should call onExpire after final tick (remainingSeconds <= 0) 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > tick behavior > should stop interval after expiration 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > tick behavior > should not call onTick after expiry 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > dispose() > should clear interval 2ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > dispose() > should be safe to call multiple times 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > dispose() > should clear intervalId 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > dispose() > should stop before timeout if disposed early 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > edge cases > should handle timeoutMs exactly 1000 (1 second) 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > edge cases > should handle timeoutMs less than 1000 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > edge cases > should handle very large timeoutMs 1ms
+ ✓ src/tui/molecules/countdown-timer.test.ts > CountdownTimer > edge cases > should continue ticking after manual modification? (no setter) 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > constructor > should create with message 4ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > constructor > should default type to info 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > constructor > should default duration to 5000ms 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > constructor > should default width to 40 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > constructor > should accept custom theme 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > constructor > should store createdAt as current time 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > isExpired() > should return false for infinite duration (0) 0ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > isExpired() > should return false before duration expires 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > isExpired() > should return true after duration expires 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > getRemainingPercent() > should return 100 for infinite duration 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > getRemainingPercent() > should decrease over time 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > getRemainingPercent() > should be 0 when expired 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > draw() > should render bordered box with message 2ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > draw() > should show progress bar if showProgress=true 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > draw() > should not show progress if showProgress=false 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > draw() > should apply type-specific colors 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > draw() > should show icon based on type 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > draw() > should truncate long message to width 2ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > draw() > should handle dismissed state 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > clearCache() > should be no-op 2ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > edge cases > should handle empty message 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > edge cases > should handle very narrow width 1ms
+ ✓ src/tui/atoms/toast.test.ts > Toast > edge cases > should handle unicode 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > constructor > should create with items and visible rows 5ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > constructor > should set initial selected index to 0 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > constructor > should accept optional callbacks 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > constructor > should accept custom theme 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > constructor > should default isFocused to false 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > setMultiSelect() > should enable/disable multi-select 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > setMultiSelect() > should clear selection when disabling 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > isMultiSelect() > should return current multi-select state 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > getSelectedIndices() > should return sorted array of selected indices 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > getSelectedIndices() > should return empty array when none selected 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > toggleSelection() > should add index if not selected 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > toggleSelection() > should remove index if already selected 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > toggleSelection() > should call onSelectionChange callback 2ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > setItems() > should replace items array 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > setItems() > should clamp selectedIndex to new bounds 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > setItems() > should not increase selectedIndex beyond items length - 1 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > navigation > should move up with ArrowUp or k 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > navigation > should move down with ArrowDown or j 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > navigation > should not move past top 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > navigation > should not move past bottom 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > navigation > should page up 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > navigation > should page down 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > selection > should call onSelect on Enter 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > selection > should call onCancel on Escape 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > selection > should toggle selection in multi-select mode on Space 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > selection > should not toggle in single-select mode on Space 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > filtering > should append printable characters to filter 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > filtering > should reset selectedIndex when filter changes 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > filtering > should filter items case-insensitively 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > filtering > should show no match message when filter yields nothing 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > filtering > should clear filter on Backspace 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > handleKey() > filtering > should handle backspace with empty filter 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > draw() > should render all visible items 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > draw() > should limit visible items to visibleRows 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > draw() > should indicate selected item with prefix 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > draw() > should add checkmark for multi-selected items 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > draw() > should handle scroll offset 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > draw() > should show "No matches" when filtered empty 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > draw() > should respect custom theme.selectedPrefix 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > draw() > should truncate long labels to width 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > adjustScroll() > should keep selectedIndex in visible range 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > edge cases > should handle empty items list 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > edge cases > should handle zero visibleRows 1ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > edge cases > should handle items with empty labels 0ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > edge cases > should handle very long filter strings 2ms
+ ✓ src/tui/molecules/select-list.test.ts > SelectList > edge cases > should handle unicode in labels 1ms
+ ✓ src/session/agent-session.integration.test.ts > AgentSession Integration > session lifecycle > should create session with empty state 16ms
+ ✓ src/session/agent-session.integration.test.ts > AgentSession Integration > session lifecycle > should set model and emit event 4ms
+ ✓ src/session/agent-session.integration.test.ts > AgentSession Integration > prompt flow > should run a simple prompt and produce answer 13ms
+ ✓ src/session/agent-session.integration.test.ts > AgentSession Integration > event subscription > should receive events during execution 5ms
+ ✓ src/session/agent-session.integration.test.ts > AgentSession Integration > session persistence > should record entries in session manager 3ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > constructor > should create with sessions and callbacks 6ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > constructor > should default selectedIndex to 0 1ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > constructor > should initialize isFocused false by default 1ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > constructor > should allow empty sessions array 1ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > draw() > should render a bordered box 2ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > draw() > should display title " Sessions " 1ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > draw() > should list session names 1ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > draw() > should show time ago (formatted) 1ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > draw() > should indicate selected with ▶ prefix 1ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > draw() > should show help text at bottom 1ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > draw() > should limit visible sessions based on height 1ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > draw() > should truncate long session names 3ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > handleKey() > should move selection up with ArrowUp 1ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > handleKey() > should move selection down with ArrowDown 0ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > handleKey() > should not move past top 0ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > handleKey() > should not move past bottom 0ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > handleKey() > should call onSelect on Enter 2ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > handleKey() > should call onCancel on Escape 0ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > formatDate() > should format "now" for recent 0ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > formatDate() > should format minutes 0ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > formatDate() > should format hours 0ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > formatDate() > should format days 0ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > clearCache() > should be no-op 1ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > edge cases > should handle empty sessions 0ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > edge cases > should handle unicode in names 0ms
+ ✓ src/tui/molecules/session-selector.test.ts > SessionSelector > edge cases > should handle very long cwd (but we truncate name only) 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > constructor > should create with required options 5ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > constructor > should default type to info 2ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > constructor > should accept custom type 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > constructor > should use default buttons based on type 4ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > constructor > should accept custom buttons 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > constructor > should merge custom theme 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > constructor > should default width to 50 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > constructor > should accept custom width 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > constructor > should set onResult and onCancel 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > constructor > should initialize selectedIndex to primary button if available 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > constructor > should default isFocused to true 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > draw() > should render a bordered box 2ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > draw() > should display title 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > draw() > should display message 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > draw() > should display buttons 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > draw() > should highlight primary button 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > draw() > should apply destructive style if marked 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > draw() > should respect requested width 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > draw() > should show icon based on type 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > draw() > should wrap long message 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > draw() > should center content within width 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > handleKey() > should move selection left with Left arrow or 'h' 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > handleKey() > should move selection right with Right arrow or 'l' 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > handleKey() > should not move past rightmost button 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > handleKey() > should confirm selection on Enter 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > handleKey() > should call onCancel on Escape 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > handleKey() > should call onCancel on ctrl+c? 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > handleKey() > should trigger confirm on first button if Enter at index 0 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > moveLeft() / moveRight() > should update selectedIndex 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > confirm() > should call onResult with button value 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > confirm() > should do nothing if no button at index 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > getDefaultButtons() > should return two buttons for confirm 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > getDefaultButtons() > should return single OK for error/warning 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > getDefaultButtons() > should return single OK for info/custom default 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > clearCache() > should be no-op (no cache) 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > edge cases > should handle very narrow width 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > edge cases > should handle empty message 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > edge cases > should handle empty title? 0ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > edge cases > should handle many buttons 1ms
+ ✓ src/tui/organisms/modal.test.ts > Modal > edge cases > should handle unicode in title/message/buttons 1ms
+ ✓ src/tui/atoms/autocomplete.test.ts > Autocomplete > SlashCommandAutocompleteProvider > should only match queries starting with / 4ms
+ ✓ src/tui/atoms/autocomplete.test.ts > Autocomplete > SlashCommandAutocompleteProvider > should match commands by substring 1ms
+ ✓ src/tui/atoms/autocomplete.test.ts > Autocomplete > SlashCommandAutocompleteProvider > should be case-insensitive 1ms
+ ✓ src/tui/atoms/autocomplete.test.ts > Autocomplete > SlashCommandAutocompleteProvider > should include description as detail 1ms
+ ✓ src/tui/atoms/autocomplete.test.ts > Autocomplete > SlashCommandAutocompleteProvider > should include icon 1ms
+ ✓ src/tui/atoms/autocomplete.test.ts > Autocomplete > SlashCommandAutocompleteProvider > should sort: exact match first, then prefix, then contains 0ms
+ ✓ src/tui/atoms/autocomplete.test.ts > Autocomplete > FilePathAutocompleteProvider > should return empty if query does not look like path 2ms
+ ✓ src/tui/atoms/autocomplete.test.ts > Autocomplete > FilePathAutocompleteProvider > should return empty if directory does not exist 1ms
+ ✓ src/tui/atoms/autocomplete.test.ts > Autocomplete > FilePathAutocompleteProvider > should return files in directory if query ends with / 17ms
+ ✓ src/tui/atoms/autocomplete.test.ts > Autocomplete > CombinedAutocompleteProvider > should merge results from multiple providers 1ms
+ ✓ src/tui/atoms/autocomplete.test.ts > Autocomplete > CombinedAutocompleteProvider > should deduplicate by label 1ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > constructor > should create with content 2ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > constructor > should accept paddingX and paddingY 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > constructor > should default to padding 1 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > setContent() > should update content and clear cache 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should return empty array for empty content 1ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should render markdown headings 1ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should render bold text 1ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should render italic text 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should render inline code with highlighting 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should render code blocks with syntax highlighting 13ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should add [Copy] hint after code block 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should apply padding 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should cache result per width 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should invalidate cache when content changes 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should handle lists 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should handle blockquotes 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > draw() > should handle tables 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > clearCache() > should clear cache 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > getCodeAtCopyRow() / hasCopyHint() > should return code for copy rows 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > edge cases > should handle very long lines 0ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > edge cases > should handle unicode 1ms
+ ✓ src/tui/atoms/markdown.test.ts > Markdown > edge cases > should handle zero width gracefully 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > constructor > should create with data and default visibleRows=20 4ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > constructor > should accept custom visibleRows 1ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > constructor > should call ensureExpanded on all nodes 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > constructor > should accept onSelect and onToggle callbacks 2ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > constructor > should initialize isFocused to false 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > constructor > should set selectedIndex to 0 initially 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > recomputeVisible() > should flatten tree into visible nodes 1ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > recomputeVisible() > should include children when parent expanded 1ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > recomputeVisible() > should not include children when parent collapsed 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > recomputeVisible() > should recalculate depth correctly 1ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > recomputeVisible() > should clamp selectedIndex if out of bounds 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > adjustScroll() > should move scroll up when selectedIndex above viewport 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > adjustScroll() > should move scroll down when selectedIndex below viewport 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > adjustScroll() > should clamp scroll to 0 minimum 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > adjustScroll() > should clamp scroll to maxScroll 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > draw() > should return array of lines 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > draw() > should include labels 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > draw() > should show [+] for collapsed nodes with children 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > draw() > should show [-] for expanded nodes with children 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > draw() > should indent children with spaces 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > draw() > should add cursor marker on selected line when focused 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > draw() > should not add cursor marker when not focused 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > draw() > should respect visibleRows limit 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > draw() > should handle scrollOffset 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should move selection up 1ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should move selection down 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should not move past top 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should not move past bottom 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should page up 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should page down 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should toggle expand/collapse on Enter for nodes with children 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should call onToggle when expanding/collapsing 3ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should call onSelect on Enter for leaf nodes 1ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should expand with Right arrow if collapsed 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should not expand with Right arrow if already expanded 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should collapse with Left arrow if expanded 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > handleKey() > should move to parent with Left arrow if collapsed and has children 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > serializeState() / deserializeState() > should serialize expanded state, selectedIndex, scrollOffset 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > serializeState() / deserializeState() > should deserialize and restore state 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > serializeState() / deserializeState() > should ignore undefined properties on deserialize 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > edge cases > should handle empty data 1ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > edge cases > should handle single node 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > edge cases > should handle deep nesting 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > edge cases > should handle unicode labels 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > edge cases > should handle large visibleRows 0ms
+ ✓ src/tui/molecules/tree-view.test.ts > TreeView > edge cases > should handle nodes without children array 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > constructor > should create with first and second panes 5ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > constructor > should default orientation to horizontal 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > constructor > should accept custom orientation 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > constructor > should default minFirst/minSecond to 3 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > constructor > should accept custom min sizes 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > constructor > should default initialPosition to 0.5 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > constructor > should initialize isFocused to false 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > constructor > should initialize position to 0, set on first draw 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should return height number of lines 2ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should set totalSize based on orientation 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should initialize position on first draw using initialPosition 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should render divider between panes (horizontal) 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should render divider between panes (vertical) 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should include divider character in each line (horizontal) 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should add cursor marker at divider position when dragging 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should not include cursor marker when not dragging 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should clamp position to minFirst/maxPos 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should handle narrow terminals 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should handle empty child lines gracefully 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should pad child lines appropriately 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > draw() > should recompute position on each draw (persist after resize) 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > handleKey() > should move divider right on ArrowRight 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > handleKey() > should move divider left on ArrowLeft 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > handleKey() > should move divider down on ArrowDown for vertical 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > handleKey() > should move divider up on ArrowUp for vertical 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > handleKey() > should clamp position to minFirst 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > handleKey() > should clamp position to total - minSecond 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > handleKey() > should clear caches on both children after move 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > handleKey() > should ignore other keys 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > clearCache() > should clear caches on both children 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > edge cases > should handle very small terminal 0ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > edge cases > should handle very large terminal 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > edge cases > should handle children returning different line counts 1ms
+ ✓ src/tui/molecules/split-pane.test.ts > SplitPane > edge cases > should handle orientation toggle? (no runtime toggle) 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > constructor > should create with default options 4ms
+ ✓ src/tui/molecules/input.test.ts > Input > constructor > should accept initial value 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > constructor > should accept placeholder 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > constructor > should accept maxWidth 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > constructor > should support password mode 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > constructor > should accept custom mask char 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > value management > should get current value 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > value management > should set value and trigger onChange 3ms
+ ✓ src/tui/molecules/input.test.ts > Input > value management > should keep cursor within bounds after setValue 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > value management > should insert text at cursor position 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > value management > should trigger onChange on insertText 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > draw() > should render value when focused or non-empty 2ms
+ ✓ src/tui/molecules/input.test.ts > Input > draw() > should show placeholder when not focused and empty 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > draw() > should mask password 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > draw() > should include cursor marker when focused 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > draw() > should not include cursor marker when not focused 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > draw() > should respect maxWidth for rendering 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > draw() > should handle empty value when focused 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > handleKey() > should move cursor left with ArrowLeft 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > handleKey() > should move cursor right with ArrowRight 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > handleKey() > should not move cursor past start 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > handleKey() > should not move cursor past end 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > handleKey() > should insert character on regular key 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > handleKey() > should delete with Backspace 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > handleKey() > should delete forward with Delete 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > handleKey() > should submit on Enter 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > handleKey() > should cancel on Escape 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > handleKey() > should call onAutocompleteRequested on Tab 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > handleKey() > should move to line start with Home 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > handleKey() > should move to line end with End 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > history > should add entries to history 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > history > should not add duplicate consecutive entries 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > history > should not add empty entries 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > history > should clear history 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > edge cases > should handle very long value 3ms
+ ✓ src/tui/molecules/input.test.ts > Input > edge cases > should handle unicode characters 1ms
+ ✓ src/tui/molecules/input.test.ts > Input > edge cases > should handle cursor at boundaries 0ms
+ ✓ src/tui/molecules/input.test.ts > Input > edge cases > should handle multiple insertions 0ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > constructor > should create instance with default options 5ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > constructor > should create instance with custom options 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > containers > should have all required containers 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > containers > should append containers to children 3ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > setRuntime() > should accept runtime without error 2ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > setRuntime() > should allow null runtime initially 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > init() > should initialize editor and header 3ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > init() > should not reinitialize if already initialized 5ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > stop() > should stop the running loop 0ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > addUserMessage() > should add user message to chat container 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > addAssistantMessage() > should add assistant message to chat container 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > addToolMessage() > should add tool message to chat container 2ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > setStatus() > should update status container 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > setWidget() > should add widget above editor by default 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > setWidget() > should add widget below editor when specified 0ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > setHeader() > should clear and set new header 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > setHeader() > should clear header when null passed 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > setRightItems() > should be callable without error 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > clearCache() > should clear cache on all containers 0ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > handleKey() > should forward key events to editor when initialized 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > handleKey() > should not throw when editor is null 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > run() loop > should handle immediate stop without input 10ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > draw() > should draw without errors 0ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > draw() > should handle zero width gracefully 1ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > edge cases > should handle empty message string 0ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > edge cases > should handle very long message 0ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > edge cases > should handle multiple messages 0ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > edge cases > should handle status updates 0ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > edge cases > should handle widget replacement 0ms
+ ✓ src/tui/interactive-mode.test.ts > InteractiveMode > edge cases > should handle null runtime gracefully in run 11ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > constructor > should create with default provider "anthropic" 4ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > constructor > should accept custom provider 1ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > constructor > should default title to "Login" 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > constructor > should accept custom title 1ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > constructor > should set callbacks 1ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > constructor > should initialize isFocused false by default? Actually default false, but often focused when shown. 1ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > constructor > should start with empty apiKey 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > constructor > should start in provider stage 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > getApiKey() / setApiKey() > should get current apiKey 1ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > draw() > should render a bordered box 1ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > draw() > should display title centered 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > draw() > should display provider 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > draw() > should show masked key placeholder when not in input stage 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > draw() > should show asterisks for key when in input stage 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > draw() > should add cursor marker when focused and in input stage 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > draw() > should show help text at bottom 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > draw() > should fill height with empty lines if needed 1ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > handleKey() > should advance to input stage on Enter in provider stage 1ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > handleKey() > should submit apiKey on Enter in input stage 3ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > handleKey() > should call onCancel on Escape 1ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > handleKey() > should handle backspace to delete key chars 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > handleKey() > should append printable characters in input stage 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > handleKey() > should ignore non-printable keys in input stage 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > handleKey() > should not accept input in provider stage 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > clearCache() > should be no-op 2ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > edge cases > should handle empty apiKey submission 1ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > edge cases > should handle many characters 3ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > edge cases > should handle unicode in apiKey 0ms
+ ✓ src/tui/organisms/login-dialog.test.ts > LoginDialog > edge cases > should handle narrow width 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > constructor > should create with definitions 4ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > constructor > should start with empty context stack 2ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > constructor > should initialize config from provided config 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > constructor > should apply disabled bindings from config 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > registerDefinitions() > should add new bindings 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > registerDefinitions() > should merge with existing binding, keep user overrides 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > registerDefinitions() > should set defaultKeys if no override 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > registerDefinitions() > should apply disabled to new bindings from config.disabled 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > context stack > pushContext should add to stack 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > context stack > popContext should remove and return last 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > context stack > popContext on empty stack returns undefined 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > context stack > setContext should replace entire stack 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > context stack > getCurrentContext should return top of stack or undefined 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > matches() > should return false if binding not found 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > matches() > should return false if binding disabled 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > matches() > should return false if context mismatch 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > matches() > should return true when key matches binding keys 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > matches() > should accept multiple keys 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > matches() > should return false if no match 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > findMatch() > should return binding ID for matching key 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > findMatch() > should return null for no match 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > findMatch() > should respect context filter 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > findMatch() > should ignore disabled bindings 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > getBindingsForContext() > should return bindings for given context 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > getBindingsForContext() > should return empty array for unknown context 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > getBindingsForContext() > should not include bindings without context field? 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > getAllBindings() > should return all registered bindings 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > getBinding() > should return binding by id 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > getBinding() > should return undefined for unknown id 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > setBinding() > should update keys for existing binding 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > setBinding() > should accept single string and convert to array 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > setBinding() > should not affect other bindings 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > setEnabled() > should enable/disable binding 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > findConflicts() > should detect conflicts within same context 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > findConflicts() > should not detect conflicts across different contexts 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > findConflicts() > should ignore disabled bindings 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > findConflicts() > should return conflict key 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > loadConfig() > should apply overrides 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > loadConfig() > should apply disabled list 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > loadConfig() > should preserve other bindings 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > exportConfig() > should export overrides for changed bindings 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > exportConfig() > should export disabled bindings 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > exportConfig() > should not export unchanged bindings 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > exportConfig() > should handle array overrides 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > edge cases > should handle binding with empty defaultKeys 0ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > edge cases > should handle many bindings 1ms
+ ✓ src/tui/atoms/keybindings.test.ts > KeybindingsManager > edge cases > should handle unicode in descriptions 0ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > constructor > should create with provided themes 6ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > constructor > should default to dark theme if none provided 1ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > constructor > should accept custom currentThemeId 1ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > constructor > should set selectedIndex to 0 if theme not found 1ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > constructor > should default to built-in themes if none provided 1ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > constructor > should initialize isFocused false 0ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > draw() > should render a bordered box 1ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > draw() > should display title "Select Theme" 1ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > draw() > should list themes 2ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > draw() > should mark current theme with a dot 1ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > draw() > should use ▶ prefix for selected item 1ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > draw() > should show help text at bottom 0ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > draw() > should respect context height (limit visible themes) 0ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > draw() > should pad with empty lines to fill height 0ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > draw() > should truncate lines to width 2ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > handleKey() > should move selection up with ArrowUp or "up" 1ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > handleKey() > should move selection down with ArrowDown or "down" 0ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > handleKey() > should not move past top 1ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > handleKey() > should not move past bottom 0ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > handleKey() > should call onSelect on Enter 3ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > handleKey() > should call onCancel on Escape 0ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > clearCache() > should be no-op 1ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > edge cases > should handle empty themes array 0ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > edge cases > should handle single theme 1ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > edge cases > should handle very long theme names 0ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > edge cases > should handle unicode in theme names 0ms
+ ✓ src/tui/molecules/theme-selector.test.ts > ThemeSelector > edge cases > should handle invalid currentThemeId gracefully 0ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > constructor > should filter out null separators? Actually filter(Boolean) removes null 5ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > constructor > should merge theme with defaults 2ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > constructor > should default maxVisible to 10 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > constructor > should set selectedIndex 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > constructor > should clamp selectedIndex to valid range 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > setItems() > should replace items and reset selection 2ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > getSelectedItem() > should return selected item if not disabled 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > getSelectedItem() > should return null if selected item is disabled 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > selectById() > should set selectedIndex to matching item 2ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > selectById() > should do nothing if id not found 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > draw() > should render a bordered box 2ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > draw() > should list items with labels and shortcuts 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > draw() > should show disabled items with dim color 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > draw() > should highlight selected item 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > draw() > should apply custom theme 0ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > draw() > should respect requested width 2ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > draw() > should limit visible items to maxVisible 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > draw() > should not render separators (null items) 0ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > handleKey() > should move selection up/down 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > handleKey() > should skip disabled items when navigating 0ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > handleKey() > should call onSelect when pressing Enter on enabled item 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > handleKey() > should call onClose on Escape 0ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > handleKey() > should not call onSelect when Enter pressed on disabled item 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > clearCache() > should be no-op 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > edge cases > should handle empty items array 0ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > edge cases > should handle very long labels 1ms
+ ✓ src/tui/organisms/context-menu.test.ts > ContextMenu > edge cases > should handle unicode 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > constructor > should create with items, visibleRows, and callbacks 7ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > constructor > should default isFocused to false 1ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > constructor > should accept custom theme 1ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > constructor > should accept onChange and onClose callbacks 2ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > setItems() > should replace items array 1ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > setItems() > should clamp selectedIndex to new bounds 1ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > handleKey() > should cycle value on Enter 4ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > handleKey() > should call onClose on Escape 1ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > handleKey() > should move selection up 1ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > handleKey() > should move selection down 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > handleKey() > should not move past top 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > handleKey() > should not move past bottom 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > handleKey() > should wrap values when cycling at last value 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > draw() > should render visible items 1ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > draw() > should show selected item with > prefix and color 1ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > draw() > should show value in brackets with color 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > draw() > should show scroll info when items exceed visibleRows 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > draw() > should add cursor marker to first line when focused 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > draw() > should not add cursor marker when not focused 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > draw() > should dim non-selected items 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > draw() > should truncate long lines to width 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > draw() > should respect custom theme.selected 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > draw() > should respect custom theme.value 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > clearCache() > should be no-op (stateless) 1ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > edge cases > should handle empty items array 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > edge cases > should handle items with empty label/value 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > edge cases > should handle single item 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > edge cases > should handle scrollOffset larger than items 0ms
+ ✓ src/tui/molecules/settings-list.test.ts > SettingsList > edge cases > should handle unicode in labels 0ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > constructor > should create with memories and default maxDisplay=10 4ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > constructor > should accept custom maxDisplay 1ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > constructor > should accept onSelect and onDelete callbacks 1ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > constructor > should build SelectList items from memories 2ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > constructor > should truncate long content 0ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > setMemories() > should update memories and rebuild items 2ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > setMemories() > should respect maxDisplay when rebuilding 1ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > draw() > should delegate to SelectList.draw() 1ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > draw() > should display memory items with score and source 1ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > draw() > should handle empty memories 1ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > clearCache() > should be no-op 1ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > edge cases > should handle memory with missing score 0ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > edge cases > should handle memory with missing metadata 0ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > edge cases > should handle very long content 0ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > edge cases > should handle unicode content 0ms
+ ✓ src/tui/molecules/memory-panel.test.ts > MemoryPanel > edge cases > should handle maxDisplay larger than memories 0ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > constructor > should create with models 6ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > constructor > should set callbacks 1ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > constructor > should default selectedIndex to 0 0ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > draw() > should render a bordered box 1ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > draw() > should display title " Select Model " 1ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > draw() > should list models with name, provider, and context window 1ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > draw() > should format context window in K/M 1ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > draw() > should mark selected with ▶ prefix 0ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > draw() > should show help text 1ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > draw() > should truncate long lines 3ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > handleKey() > should move selection up/down 1ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > handleKey() > should not move past boundaries 0ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > handleKey() > should call onSelect on Enter 2ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > handleKey() > should call onCancel on Escape 0ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > clearCache() > should clear cached lines 0ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > edge cases > should handle empty models array 0ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > edge cases > should handle very large context window (10M) 0ms
+ ✓ src/tui/molecules/model-selector.test.ts > ModelSelector > edge cases > should handle unicode in names 0ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > constructor > should create with default 1 line 3ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > constructor > should accept custom lines count 0ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > constructor > should default to empty object options 0ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > getLines() > should return current number of lines 1ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > setLines() > should update lines count 0ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > setLines() > should allow zero lines 0ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > setLines() > should not allow negative lines 0ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > setLines() > should clamp large numbers 1ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > draw() > should return array of empty strings 1ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > draw() > should return correct number of lines 2ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > draw() > should ignore context width 1ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > draw() > should return empty array when lines=0 0ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > clearCache() > should be no-op 2ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > edge cases > should handle large line count 1ms
+ ✓ src/tui/atoms/spacer.test.ts > Spacer > edge cases > should be stateless (draw independent) 0ms
+ ✓ src/cli/list-models.test.ts > listModels > should print 'No models available.' when registry empty 7ms
+ ✓ src/cli/list-models.test.ts > listModels > should list models in a table with headers 19ms
+ ✓ src/cli/list-models.test.ts > listModels > should filter models by search pattern (case-insensitive) 1ms
+ ✓ src/cli/list-models.test.ts > listModels > should sort models by provider then id 2ms
+ ✓ src/cli/list-models.test.ts > listModels > should show 'no models matching' when filter yields none 1ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > constructor > should create with default options 5ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > constructor > should accept custom options 1ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > getText() / setText() > should get initial text (empty) 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > getText() / setText() > should set text and split into lines 1ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > getText() / setText() > should call onChange callback when setText 3ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > insertText() > should insert at cursor position 1ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > insertText() > should update cursor position after insert 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > handleKey() > should move cursor left with ArrowLeft 1ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > handleKey() > should move cursor right with ArrowRight 1ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > handleKey() > should handle backspace to delete before cursor 1ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > handleKey() > should handle delete to delete after cursor 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > handleKey() > should insert newline with Enter 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > handleKey() > should handle Home/End 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > handleKey() > should call onSubmit when configured 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > handleKey() > should call onEscape when configured 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > draw() > should render lines with cursor marker when focused 1ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > draw() > should not show cursor marker when not focused 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > draw() > should apply scroll offset 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > undo/redo > should push state on setText and support undo 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > history > should add entries to history 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > history > should clear history 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > clearCache() > should clear all caches 2ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > edge cases > should handle empty text 0ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > edge cases > should handle very long lines 1ms
+ ✓ src/tui/organisms/editor.test.ts > Editor > edge cases > should handle unicode characters 0ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > constructor > should create with bindings array 5ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > constructor > should default columnWidth to 20 1ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > constructor > should default spacing to 2 1ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > constructor > should default keyColor to yellow 1ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > constructor > should default actionColor to white 1ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > constructor > should accept custom options 1ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > setBindings() > should update bindings and clear cache 0ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > draw() > should render bindings in columns 1ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > draw() > should apply colors 1ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > draw() > should reset colors at end of each binding 1ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > draw() > should space columns evenly based on width 1ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > draw() > should pad lines to full width 0ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > draw() > should handle empty bindings 2ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > draw() > should handle single binding 1ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > draw() > should truncate key to columnWidth 0ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > clearCache() > should be no-op (stateless) 1ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > edge cases > should handle very many bindings 1ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > edge cases > should handle unicode in key and action 0ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > edge cases > should handle very small width 0ms
+ ✓ src/tui/molecules/keybinding-hints.test.ts > KeybindingHints > edge cases > should handle large columnWidth 0ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > constructor > should create with default options 4ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > constructor > should accept custom content and language 1ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > constructor > should set callbacks 1ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > constructor > should initialize cursor at 0,0 1ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > constructor > should default isFocused false 1ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > draw() > should render a bordered box 2ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > draw() > should display title with language 1ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > draw() > should show line numbers 1ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > draw() > should show cursor marker on current line 1ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > draw() > should not show cursor marker when not focused 1ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > draw() > should show info line at bottom 1ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > draw() > should show help text 0ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > draw() > should fill remaining vertical space 0ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > draw() > should truncate lines to borderWidth 3ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > handleKey() > should call onCancel on Escape 1ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > handleKey() > should call onSave on Ctrl+S 2ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > handleKey() > should insert character into current line 0ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > handleKey() > should handle backspace 1ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > handleKey() > should handle Enter to insert new line 1ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > edge cases > should handle empty content 0ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > edge cases > should handle very long content 0ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > edge cases > should handle unicode 0ms
+ ✓ src/tui/molecules/extension-editor.test.ts > ExtensionEditor > edge cases > should handle narrow terminal 0ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > constructor > should create with steps and currentStep clamped 3ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > constructor > should accept custom theme 2ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > constructor > should default showDescription true 0ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > constructor > should default vertical false 0ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > setCurrentStep() > should update currentStep within bounds 0ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > setCurrentStep() > should clamp to 0 0ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > setCurrentStep() > should clamp to max 0ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > nextStep() > should increment currentStep if not last 0ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > nextStep() > should not increment past last 1ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > previousStep() > should decrement currentStep if greater than 0 1ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > previousStep() > should not decrement below 0 0ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > isComplete() > should return true if at last step 0ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > isComplete() > should return false if not at last step 0ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > draw() > should draw horizontal layout by default 1ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > draw() > should draw vertical when vertical=true 0ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > clearCache() > should be no-op 1ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > edge cases > should handle single step 0ms
+ ✓ src/tui/atoms/stepper.test.ts > Stepper > edge cases > should handle empty steps 0ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > constructor > should create with extensions 4ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > constructor > should set callbacks 1ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > constructor > should default selectedIndex to 0 1ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > draw() > should render bordered box with title " Extensions " 1ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > draw() > should show checkmark for enabled, circle for disabled 1ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > draw() > should mark selected with ▶ 0ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > draw() > should show help text 0ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > handleKey() > should move selection up/down 1ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > handleKey() > should call onCancel on Escape 1ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > handleKey() > should call onSelect on Enter 2ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > handleKey() > should toggle enabled via Space 1ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > handleKey() > should not toggle if onToggle not provided 2ms
+ ✓ src/tui/molecules/extension-selector.test.ts > ExtensionSelector > clearCache() > should be no-op 1ms
+ ✓ src/tui/atoms/text.test.ts > Text > constructor > should create instance with empty content 4ms
+ ✓ src/tui/atoms/text.test.ts > Text > constructor > should accept content in constructor 1ms
+ ✓ src/tui/atoms/text.test.ts > Text > constructor > should accept all styling options 1ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should return empty array for empty content 2ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should return single line for simple text 2ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should handle multiline text 1ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should handle zero width gracefully 1ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should wrap text when wrap=true 1ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should truncate text when truncate=true 1ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should not wrap or truncate by default 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should align center 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should align right 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should align left (default) 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should apply bold style 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should apply dim style 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should apply underline style 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should apply color 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should apply background color 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should combine multiple styles 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > draw() > should reset styles after text 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > clearCache() > should clear cached output 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > clearCache() > should not throw when called multiple times 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > setContent() > should update content and invalidate cache 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > describe() > should return content for accessibility 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > describe() > should return empty string for empty content 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > textDirection > should support RTL direction 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > textDirection > should support LTR direction 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > textDirection > should auto-detect RTL with auto direction 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > Arabic reshaping > should reshape Arabic text 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > Arabic reshaping > should not reshape non-Arabic text 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > caching > should cache result for same width 0ms
+ ✓ src/tui/atoms/text.test.ts > Text > caching > should recompute when width changes 1ms
+ ✓ src/tui/atoms/text.test.ts > Text > caching > should recompute when content changes 0ms
+ ✓ src/tui/molecules/scoped-models-selector.test.ts > ScopedModelsSelector > constructor > should create with models 6ms
+ ✓ src/tui/molecules/scoped-models-selector.test.ts > ScopedModelsSelector > constructor > should set callbacks 1ms
+ ✓ src/tui/molecules/scoped-models-selector.test.ts > ScopedModelsSelector > draw() > should render with title Scoped Models 1ms
+ ✓ src/tui/molecules/scoped-models-selector.test.ts > ScopedModelsSelector > draw() > should display scope tags 1ms
+ ✓ src/tui/molecules/scoped-models-selector.test.ts > ScopedModelsSelector > draw() > should truncate long model names 3ms
+ ✓ src/tui/molecules/scoped-models-selector.test.ts > ScopedModelsSelector > handleKey() > should navigate and select 3ms
+ ✓ src/tui/molecules/scoped-models-selector.test.ts > ScopedModelsSelector > handleKey() > should cancel 1ms
+ ✓ src/tui/molecules/scoped-models-selector.test.ts > ScopedModelsSelector > clearCache() > should no-op 1ms
+ ✓ src/tui/atoms/stdin-buffer.test.ts > stdin-buffer > isCompleteSequence() > should return not-escape for non-escape 3ms
+ ✓ src/tui/atoms/stdin-buffer.test.ts > stdin-buffer > isCompleteSequence() > should return incomplete for single ESC 0ms
+ ✓ src/tui/atoms/stdin-buffer.test.ts > stdin-buffer > isCompleteSequence() > should handle simple ESC + char 0ms
+ ✓ src/tui/atoms/stdin-buffer.test.ts > stdin-buffer > isCompleteSequence() > should handle CSI sequences 0ms
+ ✓ src/tui/atoms/stdin-buffer.test.ts > stdin-buffer > isCompleteSequence() > should handle bracketed paste start 0ms
+ ✓ src/tui/atoms/stdin-buffer.test.ts > stdin-buffer > StdinBuffer class > should process complete escape sequences immediately 4ms
+ ✓ src/tui/atoms/stdin-buffer.test.ts > stdin-buffer > StdinBuffer class > should buffer incomplete sequences until more data arrives 1ms
+ ✓ src/tui/atoms/stdin-buffer.test.ts > stdin-buffer > StdinBuffer class > should detect bracketed paste 1ms
+ ✓ src/tui/atoms/stdin-buffer.test.ts > stdin-buffer > StdinBuffer class > should flush buffer on timeout 5ms
+ ✓ src/tui/atoms/stdin-buffer.test.ts > stdin-buffer > StdinBuffer class > should clear buffer on destroy 1ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > message adding > addUserMessage should append to chatContainer 6ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > message adding > addAssistantMessage should append to chatContainer 1ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > message adding > addToolMessage should append to chatContainer 1ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > setStatus() > should update statusContainer 1ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > setWidget() > should add to widgetAboveContainer by default 1ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > setWidget() > should add to widgetBelowContainer when specified 1ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > setHeader() > should set headerContainer children 0ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > setHeader() > should clear header when null 0ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > setRightItems() > should call footer.setRightItems 0ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > clearCache() > should clear all containers caches 1ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > run() loop > should handle immediate stop 14ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > command palette > should handle command palette on Ctrl+P 1ms
+ ✓ src/tui/interactive-mode.extra.test.ts > InteractiveMode Additional > thinking selector > should show thinking selector on Ctrl+T 1ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > constructor > should create with default options 3ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > constructor > should accept custom options 0ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > constructor > should initialize isFocused false 0ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > onRoundEvent() > should push round metrics 1ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > onRoundEvent() > should keep only last N rounds based on height 1ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > onRunEvent() > should store run metric 1ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > clear() > should clear metrics 1ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > handleKey() > should be defined but no-op for Escape 1ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > draw() > should render a bordered box 1ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > draw() > should show title "Debug Metrics" 1ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > draw() > should show run metrics when showRun=true and data present 1ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > draw() > should show round metrics when showRounds=true 0ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > draw() > should respect width 1ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > draw() > should handle empty metrics 0ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > clearCache() > should be no-op 0ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > edge cases > should handle very small height 0ms
+ ✓ src/tui/organisms/debug-panel.test.ts > DebugPanel > edge cases > should handle zero width context 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > createFileOps > should create empty FileOperations 4ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > extractFileOpsFromMessage > should extract read operations from read tool 1ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > extractFileOpsFromMessage > should extract read operations from find tool with paths array 1ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > extractFileOpsFromMessage > should extract edit operations from edit tool 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > extractFileOpsFromMessage > should extract multiple operations from a message 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > extractFileOpsFromMessage > should not extract if no toolCalls 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > computeFileLists > should compute sorted file lists 1ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > computeFileLists > should handle empty 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > formatFileOperations > should format file operations text 3ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > formatFileOperations > should handle no operations 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > formatFileOperations > should truncate long lists 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > extractTextContent > should extract text from text blocks 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > extractTextContent > should handle thinking blocks 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > extractTextContent > should handle toolCall blocks 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > extractTextContent > should ignore unknown types 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > serializeTurn > should serialize user turn 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > serializeTurn > should serialize assistant turn with tool calls 1ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > serializeTurn > should serialize tool turn 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > estimateTokens > should estimate tokens by dividing length by 4 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > calculateContextTokens > should calculate tokens for message entries 1ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > calculateContextTokens > should include compaction summary tokens 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > calculateContextTokens > should include branch summary tokens 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > calculateContextTokens > should include custom message tokens 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > getMessageFromEntry > should convert message entry to message-like 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > getMessageFromEntry > should convert custom_message to user-like message 1ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > getMessageFromEntry > should convert branch_summary to user message with prefix 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > getMessageFromEntry > should convert compaction with includeCompaction 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > getMessageFromEntry > should skip compaction if not includeCompaction 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > getMessageFromEntry > should return undefined for unknown entry type 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > serializeConversation > should serialize list of entries to string 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > serializeConversation > should skip entries that return undefined from getMessageFromEntry 0ms
+ ✓ src/compaction/utils.test.ts > Compaction Utils > serializeConversation > should include compaction if requested 0ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > getSegmenter > should return Intl.Segmenter instance 4ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > getSegmenter > should return same instance (singleton) 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > visibleWidth > should return 0 for empty string 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > visibleWidth > should count ASCII characters as 1 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > visibleWidth > should ignore ANSI escape sequences 0ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > visibleWidth > should count Chinese/Japanese/Korean characters as 2 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > visibleWidth > should count emojis as 2 (most are wide) 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > visibleWidth > should ignore zero-width characters 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > visibleWidth > should handle mixed content 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > visibleWidth > should handle multiple ANSI codes 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > truncateText > should truncate to width with ellipsis 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > truncateText > should not truncate if shorter than width 0ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > truncateText > should handle ANSI codes in truncation 0ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > truncateText > should respect maxWidth parameter 0ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > wrapText > should wrap long text to width 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > wrapText > should preserve existing newlines 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > wrapText > should handle empty string 2ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > wrapText > should break on word boundaries when possible 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > wrapTextWithAnsi > should wrap text while preserving ANSI codes 0ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > sliceByColumn > should extract substring by visible columns 0ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > sliceByColumn > should skip zero-width chars 0ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > sliceByColumn > should handle wide chars 0ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > sliceByColumn > should respect start offset 0ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > extractOverlaySegments > should extract overlay segments from lines 1ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > containsArabic > should detect Arabic characters 0ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > shapeArabic > should reshape Arabic text 0ms
+ ✓ src/tui/atoms/internal-utils.test.ts > internal-utils > shapeArabic > should handle non-Arabic gracefully 0ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > constructor > should create with root node and auto-expand root 5ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > constructor > should build initial visible list 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > constructor > should set callbacks 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > constructor > should default selectedIndex to 0 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > buildVisibleList() > should flatten tree respecting expandedDirs 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > draw() > should render a bordered box with title " File Browser " 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > draw() > should show file/directory icons 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > draw() > should indent children with spaces 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > draw() > should show selected with ▶ prefix 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > draw() > should display help text 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > draw() > should respect visible height limit 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > handleKey() > should move selection up/down 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > handleKey() > should not move past boundaries 0ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > handleKey() > should call onSelect on Enter 3ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > handleKey() > should call onCancel on Escape 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > clearCache() > should clear any stored cache 0ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > edge cases > should handle empty directory 0ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > edge cases > should handle deep nesting 1ms
+ ✓ src/tui/molecules/tree-selector.test.ts > TreeSelector > edge cases > should handle unicode names 1ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > getCapabilities() > should detect Kitty terminal 4ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > getCapabilities() > should detect iTerm2 1ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > getCapabilities() > should detect WezTerm 1ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > getCapabilities() > should return null images for VSCode 1ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > getCapabilities() > should cache capabilities 0ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > getCapabilities() > should reset cache on resetCapabilitiesCache 2ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > isImageLine() > should detect Kitty image prefix 0ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > isImageLine() > should detect iTerm2 prefix 0ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > isImageLine() > should return false for normal text 1ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > getCellDimensions / setCellDimensions > should get default dimensions 1ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > getCellDimensions / setCellDimensions > should set custom dimensions 1ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > getCellDimensions / setCellDimensions > should return copy to prevent mutation 0ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > clearRenderCache() > should clear cache 0ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > encodeKitty() > should encode image data with basic options 1ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > encodeKitty() > should include imageId if provided 1ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > encodeKitty() > should chunk large data 0ms
+ ✓ src/tui/atoms/terminal-image.test.ts > terminal-image > ScaleMode > should have correct values 1ms
+ ✓ src/tui/atoms/base.test.ts > base > isInteractive type guard > should return true for InteractiveElement 4ms
+ ✓ src/tui/atoms/base.test.ts > base > isInteractive type guard > should return false for null 0ms
+ ✓ src/tui/atoms/base.test.ts > base > isInteractive type guard > should return false for UIElement without isFocused 1ms
+ ✓ src/tui/atoms/base.test.ts > base > resolveDimension > should return number as is 0ms
+ ✓ src/tui/atoms/base.test.ts > base > resolveDimension > should parse percentage string 1ms
+ ✓ src/tui/atoms/base.test.ts > base > resolveDimension > should clamp percentage 0-100 0ms
+ ✓ src/tui/atoms/base.test.ts > base > resolveDimension > should return undefined for undefined 0ms
+ ✓ src/tui/atoms/base.test.ts > base > resolveDimension > should parse fractional percentages 0ms
+ ✓ src/tui/atoms/base.test.ts > base > resolveDimension > should floor number values 0ms
+ ✓ src/tui/atoms/base.test.ts > base > CURSOR_MARKER > should be defined escape sequence 0ms
+ ✓ src/tui/atoms/base.test.ts > base > ElementContainer > should create empty children 2ms
+ ✓ src/tui/atoms/base.test.ts > base > ElementContainer > should append children 2ms
+ ✓ src/tui/atoms/base.test.ts > base > ElementContainer > should remove children 1ms
+ ✓ src/tui/atoms/base.test.ts > base > ElementContainer > should clear all children 1ms
+ ✓ src/tui/atoms/base.test.ts > base > ElementContainer > draw should concatenate children lines 2ms
+ ✓ src/tui/atoms/base.test.ts > base > ElementContainer > clearCache should clear all children caches 2ms
+ ✓ src/tui/atoms/animations.test.ts > Blink > should start with visible = true 6ms
+ ✓ src/tui/atoms/animations.test.ts > Blink > start() should set interval 3ms
+ ✓ src/tui/atoms/animations.test.ts > Blink > start() should not set interval if already started 1ms
+ ✓ src/tui/atoms/animations.test.ts > Blink > stop() should clear interval and reset visible 2ms
+ ✓ src/tui/atoms/animations.test.ts > Blink > draw() should return child lines when visible 2ms
+ ✓ src/tui/atoms/animations.test.ts > Blink > draw() should return empty when not visible 1ms
+ ✓ src/tui/atoms/animations.test.ts > Blink > clearCache() should clear child cache 1ms
+ ✓ src/tui/atoms/animations.test.ts > Slide > should start with startTime set to Date.now() 0ms
+ ✓ src/tui/atoms/animations.test.ts > Slide > draw() should shift child with spaces based on progress 1ms
+ ✓ src/tui/atoms/animations.test.ts > Slide > draw() should have no left padding when duration elapsed 1ms
+ ✓ src/tui/atoms/animations.test.ts > Slide > clearCache() should clear child cache 1ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > constructor > should create with required label 2ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > constructor > should default to variant "default" 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > constructor > should accept custom variant 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > constructor > should accept custom theme 1ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > constructor > should accept prefix and suffix 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > setLabel() > should update label 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > setVariant() > should update variant 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > setVariant() > should accept all variant types 1ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > getText() > should return label only by default 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > getText() > should include prefix and suffix 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > getText() > should return empty string if label empty 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > draw() > should render a single line 1ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > draw() > should apply padding spaces 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > draw() > should apply default theme for default variant 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > draw() > should apply primary theme 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > draw() > should apply success theme 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > draw() > should apply error theme 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > draw() > should apply warning theme 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > draw() > should include prefix and suffix in styled text 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > draw() > should reset style at end 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > draw() > should ignore context width/height 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > clearCache() > should be no-op (stateless) 1ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > edge cases > should handle empty label 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > edge cases > should handle very long label 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > edge cases > should handle unicode characters 0ms
+ ✓ src/tui/atoms/badge.test.ts > Badge > edge cases > should handle custom theme overriding specific variants 0ms
+ ✓ src/tui/atoms/badge.test.ts > BadgeGroup > constructor > should create with badges array 1ms
+ ✓ src/tui/atoms/badge.test.ts > BadgeGroup > constructor > should default to empty array 1ms
+ ✓ src/tui/atoms/badge.test.ts > BadgeGroup > constructor > should accept custom separator 0ms
+ ✓ src/tui/atoms/badge.test.ts > BadgeGroup > constructor > should default separator to space 0ms
+ ✓ src/tui/atoms/badge.test.ts > BadgeGroup > draw() > should concatenate badges with separator 1ms
+ ✓ src/tui/atoms/badge.test.ts > BadgeGroup > draw() > should render single badge without separator 0ms
+ ✓ src/tui/atoms/badge.test.ts > BadgeGroup > draw() > should return empty array for no badges 1ms
+ ✓ src/tui/atoms/badge.test.ts > BadgeGroup > draw() > should handle custom separator 0ms
+ ✓ src/tui/atoms/badge.test.ts > BadgeGroup > clearCache() > should be no-op (stateless) 0ms
+ ✓ src/tui/molecules/oauth-selector.test.ts > OAuthSelector > constructor > should create with default providers if none provided 5ms
+ ✓ src/tui/molecules/oauth-selector.test.ts > OAuthSelector > constructor > should use custom providers 1ms
+ ✓ src/tui/molecules/oauth-selector.test.ts > OAuthSelector > constructor > should set callbacks 1ms
+ ✓ src/tui/molecules/oauth-selector.test.ts > OAuthSelector > draw() > should render a bordered box 1ms
+ ✓ src/tui/molecules/oauth-selector.test.ts > OAuthSelector > draw() > should display title 1ms
+ ✓ src/tui/molecules/oauth-selector.test.ts > OAuthSelector > draw() > should list provider names 1ms
+ ✓ src/tui/molecules/oauth-selector.test.ts > OAuthSelector > draw() > should add help text 1ms
+ ✓ src/tui/molecules/oauth-selector.test.ts > OAuthSelector > handleKey() > should navigate up/down 1ms
+ ✓ src/tui/molecules/oauth-selector.test.ts > OAuthSelector > handleKey() > should call onSelect on Enter 3ms
+ ✓ src/tui/molecules/oauth-selector.test.ts > OAuthSelector > handleKey() > should call onCancel on Escape 1ms
+ ✓ src/tui/molecules/oauth-selector.test.ts > OAuthSelector > clearCache() > should be no-op 1ms
+ ✓ src/tui/atoms/tool-execution.test.ts > ToolExecutionMessage > constructor > should create with empty tools by default 3ms
+ ✓ src/tui/atoms/tool-execution.test.ts > ToolExecutionMessage > constructor > should accept initial tools 1ms
+ ✓ src/tui/atoms/tool-execution.test.ts > ToolExecutionMessage > addToolCall() > should add a tool to the list 0ms
+ ✓ src/tui/atoms/tool-execution.test.ts > ToolExecutionMessage > draw() > should render bordered box with title 1ms
+ ✓ src/tui/atoms/tool-execution.test.ts > ToolExecutionMessage > draw() > should display tool with appropriate icon 0ms
+ ✓ src/tui/atoms/tool-execution.test.ts > ToolExecutionMessage > draw() > should truncate output lines 2ms
+ ✓ src/tui/atoms/tool-execution.test.ts > ToolExecutionMessage > draw() > should not show output if not provided 0ms
+ ✓ src/tui/atoms/tool-execution.test.ts > ToolExecutionMessage > draw() > should pad to fill height 0ms
+ ✓ src/tui/atoms/tool-execution.test.ts > ToolExecutionMessage > clearCache() > should be no-op 1ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > constructor > should create with settings and callbacks 8ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > constructor > should default selectedIndex to 0 1ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > constructor > should initialize isFocused false 1ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > draw() > should render a bordered box 2ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > draw() > should display title " Settings " 1ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > draw() > should list settings with name and value 1ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > draw() > should indicate selected with ▶ prefix 1ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > draw() > should show help text 1ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > draw() > should limit visible items by height 2ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > handleKey() > should move selection up/down 1ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > handleKey() > should not exceed bounds 1ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > handleKey() > should call onCancel on Escape 1ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > handleKey() > should toggle boolean settings on Space 3ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > handleKey() > should not toggle non-boolean on Space 1ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > clearCache() > should be no-op 1ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > edge cases > should handle empty settings array 0ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > edge cases > should handle settings with null/undefined values 0ms
+ ✓ src/tui/molecules/settings-selector.test.ts > SettingsSelector > edge cases > should handle unicode in names 1ms
+ ✓ src/tui/organisms/thinking-selector.test.ts > ThinkingSelector > constructor > should create select list with all available levels 5ms
+ ✓ src/tui/organisms/thinking-selector.test.ts > ThinkingSelector > constructor > should preselect current level 1ms
+ ✓ src/tui/organisms/thinking-selector.test.ts > ThinkingSelector > constructor > should include descriptions from LEVEL_DESCRIPTIONS 1ms
+ ✓ src/tui/organisms/thinking-selector.test.ts > ThinkingSelector > draw() > should render a bordered box with title " Thinking Level " 2ms
+ ✓ src/tui/organisms/thinking-selector.test.ts > ThinkingSelector > draw() > should display all levels 1ms
+ ✓ src/tui/organisms/thinking-selector.test.ts > ThinkingSelector > draw() > should include descriptions 1ms
+ ✓ src/tui/organisms/thinking-selector.test.ts > ThinkingSelector > handleKey() > should forward keys to selectList 1ms
+ ✓ src/tui/organisms/thinking-selector.test.ts > ThinkingSelector > handleKey() > should trigger onSelect through selectList 3ms
+ ✓ src/tui/organisms/thinking-selector.test.ts > ThinkingSelector > clearCache() > should clear selectList cache 1ms
+ ✓ src/tui/organisms/thinking-selector.test.ts > ThinkingSelector > edge cases > should handle empty availableLevels 1ms
+ ✓ src/tui/organisms/thinking-selector.test.ts > ThinkingSelector > edge cases > should handle unicode in descriptions 0ms
+ ✓ src/tui/molecules/session-selector-search.test.ts > SessionSearchSelector > constructor > should initialize with all sessions as results 5ms
+ ✓ src/tui/molecules/session-selector-search.test.ts > SessionSearchSelector > constructor > should start with empty search query 1ms
+ ✓ src/tui/molecules/session-selector-search.test.ts > SessionSearchSelector > draw() > should render bordered box with title 1ms
+ ✓ src/tui/molecules/session-selector-search.test.ts > SessionSearchSelector > draw() > should show search input line 1ms
+ ✓ src/tui/molecules/session-selector-search.test.ts > SessionSearchSelector > draw() > should list sessions 1ms
+ ✓ src/tui/molecules/session-selector-search.test.ts > SessionSearchSelector > draw() > should filter results based on searchQuery 1ms
+ ✓ src/tui/molecules/session-selector-search.test.ts > SessionSearchSelector > handleKey() > should append characters to searchQuery 1ms
+ ✓ src/tui/molecules/session-selector-search.test.ts > SessionSearchSelector > handleKey() > should handle backspace 1ms
+ ✓ src/tui/molecules/session-selector-search.test.ts > SessionSearchSelector > handleKey() > should select on Enter 5ms
+ ✓ src/tui/molecules/session-selector-search.test.ts > SessionSearchSelector > handleKey() > should call onCancel on Escape 1ms
+ ✓ src/tui/molecules/session-selector-search.test.ts > SessionSearchSelector > clearCache() > should be no-op 1ms
+ ✓ src/tui/molecules/show-images-selector.test.ts > ShowImagesSelector > constructor > should create with images and defaults 4ms
+ ✓ src/tui/molecules/show-images-selector.test.ts > ShowImagesSelector > constructor > should accept initial enabled state 1ms
+ ✓ src/tui/molecules/show-images-selector.test.ts > ShowImagesSelector > constructor > should set callbacks 1ms
+ ✓ src/tui/molecules/show-images-selector.test.ts > ShowImagesSelector > draw() > should render bordered box with title Image Display 1ms
+ ✓ src/tui/molecules/show-images-selector.test.ts > ShowImagesSelector > draw() > should show enabled/disabled status 1ms
+ ✓ src/tui/molecules/show-images-selector.test.ts > ShowImagesSelector > draw() > should list images with emoji 2ms
+ ✓ src/tui/molecules/show-images-selector.test.ts > ShowImagesSelector > draw() > should mark selected image with ▶ 1ms
+ ✓ src/tui/molecules/show-images-selector.test.ts > ShowImagesSelector > handleKey() > should toggle enabled on Space 2ms
+ ✓ src/tui/molecules/show-images-selector.test.ts > ShowImagesSelector > handleKey() > should call onCancel on Escape 1ms
+ ✓ src/tui/molecules/show-images-selector.test.ts > ShowImagesSelector > handleKey() > should move selection up/down 1ms
+ ✓ src/tui/molecules/show-images-selector.test.ts > ShowImagesSelector > clearCache() > should be no-op 2ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > constructor > should create with items and callbacks 5ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > constructor > should default selectedIndex to 0 1ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > constructor > should initialize isFocused false 0ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > draw() > should render bordered box with title Config Editor 1ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > draw() > should list config items as key = value 1ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > draw() > should mark selected with ▶ prefix 1ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > draw() > should show help text 1ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > handleKey() > should move selection up/down 1ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > handleKey() > should not move past boundaries 1ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > handleKey() > should call onCancel on Escape 1ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > clearCache() > should be no-op 1ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > edge cases > should handle empty items 0ms
+ ✓ src/tui/molecules/config-selector.test.ts > ConfigSelector > edge cases > should handle long values 2ms
+ ✓ src/tui/atoms/tool-message.test.ts > ToolMessage > should render tool name header 3ms
+ ✓ src/tui/atoms/tool-message.test.ts > ToolMessage > should show duration if provided 0ms
+ ✓ src/tui/atoms/tool-message.test.ts > ToolMessage > should show output 2ms
+ ✓ src/tui/atoms/tool-message.test.ts > ToolMessage > should wrap output 1ms
+ ✓ src/tui/atoms/tool-message.test.ts > ToolMessage > should show (no output) when output missing 0ms
+ ✓ src/tui/atoms/tool-message.test.ts > ToolMessage > should apply error styling 1ms
+ ✓ src/tui/atoms/tool-message.test.ts > ToolMessage > should apply padding 1ms
+ ✓ src/tui/atoms/tool-message.test.ts > ToolMessage > setResult should update output and duration 1ms
+ ✓ src/tui/atoms/tool-message.test.ts > ToolMessage > setError should set error flag and output 1ms
+ ✓ src/tui/atoms/tool-message.test.ts > ToolMessage > should handle zero width? 1ms
+ ✓ src/tui/atoms/tool-message.test.ts > ToolMessage > clearCache should no-op 0ms
+ ✓ src/tui/atoms/diff.test.ts > parseDiffLine > should identify diff --git header 3ms
+ ✓ src/tui/atoms/diff.test.ts > parseDiffLine > should identify --- and +++ headers 1ms
+ ✓ src/tui/atoms/diff.test.ts > parseDiffLine > should identify hunk header 1ms
+ ✓ src/tui/atoms/diff.test.ts > parseDiffLine > should identify added lines 1ms
+ ✓ src/tui/atoms/diff.test.ts > parseDiffLine > should identify removed lines 1ms
+ ✓ src/tui/atoms/diff.test.ts > parseDiffLine > should identify context lines 0ms
+ ✓ src/tui/atoms/diff.test.ts > parseDiffLine > should return null for empty? Not used 1ms
+ ✓ src/tui/atoms/diff.test.ts > wordDiff > should identify additions wrapped in {inverse} tags 1ms
+ ✓ src/tui/atoms/diff.test.ts > wordDiff > should identify deletions wrapped in {inverse} tags 1ms
+ ✓ src/tui/atoms/diff.test.ts > wordDiff > should handle identical lines 1ms
+ ✓ src/tui/atoms/diff.test.ts > Diff > should create with diffText and default theme 1ms
+ ✓ src/tui/atoms/diff.test.ts > Diff > should render simple diff 1ms
+ ✓ src/tui/atoms/diff.test.ts > Diff > should apply theme colors 4ms
+ ✓ src/tui/atoms/diff.test.ts > Diff > should include line numbers when showLineNumbers true 1ms
+ ✓ src/tui/atoms/diff.test.ts > Diff > should cache result for same width 0ms
+ ✓ src/tui/atoms/diff.test.ts > Diff > should clear cache on clearCache 0ms
+ ✓ src/tui/atoms/diff.test.ts > renderDiff helper > should render diff and return lines 0ms
+ ✓ src/tui/molecules/cancellable-loader.test.ts > CancellableLoader > should extend BorderedLoader 9ms
+ ✓ src/tui/molecules/cancellable-loader.test.ts > CancellableLoader > should call onAbort via abort() method 3ms
+ ✓ src/tui/molecules/cancellable-loader.test.ts > CancellableLoader > abort() should clear spinner interval 2ms
+ ✓ src/tui/molecules/cancellable-loader.test.ts > CancellableLoader > dispose() should clear spinner interval 1ms
+ ✓ src/tui/molecules/cancellable-loader.test.ts > CancellableLoader > should accept optional onAbort in constructor 1ms
+ ✓ src/tui/organisms/file-browser.test.ts > FileBrowser > constructor > should create with entries and visibleRows 6ms
+ ✓ src/tui/organisms/file-browser.test.ts > FileBrowser > constructor > should format items with icons 1ms
+ ✓ src/tui/organisms/file-browser.test.ts > FileBrowser > constructor > should set onSelect callback 1ms
+ ✓ src/tui/organisms/file-browser.test.ts > FileBrowser > setEntries() > should update entries and refresh select list 1ms
+ ✓ src/tui/organisms/file-browser.test.ts > FileBrowser > getSelectList() > should return the internal SelectList 1ms
+ ✓ src/tui/organisms/file-browser.test.ts > FileBrowser > draw() > should delegate to SelectList draw 1ms
+ ✓ src/tui/organisms/file-browser.test.ts > FileBrowser > clearCache() > should be no-op 2ms
+ ✓ src/tui/organisms/file-browser.test.ts > FileBrowser > edge cases > should handle empty entries 1ms
+ ✓ src/tui/organisms/file-browser.test.ts > FileBrowser > edge cases > should handle entries with special chars 1ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have select method 3ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have confirm method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have input method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have notify method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have onTerminalInput method 1ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have setStatus method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have setWorkingMessage method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have setWorkingIndicator method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have setHiddenThinkingLabel method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have setWidget method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have setFooter method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have setHeader method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have setTitle method 1ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have custom method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have pasteToEditor method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have setEditorText method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have getEditorText method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have editor method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have addAutocompleteProvider method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have setEditorComponent method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have theme getter 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have getAllThemes method 1ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have getTheme method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have setTheme method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have getToolsExpanded method 0ms
+ ✓ src/tui/extension-ui-context.test.ts > ExtensionUIContext > should have setToolsExpanded method 0ms
+ ✓ src/tui/molecules/user-message-selector.test.ts > UserMessageSelector > constructor > should create with messages 6ms
+ ✓ src/tui/molecules/user-message-selector.test.ts > UserMessageSelector > constructor > should set callbacks 2ms
+ ✓ src/tui/molecules/user-message-selector.test.ts > UserMessageSelector > draw() > should render bordered box with title Select Message 1ms
+ ✓ src/tui/molecules/user-message-selector.test.ts > UserMessageSelector > draw() > should display message content truncated to 50 chars 1ms
+ ✓ src/tui/molecules/user-message-selector.test.ts > UserMessageSelector > draw() > should indicate selected with ▶ 1ms
+ ✓ src/tui/molecules/user-message-selector.test.ts > UserMessageSelector > handleKey() > should move selection up/down 1ms
+ ✓ src/tui/molecules/user-message-selector.test.ts > UserMessageSelector > handleKey() > should call onSelect on Enter 3ms
+ ✓ src/tui/molecules/user-message-selector.test.ts > UserMessageSelector > handleKey() > should call onCancel on Escape 1ms
+ ✓ src/tui/molecules/user-message-selector.test.ts > UserMessageSelector > clearCache() > should be no-op 2ms
+ ✓ src/runtime/slash-commands.test.ts > Slash Commands > BUILTIN_SLASH_COMMANDS > should contain common commands 4ms
+ ✓ src/runtime/slash-commands.test.ts > Slash Commands > BUILTIN_SLASH_COMMANDS > should have description for each command 2ms
+ ✓ src/runtime/slash-commands.test.ts > Slash Commands > getSlashCommand > should return command info for known command 1ms
+ ✓ src/runtime/slash-commands.test.ts > Slash Commands > getSlashCommand > should return undefined for unknown command 0ms
+ ✓ src/runtime/slash-commands.test.ts > Slash Commands > listSlashCommands > should return all builtin commands 0ms
+ ✓ src/tui/atoms/box.test.ts > Box > constructor > should create with default padding (1,1) 4ms
+ ✓ src/tui/atoms/box.test.ts > Box > constructor > should accept custom padding 1ms
+ ✓ src/tui/atoms/box.test.ts > Box > constructor > should accept background function 0ms
+ ✓ src/tui/atoms/box.test.ts > Box > children management > should start with empty children 2ms
+ ✓ src/tui/atoms/box.test.ts > Box > children management > should append children 2ms
+ ✓ src/tui/atoms/box.test.ts > Box > children management > should remove children 1ms
+ ✓ src/tui/atoms/box.test.ts > Box > children management > should clear all children 1ms
+ ✓ src/tui/atoms/box.test.ts > Box > children management > should clear cache when children change 1ms
+ ✓ src/tui/atoms/box.test.ts > Box > setBgFn() > should set background function 1ms
+ ✓ src/tui/atoms/box.test.ts > Box > setBgFn() > should clear cache when bgFn changes 1ms
+ ✓ src/tui/atoms/box.test.ts > Box > setBgFn() > should remove background when set to undefined 2ms
+ ✓ src/tui/atoms/box.test.ts > Box > draw() > should return empty array without children 1ms
+ ✓ src/tui/atoms/box.test.ts > Box > draw() > should render children with reduced width 0ms
+ ✓ src/tui/atoms/box.test.ts > Box > draw() > should add top and bottom padding 1ms
+ ✓ src/tui/atoms/box.test.ts > Box > draw() > should add left and right padding to content lines 1ms
+ ✓ src/tui/atoms/box.test.ts > Box > draw() > should apply background function to all lines 1ms
+ ✓ src/tui/atoms/box.test.ts > Box > draw() > should handle multiple children 0ms
+ ✓ src/tui/atoms/box.test.ts > Box > draw() > should cache result for same width 0ms
+ ✓ src/tui/atoms/box.test.ts > Box > draw() > should invalidate cache when width changes 0ms
+ ✓ src/tui/atoms/box.test.ts > Box > draw() > should invalidate cache when bgFn changes 1ms
+ ✓ src/tui/atoms/box.test.ts > Box > clearCache() > should clear own cache and children cache 1ms
+ ✓ src/tui/atoms/box.test.ts > Box > clearCache() > should not throw when called multiple times 0ms
+ ✓ src/tui/atoms/box.test.ts > Box > edge cases > should handle very narrow width 0ms
+ ✓ src/tui/atoms/box.test.ts > Box > edge cases > should handle zero padding 0ms
+ ✓ src/tui/atoms/box.test.ts > Box > edge cases > should handle empty child lines 0ms
+ ✓ src/tui/atoms/box.test.ts > Box > edge cases > should handle children with many lines 0ms
+ ✓ src/tui/atoms/box.test.ts > Box > edge cases > should handle large padding values 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > constructor > should create with default options 4ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > constructor > should accept percent 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > constructor > should accept value as alias for percent 1ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > constructor > should clamp percent to 0-100 1ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > constructor > should accept custom width 1ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > constructor > should accept custom height 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > constructor > should accept custom fill/empty characters 1ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > constructor > should accept custom colors 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > constructor > should hide label when showLabel=false 1ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > createProgressBar factory > should create bar with value 1ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > createProgressBar factory > should accept optional label param (ignored) 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > setPercent() > should update percent 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > setPercent() > should clamp to 0-100 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > setValue() > should be alias for setPercent 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > increment() > should increase percent 1ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > increment() > should clamp after increment 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > getValue() > should return current percent 1ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > draw() > should render line with bar 2ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > draw() > should include label when showLabel=true 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > draw() > should apply fill color 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > draw() > should apply empty color 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > draw() > should apply label color 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > draw() > should reset color at end 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > draw() > should center bar in available width 1ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > draw() > should render multiple lines if height > 1 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > draw() > should handle 0% 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > draw() > should handle 100% 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > clearCache() > should be no-op (stateless) 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > edge cases > should handle very small width 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > edge cases > should handle very large width 0ms
+ ✓ src/tui/atoms/progress-bar.test.ts > ProgressBar > edge cases > should handle custom fill/empty chars of different lengths 1ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > push() > should add text to ring 6ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > push() > should ignore empty text 1ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > push() > should accumulate with prepend 1ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > push() > should accumulate with append (prepend false) 1ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > push() > should not accumulate if no previous entry 1ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > peek() > should return undefined when empty 0ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > peek() > should return most recent entry 0ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > peekAt() > should return entry at index from end 1ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > peekAt() > should return undefined for out-of-range 1ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > rotate() > should rotate last to first 1ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > rotate() > should do nothing if only one entry 0ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > rotate() > should do nothing if empty 0ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > clear() > should remove all entries 0ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > length getter > should return correct count 0ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > isEmpty() > should return true when empty 1ms
+ ✓ src/tui/atoms/kill-ring.test.ts > KillRing > isEmpty() > should return false when not empty 0ms
+ ✓ src/tui/atoms/flex.test.ts > Flex > constructor > should default to column with gap 0 4ms
+ ✓ src/tui/atoms/flex.test.ts > Flex > constructor > should accept custom options 0ms
+ ✓ src/tui/atoms/flex.test.ts > Flex > draw() - column > should stack children vertically 3ms
+ ✓ src/tui/atoms/flex.test.ts > Flex > draw() - column > should add gap between children 1ms
+ ✓ src/tui/atoms/flex.test.ts > Flex > draw() - column > should not add gap before first child 1ms
+ ✓ src/tui/atoms/flex.test.ts > Flex > draw() - column > should handle empty children 1ms
+ ✓ src/tui/atoms/flex.test.ts > Flex > draw() - row > should combine children horizontally line by line 1ms
+ ✓ src/tui/atoms/flex.test.ts > Flex > draw() - row > should pad shorter children with empty lines 1ms
+ ✓ src/tui/atoms/flex.test.ts > Flex > draw() - row > should add horizontal gap between children 1ms
+ ✓ src/tui/atoms/flex.test.ts > Flex > draw() - row > should handle multi-line children 1ms
+ ✓ src/tui/atoms/flex.test.ts > Flex > clearCache() > should clear caches of all children 1ms
+ ✓ src/agent/context-manager.test.ts > ContextBuilder > build > should build prompt with base and history 3ms
+ ✓ src/agent/context-manager.test.ts > ContextBuilder > build > should inject memories when enabled 1ms
+ ✓ src/agent/context-manager.test.ts > ContextBuilder > build > should not inject memories when disabled 1ms
+ ✓ src/agent/context-manager.test.ts > ContextBuilder > build > should truncate history to fit maxTokens 1ms
+ ✓ src/agent/context-manager.test.ts > ContextBuilder > build > should keep at least minMessages recent turns 1ms
+ ✓ src/agent/context-manager.test.ts > ContextBuilder > build > should separate system messages from non-system 0ms
+ ✓ src/agent/context-manager.test.ts > ContextBuilder > estimateTokenCount > should estimate tokens as length / 4 1ms
+ ✓ src/agent/context-manager.test.ts > ContextBuilder > estimateHistoryTokens > should sum tokens of all turns 0ms
+stdout | src/cli/session-picker.test.ts > selectSession > should resolve null when loader returns empty list
+No sessions found.
+
+ ✓ src/tui/atoms/i18n.test.ts > I18n > constructor > should default to en locale 3ms
+ ✓ src/tui/atoms/i18n.test.ts > I18n > constructor > should register en with defaultEnglish 1ms
+ ✓ src/tui/atoms/i18n.test.ts > I18n > register() > should add new locale 1ms
+ ✓ src/tui/atoms/i18n.test.ts > I18n > register() > should merge with fallback 0ms
+ ✓ src/tui/atoms/i18n.test.ts > I18n > setLocale() > should change current locale 0ms
+ ✓ src/tui/atoms/i18n.test.ts > I18n > setLocale() > should fallback to en if locale not registered 3ms
+ ✓ src/tui/atoms/i18n.test.ts > I18n > t() > should translate known key 1ms
+ ✓ src/tui/atoms/i18n.test.ts > I18n > t() > should fallback to key if missing 0ms
+ ✓ src/tui/atoms/i18n.test.ts > I18n > t() > should support positional arguments 1ms
+ ✓ src/tui/atoms/i18n.test.ts > I18n > t() > should ignore extra args 1ms
+ ✓ src/tui/atoms/i18n.test.ts > I18n > getAvailableLocales() > should list registered locales 2ms
+ ✓ src/cli/session-picker.test.ts > selectSession > should resolve null when loader returns empty list 6ms
+ ✓ src/cli/session-picker.test.ts > selectSession > should create UI and selector when sessions available 5ms
+ ✓ src/cli/session-picker.test.ts > selectSession > should resolve null when user cancels 1ms
+ ✓ src/compaction/core.test.ts > findCutPoint > should return full length if under limit 5ms
+ ✓ src/compaction/core.test.ts > findCutPoint > should find cut point when exceeding limit 1ms
+ ✓ src/compaction/core.test.ts > findCutPoint > should return 0 if nothing fits 1ms
+ ✓ src/compaction/core.test.ts > findCutPoint > should handle empty array 0ms
+ ✓ src/compaction/core.test.ts > shouldCompact > should return false if below minTokens 0ms
+ ✓ src/compaction/core.test.ts > shouldCompact > should return true if at or above tokenThreshold 1ms
+ ✓ src/compaction/core.test.ts > shouldCompact > should respect custom thresholds 0ms
+ ✓ src/compaction/core.test.ts > prepareCompaction > should split entries into keep and summarize groups 2ms
+ ✓ src/compaction/core.test.ts > prepareCompaction > should include file operations tracking 2ms
+ ✓ src/tui/atoms/assistant-message.test.ts > AssistantMessage > should render markdown content 5ms
+ ✓ src/tui/atoms/assistant-message.test.ts > AssistantMessage > should return empty array for empty content 2ms
+ ✓ src/tui/atoms/assistant-message.test.ts > AssistantMessage > should show loading indicator when isLoading 1ms
+ ✓ src/tui/atoms/assistant-message.test.ts > AssistantMessage > should apply padding 1ms
+ ✓ src/tui/atoms/assistant-message.test.ts > AssistantMessage > should apply text color 1ms
+ ✓ src/tui/atoms/assistant-message.test.ts > AssistantMessage > should update content via setContent 1ms
+ ✓ src/tui/atoms/assistant-message.test.ts > AssistantMessage > should update loading via setLoading 0ms
+ ✓ src/tui/atoms/assistant-message.test.ts > AssistantMessage > should handle narrow width 1ms
+ ✓ src/tui/atoms/assistant-message.test.ts > AssistantMessage > should handle unicode in content 1ms
+ ✓ src/tui/atoms/assistant-message.test.ts > AssistantMessage > clearCache should no-op 0ms
+ ✓ src/tui/atoms/grid.test.ts > Grid > constructor > should default to 1 column, no gaps 4ms
+ ✓ src/tui/atoms/grid.test.ts > Grid > constructor > should accept custom options 1ms
+ ✓ src/tui/atoms/grid.test.ts > Grid > draw() > should return empty for zero columns 2ms
+ ✓ src/tui/atoms/grid.test.ts > Grid > draw() > should return empty for no children 0ms
+ ✓ src/tui/atoms/grid.test.ts > Grid > draw() > should arrange children in a single row for one column 2ms
+ ✓ src/tui/atoms/grid.test.ts > Grid > draw() > should place children in multiple columns 1ms
+ ✓ src/tui/atoms/grid.test.ts > Grid > draw() > should add row gap between rows 1ms
+ ✓ src/tui/atoms/grid.test.ts > Grid > draw() > should handle multi-line children (row height = max) 1ms
+ ✓ src/tui/atoms/grid.test.ts > Grid > draw() > should pad children to fill cell width 2ms
+ ✓ src/tui/atoms/grid.test.ts > Grid > clearCache() > should clear children caches 1ms
+ ✓ src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > constructor > should create with command 4ms
+ ✓ src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > appendOutput() > should add output lines 0ms
+ ✓ src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > setComplete() > should set exit code and truncated flag 0ms
+ ✓ src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > draw() > should render header with command 1ms
+ ✓ src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > draw() > should show spinner when running 1ms
+ ✓ src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > draw() > should show exit code when complete 0ms
+ ✓ src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > draw() > should indicate truncation if truncated 1ms
+ ✓ src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > draw() > should pad lines to full width 2ms
+ ✓ src/tui/atoms/bash-execution-message.test.ts > BashExecutionMessage > clearCache() > should be no-op 2ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > constructor > should create with required text 3ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > constructor > should accept optional paddingX and paddingY 0ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > constructor > should accept custom ellipsis 0ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > constructor > should enable wrap when wrap=true 0ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > setText() / getText() > should update text 0ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > setText() / getText() > should treat null/undefined as empty string 0ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > draw() > should add top padding lines 1ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > draw() > should add bottom padding lines 0ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > draw() > should truncate long text with ellipsis 2ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > draw() > should wrap when wrap=true 1ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > draw() > should apply horizontal padding 0ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > draw() > should respect fillWidth for single-line truncate? Actually implementation varies. 0ms
+ ✓ src/tui/atoms/truncated-text.test.ts > TruncatedText > clearCache() > should be no-op (stateless) 1ms
+ ✓ src/tui/atoms/table.test.ts > Table > constructor > should create with rows 3ms
+ ✓ src/tui/atoms/table.test.ts > Table > constructor > should accept optional headers 1ms
+ ✓ src/tui/atoms/table.test.ts > Table > draw() > should render rows with aligned columns 1ms
+ ✓ src/tui/atoms/table.test.ts > Table > draw() > should include headers if provided 0ms
+ ✓ src/tui/atoms/table.test.ts > Table > draw() > should handle empty rows 0ms
+ ✓ src/tui/atoms/table.test.ts > Table > draw() > should handle rows with varying column counts 0ms
+ ✓ src/tui/atoms/table.test.ts > Table > draw() > should respect visibleWidth for wide chars 1ms
+ ✓ src/tui/atoms/table.test.ts > Table > clearCache() > should be no-op 1ms
+ ✓ src/tui/atoms/debug-overlay.test.ts > DebugOverlay > should create with empty data 4ms
+ ✓ src/tui/atoms/debug-overlay.test.ts > DebugOverlay > setData should store data 1ms
+ ✓ src/tui/atoms/debug-overlay.test.ts > DebugOverlay > draw should return lines for each data entry 2ms
+ ✓ src/tui/atoms/debug-overlay.test.ts > DebugOverlay > should truncate long lines to width 1ms
+ ✓ src/tui/atoms/debug-overlay.test.ts > DebugOverlay > clearCache should be no-op 1ms
+ ✓ src/tui/atoms/user-message.test.ts > UserMessage > should render right-aligned text 4ms
+ ✓ src/tui/atoms/user-message.test.ts > UserMessage > should wrap long text 1ms
+ ✓ src/tui/atoms/user-message.test.ts > UserMessage > should apply color and bgColor 1ms
+ ✓ src/tui/atoms/user-message.test.ts > UserMessage > should respect padding option 0ms
+ ✓ src/tui/atoms/user-message.test.ts > UserMessage > should update text via setText 0ms
+ ✓ src/tui/atoms/user-message.test.ts > UserMessage > should handle empty text 2ms
+ ✓ src/tui/atoms/user-message.test.ts > UserMessage > should preserve ANSI? Not implemented 0ms
+ ✓ src/tui/atoms/user-message.test.ts > UserMessage > clearCache should no-op 0ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > constructor > should create unlimited stack by default 5ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > constructor > should accept limit 0ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > push() > should add state to stack 1ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > push() > should clone state (deep copy) 1ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > push() > should enforce limit by removing oldest 1ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > pop() > should return and remove most recent 0ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > pop() > should return undefined when empty 0ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > peek() > should return most recent without removing 1ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > peek() > should return undefined when empty 0ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > clear() > should remove all snapshots 1ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > length > should return count 0ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > isEmpty() > should return true when empty 0ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > isEmpty() > should return false when not empty 0ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > canUndo() > should return true if has snapshots 0ms
+ ✓ src/tui/atoms/undo-stack.test.ts > UndoStack > canUndo() > should return false if empty 0ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > constructor > should create with items 4ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > constructor > should default separator to " / " 1ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > constructor > should accept custom separator 0ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > constructor > should default showHome true 0ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > constructor > should default homeIcon to 🏠 0ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > constructor > should merge custom theme 1ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > setItems() > should update items 1ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > draw() > should render line with separators 2ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > draw() > should include home icon when showHome true 1ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > draw() > should style active (last) item differently 0ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > draw() > should apply dim color to separator 0ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > draw() > should truncate to width 0ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > draw() > should include icon in label if provided 0ms
+ ✓ src/tui/atoms/breadcrumbs.test.ts > Breadcrumbs > clearCache() > should be no-op 2ms
+ ✓ src/runtime/telemetry.test.ts > Telemetry > should not emit when disabled 5ms
+ ✓ src/runtime/telemetry.test.ts > Telemetry > should emit when enabled 5ms
+ ✓ src/runtime/telemetry.test.ts > Telemetry > should queue events when rate limited 1ms
+ ✓ src/tui/atoms/custom-message.test.ts > CustomMessage > constructor > should create with required options 2ms
+ ✓ src/tui/atoms/custom-message.test.ts > CustomMessage > constructor > should accept optional label, color, padding 1ms
+ ✓ src/tui/atoms/custom-message.test.ts > CustomMessage > setContent() > should update content 0ms
+ ✓ src/tui/atoms/custom-message.test.ts > CustomMessage > setExpanded() > should update expanded flag 1ms
+ ✓ src/tui/atoms/custom-message.test.ts > CustomMessage > draw() > should render header with custom type label 2ms
+ ✓ src/tui/atoms/custom-message.test.ts > CustomMessage > draw() > should use custom label if provided 1ms
+ ✓ src/tui/atoms/custom-message.test.ts > CustomMessage > draw() > should apply color to label 1ms
+ ✓ src/tui/atoms/custom-message.test.ts > CustomMessage > draw() > should apply background color if provided 1ms
+ ✓ src/tui/atoms/custom-message.test.ts > CustomMessage > draw() > should render content via Markdown 1ms
+ ✓ src/tui/atoms/custom-message.test.ts > CustomMessage > draw() > should handle array content with text type 1ms
+ ✓ src/tui/atoms/custom-message.test.ts > CustomMessage > draw() > should filter non-text content blocks 1ms
+ ✓ src/tui/atoms/custom-message.test.ts > CustomMessage > clearCache() > should be no-op 1ms
+ ✓ src/cli/initial-message.test.ts > buildInitialMessage > should return undefined when no inputs 3ms
+ ✓ src/cli/initial-message.test.ts > buildInitialMessage > should use only stdin when provided 1ms
+ ✓ src/cli/initial-message.test.ts > buildInitialMessage > should use only fileText when provided 0ms
+ ✓ src/cli/initial-message.test.ts > buildInitialMessage > should use only first message when provided 1ms
+ ✓ src/cli/initial-message.test.ts > buildInitialMessage > should combine stdin, fileText, and first message in order 2ms
+ ✓ src/cli/initial-message.test.ts > buildInitialMessage > should include initialImages when provided 0ms
+ ✓ src/cli/initial-message.test.ts > buildInitialMessage > should not include initialImages when not provided 0ms
+ ✓ src/cli/initial-message.test.ts > buildInitialMessage > should handle empty messages array after shift 0ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > constructor > should create with value and maxStars 3ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > constructor > should clamp value between 0 and maxStars 1ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > constructor > should use default stars=5 0ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > constructor > should accept custom chars 0ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > constructor > should merge custom theme 1ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > setValue() > should update value with clamping 1ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > draw() > should render stars with correct count 1ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > draw() > should show empty stars 0ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > draw() > should show half star if allowHalf and value has .5 1ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > draw() > should include label if showLabel true 0ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > draw() > should use default label if none provided 0ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > clearCache() > should be no-op 1ms
+ ✓ src/tui/atoms/rating.test.ts > Rating > createRating factory > should create Rating instance 0ms
+ ✓ src/tui/atoms/dynamic-border.test.ts > DynamicBorder > should draw top and bottom border 5ms
+ ✓ src/tui/atoms/dynamic-border.test.ts > DynamicBorder > should apply color function if provided 1ms
+ ✓ src/tui/atoms/dynamic-border.test.ts > DynamicBorder > should respect width 0ms
+ ✓ src/tui/atoms/dynamic-border.test.ts > DynamicBorder > clearCache should be no-op 1ms
+ ✓ src/tui/atoms/keys.test.ts > parseKey > special keys > should parse Enter 4ms
+ ✓ src/tui/atoms/keys.test.ts > parseKey > special keys > should parse Escape 0ms
+ ✓ src/tui/atoms/keys.test.ts > parseKey > special keys > should parse Tab 0ms
+ ✓ src/tui/atoms/keys.test.ts > parseKey > special keys > should parse Backspace 0ms
+ ✓ src/tui/atoms/keys.test.ts > parseKey > special keys > should parse Arrow keys 1ms
+ ✓ src/tui/atoms/keys.test.ts > parseKey > special keys > should parse PageUp/PageDown 0ms
+ ✓ src/tui/atoms/keys.test.ts > parseKey > Ctrl+Letter > should parse Ctrl+A (SOH) 0ms
+ ✓ src/tui/atoms/keys.test.ts > parseKey > Ctrl+Letter > should parse Ctrl+Z 0ms
+ ✓ src/tui/atoms/keys.test.ts > parseKey > Ctrl+Letter > should not misinterpret other control codes 0ms
+ ✓ src/tui/atoms/keys.test.ts > parseKey > printable characters > should parse single printable 0ms
+ ✓ src/tui/atoms/keys.test.ts > parseKey > printable characters > should return null for empty string 0ms
+ ✓ src/tui/atoms/keys.test.ts > parseKey > unknown sequences > should return null for unknown CSI 0ms
+ ✓ src/tui/atoms/keys.test.ts > matchesKey > should match string key to string pattern 0ms
+ ✓ src/tui/atoms/keys.test.ts > matchesKey > should match ParsedKey to string pattern by name 0ms
+ ✓ src/tui/atoms/keys.test.ts > matchesKey > should match ParsedKey to string pattern by raw 0ms
+ ✓ src/tui/atoms/keys.test.ts > matchesKey > should match KeyId with seq 0ms
+ ✓ src/tui/atoms/keys.test.ts > matchesKey > should handle KeyId with name? Not used 0ms
+ ✓ src/tui/atoms/keys.test.ts > isKeyRelease > should return false for string 0ms
+ ✓ src/tui/atoms/keys.test.ts > isKeyRelease > should return true if type is release 0ms
+ ✓ src/tui/atoms/keys.test.ts > isKeyRepeat > should return false for string 0ms
+ ✓ src/tui/atoms/keys.test.ts > isKeyRepeat > should return true if type is repeat 0ms
+ ✓ src/tui/atoms/keys.test.ts > decodeKittyPrintable > should strip kitty wrapper 0ms
+ ✓ src/tui/atoms/keys.test.ts > decodeKittyPrintable > should handle multiple chunks 0ms
+ ✓ src/tui/atoms/keys.test.ts > Key constant > should export Key object 0ms
+ ✓ src/tui/atoms/layout-inspector.test.ts > LayoutInspector > should draw border and layout info 5ms
+ ✓ src/tui/atoms/layout-inspector.test.ts > LayoutInspector > should handle no panels 1ms
+ ✓ src/tui/atoms/layout-inspector.test.ts > LayoutInspector > should truncate long stats lines 1ms
+ ✓ src/tui/atoms/layout-inspector.test.ts > LayoutInspector > clearCache should be no-op 2ms
+ ✓ src/session/session-cwd.test.ts > getMissingSessionCwdIssue > should return undefined when sessionFile is not set 2ms
+ ✓ src/session/session-cwd.test.ts > getMissingSessionCwdIssue > should return undefined when session cwd exists 0ms
+ ✓ src/session/session-cwd.test.ts > getMissingSessionCwdIssue > should return issue when session cwd missing and sessionFile set 1ms
+ ✓ src/session/session-cwd.test.ts > getMissingSessionCwdIssue > should return undefined when session cwd is empty string 0ms
+ ✓ src/session/session-cwd.test.ts > formatMissingSessionCwdError > should format error with session file 1ms
+ ✓ src/session/session-cwd.test.ts > formatMissingSessionCwdError > should format error without session file 0ms
+ ✓ src/session/session-cwd.test.ts > formatMissingSessionCwdPrompt > should format compact prompt 0ms
+ ✓ src/session/session-cwd.test.ts > MissingSessionCwdError > should have proper message and name 1ms
+ ✓ src/tui/atoms/skill-invocation-message.test.ts > SkillInvocationMessage > constructor > should create with skill info 4ms
+ ✓ src/tui/atoms/skill-invocation-message.test.ts > SkillInvocationMessage > draw() > should render bordered box 1ms
+ ✓ src/tui/atoms/skill-invocation-message.test.ts > SkillInvocationMessage > draw() > should show skill name and appropriate icon per status 1ms
+ ✓ src/tui/atoms/skill-invocation-message.test.ts > SkillInvocationMessage > draw() > should show checkmark for complete 0ms
+ ✓ src/tui/atoms/skill-invocation-message.test.ts > SkillInvocationMessage > draw() > should fill height with empty lines 0ms
+ ✓ src/tui/atoms/skill-invocation-message.test.ts > SkillInvocationMessage > clearCache() > should be no-op 2ms
+ ✓ src/tui/atoms/stats-footer.test.ts > StatsFooter > setStats() > should update stats and refresh items 3ms
+ ✓ src/tui/atoms/stats-footer.test.ts > StatsFooter > draw() > should render stats 2ms
+ ✓ src/tui/atoms/stats-footer.test.ts > StatsFooter > draw() > should show auto-compact indicator 1ms
+ ✓ src/tui/atoms/stats-footer.test.ts > StatsFooter > draw() > should show context percent with color 1ms
+ ✓ src/tui/atoms/stats-footer.test.ts > StatsFooter > draw() > should handle missing optional fields 2ms
+ ✓ src/tui/atoms/stats-footer.test.ts > StatsFooter > clearCache() > should clear cache (delegated to parent) 0ms
+ ✓ src/tui/atoms/fuzzy.test.ts > fuzzyMatch > should return null for empty query 3ms
+ ✓ src/tui/atoms/fuzzy.test.ts > fuzzyMatch > should return null for empty text 0ms
+ ✓ src/tui/atoms/fuzzy.test.ts > fuzzyMatch > should match exact string 1ms
+ ✓ src/tui/atoms/fuzzy.test.ts > fuzzyMatch > should match subsequence 1ms
+ ✓ src/tui/atoms/fuzzy.test.ts > fuzzyMatch > should respect case sensitivity option 1ms
+ ✓ src/tui/atoms/fuzzy.test.ts > fuzzyMatch > should return matches indices 1ms
+ ✓ src/tui/atoms/fuzzy.test.ts > fuzzyMatch > should give bonus for sequential matches 0ms
+ ✓ src/tui/atoms/fuzzy.test.ts > fuzzyMatch > should give bonus for word boundary matches 0ms
+ ✓ src/tui/atoms/auth-selector-status.test.ts > AuthSelectorStatus > constructor > should default to two providers with none status 4ms
+ ✓ src/tui/atoms/auth-selector-status.test.ts > AuthSelectorStatus > constructor > should accept custom statuses 1ms
+ ✓ src/tui/atoms/auth-selector-status.test.ts > AuthSelectorStatus > draw() > should render a bordered box with title 1ms
+ ✓ src/tui/atoms/auth-selector-status.test.ts > AuthSelectorStatus > draw() > should display provider status with appropriate icon 1ms
+ ✓ src/tui/atoms/auth-selector-status.test.ts > AuthSelectorStatus > draw() > should show email if provided 0ms
+ ✓ src/tui/atoms/auth-selector-status.test.ts > AuthSelectorStatus > clearCache() > should be no-op 1ms
+ ✓ src/tui/atoms/visual-truncate.test.ts > VisualTruncate > constructor > should create with text and maxWidth 3ms
+ ✓ src/tui/atoms/visual-truncate.test.ts > VisualTruncate > draw() > should return text as-is if within maxWidth 1ms
+ ✓ src/tui/atoms/visual-truncate.test.ts > VisualTruncate > draw() > should truncate and add ellipsis if exceeding maxWidth 1ms
+ ✓ src/tui/atoms/visual-truncate.test.ts > VisualTruncate > draw() > should respect context.width if smaller than maxWidth 0ms
+ ✓ src/tui/atoms/visual-truncate.test.ts > VisualTruncate > draw() > should handle wide characters 0ms
+ ✓ src/tui/atoms/visual-truncate.test.ts > VisualTruncate > clearCache() > should be no-op 1ms
+ ✓ src/tui/atoms/earendil-announcement.test.ts > EarendilAnnouncementComponent > should draw announcement with border 4ms
+ ✓ src/tui/atoms/earendil-announcement.test.ts > EarendilAnnouncementComponent > should adjust width based on context 1ms
+ ✓ src/tui/atoms/earendil-announcement.test.ts > EarendilAnnouncementComponent > clearCache should be no-op 2ms
+ ✓ src/tui/atoms/footer.test.ts > Footer > should render with left and right items 4ms
+ ✓ src/tui/atoms/footer.test.ts > Footer > should handle no items 1ms
+ ✓ src/tui/atoms/footer.test.ts > Footer > should apply default theme if none provided 0ms
+ ✓ src/tui/atoms/footer.test.ts > Footer > should clearCache no-op 2ms
+ ✓ src/tui/molecules/form.test.ts > Form > should create form with fields 3ms
+ ✓ src/tui/molecules/form.test.ts > Form > should render labels with colon 1ms
+ ✓ src/tui/molecules/form.test.ts > Form > should include input components 0ms
+ ✓ src/tui/molecules/form.test.ts > Form > should handle empty fields array 0ms
+ ✓ src/tui/molecules/form.test.ts > Form > should clear cache on all children 0ms
+ ✓ src/runtime/resource-loader.test.ts > DefaultResourceLoader > should instantiate and return empty resources by default 4ms
+ ✓ src/runtime/resource-loader.test.ts > DefaultResourceLoader > should be able to reload without throwing 2ms
+ ✓ src/tui/atoms/divider.test.ts > Divider > should render a horizontal line 5ms
+ ✓ src/tui/atoms/divider.test.ts > Divider > should respect width 1ms
+ ✓ src/tui/atoms/divider.test.ts > Divider > should accept custom character 1ms
+ ✓ src/tui/atoms/divider.test.ts > Divider > should render empty line when width=0 0ms
+ ✓ src/tui/atoms/object-pool.test.ts > ObjectPool > should create with factory 4ms
+ ✓ src/tui/atoms/object-pool.test.ts > ObjectPool > acquire should create new instance when pool empty 2ms
+ ✓ src/tui/atoms/object-pool.test.ts > ObjectPool > release should return instance to pool 1ms
+ ✓ src/tui/atoms/object-pool.test.ts > ObjectPool > acquire should reuse released instance 1ms
+ ✓ src/tui/atoms/object-pool.test.ts > ObjectPool > clear should empty pool 0ms
+ ✓ src/tui/atoms/compaction-summary-message.test.ts > CompactionSummaryMessageComponent > should draw compaction summary stub 4ms
+ ✓ src/tui/atoms/compaction-summary-message.test.ts > CompactionSummaryMessageComponent > clearCache should be no-op 1ms
+ ✓ src/tui/atoms/themes.test.ts > themes > darkTheme > should define all required properties 3ms
+ ✓ src/tui/atoms/themes.test.ts > themes > lightTheme > should define all required properties 1ms
+ ✓ src/tui/atoms/themes.test.ts > themes > highContrastTheme > should define all required properties 0ms
+ ✓ src/tui/atoms/themes.test.ts > themes > ThemeManager > should create singleton 1ms
+ ✓ src/tui/organisms/index.test.ts > organisms/index.ts exports > should export CommandPalette 3ms
+ ✓ src/tui/organisms/index.test.ts > organisms/index.ts exports > should export Modal 0ms
+ ✓ src/tui/organisms/index.test.ts > organisms/index.ts exports > should export ContextMenu 1ms
+ ✓ src/tui/organisms/index.test.ts > organisms/index.ts exports > should export LoginDialog 0ms
+ ✓ src/tui/organisms/index.test.ts > organisms/index.ts exports > should export FileBrowser 0ms
+ ✓ src/tui/organisms/index.test.ts > organisms/index.ts exports > should export DebugPanel 0ms
+ ✓ src/tui/organisms/index.test.ts > organisms/index.ts exports > should export Editor 0ms
+ ✓ src/tui/organisms/index.test.ts > organisms/index.ts exports > should export ThinkingSelector 0ms
+ ✓ src/session/model-registry.test.ts > DefaultModelRegistry > should list providers 4ms
+ ✓ src/session/model-registry.test.ts > DefaultModelRegistry > should list all models 1ms
+ ✓ src/session/model-registry.test.ts > DefaultModelRegistry > should find an existing model 1ms
+ ✓ src/session/model-registry.test.ts > DefaultModelRegistry > should return undefined for unknown model 0ms
+ ✓ src/tui/atoms/branch-summary-message.test.ts > BranchSummaryMessageComponent > should draw stub line 5ms
+ ✓ src/tui/atoms/branch-summary-message.test.ts > BranchSummaryMessageComponent > clearCache should be no-op 1ms
+ ✓ src/tui/atoms/daxnuts.test.ts > DaxnutsComponent > should draw ASCII pattern 4ms
+ ✓ src/tui/atoms/daxnuts.test.ts > DaxnutsComponent > clearCache should be no-op 2ms
+ ✓ src/tui/atoms/armin.test.ts > ArminComponent > should draw ASCII art 3ms
+ ✓ src/tui/atoms/armin.test.ts > ArminComponent > clearCache should be no-op 1ms
+ ✓ src/extensions/loader.test.ts > Extension Loader > should discover and load extensions without throwing 4ms
+ ✓ src/tui/atoms/color-fallback.test.ts > color-fallback > should map theme colors to terminal capabilities 4ms
+ ✓ src/tui/atoms/types-atoms.test.ts > types-atoms.ts > should import without error 3ms
+ ✓ src/tui/atoms/types.test.ts > types.ts > should import without runtime errors 3ms
+ ✓ src/tui/molecules/index.test.ts > molecules/index.ts exports > should export Input 3ms
+ ✓ src/tui/molecules/index.test.ts > molecules/index.ts exports > should export SelectList 0ms
+ ✓ src/tui/molecules/index.test.ts > molecules/index.ts exports > should export Form 0ms
+ ✓ src/tui/molecules/index.test.ts > molecules/index.ts exports > should export Loader 0ms
+ ✓ src/tui/molecules/index.test.ts > molecules/index.ts exports > should export TreeView 0ms
+ ✓ src/tui/molecules/index.test.ts > molecules/index.ts exports > should export SessionSelector 0ms
+ ✓ src/tui/molecules/index.test.ts > molecules/index.ts exports > should export ModelSelector 0ms
+ ✓ src/tui/atoms/index.test.ts > atoms/index.ts exports > should export Text class 2ms
+ ✓ src/tui/atoms/index.test.ts > atoms/index.ts exports > should export Box class 0ms
+ ✓ src/tui/atoms/index.test.ts > atoms/index.ts exports > should export ProcessTerminal class 0ms
+ ✓ src/tui/atoms/index.test.ts > atoms/index.ts exports > should export key functions like visibleWidth 0ms
+ ✓ src/tui/atoms/index.test.ts > atoms/index.ts exports > should export themes 0ms
+ ✓ src/tui/atoms/index.test.ts > atoms/index.ts exports > should export Markdown 0ms
+ ✓ src/tui/atoms/index.test.ts > atoms/index.ts exports > should export Footer 0ms
+ ↓ src/tui/atoms/index.test.ts > atoms/index.ts exports > should export Input (deprecated)
+ ✓ src/tui/index.test.ts > tui/index.ts > should export TerminalUI 2ms
+ ✓ src/tui/index.test.ts > tui/index.ts > should export ProcessTerminal 0ms
+ ✓ src/tui/index.test.ts > tui/index.ts > should export InteractiveMode 0ms
+
+ Test Files  1 failed | 111 passed (113)
+      Tests  2 failed | 1684 passed | 1 skipped (1695)
+     Errors  1 error
+   Start at  13:54:06
+   Duration  6.96s (transform 7.64s, setup 0ms, import 16.55s, tests 2.95s, environment 23ms)
+
