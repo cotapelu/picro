@@ -106,6 +106,67 @@ describe('ToolExecutor', () => {
       expect(result.isError).toBe(true);
       expect((result as any).error).toBe('Execution aborted');
     });
+
+    describe('argument validation', () => {
+      it('should validate required parameters and reject missing ones', async () => {
+        // Tool with required parameter 'x'
+        const tool = {
+          name: 'req',
+          description: 'requires x',
+          parameters: {
+            type: 'object',
+            properties: { x: { type: 'string' } },
+            required: ['x']
+          },
+          handler: async () => 'ok'
+        } as ToolDefinition;
+        executor.register(tool);
+        const result = await executor.execute(buildToolCall('req', {}), buildContext());
+        expect(result.isError).toBe(true);
+        expect((result as any).error).toContain('Invalid arguments');
+        expect((result as any).error).toContain('x');
+      });
+
+      it('should validate type and reject mismatched types', async () => {
+        const tool = {
+          name: 'typed',
+          description: 'type check',
+          parameters: {
+            type: 'object',
+            properties: { count: { type: 'number' } }
+          },
+          handler: async () => 'ok'
+        } as ToolDefinition;
+        executor.register(tool);
+        const result = await executor.execute(buildToolCall('typed', { count: 'not-a-number' }), buildContext());
+        expect(result.isError).toBe(true);
+        expect((result as any).error).toContain('Invalid arguments');
+      });
+
+      it('should allow valid arguments to execute successfully', async () => {
+        const tool = {
+          name: 'valid',
+          description: 'valid args',
+          parameters: {
+            type: 'object',
+            properties: { value: { type: 'string' } },
+            required: ['value']
+          },
+          handler: async () => 'success'
+        } as ToolDefinition;
+        executor.register(tool);
+        const result = await executor.execute(buildToolCall('valid', { value: 'ok' }), buildContext());
+        expect(result.isError).toBe(false);
+        expect((result as any).result).toBe('success');
+      });
+
+      it('should skip validation when tool has no parameters schema', async () => {
+        const tool = createTool('no-schema', () => 'done');
+        executor.register(tool);
+        const result = await executor.execute(buildToolCall('no-schema', { anything: 'go' }), buildContext());
+        expect(result.isError).toBe(false);
+      });
+    });
   });
 
   describe('executeAll', () => {

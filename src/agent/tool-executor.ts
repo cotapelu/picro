@@ -20,6 +20,7 @@ import type {
   ToolCallData,
 } from './types';
 import { EventEmitter } from '../events/event-emitter';
+import { validateToolArguments } from '../llm/validation';
 
 /**
  * Manages tool registration and execution.
@@ -144,6 +145,15 @@ export class ToolExecutor {
        toolCallId: toolCall.id,
        arguments: toolCall.arguments,
      };
+
+     // Validate tool arguments against schema if available
+     if (tool.parameters) {
+       const validation = validateToolArguments(tool.parameters, toolCall.arguments);
+       if (!validation.valid) {
+         const errorMsg = `Invalid arguments for tool '${toolCall.name}': ${validation.errors?.join('; ') || 'validation failed'}`;
+         return this.createErrorResult(toolCall, errorMsg, startTime);
+       }
+     }
 
      // Before hook
      if (this.config.beforeToolCall) {
