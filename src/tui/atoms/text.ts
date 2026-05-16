@@ -57,10 +57,12 @@ export class Text implements UIElement {
 	}
 
 	draw(context: RenderContext): string[] {
+		if (process.env.VERBOSE) console.log('Text.draw: content="' + this.content.slice(0, 30) + '"... width=', context.width);
 		const width = context.width;
 
 		// Check cache
 		if (this.cache && this.cache.width === width) {
+			if (process.env.VERBOSE) console.log('Text.draw: cache hit');
 			return this.cache.lines;
 		}
 
@@ -111,7 +113,7 @@ export class Text implements UIElement {
 			width,
 			lines: styledLines,
 		};
-
+		if (process.env.VERBOSE) console.log('Text.draw: returning', styledLines.length, 'lines');
 		return styledLines;
 	}
 

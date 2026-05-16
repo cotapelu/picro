@@ -253,12 +253,21 @@ export class ElementContainer implements UIElement {
 
   /** Draw all child elements */
   draw(context: RenderContext): string[] {
+    if (process.env.VERBOSE && this.constructor.name === 'EditorContainer') {
+      console.log('EditorContainer.draw: context.width=', context.width, 'height=', context.height);
+    }
     const lines: string[] = [];
     for (const child of this.children) {
       const childLines = child.draw(context);
+      if (process.env.VERBOSE) {
+        console.log('ElementContainer.draw: parent=', this.constructor.name, 'child=', child.constructor.name, 'lines=', childLines.length);
+      }
       for (const line of childLines) {
         lines.push(line);
       }
+    }
+    if (process.env.VERBOSE && this.constructor.name === 'EditorContainer') {
+      console.log('EditorContainer.draw: total lines =', lines.length);
     }
     return lines;
   }

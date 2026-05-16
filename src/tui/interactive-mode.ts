@@ -193,13 +193,15 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     super.append(this.pendingContainer);
     super.append(this.statusContainer);
     super.append(this.widgetAboveContainer);
-    super.append(this.editorContainer);
+    // editorContainer is shown as a fixed bottom panel (see init)
     super.append(this.widgetBelowContainer);
-    super.append(this.footerContainer);
+    // footer is shown as a fixed bottom panel (see init)
   }
 
   async init(): Promise<void> {
     if (this.isInitialized) return;
+    // DEBUG
+    if (process.env.VERBOSE) console.log('InteractiveMode: init()');
 
     // Create editor (Editor organism - Tầng 3)
     this.editor = new Editor({
@@ -208,13 +210,14 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     });
     this.editorContainer.append(this.editor as UIElement);
 
-    // Setup submit handler - connected to runtime if available
-    this.editor.onSubmit = async (text: string) => {
-      if (this.runtime) {
-        await this.runtime.session.prompt(text);
-      } else {
-        if (this.inputController.resolve) this.inputController.resolve(text);
+    // Setup submit handler - resolves input promise to unblock getUserInput
+    this.editor.onSubmit = (text: string) => {
+      // Always resolve the pending input promise
+      if (this.inputController.resolve) {
+        this.inputController.resolve(text);
       }
+      // Clear the controller to allow next input
+      this.inputController = {};
     };
 
     // Setup escape handler for command palette
@@ -241,6 +244,19 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.tui.start();
     this.tui.setFocus(this.editor as UIElement);
 
+    // Show editor and footer as fixed bottom panels
+    this.tui.showPanel(this.editorContainer as UIElement, {
+      anchor: 'bottom-left',
+      width: '100%',
+      height: 1,
+    });
+    this.tui.showPanel(this.footer, {
+      anchor: 'bottom-left',
+      offsetY: -1,
+      width: '100%',
+      height: 1,
+    });
+
     this.isInitialized = true;
   }
 
@@ -260,6 +276,13 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       try {
         const text = await this.getUserInput();
         if (text && this.running && this.runtime) {
+          // Show user message in chat
+          this.addUserMessage(text);
+          // Clear editor for next input
+          if (this.editor) {
+            this.editor.setText('');
+          }
+          // Send to agent
           await this.runtime.session.prompt(text);
         }
       } catch {
@@ -442,7 +465,9 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   // =========================================================================
 
   draw(context: RenderContext): string[] {
-    return super.draw(context);
+    const result = super.draw(context);
+    if (process.env.VERBOSE) console.log('InteractiveMode.draw: total lines =', result.length);
+    return result;
   }
 
   clearCache(): void {

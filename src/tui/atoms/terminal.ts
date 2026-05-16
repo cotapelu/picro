@@ -75,8 +75,19 @@ export class ProcessTerminal implements Terminal {
 		// Setup StdinBuffer to split batched input
 		this.setupStdinBuffer();
 
-		// Query and enable Kitty keyboard protocol
-		this.queryAndEnableKittyProtocol();
+		// Query and enable Kitty keyboard protocol (only if we have a real TTY)
+		try {
+		  if (process.stdout.isTTY) {
+		    this.queryAndEnableKittyProtocol();
+		  } else {
+		    this._kittyProtocolActive = false;
+		    this._modifyOtherKeysActive = false;
+		  }
+		} catch (e) {
+		  // Silently ignore kitty protocol errors
+		  this._kittyProtocolActive = false;
+		  this._modifyOtherKeysActive = false;
+		}
 	}
 
 	/**
@@ -88,24 +99,28 @@ export class ProcessTerminal implements Terminal {
 
 		// Forward individual sequences to the input handler
 		this.stdinBuffer.on('data', (sequence: string) => {
-			// Check for Kitty protocol response (only if not already enabled)
-			if (!this._kittyProtocolActive) {
+			try {
+			  // Check for Kitty protocol response (only if not already enabled)
+			  if (!this._kittyProtocolActive) {
 				const match = sequence.match(/^\x1b\[\?(\d+)u$/);
 				if (match) {
-					this._kittyProtocolActive = true;
-					setKittyProtocolActive(true);
+				  this._kittyProtocolActive = true;
+				  setKittyProtocolActive(true);
 
-					// Enable Kitty keyboard protocol (push flags)
-					// Flag 1 = disambiguate escape codes
-					// Flag 2 = report event types (press/repeat/release)
-					// Flag 4 = report alternate keys
-					process.stdout.write('\x1b[>7u');
-					return;
+				  // Enable Kitty keyboard protocol (push flags)
+				  // Flag 1 = disambiguate escape codes
+				  // Flag 2 = report event types (press/repeat/release)
+				  // Flag 4 = report alternate keys
+				  process.stdout.write('\x1b[>7u');
+				  return;
 				}
-			}
+			  }
 
-			if (this.inputHandler) {
+			  if (this.inputHandler) {
 				this.inputHandler(sequence);
+			}
+			} catch (e) {
+			  // Ignore per-sequence errors to prevent one bad sequence from breaking input
 			}
 		});
 
@@ -302,7 +317,7 @@ export class ProcessTerminal implements Terminal {
 	async queryCellSize(): Promise<{ width: number; height: number }> {
 		return new Promise((resolve, reject) => {
 			// Default fallback values
-			const fallback = { width: 9, height: 18 };
+			const fallback: { width: number; height: number } = { width: 9, height: 18 };
 
 			// Send CSI 16 t to query cell size
 			process.stdout.write('\x1b[16t');
@@ -324,7 +339,8 @@ export class ProcessTerminal implements Terminal {
 				} else {
 					clearTimeout(timeout);
 					process.stdin.removeListener('data', onResponse);
-					reject(new Error('Invalid response'));
+					// Invalid response, use fallback
+					resolve(fallback);
 				}
 			};
 

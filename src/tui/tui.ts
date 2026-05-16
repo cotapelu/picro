@@ -530,16 +530,21 @@ export class TerminalUI extends ElementContainer {
 	 */
 	start(): void {
 		if (this.stopped) return;
+		// DEBUG
+		if (process.env.VERBOSE) console.log('TerminalUI: start()');
 
 		this.terminal.start(
 			(data) => this.handleKey(data),
-			() => this.requestRender()
+			() => {
+				if (process.env.VERBOSE) console.log('TerminalUI: resize event');
+				this.requestRender();
+			}
 		);
 
 		this.terminal.hideCursor();
 
-		// Query cell size for image rendering
-		this.terminal.queryCellSize();
+		// Query cell size for image rendering - don't await, errors are handled internally
+		void this.terminal.queryCellSize().catch(() => {});
 
 		// Initial render
 		this.requestRender();
@@ -863,6 +868,7 @@ export class TerminalUI extends ElementContainer {
 		// Render base content (full)
 		const context: RenderContext = { width, height };
 		const fullBase = this.renderBaseContent(context);
+		if (process.env.VERBOSE) console.log('renderInternal: fullBase lines =', fullBase.length);
 		this.totalBaseLines = fullBase.length;
 
 		// Determine viewport slice
@@ -916,8 +922,11 @@ export class TerminalUI extends ElementContainer {
 	 */
 	private renderBaseContent(parentContext: RenderContext): string[] {
 		if (this.children.length === 0) return [];
-		const childContext = this.getRenderContextForChild(parentContext, this.children[0]);
-		return this.children[0].draw(childContext);
+		const child = this.children[0];
+		const childContext = this.getRenderContextForChild(parentContext, child);
+		const lines = child.draw(childContext);
+		if (process.env.VERBOSE) console.log('renderBaseContent: child type=', child.constructor.name, 'lines=', lines.length);
+		return lines;
 	}
 
 	/**

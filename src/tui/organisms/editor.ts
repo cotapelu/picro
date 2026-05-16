@@ -312,6 +312,7 @@ export class Editor implements UIElement, InteractiveElement {
   }
 
   draw(context: RenderContext): string[] {
+    if (process.env.VERBOSE) console.log('Editor.draw: context.width=', context.width, 'height=', context.height, 'state.lines=', this.state.lines, 'cursor=', this.state.cursorLine, this.state.cursorCol);
     const width = context.width;
     this.lastRenderWidth = width;
     const lines: string[] = [];
@@ -358,6 +359,7 @@ export class Editor implements UIElement, InteractiveElement {
       }
     }
     
+    if (process.env.VERBOSE) console.log('Editor.draw: about to return', lines.length, 'lines. First line:', JSON.stringify(lines[0]));
     return lines;
   }
 

@@ -325,9 +325,8 @@ export function wrapText(text: string, width: number): string[] {
       currentLine = word;
     }
   }
-  if (currentLine) {
-    lines.push(currentLine);
-  }
+  // Always push the last line, even if empty, to preserve empty lines.
+  lines.push(currentLine);
   return lines;
 }
 

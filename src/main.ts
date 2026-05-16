@@ -53,8 +53,11 @@ function loadEnvFile(): void {
 
 // Determine application mode
 function resolveAppMode(parsed: Args, stdinIsTTY: boolean): "interactive" | "print" | "json" | "rpc" {
+  // If mode explicitly set via --mode, use it
   if (parsed.mode === "rpc") return "rpc";
   if (parsed.mode === "json") return "json";
+  // Note: "interactive" is not a valid --mode value; it's the default when TTY and not --print
+  // Default selection based on TTY and --print flag
   if (parsed.print || !stdinIsTTY) return "print";
   return "interactive";
 }
@@ -110,14 +113,21 @@ Built-in Tool Names:
 }
 
 // Helper to read all stdin
-function readStdin(): Promise<string> {
-  return new Promise((resolve, reject) => {
+function readStdin(timeoutMs: number = 100): Promise<string> {
+  return new Promise<string>((resolve) => {
     let data = "";
     process.stdin.setEncoding("utf8");
-    process.stdin.on("data", (chunk) => (data += chunk));
-    process.stdin.on("end", () => resolve(data.trim()));
-    process.stdin.on("error", reject);
+    const onData = (chunk: string) => { data += chunk; };
+    const onEnd = () => { resolve(data.trim()); };
+    process.stdin.on("data", onData);
+    process.stdin.on("end", onEnd);
     process.stdin.resume();
+    // Timeout to prevent hanging when no data is piped
+    setTimeout(() => {
+      process.stdin.removeListener("data", onData);
+      process.stdin.removeListener("end", onEnd);
+      resolve(data.trim());
+    }, timeoutMs);
   });
 }
 
@@ -172,6 +182,11 @@ async function main(): Promise<void> {
   const parsed = parseArgs(args);
   time("parseArgs");
 
+  // Enable verbose debugging if flag set
+  if (parsed.verbose) {
+    process.env.VERBOSE = "true";
+  }
+
   // Handle diagnostics errors
   if (parsed.diagnostics.some((d) => d.type === "error")) {
     for (const d of parsed.diagnostics) {
@@ -193,6 +208,10 @@ async function main(): Promise<void> {
 
   const stdinIsTTY = process.stdin.isTTY;
   const appMode = resolveAppMode(parsed, stdinIsTTY);
+  // DEBUG: Log TTY status and mode
+  if (parsed.verbose) {
+    console.log("DEBUG: stdin.isTTY=", stdinIsTTY, "appMode=", appMode);
+  }
   time("resolveAppMode");
 
   // Setup
@@ -363,6 +382,8 @@ async function main(): Promise<void> {
       initialStatus: "Ready",
     });
     interactive.setRuntime(runtime);
+    // Append interactive to tui so it gets rendered
+    tui.append(interactive);
 
     // Add initial message to session (if any) to start conversation
     if (initialResult.initialMessage) {
@@ -382,6 +403,17 @@ async function main(): Promise<void> {
       tui.stop();
     }
   } else if (appMode === "print" || appMode === "json") {
+    // If no input at all, show helpful message
+    if (!initialResult.initialMessage && parsed.messages.length === 0 && !stdinContent) {
+      console.log("No input provided. Use one of:");
+      console.log("  picro 'your question'               # text mode");
+      console.log("  echo 'question' | picro             # pipe stdin");
+      console.log("  picro --mode interactive             # interactive TUI (requires TTY)");
+      console.log("  picro --list-models                  # list models");
+      await runtime.dispose();
+      printTimings();
+      process.exit(0);
+    }
     const exitCode = await runPrintMode(runtime, {
       mode: appMode === "json" ? "json" : "text",
       messages: parsed.messages,
