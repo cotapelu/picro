@@ -3,6 +3,7 @@
  *
  * Provides UI APIs for extensions to interact with the TUI.
  * This interface mirrors the capabilities available to built-in components.
+ * Implementation: DefaultExtensionUIContext (in extension-ui-context.impl.ts)
  */
 
 import type { TerminalUI } from './tui';
@@ -85,3 +86,6 @@ export interface ExtensionUIContext {
 	/** Expand/collapse the tool output panel */
 	setToolsExpanded(expanded: boolean): void;
 }
+
+// Re-export implementation
+export { DefaultExtensionUIContext, createExtensionUIContext } from './extension-ui-context.impl';

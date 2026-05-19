@@ -24,6 +24,8 @@ import { DebugPanel, type DebugRoundEvent } from './organisms/debug-panel';
 import { FileBrowser, type FileEntry } from './organisms/file-browser';
 import type { AgentSessionRuntimeInterface, AgentSessionEvent } from '../types/agent-session';
 import type { InteractiveModeOptions } from './interactive-mode-types';
+import { createExtensionUIContext } from './extension-ui-context';
+import { ToolExecutionMessage } from './molecules/tool-execution';
 
 /**
  * Command definition for command palette
@@ -86,8 +88,15 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   // Options
   private options: InteractiveModeOptions;
 
+  // Extension UI Context
+  private extensionUIContext?: ReturnType<typeof createExtensionUIContext>;
+
   // Input promise controller
   private inputController: { resolve?: (value: string) => void; reject?: (reason?: any) => void } = {};
+
+  // Tool execution tracking: toolCallId -> ToolExecutionMessage component
+  private pendingTools = new Map<string, ToolExecutionMessage>();
+  private toolCallIdToName = new Map<string, string>();
 
   constructor(tui: TerminalUI, options: InteractiveModeOptions = {}) {
     super();
@@ -185,6 +194,26 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   private thinkingAvailableLevels: ('off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh')[] = [
     'off', 'minimal', 'low', 'medium', 'high', 'xhigh',
   ];
+
+  // =========================================================================
+  // Extension UI Context
+  // =========================================================================
+
+  /**
+   * Get the Extension UIContext for this interactive mode.
+   * Creates on first access.
+   */
+  getExtensionUIContext(): ReturnType<typeof createExtensionUIContext> {
+    if (!this.extensionUIContext) {
+      this.extensionUIContext = createExtensionUIContext(this.tui);
+    }
+    return this.extensionUIContext;
+  }
+
+  /** Set the Extension UIContext externally (for testing) */
+  setExtensionUIContext(context: ReturnType<typeof createExtensionUIContext>): void {
+    this.extensionUIContext = context;
+  }
 
   private setupLayout(): void {
     super.append(this.headerContainer);
@@ -307,13 +336,48 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
         this.finalizeStreamingMessage(event.message);
         break;
       case 'tool_execution_start':
-        this.addToolMessage(event.toolName, 'Executing...');
+        // Create a ToolExecutionMessage component if not exists
+        let toolComp = this.pendingTools.get(event.toolCallId);
+        if (!toolComp) {
+          toolComp = new ToolExecutionMessage();
+          this.chatContainer.append(toolComp);
+          this.pendingTools.set(event.toolCallId, toolComp);
+        }
+        // Store tool name for later updates
+        this.toolCallIdToName.set(event.toolCallId, event.toolName);
+        toolComp.addToolCall({
+          name: event.toolName,
+          status: 'running',
+          args: event.args,
+          startTime: Date.now(),
+        });
+        this.tui.requestRender();
         break;
       case 'tool_execution_update':
-        // Update tool output if available
+        toolComp = this.pendingTools.get(event.toolCallId);
+        if (toolComp) {
+          const toolName = this.toolCallIdToName.get(event.toolCallId) || 'Unknown';
+          if (event.partialResult !== undefined) {
+            const resultStr = JSON.stringify(event.partialResult, null, 2);
+            toolComp.updateTool(toolName, { output: resultStr });
+            this.tui.requestRender();
+          }
+        }
         break;
       case 'tool_execution_end':
-        // Update tool result
+        toolComp = this.pendingTools.get(event.toolCallId);
+        if (toolComp) {
+          const toolName = this.toolCallIdToName.get(event.toolCallId) || 'Unknown';
+          const outputStr = JSON.stringify(event.result, null, 2);
+          toolComp.updateTool(toolName, {
+            status: event.isError ? 'error' : 'success',
+            output: outputStr,
+            error: event.isError ? String(event.result) : undefined,
+          });
+          this.pendingTools.delete(event.toolCallId);
+          this.toolCallIdToName.delete(event.toolCallId);
+          this.tui.requestRender();
+        }
         break;
       case 'agent_start':
         this.setStatus('Processing...');

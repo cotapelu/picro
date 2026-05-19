@@ -3,7 +3,8 @@
  * Modal dialog for confirmations and forms
  * Reuses Input molecule for text input
  */
-import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../core/base';
+import type { UIElement, RenderContext, KeyEvent, InteractiveElement, Dimension } from '../core/base';
+import { resolveDimension } from '../core/base';
 import { visibleWidth, truncateText, wrapText } from '../core/internal-utils';
 import { Input } from '../molecules/input';
 
@@ -52,11 +53,13 @@ export const modalIcons: Record<ModalType, string> = {
 
 export interface ModalOptions {
   title: string;
-  message: string;
+  message?: string;
+  content?: UIElement; // custom UIElement content (replaces message)
   type?: ModalType;
   buttons?: ModalButton[];
   theme?: Partial<ModalTheme>;
   width?: number;
+  height?: Dimension;
   onResult?: (value: string) => void;
   onCancel?: () => void;
 }
@@ -80,10 +83,12 @@ export interface ModalOptions {
 export class Modal implements UIElement, InteractiveElement {
   private title: string;
   private message: string;
+  private content: UIElement | undefined;
   private type: ModalType;
   private buttons: ModalButton[];
   private theme: ModalTheme;
   private requestedWidth: number;
+  private requestedHeight?: number;
   private onResult?: (value: string) => void;
   private onCancel?: () => void;
   
@@ -92,14 +97,17 @@ export class Modal implements UIElement, InteractiveElement {
 
   constructor(options: ModalOptions) {
     this.title = options.title;
-    this.message = options.message;
+    this.message = options.message ?? '';
+    this.content = options.content;
     this.type = options.type ?? 'info';
     this.buttons = options.buttons ?? this.getDefaultButtons();
     // Pre-select primary button if available
     const primaryIdx = this.buttons.findIndex(b => b.primary);
     this.selectedIndex = primaryIdx !== -1 ? primaryIdx : 0;
     this.theme = { ...modalDefaultTheme, ...options.theme };
-    this.requestedWidth = options.width ?? 50;
+    // Resolve dimension: if percentage, resolve to number; if not provided, use defaults
+    this.requestedWidth = options.width ? resolveDimension(options.width, 80) : 50;
+    this.requestedHeight = options.height ? resolveDimension(options.height, 24) : undefined;
     this.onResult = options.onResult;
     this.onCancel = options.onCancel;
   }
@@ -177,7 +185,10 @@ export class Modal implements UIElement, InteractiveElement {
   clearCache(): void {}
 
   draw(context: RenderContext): string[] {
-    const width = Math.min(this.requestedWidth, context.width - 4);
+    const termWidth = context.width;
+    const termHeight = context.height;
+    const resolvedWidth = this.requestedWidth ?? termWidth;
+    const width = Math.min(resolvedWidth, termWidth - 4);
     const contentWidth = width - 4;
     const lines: string[] = [];
 
