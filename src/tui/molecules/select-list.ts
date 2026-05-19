@@ -67,6 +67,14 @@ export class SelectList implements UIElement, InteractiveElement {
 		return Array.from(this.selectedIndices).sort((a,b)=>a-b);
 	}
 
+	/** Get the selected value (single-select mode) */
+	getSelectedValue(): string | undefined {
+		if (this.selectedIndex >= 0 && this.selectedIndex < this.items.length) {
+			return this.items[this.selectedIndex].value;
+		}
+		return undefined;
+	}
+
 	toggleSelection(index: number): void {
 		if (this.selectedIndices.has(index)) this.selectedIndices.delete(index);
 		else this.selectedIndices.add(index);

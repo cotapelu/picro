@@ -106,7 +106,7 @@ export class Modal implements UIElement, InteractiveElement {
     this.selectedIndex = primaryIdx !== -1 ? primaryIdx : 0;
     this.theme = { ...modalDefaultTheme, ...options.theme };
     // Resolve dimension: if percentage, resolve to number; if not provided, use defaults
-    this.requestedWidth = options.width ? resolveDimension(options.width, 80) : 50;
+    this.requestedWidth = options.width ? (resolveDimension(options.width, 80) ?? 50) : 50;
     this.requestedHeight = options.height ? resolveDimension(options.height, 24) : undefined;
     this.onResult = options.onResult;
     this.onCancel = options.onCancel;

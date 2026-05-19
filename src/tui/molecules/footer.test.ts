@@ -39,4 +39,34 @@ describe('Footer', () => {
     const footer = new Footer({});
     expect(() => footer.clearCache()).not.toThrow();
   });
+
+  it('should update status on the right side', () => {
+    const footer = new Footer({});
+    (footer as any).setStatus('api', 'API: Connected');
+    const result = footer.draw(defaultContext);
+    expect(result.some(l => l.includes('API: Connected'))).toBe(true);
+  });
+
+  it('should clear specific status', () => {
+    const footer = new Footer({});
+    (footer as any).setStatus('api', 'API: Connected');
+    (footer as any).clearStatus('api');
+    const result = footer.draw(defaultContext);
+    expect(result.some(l => l.includes('API: Connected'))).toBe(false);
+  });
+
+  it('should show working message on left', () => {
+    const footer = new Footer({});
+    (footer as any).setWorkingMessage('Processing...');
+    const result = footer.draw(defaultContext);
+    expect(result.some(l => l.includes('Processing...'))).toBe(true);
+  });
+
+  it('should hide working message when cleared', () => {
+    const footer = new Footer({});
+    (footer as any).setWorkingMessage('Processing...');
+    (footer as any).setWorkingMessage(null);
+    const result = footer.draw(defaultContext);
+    expect(result.some(l => l.includes('Processing...'))).toBe(false);
+  });
 });

@@ -4,11 +4,46 @@
  */
 
 import type { TerminalUI } from './tui';
-import type { UIElement, KeyHandlerResult } from './core/base';
+import type { UIElement, KeyHandlerResult, ElementContainer } from './core/base';
 import type { Theme } from './core/themes';
 import type { AutocompleteProvider } from './core/autocomplete';
 import { themeManager } from './core/themes';
 import type { ExtensionUIContext, ExtensionWidgetOptions, ExtensionUIDialogOptions } from './extension-ui-context';
+import { Modal, type ModalButton } from './organisms/modal';
+import { SelectList, type SelectItem } from './molecules/select-list';
+import { Input } from './molecules/input';
+import { Toast } from './molecules/toast';
+import { Text } from './atoms/index';
+
+/**
+ * Internal UI handler that connects ExtensionUIContext to InteractiveMode.
+ */
+export interface ExtensionUIHandler {
+  // Status & working
+  setStatus(key: string, text: string): void;
+  setWorkingMessage(message: string | null): void;
+  setWorkingIndicator(options: { message?: string; show?: boolean }): void;
+  // Widgets
+  setWidget(key: string, content: UIElement | null, options?: ExtensionWidgetOptions): void;
+  // Header & Footer
+  setHeader(factory: () => UIElement | null): void;
+  setFooter(factory: () => UIElement | null): void;
+  // Editor
+  getEditorText(): string;
+  setEditorText(text: string): void;
+  pasteToEditor(text: string): void;
+  setEditorComponent(factory: (tui: TerminalUI) => UIElement | null): void;
+  showEditorDialog(title?: string, prefill?: string): Promise<string | undefined>;
+  // Tools
+  getToolsExpanded(): boolean;
+  setToolsExpanded(expanded: boolean): void;
+  // Misc
+  setTitle(title: string): void;
+  addAutocompleteProvider(factory: () => AutocompleteProvider): void;
+  // Custom dialog
+  showCustomDialog(factory: (tui: TerminalUI) => UIElement, options?: ExtensionUIDialogOptions): Promise<void>;
+}
+
 
 // Simple internal status tracking
 class ExtensionStatus {
@@ -26,32 +61,152 @@ export class DefaultExtensionUIContext implements ExtensionUIContext {
   private toolsExpanded: boolean = false;
   private themeListener?: () => void;
   private currentTheme: Theme;
+  private ui?: ExtensionUIHandler;
 
-  constructor(tui: TerminalUI) {
+  constructor(tui: TerminalUI, ui?: ExtensionUIHandler) {
     this.tui = tui;
+    this.ui = ui;
     this.currentTheme = themeManager.getTheme();
     this.themeListener = themeManager.onChange((theme) => { this.currentTheme = theme; });
   }
 
-  // ==================== Dialogs (Stubs) ====================
+  // ==================== Dialogs ====================
 
   async select(title: string, options: string[], opts?: ExtensionUIDialogOptions): Promise<string | undefined> {
-    // Not fully implemented yet
-    return undefined;
+    const items: SelectItem[] = options.map(opt => ({ label: opt, value: opt }));
+    const list = new SelectList(items, 10);
+    return new Promise((resolve) => {
+      const modal = new Modal({
+        title,
+        content: list,
+        type: 'info',
+        buttons: [
+          { label: 'Cancel', value: 'cancel' },
+          { label: 'OK', value: 'ok', primary: true },
+        ],
+        onResult: (value) => {
+          handle.close();
+          if (value === 'ok') {
+            resolve(list.getSelectedValue());
+          } else {
+            resolve(undefined);
+          }
+        },
+        onCancel: () => {
+          handle.close();
+          resolve(undefined);
+        },
+      });
+      const handle = this.tui.showPanel(modal, { anchor: 'center', width: '80%', height: '90%' });
+      if (opts?.timeout) {
+        setTimeout(() => {
+          if (!handle.isHidden()) {
+            handle.close();
+            resolve(undefined);
+          }
+        }, opts.timeout);
+      }
+      if (opts?.signal) {
+        opts.signal.addEventListener('abort', () => {
+          if (!handle.isHidden()) {
+            handle.close();
+          }
+        });
+      }
+    });
   }
 
   async confirm(title: string, message: string, opts?: ExtensionUIDialogOptions): Promise<boolean> {
-    return false;
+    return new Promise((resolve) => {
+      const modal = new Modal({
+        title,
+        message,
+        type: 'confirm',
+        buttons: [
+          { label: 'Cancel', value: 'cancel' },
+          { label: 'OK', value: 'ok', primary: true },
+        ],
+        onResult: (value) => {
+          handle.close();
+          resolve(value === 'ok');
+        },
+        onCancel: () => {
+          handle.close();
+          resolve(false);
+        },
+      });
+      const handle = this.tui.showPanel(modal, { anchor: 'center', width: '60%', height: '10%' });
+      if (opts?.timeout) {
+        setTimeout(() => {
+          if (!handle.isHidden()) {
+            handle.close();
+            resolve(false);
+          }
+        }, opts.timeout);
+      }
+      if (opts?.signal) {
+        opts.signal.addEventListener('abort', () => {
+          if (!handle.isHidden()) {
+            handle.close();
+          }
+        });
+      }
+    });
   }
 
   async input(title: string, placeholder?: string, opts?: ExtensionUIDialogOptions): Promise<string | undefined> {
-    return undefined;
+    const input = new Input({ placeholder });
+    return new Promise((resolve) => {
+      const modal = new Modal({
+        title,
+        content: input,
+        type: 'info',
+        buttons: [
+          { label: 'Cancel', value: 'cancel' },
+          { label: 'OK', value: 'ok', primary: true },
+        ],
+        onResult: (value) => {
+          handle.close();
+          if (value === 'ok') {
+            resolve(input.getValue());
+          } else {
+            resolve(undefined);
+          }
+        },
+        onCancel: () => {
+          handle.close();
+          resolve(undefined);
+        },
+      });
+      const handle = this.tui.showPanel(modal, { anchor: 'center', width: '80%', height: '20%' });
+      if (opts?.timeout) {
+        setTimeout(() => {
+          if (!handle.isHidden()) {
+            handle.close();
+            resolve(undefined);
+          }
+        }, opts.timeout);
+      }
+      if (opts?.signal) {
+        opts.signal.addEventListener('abort', () => {
+          if (!handle.isHidden()) {
+            handle.close();
+          }
+        });
+      }
+    });
   }
 
   // ==================== Notifications ====================
 
   notify(message: string, type: 'info' | 'warning' | 'error'): void {
-    // Stub
+    const toast = new Toast({ message, type, duration: 5000 });
+    const handle = this.tui.showPanel(toast, { anchor: 'top-right', width: 40, height: 3 });
+    setTimeout(() => {
+      if (!handle.isHidden()) {
+        handle.close();
+      }
+    }, 5000);
   }
 
   // ==================== Terminal Input ====================
@@ -66,19 +221,15 @@ export class DefaultExtensionUIContext implements ExtensionUIContext {
   // ==================== Status & Working Indicator ====================
 
   setStatus(key: string, text: string): void {
-    this.status.statuses.set(key, text);
+    this.ui?.setStatus(key, text);
   }
 
   setWorkingMessage(message: string | null): void {
-    this.status.workingMessage = message;
+    this.ui?.setWorkingMessage(message);
   }
 
   setWorkingIndicator(options: { message?: string; show?: boolean }): void {
-    if (options.show === false) {
-      this.status.workingMessage = null;
-    } else if (options.message !== undefined) {
-      this.status.workingMessage = options.message;
-    }
+    this.ui?.setWorkingIndicator(options);
   }
 
   setHiddenThinkingLabel(label: string): void {
@@ -88,15 +239,15 @@ export class DefaultExtensionUIContext implements ExtensionUIContext {
   // ==================== Widgets ====================
 
   setWidget(key: string, content: UIElement | null, options?: ExtensionWidgetOptions): void {
-    // TODO: Integrate with InteractiveMode.widget containers
+    this.ui?.setWidget(key, content, options);
   }
 
   setFooter(factory: () => UIElement | null): void {
-    // TODO: Integrate with InteractiveMode.footerContainer
+    this.ui?.setFooter(factory);
   }
 
   setHeader(factory: () => UIElement | null): void {
-    // TODO: Integrate with InteractiveMode.headerContainer
+    this.ui?.setHeader(factory);
   }
 
   // ==================== Title ====================
@@ -112,31 +263,33 @@ export class DefaultExtensionUIContext implements ExtensionUIContext {
   // ==================== Custom Dialog ====================
 
   async custom(factory: (tui: TerminalUI) => UIElement, options?: ExtensionUIDialogOptions): Promise<void> {
+    if (this.ui?.showCustomDialog) {
+      return this.ui.showCustomDialog(factory, options);
+    }
+    // Fallback: show as panel without waiting
     const element = factory(this.tui);
-    const handle = this.tui.showPanel(element, {
-      anchor: 'center',
-      width: '80%',
-      height: '90%',
-    });
-    // No way to wait for close; resolve immediately
+    this.tui.showPanel(element, { anchor: 'center', width: '80%', height: '90%' });
     return Promise.resolve();
   }
 
   // ==================== Editor ====================
 
   pasteToEditor(text: string): void {
-    // TODO
+    this.ui?.pasteToEditor(text);
   }
 
   setEditorText(text: string): void {
-    // TODO
+    this.ui?.setEditorText(text);
   }
 
   getEditorText(): string {
-    return '';
+    return this.ui?.getEditorText() ?? '';
   }
 
-  editor(title?: string, prefill?: string): Promise<string | undefined> {
+  async editor(title?: string, prefill?: string): Promise<string | undefined> {
+    if (this.ui) {
+      return this.ui.showEditorDialog(title, prefill);
+    }
     return Promise.resolve(undefined);
   }
 
@@ -145,12 +298,13 @@ export class DefaultExtensionUIContext implements ExtensionUIContext {
   addAutocompleteProvider(factory: () => AutocompleteProvider): void {
     const provider = factory();
     this.autocompleteProviders.push(provider);
+    this.ui?.addAutocompleteProvider(factory);
   }
 
   // ==================== Custom Editor Component ====================
 
   setEditorComponent(factory: (tui: TerminalUI) => UIElement | null): void {
-    // TODO
+    this.ui?.setEditorComponent(factory);
   }
 
   // ==================== Theme ====================
@@ -182,11 +336,11 @@ export class DefaultExtensionUIContext implements ExtensionUIContext {
   // ==================== Tool Output Panel ====================
 
   getToolsExpanded(): boolean {
-    return this.toolsExpanded;
+    return this.ui?.getToolsExpanded() ?? false;
   }
 
   setToolsExpanded(expanded: boolean): void {
-    this.toolsExpanded = expanded;
+    this.ui?.setToolsExpanded(expanded);
   }
 
   // Cleanup
@@ -198,6 +352,6 @@ export class DefaultExtensionUIContext implements ExtensionUIContext {
 /**
  * Create an ExtensionUIContext bound to a TUI instance.
  */
-export function createExtensionUIContext(tui: TerminalUI): ExtensionUIContext {
-  return new DefaultExtensionUIContext(tui);
+export function createExtensionUIContext(tui: TerminalUI, ui?: ExtensionUIHandler): ExtensionUIContext {
+  return new DefaultExtensionUIContext(tui, ui);
 }

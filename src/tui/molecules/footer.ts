@@ -68,6 +68,9 @@ export class Footer implements UIElement {
   private height: number;
   private cachedLines?: string[];
   private cachedWidth?: number;
+  // Dynamic status and working message
+  private statusMap = new Map<string, string>();
+  private workingMessage: string | null = null;
 
   constructor(options: FooterOptions = {}) {
     this.leftItems = options.leftItems ?? [];
@@ -90,6 +93,34 @@ export class Footer implements UIElement {
     this.cachedWidth = undefined;
   }
 
+  /**
+   * Set a status item by key. Shows on the right side.
+   */
+  setStatus(key: string, text: string): void {
+    this.statusMap.set(key, text);
+    this.clearCache();
+  }
+
+  /**
+   * Clear a status item by key, or all if no key provided.
+   */
+  clearStatus(key?: string): void {
+    if (key) {
+      this.statusMap.delete(key);
+    } else {
+      this.statusMap.clear();
+    }
+    this.clearCache();
+  }
+
+  /**
+   * Set working indicator message (e.g., spinner text). Shows on the left side.
+   */
+  setWorkingMessage(message: string | null): void {
+    this.workingMessage = message;
+    this.clearCache();
+  }
+
   draw(context: RenderContext): string[] {
     const width = context.width;
     
@@ -100,8 +131,11 @@ export class Footer implements UIElement {
 
     const lines: string[] = [];
     
-    // Format left side
+    // Build left side: working message + static leftItems
     const leftParts: string[] = [];
+    if (this.workingMessage) {
+      leftParts.push(this.theme.fgColor(this.workingMessage));
+    }
     for (const item of this.leftItems) {
       const keyPart = item.key ? this.theme.keyColor(item.key) : '';
       const labelPart = item.colorAnsi ? (item.colorAnsi + item.label + '\x1b[0m') : this.theme.fgColor(item.label);
@@ -113,7 +147,7 @@ export class Footer implements UIElement {
     }
     const leftStr = leftParts.join(this.theme.separator);
     
-    // Format right side
+    // Build right side: static rightItems + statuses
     const rightParts: string[] = [];
     for (const item of this.rightItems) {
       const keyPart = item.key ? this.theme.keyColor(item.key) : '';
@@ -124,6 +158,10 @@ export class Footer implements UIElement {
         rightParts.push(labelPart);
       }
     }
+    // Append dynamic status items
+    for (const [key, text] of this.statusMap) {
+      rightParts.push(this.theme.fgColor(text));
+    }
     const rightStr = rightParts.join(this.theme.separator);
     
     // Combine with padding
@@ -133,16 +171,13 @@ export class Footer implements UIElement {
     
     let line: string;
     if (leftWidth + rightWidth + sepWidth * 2 < width) {
-      // Both fit
       const paddingSpaces = width - leftWidth - rightWidth;
       const pad = ' '.repeat(paddingSpaces);
       line = leftStr + pad + rightStr;
     } else if (leftWidth < width) {
-      // Only left fits
       const pad = ' '.repeat(width - leftWidth);
       line = leftStr + pad;
     } else {
-      // Truncate
       line = leftStr.substring(0, width);
     }
     

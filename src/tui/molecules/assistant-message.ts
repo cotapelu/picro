@@ -22,6 +22,13 @@ export class AssistantMessage implements UIElement {
     this.opts = { ...this.opts, isLoading };
   }
 
+  /**
+   * Get current content (for testing)
+   */
+  getContent(): string {
+    return this.opts.content ?? '';
+  }
+
   draw(context: RenderContext): string[] {
     const width = context.width;
     const padding = this.opts.padding ?? 0;

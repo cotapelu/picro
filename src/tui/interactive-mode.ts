@@ -26,6 +26,9 @@ import type { AgentSessionRuntimeInterface, AgentSessionEvent } from '../types/a
 import type { InteractiveModeOptions } from './interactive-mode-types';
 import { createExtensionUIContext } from './extension-ui-context';
 import { ToolExecutionMessage } from './molecules/tool-execution';
+import type { ExtensionUIHandler } from './extension-ui-context.impl';
+import type { ExtensionWidgetOptions, ExtensionUIDialogOptions } from './extension-ui-context';
+import type { AutocompleteProvider } from './core/autocomplete';
 
 /**
  * Command definition for command palette
@@ -43,7 +46,7 @@ export interface InteractiveModeCommand {
  * InteractiveMode is a self-contained UI component that renders the full chat interface.
  * It extends ElementContainer for composition.
  */
-export class InteractiveMode extends ElementContainer implements InteractiveElement {
+export class InteractiveMode extends ElementContainer implements InteractiveElement, ExtensionUIHandler {
   isFocused = false;
 
   // Runtime connection (set via setRuntime())
@@ -79,8 +82,16 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   private commandPalette: CommandPalette | null = null;
   private commands: InteractiveModeCommand[] = [];
 
-  // Footer
-  footer: Footer;
+  // Footer management
+  private footerContainer = new ElementContainer();
+  private defaultFooter?: Footer;
+
+  // Expose container getters for extensions
+  getHeaderContainer(): ElementContainer { return this.headerContainer; }
+  getFooterContainer(): ElementContainer { return this.footerContainer; }
+  getWidgetAboveContainer(): ElementContainer { return this.widgetAboveContainer; }
+  getWidgetBelowContainer(): ElementContainer { return this.widgetBelowContainer; }
+  getEditor(): Editor | null { return this.editor; }
 
   // TUI reference
   private tui: TerminalUI;
@@ -98,13 +109,21 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   private pendingTools = new Map<string, ToolExecutionMessage>();
   private toolCallIdToName = new Map<string, string>();
 
+  // Widget management
+  private widgetMap = new Map<string, UIElement>();
+  // Tool execution expansion control
+  private toolsExpanded = false;
+  private allToolExecutions = new Set<ToolExecutionMessage>();
+  // Autocomplete providers
+  private autocompleteProviders: AutocompleteProvider[] = [];
+
+  // Streaming assistant message
+  private streamingAssistantMessage: AssistantMessage | null = null;
+
   constructor(tui: TerminalUI, options: InteractiveModeOptions = {}) {
     super();
     this.tui = tui;
     this.options = options;
-
-    // Create footer
-    this.footer = new Footer({});
 
     // Setup default commands
     this.setupDefaultCommands();
@@ -205,7 +224,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
    */
   getExtensionUIContext(): ReturnType<typeof createExtensionUIContext> {
     if (!this.extensionUIContext) {
-      this.extensionUIContext = createExtensionUIContext(this.tui);
+      this.extensionUIContext = createExtensionUIContext(this.tui, this);
     }
     return this.extensionUIContext;
   }
@@ -256,6 +275,10 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     // Build header
     this.headerContainer.append(new Text('Picro Agent'));
 
+    // Create default footer
+    this.defaultFooter = new Footer({});
+    this.footerContainer.append(this.defaultFooter);
+
     // Create command palette (organism)
     this.commandPalette = new CommandPalette({
       commands: this.commands.map(c => ({
@@ -278,7 +301,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       width: '100%',
       height: 1,
     });
-    this.tui.showPanel(this.footer, {
+    this.tui.showPanel(this.footerContainer as UIElement, {
       anchor: 'bottom-left',
       offsetY: -1,
       width: '100%',
@@ -325,15 +348,32 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   private handleRuntimeEvent(event: AgentSessionEvent): void {
     switch (event.type) {
       case 'message_start':
-        if (event.message.role === 'user') {
-          // User message already shown in editor
+        if (event.message.role === 'assistant') {
+          // Create a new streaming assistant message
+          if (this.streamingAssistantMessage) {
+            this.chatContainer.remove(this.streamingAssistantMessage);
+          }
+          this.streamingAssistantMessage = new AssistantMessage({});
+          this.chatContainer.append(this.streamingAssistantMessage);
         }
         break;
       case 'message_update':
-        this.updateStreamingMessage(event.message);
+        if (this.streamingAssistantMessage && event.message.role === 'assistant') {
+          const newText = this.extractTextFromContent(event.message.content || []);
+          if (newText) {
+            const current = this.streamingAssistantMessage.getContent();
+            this.streamingAssistantMessage.setContent(current + newText);
+            this.tui.requestRender();
+          }
+        }
         break;
       case 'message_end':
-        this.finalizeStreamingMessage(event.message);
+        if (event.message.role === 'assistant') {
+          if (event.message.stopReason === 'error') {
+            this.showError('Agent error occurred');
+          }
+          this.streamingAssistantMessage = null;
+        }
         break;
       case 'tool_execution_start':
         // Create a ToolExecutionMessage component if not exists
@@ -351,6 +391,10 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
           args: event.args,
           startTime: Date.now(),
         });
+        this.allToolExecutions.add(toolComp);
+        if (this.toolsExpanded) {
+          toolComp.setExpanded(true);
+        }
         this.tui.requestRender();
         break;
       case 'tool_execution_update':
@@ -388,18 +432,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     }
   }
 
-  private updateStreamingMessage(message: { role: string; content?: unknown[] }): void {
-    const text = this.extractTextFromContent(message.content || []);
-    if (text) {
-      this.addAssistantMessage(text);
-    }
-  }
 
-  private finalizeStreamingMessage(message: { role: string; stopReason?: string }): void {
-    if (message.stopReason === 'error') {
-      this.showError('Agent error occurred');
-    }
-  }
 
   private extractTextFromContent(content: unknown[]): string {
     return (content as any[])
@@ -520,6 +553,9 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
 
   private handleClearChat(): void {
     this.chatContainer.clear();
+    this.pendingTools.clear();
+    this.allToolExecutions.clear();
+    this.toolCallIdToName.clear();
     this.setStatus('Chat cleared');
   }
 
@@ -545,6 +581,14 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   }
 
   handleKey?(event: KeyEvent): void {
+    // Global shortcut: 'e' to toggle tool output expansion
+    if ((event.name === 'e' || event.raw === 'e') && !event.modifiers?.ctrl && !event.modifiers?.alt && !event.modifiers?.meta) {
+      if (this.allToolExecutions.size > 0 || this.pendingTools.size > 0) {
+        this.setToolsExpanded(!this.toolsExpanded);
+        this.setStatus(this.toolsExpanded ? 'Tools collapsed' : 'Tools expanded');
+        return; // consume
+      }
+    }
     this.editor?.handleKey?.(event);
   }
 
@@ -563,10 +607,17 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.tui.requestRender();
   }
 
-  setStatus(text: string): void {
-    this.statusContainer.clear();
-    this.statusContainer.append(new Text(text));
-    this.tui.requestRender();
+  setStatus(text: string): void;
+  setStatus(key: string, text: string): void;
+  setStatus(arg1: string, arg2?: string): void {
+    if (arg2 === undefined) {
+      this.statusContainer.clear();
+      this.statusContainer.append(new Text(arg1));
+      this.tui.requestRender();
+    } else {
+      this.defaultFooter?.setStatus(arg1, arg2);
+      this.tui.requestRender();
+    }
   }
 
   showError(text: string): void {
@@ -577,25 +628,203 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
 
   setRightItems(_items: unknown[]): void {}
 
-  setWidget(_key: string, content: string[] | UIElement | null, options?: { placement?: 'aboveEditor' | 'belowEditor' }): void {
-    const container = options?.placement === 'belowEditor' ? this.widgetBelowContainer : this.widgetAboveContainer;
-    if (content === null) return;
-    container.append(Array.isArray(content) ? new Text(content.join('\n')) : content);
+  setWidget(key: string, content: string[] | UIElement | null, options?: { placement?: 'aboveEditor' | 'belowEditor' } | ExtensionWidgetOptions): void {
+    // Determine placement
+    let placement: 'aboveEditor' | 'belowEditor' = 'aboveEditor';
+    if (options && typeof options === 'object' && 'placement' in options) {
+      placement = (options as any).placement;
+    }
+    const container = placement === 'belowEditor' ? this.widgetBelowContainer : this.widgetAboveContainer;
+
+    // Convert content to UIElement if needed
+    let element: UIElement | null = null;
+    if (content !== null) {
+      if (Array.isArray(content)) {
+        element = new Text(content.join('\n'));
+      } else {
+        element = content;
+      }
+    }
+
+    // Remove existing widget with same key
+    const existing = this.widgetMap.get(key);
+    if (existing) {
+      if (this.widgetAboveContainer.children.includes(existing)) {
+        this.widgetAboveContainer.remove(existing);
+      } else if (this.widgetBelowContainer.children.includes(existing)) {
+        this.widgetBelowContainer.remove(existing);
+      }
+      this.widgetMap.delete(key);
+    }
+
+    if (element !== null) {
+      container.append(element);
+      this.widgetMap.set(key, element);
+    }
     this.tui.requestRender();
   }
 
-  setHeader(component: UIElement | null): void {
+  setHeader(component: UIElement | null): void;
+  setHeader(factory: () => UIElement | null): void;
+  setHeader(arg: UIElement | null | (() => UIElement | null)): void {
+    let comp: UIElement | null;
+    if (typeof arg === 'function') {
+      comp = arg();
+    } else {
+      comp = arg;
+    }
     this.headerContainer.clear();
-    if (component) this.headerContainer.append(component);
+    if (comp) this.headerContainer.append(comp);
     this.tui.requestRender();
   }
 
 
+
+  // ==================== ExtensionUIHandler Implementation ====================
+
+  setWorkingMessage(message: string | null): void {
+    this.defaultFooter?.setWorkingMessage(message);
+    this.tui.requestRender();
+  }
+
+  setWorkingIndicator(options: { message?: string; show?: boolean }): void {
+    if (options.show === false) {
+      this.defaultFooter?.setWorkingMessage(null);
+    } else if (options.message !== undefined) {
+      this.defaultFooter?.setWorkingMessage(options.message);
+    }
+    this.tui.requestRender();
+  }
+
+  setFooter(factory: () => UIElement | null): void {
+    this.footerContainer.clear();
+    const comp = factory();
+    if (comp) {
+      this.footerContainer.append(comp);
+      this.defaultFooter = undefined;
+    }
+    this.tui.requestRender();
+  }
+
+  showEditorDialog(title?: string, prefill?: string): Promise<string | undefined> {
+    return new Promise((resolve) => {
+      const editor = new Editor({ paddingX: 1, paddingY: 0 });
+      editor.setText(prefill ?? '');
+      const modal = new Modal({
+        title: title ?? '',
+        content: editor,
+        type: 'info',
+        buttons: [
+          { label: 'Cancel', value: 'cancel' },
+          { label: 'OK', value: 'ok', primary: true },
+        ],
+        onResult: (value) => {
+          this.widgetAboveContainer.remove(modal);
+          if (value === 'ok') {
+            resolve(editor.getText());
+          } else {
+            resolve(undefined);
+          }
+        },
+        onCancel: () => {
+          this.widgetAboveContainer.remove(modal);
+          resolve(undefined);
+        },
+      });
+      this.widgetAboveContainer.append(modal);
+      this.tui.setFocus(modal);
+    });
+  }
+
+  getEditorText(): string {
+    return this.editor?.getText() ?? '';
+  }
+
+  setEditorText(text: string): void {
+    this.editor?.setText(text);
+  }
+
+  pasteToEditor(text: string): void {
+    this.editor?.insertText(text);
+  }
+
+  setEditorComponent(factory: (tui: TerminalUI) => UIElement | null): void {
+    this.editorContainer.clear();
+    const comp = factory(this.tui);
+    if (comp) {
+      this.editorContainer.append(comp);
+    }
+    this.tui.requestRender();
+  }
+
+  addAutocompleteProvider(factory: () => AutocompleteProvider): void {
+    this.autocompleteProviders.push(factory());
+  }
+
+  showCustomDialog(factory: (tui: TerminalUI) => UIElement, options?: ExtensionUIDialogOptions): Promise<void> {
+    return new Promise((resolve) => {
+      const element = factory(this.tui);
+      const modal = new Modal({
+        title: 'Dialog',
+        content: element,
+        type: 'custom',
+        buttons: [
+          { label: 'Close', value: 'close', primary: true },
+        ],
+        onResult: () => {
+          this.widgetAboveContainer.remove(modal);
+          resolve();
+        },
+        onCancel: () => {
+          this.widgetAboveContainer.remove(modal);
+          resolve();
+        },
+      });
+      this.widgetAboveContainer.append(modal);
+      this.tui.setFocus(modal);
+      if (options?.timeout) {
+        setTimeout(() => {
+          if (this.widgetAboveContainer.children.includes(modal)) {
+            this.widgetAboveContainer.remove(modal);
+            resolve();
+          }
+        }, options.timeout);
+      }
+      if (options?.signal) {
+        options.signal.addEventListener('abort', () => {
+          if (this.widgetAboveContainer.children.includes(modal)) {
+            this.widgetAboveContainer.remove(modal);
+          }
+        });
+      }
+    });
+  }
+
+  getToolsExpanded(): boolean {
+    return this.toolsExpanded;
+  }
+
+  setToolsExpanded(expanded: boolean): void {
+    if (this.toolsExpanded !== expanded) {
+      this.toolsExpanded = expanded;
+      for (const comp of this.allToolExecutions) {
+        comp.setExpanded(expanded);
+      }
+      this.tui.requestRender();
+    }
+  }
+
+  setTitle(title: string): void {
+    if (this.tui.terminal.setTitle) {
+      this.tui.terminal.setTitle(title);
+    } else if (process.title) {
+      process.title = title;
+    }
+  }
 
   // =========================================================================
   // Memory Panel Integration
   // =========================================================================
-
   private memoryPanel: MemoryPanel | null = null;
 
   /**

@@ -5,6 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { InteractiveMode } from './interactive-mode';
+import { AssistantMessage } from './molecules/assistant-message';
 import type { TerminalUI } from './tui';
 import type { AgentSessionRuntimeInterface } from '../types/agent-session';
 
@@ -309,6 +310,54 @@ describe('InteractiveMode', () => {
       
       setTimeout(() => mode.stop(), 10);
       await mode.run();
+    });
+  });
+
+  describe('Streaming assistant message', () => {
+    it('creates AssistantMessage on assistant message_start', () => {
+      const mode = new InteractiveMode(tui);
+      (mode as any).handleRuntimeEvent({ type: 'message_start', message: { role: 'assistant' } });
+      expect(mode.chatContainer.children.length).toBe(1);
+      expect(mode.chatContainer.children[0]).toBeInstanceOf(AssistantMessage);
+      expect((mode as any).streamingAssistantMessage).not.toBeNull();
+    });
+
+    it('accumulates text on message_update', () => {
+      const mode = new InteractiveMode(tui);
+      (mode as any).handleRuntimeEvent({ type: 'message_start', message: { role: 'assistant' } });
+      const msg = (mode as any).streamingAssistantMessage as AssistantMessage;
+      (mode as any).handleRuntimeEvent({ type: 'message_update', message: { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] } });
+      expect(msg.getContent()).toBe('Hello');
+      (mode as any).handleRuntimeEvent({ type: 'message_update', message: { role: 'assistant', content: [{ type: 'text', text: ' world' }] } });
+      expect(msg.getContent()).toBe('Hello world');
+    });
+
+    it('clears streaming reference on message_end', () => {
+      const mode = new InteractiveMode(tui);
+      (mode as any).handleRuntimeEvent({ type: 'message_start', message: { role: 'assistant' } });
+      (mode as any).handleRuntimeEvent({ type: 'message_end', message: { role: 'assistant' } });
+      expect((mode as any).streamingAssistantMessage).toBeNull();
+    });
+
+    it('ignores updates without active streaming message', () => {
+      const mode = new InteractiveMode(tui);
+      (mode as any).handleRuntimeEvent({ type: 'message_update', message: { role: 'assistant', content: [{ type: 'text', text: 'Hi' }] } });
+      expect(mode.chatContainer.children.length).toBe(0);
+    });
+
+    it('does not create streaming message for user role', () => {
+      const mode = new InteractiveMode(tui);
+      (mode as any).handleRuntimeEvent({ type: 'message_start', message: { role: 'user' } });
+      expect(mode.chatContainer.children.length).toBe(0);
+      expect((mode as any).streamingAssistantMessage).toBeNull();
+    });
+
+    it('shows error on message_end with error stopReason', () => {
+      const mode = new InteractiveMode(tui);
+      mode.showError = vi.fn();
+      (mode as any).handleRuntimeEvent({ type: 'message_start', message: { role: 'assistant' } });
+      (mode as any).handleRuntimeEvent({ type: 'message_end', message: { role: 'assistant', stopReason: 'error' } });
+      expect(mode.showError).toHaveBeenCalledWith('Agent error occurred');
     });
   });
 });
