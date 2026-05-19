@@ -16,6 +16,7 @@ const createMockTUI = (): TerminalUI => {
     requestRender: vi.fn(),
     setFocus: vi.fn(),
     getFocusedElement: vi.fn(),
+    showPanel: vi.fn(),
   } as unknown as TerminalUI;
 };
 

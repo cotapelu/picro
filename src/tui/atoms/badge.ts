@@ -2,8 +2,8 @@
  * Badge Component
  * Status labels and tags
  */
-import type { UIElement, RenderContext } from './base';
-import { visibleWidth } from './internal-utils';
+import type { UIElement, RenderContext } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 export type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
 

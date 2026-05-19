@@ -5,9 +5,9 @@
  * Supports basic distribution of space.
  */
 
-import type { UIElement, RenderContext } from './base';
-import { ElementContainer } from './base';
-import { visibleWidth } from './internal-utils';
+import type { UIElement, RenderContext } from '../core/base';
+import { ElementContainer } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 export interface FlexOptions {
   /** Direction: row (horizontal) or column (vertical) */

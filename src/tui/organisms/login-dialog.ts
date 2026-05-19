@@ -3,9 +3,9 @@
  * Dialog for entering API key and authentication
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
-import { CURSOR_MARKER } from '../atoms/base';
-import { visibleWidth, truncateText } from '../atoms/internal-utils';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
+import { CURSOR_MARKER } from '../core/base';
+import { visibleWidth, truncateText } from '../core/internal-utils';
 import { Input } from '../molecules/input';
 
 export interface LoginDialogOptions {

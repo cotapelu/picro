@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { KeybindingHints, type KeyBinding } from './keybinding-hints';
-import type { RenderContext } from '../atoms/base';
+import type { RenderContext } from '../core/base';
 
 const defaultContext: RenderContext = {
   width: 80,

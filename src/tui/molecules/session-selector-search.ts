@@ -3,7 +3,7 @@
  * Search functionality for sessions
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
 
 export interface SessionSearchResult {
   id: string;

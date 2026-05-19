@@ -3,7 +3,7 @@
  * Select and edit user messages
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
 
 export interface UserMessageInfo {
   id: string;

@@ -6,9 +6,9 @@
  * Integrates with viewport scrolling for large trees.
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
-import { CURSOR_MARKER } from '../atoms/base';
-import { matchesKey } from '../atoms/keys';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
+import { CURSOR_MARKER } from '../core/base';
+import { matchesKey } from '../core/keys';
 
 /**
  * Tree node data

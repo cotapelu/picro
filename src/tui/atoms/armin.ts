@@ -5,7 +5,7 @@
  * Legacy reference: pi-tui-legacy/interactive/components/armin.ts
  */
 
-import type { UIElement, RenderContext } from './base';
+import type { UIElement, RenderContext } from '../core/base';
 
 export class ArminComponent implements UIElement {
 	draw(context: RenderContext): string[] {

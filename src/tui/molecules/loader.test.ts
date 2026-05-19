@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { BorderedLoader } from './loader';
-import type { RenderContext, KeyEvent } from '../atoms/base';
+import type { RenderContext, KeyEvent } from '../core/base';
 
 // Mock TUI
 const createMockTUI = () => ({

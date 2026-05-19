@@ -3,9 +3,9 @@
  * List for toggling settings
  */
 
-import { CURSOR_MARKER, type UIElement, type InteractiveElement, type RenderContext, type KeyEvent } from '../atoms/base';
-import { truncateText, visibleWidth } from '../atoms/internal-utils';
-import { getKeybindings } from '../atoms/keybindings';
+import { CURSOR_MARKER, type UIElement, type InteractiveElement, type RenderContext, type KeyEvent } from '../core/base';
+import { truncateText, visibleWidth } from '../core/internal-utils';
+import { getKeybindings } from '../core/keybindings';
 
 export interface SettingsListSettingItem {
 	id: string;

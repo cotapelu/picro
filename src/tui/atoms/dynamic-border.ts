@@ -3,7 +3,7 @@
  * Decorative border around content
  */
 
-import type { UIElement, RenderContext } from './base';
+import type { UIElement, RenderContext } from '../core/base';
 
 /**
  * DynamicBorder - draws a rounded border around child content

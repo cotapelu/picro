@@ -4,8 +4,8 @@
  * Simple text display component with styling support
  */
 
-import type { UIElement, RenderContext } from './base';
-import { visibleWidth, wrapTextWithAnsi as wrapText, truncateText, containsRtl, reverseByGraphemes, containsArabic, shapeArabic } from './internal-utils';
+import type { UIElement, RenderContext } from '../core/base';
+import { visibleWidth, wrapTextWithAnsi as wrapText, truncateText, containsRtl, reverseByGraphemes, containsArabic, shapeArabic } from '../core/internal-utils';
 
 export type TextCache = {
 	width: number;

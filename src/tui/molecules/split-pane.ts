@@ -4,9 +4,9 @@
  * Supports horizontal (left/right) and vertical (top/bottom) orientation.
  */
 
-import type { UIElement, RenderContext, InteractiveElement, KeyEvent } from '../atoms/base';
-import { CURSOR_MARKER } from '../atoms/base';
-import { matchesKey } from '../atoms/keys';
+import type { UIElement, RenderContext, InteractiveElement, KeyEvent } from '../core/base';
+import { CURSOR_MARKER } from '../core/base';
+import { matchesKey } from '../core/keys';
 
 export type SplitOrientation = 'horizontal' | 'vertical';
 

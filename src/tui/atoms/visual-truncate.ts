@@ -3,8 +3,8 @@
  * Text truncation with visual handling
  */
 
-import type { UIElement, RenderContext } from './base';
-import { visibleWidth } from './internal-utils';
+import type { UIElement, RenderContext } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 export interface VisualTruncateOptions {
   text: string;

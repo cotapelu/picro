@@ -3,7 +3,7 @@
  * Edit configuration values
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
 
 export interface ConfigItem {
   key: string;

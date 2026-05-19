@@ -3,8 +3,8 @@
  * OAuth provider selection for authentication
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
-import { visibleWidth } from '../atoms/internal-utils';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 export interface OAuthProvider {
   id: string;

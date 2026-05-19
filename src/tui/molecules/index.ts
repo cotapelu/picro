@@ -1,9 +1,9 @@
 // Molecules: Simple UI components (L2)
 
-// Layout (only split-pane remains; box, flex, grid moved to atoms)
+// Layout
 export * from './split-pane';
 
-// Text & Display (only tree-view remains; breadcrumbs, table moved to atoms)
+// Tree
 export * from './tree-view';
 
 // Input & Controls
@@ -15,10 +15,7 @@ export * from './cancellable-loader';
 // Forms
 export * from './form';
 
-// Chrome (footer, stats-footer, keybinding-hints moved to atoms)
-// No exports in this category remain
-
-// Selectors (all remain)
+// Selectors
 export * from './config-selector';
 export * from './extension-selector';
 export * from './extension-input';
@@ -39,6 +36,29 @@ export * from './user-message-selector';
 // Memory
 export * from './memory-panel';
 
-// Panels (all moved to atoms; debug-panel moved to organisms)
+// Text & Display
+export * from './markdown';
+export * from './table';
+export * from './toast';
+export * from './breadcrumbs';
+export * from './diff';
 
-// Messages (all moved to atoms; diff also moved)
+// Messages
+export * from './assistant-message';
+export * from './user-message';
+export * from './bash-execution-message';
+export * from './tool-message';
+export * from './tool-execution';
+export * from './branch-summary-message';
+export * from './compaction-summary-message';
+export * from './skill-invocation-message';
+export * from './earendil-announcement';
+export * from './custom-message';
+
+// Chrome
+export * from './footer';
+export * from './stats-footer';
+export * from './keybinding-hints';
+
+// Misc
+export * from './auth-selector-status';

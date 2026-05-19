@@ -3,7 +3,7 @@
  * Interactive list for selecting and managing extensions
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
 
 export interface ExtensionInfo {
   id: string;

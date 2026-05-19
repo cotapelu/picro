@@ -5,8 +5,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { Divider } from './divider';
-import type { RenderContext } from './base';
-import { visibleWidth } from './internal-utils';
+import type { RenderContext } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 const defaultContext: RenderContext = {
   width: 80,

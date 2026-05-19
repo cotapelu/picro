@@ -29,7 +29,7 @@ import { ProcessTerminal, TerminalUI } from "./tui";
 import { InteractiveMode } from "./tui/interactive-mode";
 import { runPrintMode } from "./modes/print-mode";
 import { runRpcMode } from "./modes/rpc-mode";
-import { themeManager } from "./tui/atoms/theme";
+import { themeManager } from "./tui/core/theme";
 import type { AgentSessionRuntimeDiagnostic } from "./session/agent-session-services";
 
 // Load environment variables from .env

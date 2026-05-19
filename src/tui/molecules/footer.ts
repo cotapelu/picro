@@ -2,8 +2,8 @@
  * Footer Component
  * Status bar at bottom of terminal
  */
-import type { UIElement, RenderContext } from '../atoms/base';
-import { visibleWidth } from '../atoms/internal-utils';
+import type { UIElement, RenderContext } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 export interface FooterItem {
   /** Key/shortcut hint */

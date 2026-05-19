@@ -5,10 +5,10 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CommandPalette, type Command } from './command-palette';
-import type { RenderContext, KeyEvent } from '../atoms/base';
+import type { RenderContext, KeyEvent } from '../core/base';
 
 // Mock keybindings for CommandPalette/SelectList
-vi.mock('../atoms/keybindings', () => ({
+vi.mock('../core/keybindings', () => ({
   getKeybindings: () => ({
     matches: (data: string, action: string) => {
       const map: Record<string, Set<string>> = {

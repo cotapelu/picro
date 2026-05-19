@@ -5,8 +5,8 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { DebugPanel, type DebugRoundEvent, type DebugRunEvent } from './debug-panel';
-import type { RenderContext, KeyEvent } from '../atoms/base';
-import { visibleWidth } from '../atoms/internal-utils';
+import type { RenderContext, KeyEvent } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 const defaultContext: RenderContext = {
   width: 80,

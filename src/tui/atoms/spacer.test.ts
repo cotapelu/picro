@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Spacer } from './spacer';
-import type { RenderContext } from './base';
+import type { RenderContext } from '../core/base';
 
 const defaultContext: RenderContext = {
   width: 80,

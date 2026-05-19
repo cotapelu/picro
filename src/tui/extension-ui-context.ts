@@ -6,9 +6,9 @@
  */
 
 import type { TerminalUI } from './tui';
-import type { UIElement } from './atoms/base';
-import type { Theme } from './atoms/themes';
-import type { AutocompleteProvider, AutocompleteItem } from './atoms/autocomplete';
+import type { UIElement } from './core/base';
+import type { Theme } from './core/themes';
+import type { AutocompleteProvider, AutocompleteItem } from './core/autocomplete';
 
 /**
  * Options for extension widget placement

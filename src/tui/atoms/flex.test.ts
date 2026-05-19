@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { Flex } from './flex';
-import type { RenderContext, UIElement } from './base';
+import type { RenderContext, UIElement } from '../core/base';
 
 const createChild = (lines: string[]): UIElement => ({
   draw: vi.fn().mockReturnValue(lines),

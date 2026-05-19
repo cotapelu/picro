@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { Form } from './form';
 import { Input } from './input';
-import type { RenderContext } from '../atoms/base';
+import type { RenderContext } from '../core/base';
 
 const defaultContext: RenderContext = {
   width: 80,

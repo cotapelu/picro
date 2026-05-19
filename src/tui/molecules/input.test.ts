@@ -5,8 +5,8 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Input } from './input';
-import type { RenderContext, KeyEvent } from '../atoms/base';
-import { visibleWidth } from '../atoms/internal-utils';
+import type { RenderContext, KeyEvent } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 const defaultContext: RenderContext = {
   width: 80,

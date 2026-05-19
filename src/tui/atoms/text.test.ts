@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Text } from './text';
-import type { RenderContext, UITheme } from './base';
+import type { RenderContext, UITheme } from '../core/base';
 
 const defaultContext: RenderContext = {
   width: 80,

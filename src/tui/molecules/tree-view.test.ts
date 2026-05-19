@@ -5,11 +5,11 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TreeView } from './tree-view';
-import type { RenderContext, KeyEvent } from '../atoms/base';
-import { matchesKey } from '../atoms/keys';
+import type { RenderContext, KeyEvent } from '../core/base';
+import { matchesKey } from '../core/keys';
 
 // Mock matchesKey
-vi.mock('../atoms/keys', () => ({
+vi.mock('../core/keys', () => ({
   matchesKey: (raw: string, action: string) => {
     const map: Record<string, Set<string>> = {
       up: new Set(['\u001b[A', 'ArrowUp', 'k', '001b[A']),

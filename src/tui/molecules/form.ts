@@ -4,8 +4,8 @@
  * A simple vertical form layout with labels and input components.
  */
 
-import type { UIElement, RenderContext } from '../atoms/base';
-import { ElementContainer } from '../atoms/base';
+import type { UIElement, RenderContext } from '../core/base';
+import { ElementContainer } from '../core/base';
 import { Text } from '../atoms/text';
 
 export interface FormField {

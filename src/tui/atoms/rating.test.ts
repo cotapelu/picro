@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { Rating, createRating, ratingDefaultTheme } from './rating';
-import type { RenderContext } from './base';
+import type { RenderContext } from '../core/base';
 
 const defaultContext: RenderContext = {
   width: 80,

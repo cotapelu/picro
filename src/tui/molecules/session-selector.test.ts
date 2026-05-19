@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SessionSelector, type SessionInfo } from './session-selector';
-import type { RenderContext, KeyEvent } from '../atoms/base';
+import type { RenderContext, KeyEvent } from '../core/base';
 
 const defaultContext: RenderContext = {
   width: 80,

@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ExtensionSelector, type ExtensionInfo } from './extension-selector';
-import type { RenderContext, KeyEvent } from '../atoms/base';
+import type { RenderContext, KeyEvent } from '../core/base';
 
 const defaultContext: RenderContext = {
   width: 80,

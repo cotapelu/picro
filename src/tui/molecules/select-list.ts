@@ -3,10 +3,10 @@
  * Interactive list for selecting items
  */
 
-import { CURSOR_MARKER } from '../atoms/base';
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
-import { visibleWidth, truncateText } from '../atoms/internal-utils';
-import { getKeybindings } from '../atoms/keybindings';
+import { CURSOR_MARKER } from '../core/base';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
+import { visibleWidth, truncateText } from '../core/internal-utils';
+import { getKeybindings } from '../core/keybindings';
 
 export interface SelectItem {
 	value: string;

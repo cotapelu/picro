@@ -5,8 +5,8 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { TerminalUI } from './tui';
-import type { Terminal } from './atoms/terminal';
-import type { UIElement, RenderContext, InteractiveElement } from './atoms/base';
+import type { Terminal } from './core/terminal';
+import type { UIElement, RenderContext, InteractiveElement } from './core/base';
 
 // Mock Terminal
 const createMockTerminal = (): Terminal => ({

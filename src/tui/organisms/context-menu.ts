@@ -3,9 +3,9 @@
  * Popup menu for contextual actions
  * Reuses SelectList molecule for item rendering
  */
-import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../atoms/base';
-import { CURSOR_MARKER } from '../atoms/base';
-import { visibleWidth, truncateText } from '../atoms/internal-utils';
+import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../core/base';
+import { CURSOR_MARKER } from '../core/base';
+import { visibleWidth, truncateText } from '../core/internal-utils';
 import { SelectList, type SelectItem } from '../molecules/select-list';
 
 export interface MenuItem {

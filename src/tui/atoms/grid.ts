@@ -5,9 +5,9 @@
  * Supports gap between columns and rows.
  */
 
-import type { UIElement, RenderContext } from './base';
-import { ElementContainer } from './base';
-import { visibleWidth } from './internal-utils';
+import type { UIElement, RenderContext } from '../core/base';
+import { ElementContainer } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 export interface GridOptions {
   /** Number of columns */

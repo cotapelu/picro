@@ -3,7 +3,7 @@
  * Toggle image display in terminal
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
 
 export interface ImageInfo {
   id: string;

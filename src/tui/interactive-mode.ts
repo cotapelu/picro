@@ -6,13 +6,13 @@
  * (Clean-room implementation)
  */
 
-import type { UIElement, RenderContext, InteractiveElement, KeyEvent } from './atoms/base';
+import type { UIElement, RenderContext, InteractiveElement, KeyEvent } from './core/base';
 import type { TerminalUI } from './tui';
-import { ElementContainer } from './atoms/base';
-import { Footer } from './atoms/footer';
-import { UserMessage } from './atoms/user-message';
-import { AssistantMessage } from './atoms/assistant-message';
-import { ToolMessage } from './atoms/tool-message';
+import { ElementContainer } from './core/base';
+import { Footer } from './molecules/footer';
+import { UserMessage } from './molecules/user-message';
+import { AssistantMessage } from './molecules/assistant-message';
+import { ToolMessage } from './molecules/tool-message';
 import { Text } from './atoms/index';
 import { Editor } from './organisms/editor';
 import { LoginDialog } from './organisms/login-dialog';

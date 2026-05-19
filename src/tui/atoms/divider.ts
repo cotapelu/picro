@@ -2,8 +2,8 @@
  * Divider Component
  * Visual separation with optional label
  */
-import type { UIElement, RenderContext } from './base';
-import { visibleWidth, truncateText } from './internal-utils';
+import type { UIElement, RenderContext } from '../core/base';
+import { visibleWidth, truncateText } from '../core/internal-utils';
 
 export type DividerStyle = 'single' | 'double' | 'thick' | 'dashed' | 'hidden';
 

@@ -3,9 +3,9 @@
  * Shows a loading spinner with message and ability to cancel
  */
 
-import { CURSOR_MARKER } from '../atoms/base';
-import type { UIElement, KeyEvent, RenderContext, InteractiveElement } from '../atoms/base';
-import { visibleWidth } from '../atoms/internal-utils';
+import { CURSOR_MARKER } from '../core/base';
+import type { UIElement, KeyEvent, RenderContext, InteractiveElement } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 export const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 let spinnerFrame = 0;

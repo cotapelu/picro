@@ -3,8 +3,8 @@
  * Code editor for extension files
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
-import { CURSOR_MARKER } from '../atoms/base';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
+import { CURSOR_MARKER } from '../core/base';
 
 export interface ExtensionEditorOptions {
   content?: string;

@@ -19,22 +19,22 @@ import type {
   PanelOptions,
   PanelHandle,
   UITheme,
-} from './atoms/base';
+} from './core/base';
 
 import {
   isInteractive,
   CURSOR_MARKER,
   resolveDimension,
   ElementContainer,
-} from './atoms/base';
-import { darkTheme } from './atoms/themes';
-import { DebugOverlay } from './atoms/debug-overlay';
-import { LayoutInspector } from './atoms/layout-inspector';
+} from './core/base';
+import { darkTheme } from './core/themes';
+import { DebugOverlay } from './organisms/debug-overlay';
+import { LayoutInspector } from './organisms/layout-inspector';
 
-import { visibleWidth, truncateText, wrapText, sliceByColumn, extractOverlaySegments, wrapTextWithAnsi } from './atoms/internal-utils';
-import { isImageLine, getCellDimensions, setCellDimensions } from './atoms/terminal-image';
-import type { Terminal } from './atoms/terminal';
-import { parseKey, isKeyRelease } from './atoms/keys';
+import { visibleWidth, truncateText, wrapText, sliceByColumn, extractOverlaySegments, wrapTextWithAnsi } from './core/internal-utils';
+import { isImageLine, getCellDimensions, setCellDimensions } from './core/terminal-image';
+import type { Terminal } from './core/terminal';
+import { parseKey, isKeyRelease } from './core/keys';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -777,7 +777,7 @@ export class TerminalUI extends ElementContainer {
 	}
 
 	/** Handle mouse events (row/col are 0-indexed) */
-	private handleMouse(event: import('./atoms/base').MouseEvent): void {
+	private handleMouse(event: import('./core/base').MouseEvent): void {
 		if (this.inputLogging) this.logRender(`mouse: ${event.row},${event.col} btn=${event.button} modifiers=${event.modifiers ?? ''}`);
 		// Handle wheel events with inertial scrolling
 		if (event.button === 'wheelup' || event.button === 'wheeldown') {

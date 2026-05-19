@@ -3,7 +3,7 @@
  * Input for extension-defined values
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
 
 export interface ExtensionInputOptions {
   label?: string;

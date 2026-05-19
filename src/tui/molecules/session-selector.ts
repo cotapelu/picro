@@ -3,8 +3,8 @@
  * Interactive list for selecting sessions
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
-import { visibleWidth, truncateText } from '../atoms/internal-utils';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
+import { visibleWidth, truncateText } from '../core/internal-utils';
 
 export interface SessionInfo {
   id: string;

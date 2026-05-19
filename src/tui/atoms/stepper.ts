@@ -2,8 +2,8 @@
  * Stepper/Wizard Component
  * Multi-step form navigation
  */
-import type { UIElement, RenderContext } from './base';
-import { visibleWidth, truncateText } from './internal-utils';
+import type { UIElement, RenderContext } from '../core/base';
+import { visibleWidth, truncateText } from '../core/internal-utils';
 
 export interface Step {
   id: string;

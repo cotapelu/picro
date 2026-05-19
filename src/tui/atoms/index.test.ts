@@ -30,12 +30,13 @@ describe('atoms/index.ts exports', () => {
     expect(Atoms.lightTheme).toBeDefined();
   });
 
-  it('should export Markdown', () => {
-    expect(Atoms.Markdown).toBeDefined();
+  // Markdown and Footer moved to molecules, not exported from atoms/index anymore
+  it('should not export Markdown from atoms (moved to molecules)', () => {
+    expect(Atoms.Markdown).toBeUndefined();
   });
 
-  it('should export Footer', () => {
-    expect(Atoms.Footer).toBeDefined();
+  it('should not export Footer from atoms (moved to molecules)', () => {
+    expect(Atoms.Footer).toBeUndefined();
   });
 
   // Input component removed/renamed - skip

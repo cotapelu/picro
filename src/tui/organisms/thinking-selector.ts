@@ -3,7 +3,7 @@
  * Interactive selector for thinking/reasoning level
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
 import { SelectList, type SelectItem } from '../molecules/select-list';
 
 export type ThinkingLevel = 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';

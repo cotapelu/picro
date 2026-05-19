@@ -5,7 +5,7 @@
  * Legacy reference: pi-tui-legacy/interactive/components/daxnuts.ts
  */
 
-import type { UIElement, RenderContext } from './base';
+import type { UIElement, RenderContext } from '../core/base';
 
 export class DaxnutsComponent implements UIElement {
 	draw(context: RenderContext): string[] {

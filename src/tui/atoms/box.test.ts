@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Box } from './box';
-import type { RenderContext, UIElement } from './base';
+import type { RenderContext, UIElement } from '../core/base';
 
 // Mock child component
 const createMockChild = (lines: string[] = []): UIElement => ({

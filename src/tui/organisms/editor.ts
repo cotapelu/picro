@@ -5,13 +5,13 @@
  * Implements UIElement for composition-based UI hierarchy.
  * Reuses SelectList molecule for line number selection.
  */
-import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../atoms/base';
-import { CURSOR_MARKER } from '../atoms/base';
-import { visibleWidth, wrapText, truncateText } from '../atoms/internal-utils';
-import { KillRing, defaultKillRing } from '../atoms/kill-ring';
-import { UndoRedoManager } from '../atoms/undo-stack';
-import { getKeybindings } from '../atoms/keybindings';
-import { decodeKittyPrintable, matchesKey } from '../atoms/keys';
+import type { UIElement, RenderContext, KeyEvent, InteractiveElement } from '../core/base';
+import { CURSOR_MARKER } from '../core/base';
+import { visibleWidth, wrapText, truncateText } from '../core/internal-utils';
+import { KillRing, defaultKillRing } from '../core/kill-ring';
+import { UndoRedoManager } from '../core/undo-stack';
+import { getKeybindings } from '../core/keybindings';
+import { decodeKittyPrintable, matchesKey } from '../core/keys';
 import { SelectList, type SelectItem } from '../molecules/select-list';
 
 export interface EditorState {

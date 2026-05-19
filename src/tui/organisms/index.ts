@@ -5,6 +5,8 @@ export * from './command-palette';
 export * from './modal';
 export * from './context-menu';
 export * from './login-dialog';
+export * from './debug-overlay';
+export * from './layout-inspector';
 
 // Panels
 export * from './file-browser';

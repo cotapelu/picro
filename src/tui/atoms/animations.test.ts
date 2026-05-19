@@ -5,7 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Blink, Slide } from './animations';
-import type { UIElement, RenderContext } from './base';
+import type { UIElement, RenderContext } from '../core/base';
 
 const mockChild: UIElement = {
   draw: vi.fn().mockReturnValue(['child line']),

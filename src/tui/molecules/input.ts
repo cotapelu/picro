@@ -5,9 +5,9 @@
  * Supports editing, navigation, and optional single-line mode.
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
-import { visibleWidth, sliceByColumn } from '../atoms/internal-utils';
-import { parseKey, Key, matchesKey, isKeyRelease } from '../atoms/keys';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
+import { visibleWidth, sliceByColumn } from '../core/internal-utils';
+import { parseKey, Key, matchesKey, isKeyRelease } from '../core/keys';
 
 /**
  * Input options

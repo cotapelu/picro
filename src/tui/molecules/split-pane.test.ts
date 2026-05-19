@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SplitPane, type SplitOrientation } from './split-pane';
-import type { UIElement, RenderContext, KeyEvent } from '../atoms/base';
+import type { UIElement, RenderContext, KeyEvent } from '../core/base';
 
 // Mock simple child component
 const createMockChild = (lines: string[] = []): UIElement => ({
@@ -24,7 +24,7 @@ function createKeyEvent(raw: string): KeyEvent {
 }
 
 // Mock matchesKey
-vi.mock('../atoms/keys', () => ({
+vi.mock('../core/keys', () => ({
   matchesKey: (raw: string, action: string) => {
     const dir: Record<string, string[]> = {
       right: ['ArrowRight', '\u001b[C', '001b[C'],

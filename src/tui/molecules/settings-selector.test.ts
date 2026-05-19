@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SettingsSelector, type SettingsSelectorSettingItem } from './settings-selector';
-import type { RenderContext, KeyEvent } from '../atoms/base';
+import type { RenderContext, KeyEvent } from '../core/base';
 
 const defaultContext: RenderContext = {
   width: 80,

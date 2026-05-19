@@ -2,7 +2,7 @@
  * Spacer Component
  * Renders empty lines as spacing between elements
  */
-import type { UIElement, RenderContext } from './base';
+import type { UIElement, RenderContext } from '../core/base';
 
 export interface SpacerOptions {
   lines?: number;

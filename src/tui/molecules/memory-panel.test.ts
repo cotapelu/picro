@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { MemoryPanel, type MemoryEntry } from './memory-panel';
-import type { RenderContext } from '../atoms/base';
+import type { RenderContext } from '../core/base';
 
 const defaultContext: RenderContext = {
   width: 80,

@@ -3,8 +3,8 @@
  * Text component that truncates content to fit viewport width
  * Supports ANSI codes and optional padding
  */
-import type { UIElement, RenderContext } from './base';
-import { stripAnsi, truncateText, visibleWidth, wrapText } from './internal-utils';
+import type { UIElement, RenderContext } from '../core/base';
+import { stripAnsi, truncateText, visibleWidth, wrapText } from '../core/internal-utils';
 
 export interface TruncatedTextOptions {
   /** Text content (can contain ANSI codes) */

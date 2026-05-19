@@ -1,4 +1,4 @@
-import type { RenderContext, KeyEvent } from '../atoms/base';
+import type { RenderContext, KeyEvent } from '../core/base';
 import { SelectList, type SelectItem } from '../molecules/select-list';
 
 /**

@@ -1,5 +1,5 @@
-import type { UIElement, RenderContext } from '../atoms/base';
-import { visibleWidth } from '../atoms/internal-utils';
+import type { UIElement, RenderContext } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 export interface KeyBinding {
   /** Key combination string, e.g. 'Ctrl+S', 'Cmd+Shift+P' */

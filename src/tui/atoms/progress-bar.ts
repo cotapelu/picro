@@ -1,4 +1,4 @@
-import type { UIElement, RenderContext } from './base';
+import type { UIElement, RenderContext } from '../core/base';
 
 export interface ProgressBarOptions {
   percent?: number; // 0-100

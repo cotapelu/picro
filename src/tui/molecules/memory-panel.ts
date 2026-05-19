@@ -1,4 +1,4 @@
-import type { UIElement, RenderContext } from '../atoms/base';
+import type { UIElement, RenderContext } from '../core/base';
 import { SelectList, type SelectItem } from './select-list';
 
 /**

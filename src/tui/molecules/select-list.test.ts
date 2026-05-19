@@ -5,12 +5,12 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SelectList } from './select-list';
-import type { RenderContext, KeyEvent } from '../atoms/base';
-import { getKeybindings } from '../atoms/keybindings';
-import { visibleWidth } from '../atoms/internal-utils';
+import type { RenderContext, KeyEvent } from '../core/base';
+import { getKeybindings } from '../core/keybindings';
+import { visibleWidth } from '../core/internal-utils';
 
 // Mock keybindings
-vi.mock('../atoms/keybindings', () => ({
+vi.mock('../core/keybindings', () => ({
   getKeybindings: () => ({
     matches: (data: string, action: string) => {
       const map: Record<string, Set<string>> = {

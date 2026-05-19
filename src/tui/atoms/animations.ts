@@ -3,7 +3,7 @@
  * Provides simple visual effects: Blink, Slide
  */
 
-import type { UIElement, RenderContext } from './base';
+import type { UIElement, RenderContext } from '../core/base';
 
 /**
  * Blink - toggles visibility of its child on a regular interval.

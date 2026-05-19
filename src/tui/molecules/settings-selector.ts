@@ -3,8 +3,8 @@
  * Interactive list for modifying settings
  */
 
-import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../atoms/base';
-import { visibleWidth } from '../atoms/internal-utils';
+import type { UIElement, InteractiveElement, RenderContext, KeyEvent } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 export interface SettingsSelectorSettingItem {
   id: string;

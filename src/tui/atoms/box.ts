@@ -4,8 +4,8 @@
  * Container component with padding and background
  */
 
-import type { UIElement, RenderContext } from './base';
-import { visibleWidth } from './internal-utils';
+import type { UIElement, RenderContext } from '../core/base';
+import { visibleWidth } from '../core/internal-utils';
 
 export type RenderCache = {
 	childLines: string[];
