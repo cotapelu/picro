@@ -63,7 +63,6 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   widgetAboveContainer = new ElementContainer();
   editorContainer = new ElementContainer();
   widgetBelowContainer = new ElementContainer();
-  footerContainer = new ElementContainer();
 
   // Editor - using Editor organism (Tầng 3)
   private editor: Editor | null = null;
@@ -478,7 +477,6 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.widgetAboveContainer.clearCache?.();
     this.editorContainer.clearCache?.();
     this.widgetBelowContainer.clearCache?.();
-    this.footerContainer.clearCache?.();
     super.clearCache();
   }
 
@@ -528,11 +526,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.tui.requestRender();
   }
 
-  setCustomFooter(component: UIElement | null): void {
-    this.footerContainer.clear();
-    if (component) this.footerContainer.append(component);
-    this.tui.requestRender();
-  }
+
 
   // =========================================================================
   // Memory Panel Integration

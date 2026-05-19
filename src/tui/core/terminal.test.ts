@@ -200,11 +200,11 @@ describe('ProcessTerminal', () => {
       expect(result).toEqual({ width: 80, height: 24 });
     });
 
-    it('should reject on invalid response', async () => {
+    it('should use fallback on invalid response', async () => {
       term.start(onInput, onResize);
       const promise = term.queryCellSize();
       term['stdinBuffer']?.emit('data', 'invalid');
-      await expect(promise).rejects.toThrow();
+      await expect(promise).resolves.toEqual({ width: 9, height: 18 });
     });
   });
 

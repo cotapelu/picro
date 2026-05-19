@@ -15,23 +15,10 @@ export * from '../core/color-fallback';
 export * from '../core/stdin-buffer';
 export * from '../core/terminal';
 export * from '../core/keybindings';
+// Theme system - re-export from core/themes (single source of truth)
 export * from '../core/themes';
-// Theme also exports similar names; re-export with rename to avoid conflict
-export type {
-	ThemeColors as ThemeColors_theme,
-	ThemeName
-} from '../core/theme';
-export {
-	darkTheme as darkTheme_theme,
-	lightTheme as lightTheme_theme,
-	themes,
-	themeManager,
-	getTheme,
-	setTheme,
-	onThemeChange,
-	fg,
-	bg
-} from '../core/theme';
+// Backward compatibility: ThemeColors alias for Theme
+export type { Theme as ThemeColors } from '../core/themes';
 export * from '../core/terminal-image';
 export * from '../core/state-serializer';
 

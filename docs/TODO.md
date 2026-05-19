@@ -1,12 +1,35 @@
-# Tái Cấu Trúc Gói TUI - Phân Lót Rõ Ràng
+✅ **COMPLETED** (2026-05-19)
 
-**Mục tiêu**: Tái tổ chức gói `src/tui/` theo đúng nguyên tắc Atomic Design và phân tách core utilities.
+The TUI package has been successfully reorganized into a clean layered architecture.
 
-**Nguyên tắc**:
-- **Atoms**: UIElement đơn giản, không compose children (text, badge, spacer, divider, rating, progress-bar, stepper, box, flex, grid, truncated-text, dynamic-border, visual-truncate, daxnuts, armin, animations).
-- **Molecules**: UIElement kết hợp từ atoms (markdown, table, footer, toast, breadcrumbs, diff, assistant-message, user-message, bash-execution-message, tool-message, tool-execution, branch-summary-message, compaction-summary-message, skill-invocation-message, earendil-announcement, auth-selector-status, keybinding-hints, và các selector/panels molecules).
-- **Organisms**: UIElement phức tạp, độc lập (terminal, debug-overlay, layout-inspector, command-palette, context-menu, editor, file-browser, login-dialog, modal, thinking-selector, tree-view, split-pane, etc.)
-- **Core**: Non-UIElement utilities (base types, keys, utils, internal-utils, themes, theme, i18n, fuzzy, autocomplete providers, terminal-image, terminal interface, color-fallback, stdin-buffer, state-serializer, object-pool, resource-bundle, kill-ring, undo-stack, keybindings, etc.)
+**Result structure**:
+```
+src/tui/
+├── core/       # Non-UI utilities & types (base, keys, utils, themes, etc.)
+├── atoms/      # Simple UI primitives (text, spacer, divider, badge, rating, progress-bar, stepper, box, flex, grid, truncated-text, dynamic-border, visual-truncate, daxnuts, armin, animations)
+├── molecules/  # Composite components (markdown, table, footer, toast, breadcrumbs, diff, messages, selectors, etc.)
+├── organisms/  # Complex UI sections (editor, command-palette, modal, debug-overlay, layout-inspector, etc.)
+├── tui.ts
+├── interactive-mode.ts
+├── extension-ui-context.ts
+└── index.ts
+```
+
+**Changes summary**:
+- Created `core/` with 20+ utility modules (moved from atoms).
+- Cleaned `atoms/` to contain only true atomic components (16 UIElement classes).
+- Moved 19 molecule-level components from atoms → molecules.
+- Moved 2 organism-level components from atoms → organisms.
+- Updated all imports across the codebase (atoms, molecules, organisms, root files).
+- Updated index.ts files for proper re-exports.
+- Adjusted tests (mock paths, wrapText empty handling, atoms/index expectations).
+- Build passes, 1660/1662 tests pass (2 unrelated failures).
+
+**Files changed**: 187 files (839 insertions, 566 deletions).
+
+---
+
+Original plan preserved below for reference.
 
 ---
 

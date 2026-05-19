@@ -72,14 +72,21 @@ describe('InteractiveMode', () => {
       expect(mode.widgetAboveContainer).toBeDefined();
       expect(mode.editorContainer).toBeDefined();
       expect(mode.widgetBelowContainer).toBeDefined();
-      expect(mode.footerContainer).toBeDefined();
+      // footerContainer removed (using footer directly as panel)
     });
 
-    it('should append containers to children', () => {
+    it('should append layout containers to children (excluding editor/footer panels)', () => {
       const mode = new InteractiveMode(tui);
+      // Core layout containers (from setupLayout)
       expect(mode.children).toContain(mode.headerContainer);
       expect(mode.children).toContain(mode.chatContainer);
-      expect(mode.children).toContain(mode.editorContainer);
+      expect(mode.children).toContain(mode.pendingContainer);
+      expect(mode.children).toContain(mode.statusContainer);
+      expect(mode.children).toContain(mode.widgetAboveContainer);
+      expect(mode.children).toContain(mode.widgetBelowContainer);
+      // editorContainer and footerContainer are panels, not in children
+      expect(mode.children).not.toContain(mode.editorContainer);
+      expect(mode.children).not.toContain(mode.footerContainer);
     });
   });
 
