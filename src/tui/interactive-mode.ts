@@ -210,6 +210,14 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
         onExecute: () => this.handleToggleMemoryLeakDetection(),
       },
       {
+        id: 'cycle-thinking',
+        label: 'Cycle Thinking Level',
+        shortcut: 'Ctrl+Alt+T',
+        category: 'Agent',
+        description: 'Cycle through thinking levels',
+        onExecute: () => this.handleCycleThinkingLevel(),
+      },
+      {
         id: 'quit',
         label: 'Quit',
         shortcut: 'Ctrl+Q',
@@ -633,6 +641,18 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       tuiAny.resetMemoryLeakStats?.();
       this.setStatus('MemLeak: OFF');
     }
+  }
+
+  private handleCycleThinkingLevel(): void {
+    if (this.thinkingAvailableLevels.length === 0) {
+      this.setStatus('No thinking levels');
+      return;
+    }
+    const currentIndex = this.thinkingAvailableLevels.indexOf(this.thinkingLevel);
+    const nextIndex = (currentIndex + 1) % this.thinkingAvailableLevels.length;
+    const nextLevel = this.thinkingAvailableLevels[nextIndex];
+    this.setThinkingLevel(nextLevel);
+    this.setStatus(`Thinking level: ${nextLevel}`);
   }
 
   // =========================================================================
