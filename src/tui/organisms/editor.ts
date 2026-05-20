@@ -427,10 +427,12 @@ export class Editor implements UIElement, InteractiveElement {
     for (let i = visibleStart; i < visibleEnd; i++) {
       const line = this.state.lines[i] ?? '';
       const wrapped = wrapText(line, contentWidth);
+      // Ensure at least one line for empty content
+      const wrappedLines = wrapped.length === 0 ? [''] : wrapped;
       
-      for (let j = 0; j < wrapped.length; j++) {
-        const content = wrapped[j] ?? '';
-        const prevLen = wrapped.slice(0, j).reduce((s, w) => s + visibleWidth(w), 0);
+      for (let j = 0; j < wrappedLines.length; j++) {
+        const content = wrappedLines[j] ?? '';
+        const prevLen = wrappedLines.slice(0, j).reduce((s, w) => s + visibleWidth(w), 0);
         const cursorInWrap = i === this.state.cursorLine && 
                            this.state.cursorCol >= prevLen &&
                            this.state.cursorCol <= prevLen + content.length;

@@ -454,7 +454,6 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     // Start TUI and set focus
     this.tui.start();
     this.tui.setFocus(this.editor as UIElement);
-    if (process.env.VERBOSE) console.log('InteractiveMode: focused element after setFocus:', this.tui.getFocusedElement()?.constructor.name);
 
     // Show editor and footer as fixed bottom panels
     this.tui.showPanel(this.editorContainer as UIElement, {
