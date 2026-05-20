@@ -415,7 +415,10 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       paddingY: 0,
       tui: this.tui,
       onInterrupt: () => this.stop(),
-      onUpdate: () => this.tui.requestRender(),
+      onUpdate: () => {
+        if (process.env.VERBOSE) console.log('[InteractiveMode] editor onUpdate → requestRender');
+        this.tui.requestRender();
+      },
     });
     // Initialize autocomplete providers
     this.editor.setAutocompleteProviders(this.autocompleteProviders);

@@ -682,7 +682,7 @@ export class TerminalUI extends ElementContainer {
 	 * Handle keyboard input
 	 */
 	private handleKey(data: string): void {
-		if (process.env.VERBOSE) console.log(`[TUI] key: ${data}`);
+		if (process.env.VERBOSE) console.log(`[TUI] handleKey: data=${JSON.stringify(data)}`);
 		// Mouse event detection (X10 protocol)
 		if (data.length >= 6 && data.charCodeAt(0) === 27 && data.charCodeAt(1) === 91 && data[2] === 'M') {
 			const b = data.charCodeAt(3) - 32;

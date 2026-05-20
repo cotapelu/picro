@@ -379,6 +379,7 @@ export class Editor implements UIElement, InteractiveElement {
   }
 
   private notifyUpdate(): void {
+    if (process.env.VERBOSE) console.log('[Editor] notifyUpdate called');
     this.onUpdate?.();
   }
 
