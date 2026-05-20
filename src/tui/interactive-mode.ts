@@ -202,6 +202,14 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
         onExecute: () => this.handleEditExternal(),
       },
       {
+        id: 'toggle-memory-leak-detection',
+        label: 'Toggle Memory Leak Detection',
+        shortcut: 'Ctrl+Shift+M',
+        category: 'Debug',
+        description: 'Enable/disable memory leak tracking',
+        onExecute: () => this.handleToggleMemoryLeakDetection(),
+      },
+      {
         id: 'quit',
         label: 'Quit',
         shortcut: 'Ctrl+Q',
@@ -610,6 +618,20 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       fs.rmdirSync(dir);
     } catch (err: any) {
       this.setStatus(`Edit error: ${err.message}`);
+    }
+  }
+
+  private handleToggleMemoryLeakDetection(): void {
+    const tuiAny = this.tui as any;
+    const currentlyEnabled = tuiAny.getMemoryLeakDetection?.() ?? false;
+    const newEnabled = !currentlyEnabled;
+    tuiAny.setMemoryLeakDetection?.(newEnabled);
+    if (newEnabled) {
+      const stats = tuiAny.getMemoryLeakStats?.() ?? { created: 0, destroyed: 0 };
+      this.setStatus(`MemLeak: ON (+${stats.created}/${stats.destroyed})`);
+    } else {
+      tuiAny.resetMemoryLeakStats?.();
+      this.setStatus('MemLeak: OFF');
     }
   }
 

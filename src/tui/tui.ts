@@ -159,6 +159,29 @@ export class TerminalUI extends ElementContainer {
 		}
 	}
 
+	// ==================== Memory Leak Detection API ====================
+
+	/** Enable/disable memory leak tracking */
+	setMemoryLeakDetection(enabled: boolean): void {
+		this.memoryLeakDetection = enabled;
+	}
+
+	/** Check if memory leak detection is enabled */
+	getMemoryLeakDetection(): boolean {
+		return this.memoryLeakDetection;
+	}
+
+	/** Get memory leak statistics */
+	getMemoryLeakStats(): { created: number; destroyed: number } {
+		return { created: this.createdCount, destroyed: this.destroyedCount };
+	}
+
+	/** Reset memory leak counters */
+	resetMemoryLeakStats(): void {
+		this.createdCount = 0;
+		this.destroyedCount = 0;
+	}
+
 	constructor(terminal: Terminal, showHardwareCursor?: boolean) {
 		super();
 		this.terminal = terminal;
