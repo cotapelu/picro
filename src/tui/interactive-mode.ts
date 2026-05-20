@@ -65,6 +65,9 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   // Event subscription cleanup
   private unsubscribe: (() => void) | null = null;
 
+  // Signal handler reference
+  private signalHandler?: () => void;
+
   // State
   private isInitialized = false;
   private running = false;
@@ -454,6 +457,15 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     // Start TUI and set focus
     this.tui.start();
     this.tui.setFocus(this.editor as UIElement);
+    // Setup signal handler for Ctrl+C (SIGINT)
+    if (process.platform !== 'win32') {
+      this.signalHandler = () => {
+        this.stop();
+      };
+      process.on('SIGINT', this.signalHandler);
+      // Also handle SIGTERM
+      process.on('SIGTERM', this.signalHandler);
+    }
 
     // Show editor and footer as fixed bottom panels
     this.tui.showPanel(this.editorContainer as UIElement, {
@@ -618,6 +630,15 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
+    }
+    // Remove signal handlers
+    if (this.signalHandler && process.platform !== 'win32') {
+      try {
+        process.off('SIGINT', this.signalHandler);
+        process.off('SIGTERM', this.signalHandler);
+      } catch {
+        // ignore errors if listeners not present
+      }
     }
   }
 
