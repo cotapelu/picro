@@ -750,6 +750,7 @@ export class TerminalUI extends ElementContainer {
 		// Filter out key release events unless element opts in
 		if (isKeyRelease(parsed)) {
 			const focused = this.getFocusedElement();
+		if (process.env.VERBOSE) console.log('[TUI] focused element: ', focused?.constructor.name, 'parsed.name:', parsed?.name);
 			if (focused && !focused.wantsKeyRelease) {
 				return;
 			}
@@ -1676,3 +1677,4 @@ export class TerminalUI extends ElementContainer {
 export function isTermuxSession(): boolean {
 	return Boolean(process.env.TERMUX_VERSION);
 }
+
