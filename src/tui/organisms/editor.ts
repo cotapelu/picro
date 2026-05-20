@@ -13,6 +13,9 @@ import { UndoRedoManager } from '../core/undo-stack';
 import { getKeybindings } from '../core/keybindings';
 import { decodeKittyPrintable, matchesKey } from '../core/keys';
 import { SelectList, type SelectItem } from '../molecules/select-list';
+import type { TerminalUI } from '../tui';
+import { AutocompleteProvider, AutocompleteContext, type AutocompleteItem } from '../core/autocomplete';
+import { Modal } from '../organisms/modal';
 
 export interface EditorState {
   lines: string[];
@@ -28,6 +31,7 @@ export interface EditorOptions {
   onSubmit?: (text: string) => void;
   onChange?: (text: string) => void;
   onEscape?: () => void;
+  tui?: TerminalUI;
 }
 
 export class Editor implements UIElement, InteractiveElement {
@@ -52,6 +56,8 @@ export class Editor implements UIElement, InteractiveElement {
   public onChange?: (text: string) => void;
   public onEscape?: () => void;
   public borderColor: (s: string) => string = (s) => `\x1b[90m${s}\x1b[0m`;
+  private autocompleteProviders: AutocompleteProvider[] = [];
+  private tui: TerminalUI | null = null;
 
   constructor(options: EditorOptions = {}) {
     this.options = {
@@ -66,6 +72,7 @@ export class Editor implements UIElement, InteractiveElement {
     this.killRing = (this.options.useGlobalKillRing ?? false) ? defaultKillRing : new KillRing();
     this.undoRedoManager = new UndoRedoManager<EditorState>(50);
     this.pushUndo();
+    this.tui = options.tui ?? null;
     
     // Callbacks
     this.onSubmit = options.onSubmit;
@@ -144,6 +151,86 @@ export class Editor implements UIElement, InteractiveElement {
 
   canRedo(): boolean {
     return this.undoRedoManager.canRedo();
+  }
+
+  /**
+   * Set autocomplete providers for this editor
+   */
+  setAutocompleteProviders(providers: AutocompleteProvider[]): void {
+    this.autocompleteProviders = providers;
+  }
+
+  /**
+   * Trigger autocomplete modal with suggestions from all providers
+   */
+  private async triggerAutocomplete(): Promise<void> {
+    if (this.autocompleteProviders.length === 0 || !this.tui) return;
+
+    const line = this.state.lines[this.state.cursorLine] ?? '';
+    const cursorPos = this.state.cursorCol;
+    const query = line.substring(0, cursorPos);
+    const context: AutocompleteContext = { query, cursorPos, line };
+
+    try {
+      const results = await Promise.all(
+        this.autocompleteProviders.map(p => p.complete(context))
+      );
+      let items: AutocompleteItem[] = results.flat();
+      // Deduplicate by label+insertText
+      const seen = new Set<string>();
+      items = items.filter(item => {
+        const key = (item.insertText ?? item.label) + '|' + (item.kind ?? '');
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      if (items.length === 0) return;
+
+      // Build SelectList items
+      const selectItems: SelectItem[] = items.map(item => ({
+        value: item.insertText ?? item.label,
+        label: item.label,
+        description: item.detail,
+      }));
+
+      const selectList = new SelectList(selectItems, 10, {
+        selectedPrefix: (text) => '\x1b[32m>\x1b[0m ',
+      });
+
+      // Wrap in Modal
+      const termWidth = this.tui?.terminal?.columns ?? 80;
+      const termHeight = this.tui?.terminal?.rows ?? 24;
+      const modalWidth = Math.max(40, Math.floor(termWidth * 0.8));
+      const modalHeight = Math.max(10, Math.floor(termHeight * 0.5));
+
+      const modal = new Modal({
+        title: 'Autocomplete',
+        content: selectList,
+        type: 'info',
+        width: modalWidth,
+        height: modalHeight,
+        buttons: [
+          { label: 'Cancel', value: 'cancel' },
+          { label: 'Insert', value: 'insert', primary: true },
+        ],
+        onResult: (value) => {
+          if (this.tui) this.tui.removePanel(modal);
+          if (value === 'insert') {
+            const selected = selectList.getSelectedValue();
+            if (selected) {
+              this.insertText(selected);
+            }
+          }
+        },
+        onCancel: () => {
+          if (this.tui) this.tui.removePanel(modal);
+        },
+      });
+
+      this.tui.showPanel(modal, { anchor: 'center', width: '80%', height: '50%' });
+    } catch (err) {
+      console.error('Autocomplete error', err);
+    }
   }
 
   // ========================================================================
@@ -410,6 +497,12 @@ export class Editor implements UIElement, InteractiveElement {
     // Escape
     if (key === 'Escape') {
       this.onEscape?.();
+      return;
+    }
+    
+    // Tab Autocomplete
+    if (key === 'Tab' && !event.modifiers?.shift) {
+      this.triggerAutocomplete().catch(console.error);
       return;
     }
     

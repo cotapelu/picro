@@ -286,7 +286,10 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.editor = new Editor({
       paddingX: 1,
       paddingY: 0,
+      tui: this.tui,
     });
+    // Initialize autocomplete providers
+    this.editor.setAutocompleteProviders(this.autocompleteProviders);
     this.editorContainer.append(this.editor as UIElement);
 
     // Setup submit handler - resolves input promise to unblock getUserInput
@@ -855,6 +858,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
 
   addAutocompleteProvider(factory: () => AutocompleteProvider): void {
     this.autocompleteProviders.push(factory());
+    this.editor?.setAutocompleteProviders([...this.autocompleteProviders]);
   }
 
   showCustomDialog(factory: (tui: TerminalUI) => UIElement, options?: ExtensionUIDialogOptions): Promise<void> {
