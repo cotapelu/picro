@@ -476,6 +476,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       anchor: 'bottom-left',
       width: '100%',
       height: 1,
+      nonCapturing: true,
     });
     this.tui.showPanel(this.footerContainer as UIElement, {
       anchor: 'bottom-left',
@@ -484,6 +485,8 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       height: 1,
       nonCapturing: true,
     });
+    // Ensure editor (not container) has focus
+    this.tui.setFocus(this.editor as UIElement);
 
     this.isInitialized = true;
   }
