@@ -54,9 +54,11 @@ export class ProcessTerminal implements Terminal {
 		this.wasRaw = process.stdin.isRaw || false;
 		if (process.stdin.setRawMode) {
 			process.stdin.setRawMode(true);
+			if (process.env.VERBOSE) console.log('[ProcessTerminal] setRawMode true');
 		}
 		process.stdin.setEncoding('utf8');
 		process.stdin.resume();
+		if (process.env.VERBOSE) console.log('[ProcessTerminal] stdin resumed, isRaw=', process.stdin.isRaw, 'isTTY=', process.stdin.isTTY);
 
 		// Enable bracketed paste mode
 		process.stdout.write('\x1b[?2004h');
@@ -96,9 +98,11 @@ export class ProcessTerminal implements Terminal {
 	 */
 	private setupStdinBuffer(): void {
 		this.stdinBuffer = new StdinBuffer({ timeout: 10 });
+		if (process.env.VERBOSE) console.log('[ProcessTerminal] StdinBuffer created');
 
 		// Forward individual sequences to the input handler
 		this.stdinBuffer.on('data', (sequence: string) => {
+			if (process.env.VERBOSE) console.log('[StdinBuffer] emitted sequence:', JSON.stringify(sequence));
 			try {
 			  // Check for Kitty protocol response (only if not already enabled)
 			  if (!this._kittyProtocolActive) {
@@ -126,6 +130,7 @@ export class ProcessTerminal implements Terminal {
 
 		// Handle paste content
 		this.stdinBuffer.on('paste', (content: string) => {
+			if (process.env.VERBOSE) console.log('[StdinBuffer] paste:', JSON.stringify(content));
 			if (this.inputHandler) {
 				this.inputHandler(`\x1b[200~${content}\x1b[201~`);
 			}
@@ -133,6 +138,7 @@ export class ProcessTerminal implements Terminal {
 
 		// Handler that pipes stdin data through the buffer
 		this.stdinDataHandler = (data: string) => {
+			if (process.env.VERBOSE) console.log('[ProcessTerminal] stdinDataHandler got data:', JSON.stringify(data));
 			this.stdinBuffer?.process(data);
 		};
 	}
@@ -141,6 +147,7 @@ export class ProcessTerminal implements Terminal {
 	 * Query terminal for Kitty keyboard protocol support and enable if available.
 	 */
 	private queryAndEnableKittyProtocol(): void {
+		if (process.env.VERBOSE) console.log('[ProcessTerminal] attaching stdin data handler in queryAndEnableKittyProtocol');
 		process.stdin.on('data', this.stdinDataHandler!);
 		process.stdout.write('\x1b[?u');
 		setTimeout(() => {
