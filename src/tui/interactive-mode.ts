@@ -43,6 +43,16 @@ export interface InteractiveModeCommand {
 }
 
 /**
+ * Slash command definition
+ */
+export interface SlashCommand {
+  name: string;
+  description: string;
+  usage?: string;
+  execute(args: string, mode: InteractiveMode): void | Promise<void>;
+}
+
+/**
  * InteractiveMode is a self-contained UI component that renders the full chat interface.
  * It extends ElementContainer for composition.
  */
@@ -117,6 +127,9 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   // Autocomplete providers
   private autocompleteProviders: AutocompleteProvider[] = [];
 
+  // Slash commands
+  private slashCommands: SlashCommand[] = [];
+
   // Streaming assistant message
   private streamingAssistantMessage: AssistantMessage | null = null;
 
@@ -127,6 +140,8 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
 
     // Setup default commands
     this.setupDefaultCommands();
+    // Setup slash commands
+    this.setupSlashCommands();
 
     // Setup layout
     this.setupLayout();
@@ -226,6 +241,96 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
         onExecute: () => this.stop(),
       },
     ];
+  }
+
+  /**
+   * Set up slash commands
+   */
+  private setupSlashCommands(): void {
+    // /clear
+    this.registerSlashCommand({
+      name: 'clear',
+      description: 'Clear chat history',
+      usage: '/clear',
+      execute: () => { this.handleClearChat(); },
+    });
+    // /share
+    this.registerSlashCommand({
+      name: 'share',
+      description: 'Copy chat history to clipboard',
+      usage: '/share',
+      execute: () => { this.handleShareChat(); },
+    });
+    // /edit (external editor)
+    this.registerSlashCommand({
+      name: 'edit',
+      description: 'Open current input in external editor',
+      usage: '/edit',
+      execute: () => { this.handleEditExternal(); },
+    });
+    // /quit
+    this.registerSlashCommand({
+      name: 'quit',
+      description: 'Quit the application',
+      usage: '/quit',
+      execute: () => { this.stop(); },
+    });
+    // /new
+    this.registerSlashCommand({
+      name: 'new',
+      description: 'Start a new chat session',
+      usage: '/new',
+      execute: () => { this.handleNewSession(); },
+    });
+    // /thinking (opens selector)
+    this.registerSlashCommand({
+      name: 'thinking',
+      description: 'Select thinking level',
+      usage: '/thinking',
+      execute: () => { this.handleThinkingSelector(); },
+    });
+    // /login
+    this.registerSlashCommand({
+      name: 'login',
+      description: 'Set API key',
+      usage: '/login',
+      execute: () => { this.handleLogin(); },
+    });
+    // /help
+    this.registerSlashCommand({
+      name: 'help',
+      description: 'Show available slash commands',
+      usage: '/help',
+      execute: () => {
+        const lines = this.slashCommands.map(c => (c.usage || '/' + c.name) + ': ' + c.description);
+        this.setStatus(lines.join('; '));
+      },
+    });
+  }
+
+  private registerSlashCommand(cmd: SlashCommand): void {
+    this.slashCommands.push(cmd);
+  }
+
+  private handleSlashCommand(text: string): void {
+    const parts = text.trim().split(/\s+/);
+    const cmdName = parts[0].substring(1).toLowerCase(); // remove leading slash
+    const args = parts.slice(1).join(' ');
+    const cmd = this.slashCommands.find(c => c.name === cmdName);
+    if (!cmd) {
+      this.setStatus(`Unknown command: /${cmdName}. Type /help`);
+      return;
+    }
+    try {
+      const result = cmd.execute(args, this);
+      if (result instanceof Promise) {
+        result.catch((err: any) => {
+          this.setStatus(`Error: ${err.message}`);
+        });
+      }
+    } catch (err: any) {
+      this.setStatus(`Error: ${err.message}`);
+    }
   }
 
   /**
@@ -362,6 +467,14 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       try {
         const text = await this.getUserInput();
         if (text && this.running && this.runtime) {
+          // Slash command handling
+          if (text.startsWith('/')) {
+            this.handleSlashCommand(text);
+            if (this.editor) {
+              this.editor.setText('');
+            }
+            continue;
+          }
           // Show user message in chat
           this.addUserMessage(text);
           // Clear editor for next input
