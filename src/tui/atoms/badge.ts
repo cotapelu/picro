@@ -84,9 +84,38 @@ export class Badge implements UIElement {
 
   clearCache(): void {}
 
-  draw(_context: RenderContext): string[] {
+  draw(context: RenderContext): string[] {
     const text = ` ${this.prefix}${this.label}${this.suffix} `;
-    const styled = this.theme[this.variant](text);
+    let styled: string;
+    if (context.theme) {
+      const theme = context.theme;
+      let bg: string | undefined;
+      let fg: string | undefined = theme.textColor;
+      switch (this.variant) {
+        case 'primary':
+        case 'info':
+          bg = theme.accentColor;
+          break;
+        case 'success':
+          bg = theme.successColor;
+          break;
+        case 'warning':
+          bg = theme.warningColor;
+          break;
+        case 'error':
+          bg = theme.errorColor;
+          break;
+        default:
+          bg = theme.bgColor;
+      }
+      if (bg && fg) {
+        styled = bg + fg + text + '\x1b[0m';
+      } else {
+        styled = this.theme[this.variant](text);
+      }
+    } else {
+      styled = this.theme[this.variant](text);
+    }
     return [styled];
   }
 }
