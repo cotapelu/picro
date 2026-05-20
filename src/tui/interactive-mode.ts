@@ -194,6 +194,14 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
         onExecute: () => this.handleShareChat(),
       },
       {
+        id: 'edit-external',
+        label: 'Edit in External Editor',
+        shortcut: 'Ctrl+E',
+        category: 'Edit',
+        description: 'Open current input in $EDITOR',
+        onExecute: () => this.handleEditExternal(),
+      },
+      {
         id: 'quit',
         label: 'Quit',
         shortcut: 'Ctrl+Q',
@@ -571,6 +579,38 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     const text = this.exportChat();
     this.copyToClipboard(text);
     this.setStatus('Chat copied to clipboard');
+  }
+
+  private handleEditExternal(): void {
+    const editorText = this.editor?.getText() ?? '';
+    const fs = require('node:fs');
+    const cp = require('node:child_process');
+    const path = require('node:path');
+
+    try {
+      // Create temp file
+      const tmpDir = process.env.TMPDIR || process.env.TEMP || '/tmp';
+      const dir = fs.mkdtempSync(path.join(tmpDir, 'picro-'));
+      const filePath = path.join(dir, 'edit.txt');
+      fs.writeFileSync(filePath, editorText);
+
+      // Determine editor
+      const editor = process.env.EDITOR || 'vi';
+      cp.spawnSync(editor, [filePath], { stdio: 'inherit' });
+
+      // Read back
+      const newText = fs.readFileSync(filePath, 'utf-8');
+      if (this.editor) {
+        this.editor.setText(newText);
+        this.setStatus('Editor updated');
+      }
+
+      // Cleanup
+      fs.unlinkSync(filePath);
+      fs.rmdirSync(dir);
+    } catch (err: any) {
+      this.setStatus(`Edit error: ${err.message}`);
+    }
   }
 
   // =========================================================================
