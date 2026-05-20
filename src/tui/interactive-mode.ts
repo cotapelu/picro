@@ -126,6 +126,9 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   private allToolExecutions = new Set<ToolExecutionMessage>();
   // Autocomplete providers
   private autocompleteProviders: AutocompleteProvider[] = [];
+  // Model cycle support
+  private models: string[] = ['claude-3-opus', 'claude-3-sonnet', 'gpt-4'];
+  private currentModelIndex = 0;
 
   // Slash commands
   private slashCommands: SlashCommand[] = [];
@@ -231,6 +234,14 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
         category: 'Agent',
         description: 'Cycle through thinking levels',
         onExecute: () => this.handleCycleThinkingLevel(),
+      },
+      {
+        id: 'cycle-model',
+        label: 'Cycle Model',
+        shortcut: 'Ctrl+M',
+        category: 'System',
+        description: 'Switch to next AI model',
+        onExecute: () => this.handleCycleModel(),
       },
       {
         id: 'quit',
@@ -769,6 +780,16 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     const nextLevel = this.thinkingAvailableLevels[nextIndex];
     this.setThinkingLevel(nextLevel);
     this.setStatus(`Thinking level: ${nextLevel}`);
+  }
+
+  private handleCycleModel(): void {
+    if (this.models.length === 0) {
+      this.setStatus('No models configured');
+      return;
+    }
+    this.currentModelIndex = (this.currentModelIndex + 1) % this.models.length;
+    const model = this.models[this.currentModelIndex];
+    this.setStatus(`Model: ${model}`);
   }
 
   // =========================================================================
