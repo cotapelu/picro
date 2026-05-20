@@ -56,12 +56,22 @@ export class ProgressBar implements UIElement {
     const fillCount = Math.round((this.percent / 100) * this.width);
     const emptyCount = this.width - fillCount;
 
-    const barFill = this.fillColor + this.fillChar.repeat(fillCount);
-    const barEmpty = this.emptyColor + this.emptyChar.repeat(emptyCount);
+    // Theme adaptation: use context.theme if available, fall back to local colors
+    let labelAnsi = this.labelColor;
+    let fillAnsi = this.fillColor;
+    let emptyAnsi = this.emptyColor;
+    if (context.theme) {
+      if (context.theme.textColor) labelAnsi = context.theme.textColor;
+      if (context.theme.accentColor) fillAnsi = context.theme.accentColor;
+      if (context.theme.borderColor) emptyAnsi = context.theme.borderColor;
+    }
+
+    const barFill = fillAnsi + this.fillChar.repeat(fillCount);
+    const barEmpty = emptyAnsi + this.emptyChar.repeat(emptyCount);
     const bar = barFill + barEmpty;
 
     const label = `${this.percent.toFixed(0)}%`;
-    const coloredLabel = this.labelColor + label + '\x1b[0m';
+    const coloredLabel = labelAnsi + label + '\x1b[0m';
 
     const core = this.showLabel ? ` ${coloredLabel} ${bar}` : bar;
     const coreLen = core.length;
