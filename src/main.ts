@@ -25,11 +25,9 @@ import { handleConfigCommand } from "./package-manager-cli";
 import { isLocalPath } from "./utils/paths";
 import { runMigrations, showDeprecationWarnings } from "./migrations";
 import type { Model } from "./llm";
-import { ProcessTerminal, TerminalUI } from "./tui";
-import { InteractiveMode } from "./tui/interactive-mode";
+import { runInkApp } from "./tui/ink";
 import { runPrintMode } from "./modes/print-mode";
 import { runRpcMode } from "./modes/rpc-mode";
-import { themeManager } from "./tui/core/theme";
 import type { AgentSessionRuntimeDiagnostic } from "./session/agent-session-services";
 
 // Load environment variables from .env
@@ -369,22 +367,8 @@ async function main(): Promise<void> {
     stdinContent,
   });
 
-  // For non-interactive modes, we sent initial message via runPrintMode. For interactive, we may want to pre-load.
+  // For interactive mode, use Ink-based UI
   if (appMode === "interactive") {
-    // Initialize theme
-    themeManager.setTheme(services.settingsManager.getTheme() as any);
-    // Create terminal UI
-    const terminal = new ProcessTerminal();
-    const tui = new TerminalUI(terminal);
-    // Create interactive mode
-    const interactive = new InteractiveMode(tui, {
-      inputPlaceholder: "Type your message...",
-      initialStatus: "Ready",
-    });
-    interactive.setRuntime(runtime);
-    // Append interactive to tui so it gets rendered
-    tui.append(interactive);
-
     // Add initial message to session (if any) to start conversation
     if (initialResult.initialMessage) {
       await session.prompt(initialResult.initialMessage, { images: initialResult.initialImages });
@@ -395,12 +379,9 @@ async function main(): Promise<void> {
     }
 
     try {
-      await interactive.run();
+      await runInkApp(runtime);
     } catch (err: any) {
       console.error("Interactive mode error:", err.message || err);
-    } finally {
-      interactive.stop();
-      tui.stop();
     }
   } else if (appMode === "print" || appMode === "json") {
     // If no input at all, show helpful message
