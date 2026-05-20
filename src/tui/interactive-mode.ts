@@ -244,6 +244,14 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
         onExecute: () => this.handleCycleModel(),
       },
       {
+        id: 'about',
+        label: 'About',
+        shortcut: 'Ctrl+A',
+        category: 'Help',
+        description: 'Show application version and environment',
+        onExecute: () => this.handleAbout(),
+      },
+      {
         id: 'quit',
         label: 'Quit',
         shortcut: 'Ctrl+Q',
@@ -790,6 +798,20 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.currentModelIndex = (this.currentModelIndex + 1) % this.models.length;
     const model = this.models[this.currentModelIndex];
     this.setStatus(`Model: ${model}`);
+  }
+
+  private handleAbout(): void {
+    try {
+      const fs = require('node:fs');
+      const path = require('node:path');
+      const pkgPath = path.join(process.cwd(), 'package.json');
+      const raw = fs.readFileSync(pkgPath, 'utf-8');
+      const { name, version } = JSON.parse(raw);
+      const nodeVersion = process.version;
+      this.setStatus(`${name} v${version} (Node ${nodeVersion})`);
+    } catch (e: any) {
+      this.setStatus('Version info unavailable');
+    }
   }
 
   // =========================================================================
