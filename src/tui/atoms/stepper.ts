@@ -87,33 +87,41 @@ export class Stepper implements UIElement {
   private drawHorizontal(context: RenderContext): string[] {
     const lines: string[] = [];
     const parts: string[] = [];
+    const theme = context.theme;
+    // Color adapters: use global theme if available, else fallback to local theme
+    const completedColorFn = theme?.successColor ? ((s: string) => theme.successColor + s + '\x1b[0m') : this.theme.completedColor;
+    const currentColorFn = theme?.accentColor ? ((s: string) => theme.accentColor + s + '\x1b[0m') : this.theme.currentColor;
+    const dimLike = theme?.borderColor ? ((s: string) => theme.borderColor + s + '\x1b[0m') : null;
+    const pendingColorFn = dimLike ?? this.theme.pendingColor;
+    const optionalColorFn = dimLike ?? this.theme.optionalColor;
+    const connectorColorFn = dimLike ?? this.theme.connectorColor;
+    const dimColorFn = dimLike ?? this.theme.dimColor;
     
     this.steps.forEach((step, index) => {
       const isCurrent = index === this.currentStep;
       const isCompleted = step.completed || index < this.currentStep;
-      const isPending = index > this.currentStep;
 
       let marker: string;
       if (isCompleted) {
-        marker = this.theme.completedColor('●');
+        marker = completedColorFn('●');
       } else if (isCurrent) {
-        marker = this.theme.currentColor('○');
+        marker = currentColorFn('○');
       } else {
-        marker = this.theme.pendingColor('○');
+        marker = pendingColorFn('○');
       }
 
-      const label = isCurrent 
-        ? this.theme.currentColor(step.label)
-        : isCompleted 
-          ? this.theme.completedColor(step.label)
-          : this.theme.pendingColor(step.label);
+      const label = isCurrent
+        ? currentColorFn(step.label)
+        : isCompleted
+          ? completedColorFn(step.label)
+          : pendingColorFn(step.label);
 
-      const optional = step.optional && !isCompleted ? this.theme.optionalColor(' (opt)') : '';
+      const optional = step.optional && !isCompleted ? optionalColorFn(' (opt)') : '';
       
       parts.push(`${marker} ${label}${optional}`);
       
       if (index < this.steps.length - 1) {
-        parts.push(this.theme.connectorColor('→'));
+        parts.push(connectorColorFn('→'));
       }
     });
 
@@ -123,7 +131,7 @@ export class Stepper implements UIElement {
     if (this.showDescription) {
       const currentStep = this.steps[this.currentStep];
       if (currentStep?.description) {
-        const desc = this.theme.dimColor(currentStep.description);
+        const desc = dimColorFn(currentStep.description);
         lines.push(truncateText(desc, context.width, '…'));
       }
     }
@@ -133,37 +141,44 @@ export class Stepper implements UIElement {
 
   private drawVertical(context: RenderContext): string[] {
     const lines: string[] = [];
-    
+    const theme = context.theme;
+    const completedColorFn = theme?.successColor ? ((s: string) => theme.successColor + s + '\x1b[0m') : this.theme.completedColor;
+    const currentColorFn = theme?.accentColor ? ((s: string) => theme.accentColor + s + '\x1b[0m') : this.theme.currentColor;
+    const dimLike = theme?.borderColor ? ((s: string) => theme.borderColor + s + '\x1b[0m') : null;
+    const pendingColorFn = dimLike ?? this.theme.pendingColor;
+    const connectorColorFn = dimLike ?? this.theme.connectorColor;
+    const dimColorFn = dimLike ?? this.theme.dimColor;
+
     this.steps.forEach((step, index) => {
       const isCurrent = index === this.currentStep;
       const isCompleted = step.completed || index < this.currentStep;
 
       let marker: string;
       if (isCompleted) {
-        marker = this.theme.completedColor('●');
+        marker = completedColorFn('●');
       } else if (isCurrent) {
-        marker = this.theme.currentColor('○');
+        marker = currentColorFn('○');
       } else {
-        marker = this.theme.pendingColor('○');
+        marker = pendingColorFn('○');
       }
 
-      const label = isCurrent 
-        ? this.theme.currentColor(step.label)
-        : isCompleted 
-          ? this.theme.completedColor(step.label)
-          : this.theme.pendingColor(step.label);
+      const label = isCurrent
+        ? currentColorFn(step.label)
+        : isCompleted
+          ? completedColorFn(step.label)
+          : pendingColorFn(step.label);
 
-      const connector = index < this.steps.length - 1 ? this.theme.connectorColor('│') : ' ';
+      const connector = index < this.steps.length - 1 ? connectorColorFn('│') : ' ';
       
       lines.push(`${marker} ${label}`);
       
       if (this.showDescription && step.description) {
-        const desc = `  ${this.theme.dimColor(step.description)}`;
+        const desc = `  ${dimColorFn(step.description)}`;
         lines.push(truncateText(desc, context.width, '…'));
       }
       
       if (index < this.steps.length - 1) {
-        lines.push(this.theme.dimColor(`${connector} `));
+        lines.push(dimColorFn(`${connector} `));
       }
     });
 
