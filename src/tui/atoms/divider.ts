@@ -76,6 +76,16 @@ export class Divider implements UIElement {
     this.char = options.char;
   }
 
+  private getThemeColors(context: RenderContext): {
+    lineColor: (s: string) => string;
+    labelColor: (s: string) => string;
+  } {
+    const theme = context.theme;
+    const lineColorFn = theme?.borderColor ? ((s: string) => theme.borderColor + s + '\x1b[0m') : this.theme.lineColor;
+    const labelColorFn = theme?.textColor ? ((s: string) => theme.textColor + s + '\x1b[0m') : this.theme.labelColor;
+    return { lineColor: lineColorFn, labelColor: labelColorFn };
+  }
+
   /**
    * Update label
    */
@@ -93,32 +103,30 @@ export class Divider implements UIElement {
   clearCache(): void {}
 
   draw(context: RenderContext): string[] {
+    const colors = this.getThemeColors(context);
     if (this.direction === 'horizontal') {
-      return this.drawHorizontal(context.width);
+      return this.drawHorizontal(context.width, colors);
     } else {
-      return this.drawVertical(context.height);
+      return this.drawVertical(context.height, colors);
     }
   }
 
-  private drawHorizontal(width: number): string[] {
+  private drawHorizontal(width: number, colors: { lineColor: (s: string) => string; labelColor: (s: string) => string }): string[] {
     const char = this.char || chars[this.style].horizontal;
     
     if (!this.label) {
-      // Simple divider
-      const line = this.theme.lineColor(char.repeat(width));
+      const line = colors.lineColor(char.repeat(width));
       return [line];
     }
 
-    // Labeled divider
     const labelText = ` ${this.label} `;
     const pad = this.labelPadding;
     const totalLabelWidth = visibleWidth(labelText) + pad * 2;
     
     if (totalLabelWidth >= width - 4) {
-      // Label too wide, truncate
       const available = width - 4;
       const truncated = truncateText(this.label, available, '…');
-      const line = this.theme.lineColor(char + ' ' + truncated + ' ' + char);
+      const line = colors.lineColor(char + ' ' + truncated + ' ' + char);
       return [line];
     }
 
@@ -128,18 +136,18 @@ export class Divider implements UIElement {
 
     const leftPart = char.repeat(leftLen);
     const rightPart = char.repeat(rightLen);
-    const labelPart = ' '.repeat(pad) + this.theme.labelColor(labelText) + ' '.repeat(pad);
+    const labelPart = ' '.repeat(pad) + colors.labelColor(labelText) + ' '.repeat(pad);
 
-    const line = this.theme.lineColor(leftPart) + labelPart + this.theme.lineColor(rightPart);
+    const line = colors.lineColor(leftPart) + labelPart + colors.lineColor(rightPart);
     return [line];
   }
 
-  private drawVertical(height: number): string[] {
+  private drawVertical(height: number, colors: { lineColor: (s: string) => string }): string[] {
     const char = this.char || chars[this.style].vertical;
     const lines: string[] = [];
     
     for (let i = 0; i < height; i++) {
-      lines.push(this.theme.lineColor(char));
+      lines.push(colors.lineColor(char));
     }
     
     return lines;
