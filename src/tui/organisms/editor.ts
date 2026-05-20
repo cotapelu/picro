@@ -30,6 +30,7 @@ export interface EditorOptions {
   useGlobalKillRing?: boolean;
   onSubmit?: (text: string) => void;
   onChange?: (text: string) => void;
+  onUpdate?: () => void;
   onEscape?: () => void;
   onInterrupt?: () => void;
   tui?: TerminalUI;
@@ -55,6 +56,7 @@ export class Editor implements UIElement, InteractiveElement {
   public isFocused = false;
   public onSubmit?: (text: string) => void;
   public onChange?: (text: string) => void;
+  public onUpdate?: () => void;
   public onEscape?: () => void;
   public onInterrupt?: () => void;
   public borderColor: (s: string) => string = (s) => `\x1b[90m${s}\x1b[0m`;
@@ -79,6 +81,7 @@ export class Editor implements UIElement, InteractiveElement {
     // Callbacks
     this.onSubmit = options.onSubmit;
     this.onChange = options.onChange;
+    this.onUpdate = options.onUpdate;
     this.onEscape = options.onEscape;
     this.onInterrupt = options.onInterrupt;
   }
@@ -101,6 +104,7 @@ export class Editor implements UIElement, InteractiveElement {
     this.historyIndex = -1;
     this.pushUndo();
     this.onChange?.(this.getText());
+    this.onUpdate?.();
   }
 
   addToHistory(text: string): void {
@@ -137,6 +141,7 @@ export class Editor implements UIElement, InteractiveElement {
     if (prev) {
       this.state = prev;
       this.onChange?.(this.getText());
+      this.notifyUpdate();
     }
   }
 
@@ -145,6 +150,7 @@ export class Editor implements UIElement, InteractiveElement {
     if (next) {
       this.state = next;
       this.onChange?.(this.getText());
+      this.notifyUpdate();
     }
   }
 
@@ -249,6 +255,7 @@ export class Editor implements UIElement, InteractiveElement {
       this.lastAction = 'kill';
       this.state.lines[this.state.cursorLine] = line.slice(0, this.state.cursorCol);
       this.onChange?.(this.getText());
+      this.notifyUpdate();
     }
   }
 
@@ -262,6 +269,7 @@ export class Editor implements UIElement, InteractiveElement {
       this.state.lines[this.state.cursorLine] = line.slice(this.state.cursorCol);
       this.state.cursorCol = 0;
       this.onChange?.(this.getText());
+      this.notifyUpdate();
     }
   }
 
@@ -277,6 +285,7 @@ export class Editor implements UIElement, InteractiveElement {
     this.lastAction = 'kill';
     this.state.lines[this.state.cursorLine] = line.slice(0, start) + line.slice(oldCol);
     this.onChange?.(this.getText());
+    this.notifyUpdate();
   }
 
   private yank(): void {
@@ -307,12 +316,14 @@ export class Editor implements UIElement, InteractiveElement {
   private moveToLineStart(): void {
     this.state.cursorCol = 0;
     this.lastAction = null;
+    this.notifyUpdate();
   }
 
   private moveToLineEnd(): void {
     const line = this.state.lines[this.state.cursorLine] ?? '';
     this.state.cursorCol = line.length;
     this.lastAction = null;
+    this.notifyUpdate();
   }
 
   private moveWordBackwards(): void {
@@ -322,6 +333,7 @@ export class Editor implements UIElement, InteractiveElement {
     while (pos > 0 && /\S/.test(line[pos - 1] ?? '')) pos--;
     this.state.cursorCol = Math.max(0, pos);
     this.lastAction = null;
+    this.notifyUpdate();
   }
 
   private moveWordForwards(): void {
@@ -331,6 +343,7 @@ export class Editor implements UIElement, InteractiveElement {
     while (pos < line.length && /\S/.test(line[pos] ?? '')) pos++;
     this.state.cursorCol = Math.min(line.length, pos);
     this.lastAction = null;
+    this.notifyUpdate();
   }
 
   // ========================================================================
@@ -365,6 +378,10 @@ export class Editor implements UIElement, InteractiveElement {
     this.onChange?.(this.getText());
   }
 
+  private notifyUpdate(): void {
+    this.onUpdate?.();
+  }
+
   // ========================================================================
   // Text Insertion
   // ========================================================================
@@ -391,6 +408,8 @@ export class Editor implements UIElement, InteractiveElement {
       this.state.cursorLine += lines.length - 1;
       this.state.cursorCol = lines[lines.length - 1]?.length ?? 0;
     }
+    this.onChange?.(this.getText());
+    this.notifyUpdate();
   }
 
   // ========================================================================
@@ -541,6 +560,7 @@ export class Editor implements UIElement, InteractiveElement {
         this.state.cursorCol = this.state.lines[this.state.cursorLine]?.length ?? 0;
       }
       this.lastAction = null;
+      this.notifyUpdate();
       return;
     }
     if (key === 'ArrowRight' || (key === 'f' && event.modifiers?.ctrl)) {
@@ -551,6 +571,7 @@ export class Editor implements UIElement, InteractiveElement {
         this.state.cursorCol = 0;
       }
       this.lastAction = null;
+      this.notifyUpdate();
       return;
     }
     if (key === 'ArrowUp') {
@@ -562,6 +583,7 @@ export class Editor implements UIElement, InteractiveElement {
         const prevLine = this.state.lines[this.state.cursorLine] ?? '';
         this.state.cursorCol = Math.min(this.state.cursorCol, prevLine.length);
       }
+      this.notifyUpdate();
       return;
     }
     if (key === 'ArrowDown') {
@@ -572,6 +594,7 @@ export class Editor implements UIElement, InteractiveElement {
         const nextLine = this.state.lines[this.state.cursorLine] ?? '';
         this.state.cursorCol = Math.min(this.state.cursorCol, nextLine.length);
       }
+      this.notifyUpdate();
       return;
     }
     
@@ -595,6 +618,7 @@ export class Editor implements UIElement, InteractiveElement {
         this.state.lines[this.state.cursorLine] = line.slice(0, -1 + this.state.cursorCol) + line.slice(this.state.cursorCol);
         this.state.cursorCol--;
         this.onChange?.(this.getText());
+        this.notifyUpdate();
       } else if (this.state.cursorLine > 0) {
         this.pushUndo();
         const currentLine = this.state.lines[this.state.cursorLine] ?? '';
@@ -604,6 +628,7 @@ export class Editor implements UIElement, InteractiveElement {
         this.state.lines.splice(this.state.cursorLine, 1);
         this.state.cursorLine--;
         this.onChange?.(this.getText());
+        this.notifyUpdate();
       }
       return;
     }
@@ -617,12 +642,14 @@ export class Editor implements UIElement, InteractiveElement {
         this.pushUndo();
         this.state.lines[this.state.cursorLine] = line.slice(0, this.state.cursorCol) + line.slice(this.state.cursorCol + 1);
         this.onChange?.(this.getText());
+        this.notifyUpdate();
       } else if (this.state.cursorLine < this.state.lines.length - 1) {
         this.pushUndo();
         const nextLine = this.state.lines[this.state.cursorLine + 1] ?? '';
         this.state.lines[this.state.cursorLine] = line + nextLine;
         this.state.lines.splice(this.state.cursorLine + 1, 1);
         this.onChange?.(this.getText());
+        this.notifyUpdate();
       }
       return;
     }
