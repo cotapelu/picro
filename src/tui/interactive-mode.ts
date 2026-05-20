@@ -186,6 +186,14 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
         onExecute: () => this.handleClearChat(),
       },
       {
+        id: 'share-chat',
+        label: 'Share Chat',
+        shortcut: 'Ctrl+Shift+S',
+        category: 'Edit',
+        description: 'Copy chat history to clipboard',
+        onExecute: () => this.handleShareChat(),
+      },
+      {
         id: 'quit',
         label: 'Quit',
         shortcut: 'Ctrl+Q',
@@ -557,6 +565,12 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     this.allToolExecutions.clear();
     this.toolCallIdToName.clear();
     this.setStatus('Chat cleared');
+  }
+
+  private handleShareChat(): void {
+    const text = this.exportChat();
+    this.copyToClipboard(text);
+    this.setStatus('Chat copied to clipboard');
   }
 
   // =========================================================================
