@@ -66,23 +66,29 @@ export class Rating implements UIElement {
 
   clearCache(): void {}
 
-  draw(_context: RenderContext): string[] {
+  draw(context: RenderContext): string[] {
     const filled = Math.floor(this.value);
     const hasHalf = this.allowHalf && this.value % 1 >= 0.5;
     const empty = this.maxStars - filled - (hasHalf ? 1 : 0);
 
+    const theme = context.theme;
+    const filledStarFn = theme?.accentColor ? ((s: string) => theme.accentColor + s + '\x1b[0m') : this.theme.filledStar;
+    const halfStarFn = theme?.accentColor ? ((s: string) => theme.accentColor + s + '\x1b[0m') : this.theme.halfStar;
+    const emptyStarFn = theme?.borderColor ? ((s: string) => theme.borderColor + s + '\x1b[0m') : this.theme.emptyStar;
+    const labelColorFn = theme?.textColor ? ((s: string) => theme.textColor + s + '\x1b[0m') : this.theme.labelColor;
+
     let stars = '';
-    stars += this.theme.filledStar(this.filledChar.repeat(filled));
+    stars += filledStarFn(this.filledChar.repeat(filled));
     if (hasHalf) {
-      stars += this.theme.halfStar(this.halfChar);
+      stars += halfStarFn(this.halfChar);
     }
-    stars += this.theme.emptyStar(this.emptyChar.repeat(empty));
+    stars += emptyStarFn(this.emptyChar.repeat(empty));
 
     let line = stars;
     
     if (this.showLabel) {
       const labelText = this.label ?? `${this.value}/${this.maxStars}`;
-      line += ` ${this.theme.labelColor(labelText)}`;
+      line += ` ${labelColorFn(labelText)}`;
     }
 
     return [line];
