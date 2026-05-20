@@ -411,6 +411,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       paddingX: 1,
       paddingY: 0,
       tui: this.tui,
+      onInterrupt: () => this.stop(),
     });
     // Initialize autocomplete providers
     this.editor.setAutocompleteProviders(this.autocompleteProviders);
@@ -453,6 +454,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     // Start TUI and set focus
     this.tui.start();
     this.tui.setFocus(this.editor as UIElement);
+    if (process.env.VERBOSE) console.log('InteractiveMode: focused element after setFocus:', this.tui.getFocusedElement()?.constructor.name);
 
     // Show editor and footer as fixed bottom panels
     this.tui.showPanel(this.editorContainer as UIElement, {
@@ -465,6 +467,7 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
       offsetY: -1,
       width: '100%',
       height: 1,
+      nonCapturing: true,
     });
 
     this.isInitialized = true;

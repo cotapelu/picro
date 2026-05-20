@@ -31,6 +31,7 @@ export interface EditorOptions {
   onSubmit?: (text: string) => void;
   onChange?: (text: string) => void;
   onEscape?: () => void;
+  onInterrupt?: () => void;
   tui?: TerminalUI;
 }
 
@@ -55,6 +56,7 @@ export class Editor implements UIElement, InteractiveElement {
   public onSubmit?: (text: string) => void;
   public onChange?: (text: string) => void;
   public onEscape?: () => void;
+  public onInterrupt?: () => void;
   public borderColor: (s: string) => string = (s) => `\x1b[90m${s}\x1b[0m`;
   private autocompleteProviders: AutocompleteProvider[] = [];
   private tui: TerminalUI | null = null;
@@ -78,6 +80,7 @@ export class Editor implements UIElement, InteractiveElement {
     this.onSubmit = options.onSubmit;
     this.onChange = options.onChange;
     this.onEscape = options.onEscape;
+    this.onInterrupt = options.onInterrupt;
   }
 
   // ========================================================================
@@ -459,6 +462,8 @@ export class Editor implements UIElement, InteractiveElement {
     const raw = event.raw;
     const kb = getKeybindings();
     
+    if (process.env.VERBOSE) console.log(`[Editor] handleKey: key="${key}" ctrl=${event.modifiers?.ctrl} alt=${event.modifiers?.alt} shift=${event.modifiers?.shift}`);
+    
     // Decode printable characters
     const printable = decodeKittyPrintable(raw) ?? (raw.length === 1 && raw.charCodeAt(0) >= 32 ? raw : undefined);
     
@@ -497,6 +502,18 @@ export class Editor implements UIElement, InteractiveElement {
     // Escape
     if (key === 'Escape') {
       this.onEscape?.();
+      return;
+    }
+    
+    // Interrupt (Ctrl+C, Ctrl+\
+    if (key === 'c' && event.modifiers?.ctrl) {
+      if (process.env.VERBOSE) console.log('[Editor] Ctrl+C detected, calling onInterrupt');
+      this.onInterrupt?.();
+      return;
+    }
+    if (key === '\\' && event.modifiers?.ctrl) {
+      if (process.env.VERBOSE) console.log('[Editor] Ctrl+\\\\ detected, calling onInterrupt');
+      this.onInterrupt?.();
       return;
     }
     
