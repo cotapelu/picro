@@ -51,6 +51,8 @@ export interface ExtensionUIHandler {
     category?: string;
     onExecute: () => void;
   }): void;
+  // Compaction
+  setCompactionCount(count: number): void;
 }
 
 
@@ -361,6 +363,12 @@ export class DefaultExtensionUIContext implements ExtensionUIContext {
 
   setToolsExpanded(expanded: boolean): void {
     this.ui?.setToolsExpanded(expanded);
+  }
+
+  // ==================== Compaction ====================
+
+  setCompactionCount(count: number): void {
+    this.ui?.setCompactionCount(count);
   }
 
   // Cleanup

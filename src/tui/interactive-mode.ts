@@ -1048,6 +1048,15 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
     }
   }
 
+  setCompactionCount(count: number): void {
+    if (count > 0) {
+      this.defaultFooter?.setStatus('compaction', `Compacted: ${count} msg`);
+    } else {
+      this.defaultFooter?.clearStatus('compaction');
+    }
+    this.tui.requestRender();
+  }
+
   setTitle(title: string): void {
     if (this.tui.terminal.setTitle) {
       this.tui.terminal.setTitle(title);

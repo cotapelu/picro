@@ -94,6 +94,8 @@ export interface ExtensionUIContext {
 		category?: string;
 		onExecute: () => void;
 	}): void;
+	/** Set compaction badge count */
+	setCompactionCount(count: number): void;
 }
 
 // Re-export implementation
