@@ -85,6 +85,15 @@ export interface ExtensionUIContext {
 	getToolsExpanded(): boolean;
 	/** Expand/collapse the tool output panel */
 	setToolsExpanded(expanded: boolean): void;
+	/** Register a command for the command palette (extension) */
+	registerCommand(command: {
+		id: string;
+		label: string;
+		shortcut?: string;
+		description?: string;
+		category?: string;
+		onExecute: () => void;
+	}): void;
 }
 
 // Re-export implementation

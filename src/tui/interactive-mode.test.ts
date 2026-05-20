@@ -313,6 +313,26 @@ describe('InteractiveMode', () => {
     });
   });
 
+  describe('Extension command registration', () => {
+    it('should allow extension to register single command', () => {
+      const mode = new InteractiveMode(tui);
+      const ext = mode.getExtensionUIContext();
+      // @ts-ignore – interface may not have registerCommand yet
+      ext.registerCommand({ id: 'ext-cmd', label: 'Ext Cmd', shortcut: 'Ctrl+E', description: 'Extension command', onExecute: () => {} });
+      const cmds = (mode as any).commands as any[];
+      expect(cmds.some(c => c.id === 'ext-cmd')).toBe(true);
+    });
+
+    it('should add command to commands array', () => {
+      const mode = new InteractiveMode(tui);
+      const ext = mode.getExtensionUIContext();
+      // @ts-ignore
+      ext.registerCommand({ id: 'ext-cmd2', label: 'Ext2', onExecute: () => {} });
+      const cmds = (mode as any).commands as any[];
+      expect(cmds.some(c => c.id === 'ext-cmd2')).toBe(true);
+    });
+  });
+
   describe('Streaming assistant message', () => {
     it('creates AssistantMessage on assistant message_start', () => {
       const mode = new InteractiveMode(tui);

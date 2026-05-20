@@ -42,6 +42,15 @@ export interface ExtensionUIHandler {
   addAutocompleteProvider(factory: () => AutocompleteProvider): void;
   // Custom dialog
   showCustomDialog(factory: (tui: TerminalUI) => UIElement, options?: ExtensionUIDialogOptions): Promise<void>;
+  // Command registration
+  registerCommand(command: {
+    id: string;
+    label: string;
+    shortcut?: string;
+    description?: string;
+    category?: string;
+    onExecute: () => void;
+  }): void;
 }
 
 
@@ -207,6 +216,17 @@ export class DefaultExtensionUIContext implements ExtensionUIContext {
         handle.close();
       }
     }, 5000);
+  }
+
+  registerCommand(command: {
+    id: string;
+    label: string;
+    shortcut?: string;
+    description?: string;
+    category?: string;
+    onExecute: () => void;
+  }): void {
+    this.ui?.registerCommand(command);
   }
 
   // ==================== Terminal Input ====================

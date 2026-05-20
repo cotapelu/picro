@@ -1062,6 +1062,13 @@ export class InteractiveMode extends ElementContainer implements InteractiveElem
   }
 
   /**
+   * Register a single extension command
+   */
+  registerCommand(command: InteractiveModeCommand): void {
+    this.registerCommands([command]);
+  }
+
+  /**
    * Focus editor programmatically
    */
   focusEditor(): void {
