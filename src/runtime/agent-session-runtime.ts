@@ -267,10 +267,6 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
         `Forked from entry ${entryId}`
       );
 
-      // If withSession option is true, create a new AgentSession
-      // (reference does this in InteractiveMode after calling runtime.fork)
-      // But in our runtime, we just return the result; the caller (UI) will handle
-
       return { 
         cancelled: false,
         selectedText: (result as any)?.selectedText
@@ -279,6 +275,27 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
       console.error("Failed to fork session:", error);
       return { cancelled: true };
     }
+  }
+
+  /**
+   * List all sessions (local and global)
+   */
+  async listSessions(): Promise<Array<{ id: string; path: string; cwd: string }>> {
+    if (this._disposed) return [];
+    // List all sessions accessible to this cwd
+    const local = await SessionManager.list(this._cwd, this._services.sessionDir);
+    const global = await SessionManager.listAll();
+    // Combine and dedupe by path
+    const all = new Map<string, { id: string; path: string; cwd: string }>();
+    for (const s of local) {
+      all.set(s.path, { id: s.id, path: s.path, cwd: s.cwd });
+    }
+    for (const s of global) {
+      if (!all.has(s.path)) {
+        all.set(s.path, { id: s.id, path: s.path, cwd: s.cwd });
+      }
+    }
+    return Array.from(all.values());
   }
 
   /**

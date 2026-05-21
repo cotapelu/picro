@@ -28,6 +28,7 @@ export interface AgentSessionRuntimeInterface {
   newSession(): Promise<{ cancelled: boolean }>;
   switchSession(path: string): Promise<{ cancelled: boolean }>;
   fork(entryId: string): Promise<{ cancelled: boolean; selectedText?: string }>;
+  listSessions(): Promise<Array<{ id: string; path: string; cwd: string }>>;
   setBeforeSessionInvalidate(handler: () => void): void;
   setRebindSession(handler: (sessionPath?: string) => Promise<void>): void;
   // Settings access

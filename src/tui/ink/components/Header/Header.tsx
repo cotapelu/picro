@@ -7,9 +7,10 @@ interface HeaderProps {
   status: string;
   thinkingLevel: string;
   model: string;
+  theme?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ title, status, thinkingLevel, model }) => {
+export const Header: React.FC<HeaderProps> = ({ title, status, thinkingLevel, model, theme }) => {
   return (
     <Box borderStyle="single" borderBottom paddingX={1} justifyContent="space-between">
       <Text bold color="cyan">
@@ -18,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ title, status, thinkingLevel, mo
       <Box gap={1}>
         <Text color="gray">Model: {model}</Text>
         <Text color="green">Thinking: {thinkingLevel}</Text>
+        {theme && <Text color="cyan">Theme: {theme}</Text>}
         <Text color={status.startsWith('Error') ? 'red' : 'green'}>[{status}]</Text>
       </Box>
     </Box>

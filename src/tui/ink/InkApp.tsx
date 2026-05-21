@@ -3,7 +3,7 @@ import React, { useCallback } from 'react';
 import { render, Box, Text, useInput } from 'ink';
 import type { AgentSessionRuntimeInterface } from '../../types/agent-session';
 import type { Message } from './types';
-import { ThemeProvider } from './hooks/useTheme';
+import { ThemeProvider, useTheme } from './hooks/useTheme';
 import { useRuntime } from './hooks/useRuntime';
 import { Header } from './components/Header/Header';
 import { MessageList } from './components/MessageList/MessageList';
@@ -13,6 +13,7 @@ import { CommandPalette } from './modals/CommandPalette';
 import { ThinkingModal } from './modals/ThinkingModal';
 import { LoginModal } from './modals/LoginModal';
 import { HelpModal } from './modals/HelpModal';
+import { SessionSelectorModal } from './modals/SessionSelectorModal';
 import { Modal } from './modals/Modal';
 import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands';
 
@@ -26,15 +27,27 @@ type ModalState =
   | { type: 'login' }
   | { type: 'editor'; initialValue: string; onSave: (value: string) => Promise<void> }
   | { type: 'help' }
+  | { type: 'session-selector' }
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const { messages, status, thinkingLevel, sendMessage } = useRuntime(runtime);
+  const { toggleTheme, isDark } = useTheme();
   const [inputValue, setInputValue] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [activeModal, setActiveModal] = React.useState<ModalState>(null);
   const [showDebug, setShowDebug] = React.useState(false);
   const messageListRef = React.useRef<{ scrollToBottom: () => void } | null>(null);
+  const [toasts, setToasts] = React.useState<Array<{ id: number; message: string; type: 'info' | 'success' | 'error' }>>([]);
+  const toastIdRef = React.useRef(0);
+
+  const addToast = useCallback((message: string, type: 'info' | 'success' | 'error' = 'info') => {
+    const id = ++toastIdRef.current;
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000); // auto-dismiss after 4s
+  }, []);
 
   // Handle input submission
   const handleSubmit = useCallback(async () => {
@@ -61,8 +74,20 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       setActiveModal({ type: 'command-palette' });
     } else if (key.ctrl && input === 't') {
       setActiveModal({ type: 'thinking' });
+    } else if (key.ctrl && key.shift && input === 't') {
+      // Toggle theme with Ctrl+Shift+T
+      toggleTheme();
+      // Persist
+      try {
+        runtime.settings?.set('theme', isDark ? 'light' : 'dark');
+        runtime.settings?.save?.();
+      } catch {
+        // ignore
+      }
     } else if (key.ctrl && input === 'l') {
       setActiveModal({ type: 'login' });
+    } else if (key.ctrl && input === 'r') {
+      setActiveModal({ type: 'session-selector' });
     } else if (key.ctrl && input === 'd') {
       setShowDebug((prev) => !prev);
     } else if (key.ctrl && input === 'e') {
@@ -79,6 +104,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     switch (commandId) {
       case 'clear':
         runtime.newSession().catch(console.error);
+        addToast('Started new session', 'info');
         break;
       case 'quit':
         process.exit(0);
@@ -94,6 +120,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         break;
       case 'new':
         runtime.newSession().catch(console.error);
+        addToast('New session created', 'info');
         break;
       case 'copy':
         // Copy last assistant message to clipboard
@@ -101,16 +128,22 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         if (lastAssistant) {
           try {
             await runtime.copyToClipboard(lastAssistant.content);
+            addToast('Copied last message to clipboard', 'success');
           } catch (err) {
-            console.error('Copy failed:', err);
+            addToast('Copy failed', 'error');
           }
+        } else {
+          addToast('No assistant message to copy', 'info');
         }
+        break;
+      case 'resume':
+        setActiveModal({ type: 'session-selector' });
         break;
       default:
         // Other commands not yet implemented
         break;
     }
-  }, [runtime, messages]);
+  }, [runtime, messages, addToast]);
 
   const handleThinkingChange = useCallback((level: string) => {
     setActiveModal(null);
@@ -120,8 +153,9 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const handleLogin = useCallback(async (apiKey: string) => {
     const defaultProvider = runtime.settings?.getDefaultProvider() || 'openai';
     await runtime.authStorage.setApiKey(defaultProvider, apiKey);
+    addToast('Logged in successfully', 'success');
     setActiveModal(null);
-  }, [runtime]);
+  }, [runtime, addToast]);
 
   // Render active modal
   const renderModal = () => {
@@ -190,20 +224,26 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
             <HelpModal onClose={() => setActiveModal(null)} />
           </Modal>
         );
+      case 'session-selector':
+        return (
+          <SessionSelectorModal runtime={runtime} onClose={() => setActiveModal(null)} />
+        );
       default:
         return null;
     }
   };
 
   const modelId = (runtime.session as any)?.model?.id || 'No model';
+  const themeLabel = isDark ? 'dark' : 'light';
 
   return (
-    <Box flexDirection="column" width="100%">
+    <Box flexDirection="column" width="100%" position="relative">
       <Header
         title="Picro Agent"
         status={status || 'Ready'}
         thinkingLevel={thinkingLevel}
         model={modelId}
+        theme={themeLabel}
       />
       <Box flexGrow={1} overflow="hidden" position="relative">
         <MessageList
@@ -231,15 +271,42 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           setActiveModal({ type: 'command-palette', filter: '', isSlash: false });
         }}
       />
-      <Footer hints={['Ctrl+P: Commands', 'Ctrl+T: Thinking', 'Ctrl+E: Edit', 'Ctrl+D: Debug', 'Ctrl+C: Quit']} />
+      <Footer hints={[
+        'Ctrl+P: Commands',
+        'Ctrl+T: Thinking',
+        'Ctrl+Shift+T: Toggle Theme',
+        'Ctrl+R: Resume Session',
+        'Ctrl+E: Edit',
+        'Ctrl+D: Debug',
+        'Ctrl+C: Quit'
+      ]} />
       {activeModal && renderModal()}
+      {/* Toast notifications */}
+      <Box flexDirection="column" position="absolute" top={0} right={0}>
+        {toasts.map(toast => (
+          <Box key={toast.id} borderStyle="round" paddingX={1} margin={1}>
+            <Text color={toast.type === 'error' ? 'red' : toast.type === 'success' ? 'green' : 'cyan'}>
+              {toast.message}
+            </Text>
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 };
 
 export const InkApp: React.FC<{ runtime: AgentSessionRuntimeInterface }> = ({ runtime }) => {
+  // Determine initial theme from settings
+  let initialMode: 'dark' | 'light' = 'dark';
+  try {
+    const themeSetting = runtime.settings?.get?.('theme');
+    if (themeSetting === 'light') initialMode = 'light';
+  } catch {
+    // default dark
+  }
+
   return (
-    <ThemeProvider>
+    <ThemeProvider initialMode={initialMode}>
       <InkAppInner runtime={runtime} />
     </ThemeProvider>
   );

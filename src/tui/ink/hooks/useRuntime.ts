@@ -30,11 +30,22 @@ interface AgentSessionRuntimeInterface {
   thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
   setThinkingLevel(level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh"): void;
   // Settings
-  settings?: { getDefaultProvider?(): string; set(key: string, value: any): void; save?(): Promise<void> };
+  settings?: { get(key: string): any; set(key: string, value: any): void; save?(): Promise<void> };
   // Auth
   authStorage?: { setApiKey(provider: string, apiKey: string): Promise<void>; removeApiKey(provider: string): Promise<void>; };
   // Clipboard
   copyToClipboard?(text: string): Promise<void>;
+}
+
+// Helper to read theme from runtime
+function getRuntimeTheme(runtime: AgentSessionRuntimeInterface): 'dark' | 'light' {
+  try {
+    const themeSetting = runtime.settings?.get('theme');
+    if (themeSetting === 'light') return 'light';
+    return 'dark';
+  } catch {
+    return 'dark';
+  }
 }
 
 // Convert from ConversationTurn to Message UI type
