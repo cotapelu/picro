@@ -21,6 +21,7 @@ import { SessionInfoModal } from './modals/SessionInfoModal';
 import { ChangelogModal } from './modals/ChangelogModal';
 import { HotkeysModal } from './modals/HotkeysModal';
 import { TreeSelectorModal } from './modals/TreeSelectorModal';
+import { BashOutputModal } from './modals/BashOutputModal';
 import { Modal } from './modals/Modal';
 import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands';
 
@@ -42,6 +43,7 @@ type ModalState =
   | { type: 'changelog' }
   | { type: 'hotkeys' }
   | { type: 'tree-selector' }
+  | { type: 'bash-output'; command: string; output: string; error?: boolean }
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
@@ -54,6 +56,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const messageListRef = React.useRef<{ scrollToBottom: () => void } | null>(null);
   const [toasts, setToasts] = React.useState<Array<{ id: number; message: string; type: 'info' | 'success' | 'error' }>>([]);
   const toastIdRef = React.useRef(0);
+  const lastCtrlCTimeRef = React.useRef<number>(0);
 
   // Close command palette if slash removed
   React.useEffect(() => {
@@ -78,6 +81,23 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     setInputValue('');
     setIsSubmitting(true);
 
+    // Bash mode: !cmd or !!cmd
+    if (userInput.startsWith('!')) {
+      const withoutContext = userInput.startsWith('!!');
+      const cmd = withoutContext ? userInput.slice(2).trim() : userInput.slice(1).trim();
+      if (cmd) {
+        try {
+          const { execSync } = await import('node:child_process');
+          const output = execSync(cmd, { encoding: 'utf-8', stdio: 'pipe' });
+          setActiveModal({ type: 'bash-output', command: cmd, output });
+        } catch (err: any) {
+          setActiveModal({ type: 'bash-output', command: cmd, output: err.message || 'Error', error: true });
+        }
+      }
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       await sendMessage(userInput);
     } catch (err: any) {
@@ -86,6 +106,26 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       setIsSubmitting(false);
     }
   }, [inputValue, isSubmitting, sendMessage]);
+
+  // Version check on mount
+  React.useEffect(() => {
+    const checkVersion = async () => {
+      try {
+        const response = await fetch('https://registry.npmjs.org/@mariozechner/pi-coding-agent/latest', { signal: AbortSignal.timeout(5000) });
+        if (response.ok) {
+          const data = await response.json();
+          const latest = data.version;
+          const current = '0.0.1'; // TODO: get from package.json dynamically
+          if (latest && latest !== current) {
+            addToast(`New version available: ${latest} (current: ${current})`, 'info');
+          }
+        }
+      } catch {
+        // ignore network errors
+      }
+    };
+    checkVersion();
+  }, [addToast]);
 
   // Global keybindings
   useInput((input, key) => {
@@ -113,8 +153,32 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       setShowDebug((prev) => !prev);
     } else if (key.ctrl && input === 'e') {
       setActiveModal({ type: 'editor', initialValue: inputValue, onSave: async (val) => setInputValue(val) });
+    } else if (key.ctrl && key.shift && input === 'v') {
+      // Paste from clipboard (async fire-and-forget)
+      (async () => {
+        try {
+          const clipboardy = await import('clipboardy');
+          const text = await clipboardy.default.read();
+          setInputValue(prev => prev + text);
+          addToast('Pasted from clipboard', 'info');
+        } catch (err: any) {
+          addToast('Paste failed: ' + (err.message || err), 'error');
+        }
+      })();
+      return;
     } else if (key.ctrl && input === 'c') {
-      process.exit(0);
+      const now = Date.now();
+      if (now - lastCtrlCTimeRef.current < 1000) {
+        process.exit(0);
+      } else {
+        lastCtrlCTimeRef.current = now;
+        try {
+          (runtime.session as any)?.abort?.();
+          addToast('Interrupted', 'info');
+        } catch {
+          // ignore
+        }
+      }
     }
   });
 
@@ -388,11 +452,16 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         }
         break;
       case 'logout':
-        // Remove authentication for default provider
+        // Remove authentication for all providers
         try {
-          const defaultProvider = runtime.settings?.getDefaultProvider?.() || 'openai';
-          await runtime.authStorage.removeApiKey?.(defaultProvider);
-          addToast(`Logged out from ${defaultProvider}`, 'success');
+          const authStorage = runtime.authStorage as any;
+          const providers = authStorage.getProviders?.() || [];
+          let count = 0;
+          for (const p of providers) {
+            await authStorage.removeApiKey?.(p);
+            count++;
+          }
+          addToast(`Logged out from ${count} provider(s)`, 'success');
         } catch (err) {
           addToast('Logout failed', 'error');
         }
@@ -566,6 +635,17 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
             <TreeSelectorModal runtime={runtime} onClose={() => setActiveModal(null)} />
           </Modal>
         );
+      case 'bash-output':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <BashOutputModal
+              command={activeModal.command}
+              output={activeModal.output}
+              error={activeModal.error}
+              onClose={() => setActiveModal(null)}
+            />
+          </Modal>
+        );
       case 'confirmation':
         return (
           <Modal onClose={() => setActiveModal(null)}>
@@ -599,6 +679,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         thinkingLevel={thinkingLevel}
         model={modelId}
         theme={themeLabel}
+        showArmin={true}
       />
       <Box flexGrow={1} overflow="hidden" position="relative">
         <MessageList

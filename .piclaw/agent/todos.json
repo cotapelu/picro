@@ -3,104 +3,178 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Clean up dead code and inconsistencies",
+      "name": "Phase 1: Implement missing slash commands",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Remove dead 'clear' case from InkApp.tsx switch statement",
+          "content": "Add case 'settings' - open settings modal",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Remove '/clear' reference from HelpModal.tsx to fix documentation mismatch",
+          "content": "Add case 'model' - open model selector",
           "status": "completed"
         },
         {
           "id": "task-3",
-          "content": "Build and verify no warnings or test failures",
+          "content": "Add case 'export' - export session to HTML",
           "status": "completed"
         },
         {
           "id": "task-4",
-          "content": "Commit changes",
+          "content": "Add case 'import' - import from JSONL",
+          "status": "completed"
+        },
+        {
+          "id": "task-5",
+          "content": "Add case 'share' - share as GitHub gist",
+          "status": "completed"
+        },
+        {
+          "id": "task-6",
+          "content": "Add case 'name' - set session name",
+          "status": "completed"
+        },
+        {
+          "id": "task-7",
+          "content": "Add case 'session' - show session info",
+          "status": "completed"
+        },
+        {
+          "id": "task-8",
+          "content": "Add case 'changelog' - show changelog",
+          "status": "completed"
+        },
+        {
+          "id": "task-9",
+          "content": "Add case 'hotkeys' - show keybindings help",
+          "status": "completed"
+        },
+        {
+          "id": "task-10",
+          "content": "Add case 'clone' - duplicate session",
+          "status": "completed"
+        },
+        {
+          "id": "task-11",
+          "content": "Add case 'tree' - navigate session tree",
+          "status": "completed"
+        },
+        {
+          "id": "task-12",
+          "content": "Add case 'compact' - trigger manual compaction",
+          "status": "completed"
+        },
+        {
+          "id": "task-13",
+          "content": "Add case 'reload' - reload resources",
+          "status": "completed"
+        },
+        {
+          "id": "task-14",
+          "content": "Add case 'logout' - remove authentication",
+          "status": "completed"
+        },
+        {
+          "id": "task-15",
+          "content": "Add case 'scoped-models' - manage model scopes",
+          "status": "completed"
+        },
+        {
+          "id": "task-16",
+          "content": "Keep case 'fork' with improved message or remove",
           "status": "completed"
         }
       ]
     },
     {
       "id": "phase-2",
-      "name": "Update documentation to remove /clear references",
+      "name": "Phase 2: Core TUI features from interactive-mode",
       "tasks": [
         {
-          "id": "task-5",
-          "content": "Remove /clear from docs/TODO-INK.md slash command list",
+          "id": "task-17",
+          "content": "Implement bash mode (! and !!) in InputBox",
           "status": "completed"
         },
         {
-          "id": "task-6",
-          "content": "Remove /clear from docs/TODO.md slash command list (it was incorrectly marked as done)",
+          "id": "task-18",
+          "content": "Add image paste from clipboard",
           "status": "completed"
         },
         {
-          "id": "task-7",
-          "content": "Verify docs consistency",
+          "id": "task-19",
+          "content": "Add file drop support",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-20",
+          "content": "Implement message queuing (follow-up, dequeue)",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-21",
+          "content": "Add auto-compaction UI (loader, countdown)",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-22",
+          "content": "Add version check on startup",
           "status": "completed"
         },
         {
-          "id": "task-8",
-          "content": "Commit documentation updates",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-3",
-      "name": "Fix command palette: remove non-functional slash commands",
-      "tasks": [
+          "id": "task-23",
+          "content": "Add package update notifications",
+          "status": "abandoned"
+        },
         {
-          "id": "task-9",
-          "content": "Audit BUILTIN_SLASH_COMMANDS against InkApp switch to determine implemented commands",
+          "id": "task-24",
+          "content": "Add extension widgets (above/below editor)",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-25",
+          "content": "Support custom header/footer from extensions",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-26",
+          "content": "Add Armin component to header",
           "status": "completed"
         },
         {
-          "id": "task-10",
-          "content": "Remove unimplemented commands from BUILTIN_SLASH_COMMANDS (keep only: quit, thinking, login, help, copy, resume, new)",
+          "id": "task-27",
+          "content": "Improve signal handling (double Ctrl+C)",
           "status": "completed"
         },
         {
-          "id": "task-11",
-          "content": "Consider removing 'fork' stub (shows 'not yet implemented' toast)",
-          "status": "completed"
+          "id": "task-28",
+          "content": "Add compact mode toggle (hide thinking/tools)",
+          "status": "abandoned"
         },
         {
-          "id": "task-12",
-          "content": "Update slash-commands.test.ts to match reduced set",
-          "status": "completed"
+          "id": "task-29",
+          "content": "Display changelog on startup when new",
+          "status": "abandoned"
         },
         {
-          "id": "task-13",
-          "content": "Update HelpModal.tsx slash command list",
-          "status": "completed"
+          "id": "task-30",
+          "content": "Show resource diagnostics on startup",
+          "status": "abandoned"
         },
         {
-          "id": "task-14",
-          "content": "Update docs/TODO.md and docs/TODO-INK.md",
-          "status": "completed"
+          "id": "task-31",
+          "content": "Write tests for new features",
+          "status": "abandoned"
         },
         {
-          "id": "task-15",
-          "content": "Build and run tests",
-          "status": "completed"
-        },
-        {
-          "id": "task-16",
-          "content": "Commit all changes",
-          "status": "completed"
+          "id": "task-32",
+          "content": "Final integration test and verification",
+          "status": "in_progress"
         }
       ]
     }
   ],
-  "nextTaskId": 17,
-  "nextPhaseId": 4,
-  "updatedAt": "2026-05-21T06:00:44.749Z"
+  "nextTaskId": 33,
+  "nextPhaseId": 3,
+  "updatedAt": "2026-05-21T07:13:49.140Z"
 }
