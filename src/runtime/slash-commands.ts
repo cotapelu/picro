@@ -35,6 +35,7 @@ export const BUILTIN_SLASH_COMMANDS: SlashCommandInfo[] = [
   { name: "quit", description: "Quit the application" },
   { name: "thinking", description: "Set thinking level (off, minimal, low, medium, high, xhigh). Usage: /thinking [level]" },
   { name: "help", description: "Show help message with available commands" },
+  { name: "stats", description: "Show performance metrics" },
 ];
 
 export function getSlashCommand(name: string): SlashCommandInfo | undefined {

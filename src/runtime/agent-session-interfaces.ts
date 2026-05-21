@@ -16,6 +16,8 @@ export interface AgentSessionInterface {
   // Thinking level
   get thinkingLevel(): "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
   setThinkingLevel(level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh"): void;
+  // Performance metrics (if enabled)
+  getPerformanceStats?(): { sampleCount: number; timeSpanMS: number; avgCpuUserMS: number; avgCpuSystemMS: number; avgRSSMB: number; avgHeapUsedMB: number; peakRSSMB: number; peakHeapUsedMB: number } | null;
 }
 
 /**

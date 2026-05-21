@@ -45,6 +45,7 @@ type ModalState =
   | { type: 'hotkeys' }
   | { type: 'tree-selector' }
   | { type: 'bash-output'; command: string; output: string; error?: boolean }
+  | { type: 'stats'; stats: { sampleCount: number; timeSpanMS: number; avgCpuUserMS: number; avgCpuSystemMS: number; avgRSSMB: number; avgHeapUsedMB: number; peakRSSMB: number; peakHeapUsedMB: number } }
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
@@ -513,6 +514,15 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           addToast('Fork failed: ' + (err as Error).message, 'error');
         }
         break;
+      case 'stats':
+        // Show performance metrics
+        const stats = (runtime.session as any).getPerformanceStats?.();
+        if (stats) {
+          setActiveModal({ type: 'stats', stats });
+        } else {
+          addToast('Performance tracking is disabled or no data available', 'info');
+        }
+        break;
       default:
         // Unimplemented command - show informative message
         addToast(`Command "/${commandId}" not yet implemented`, 'info');
@@ -665,6 +675,24 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
                 setActiveModal(null);
               }}
             />
+          </Modal>
+        );
+      case 'stats':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <Box flexDirection="column" borderStyle="round" borderColor="green" padding={1}>
+              <Text bold color="green">Performance Metrics</Text>
+              <Box flexDirection="column" marginTop={1}>
+                <Text>Samples: {activeModal.stats.sampleCount}</Text>
+                <Text>Time Span: {activeModal.stats.timeSpanMS.toFixed(0)}ms</Text>
+                <Text>Avg CPU User: {activeModal.stats.avgCpuUserMS.toFixed(2)}ms</Text>
+                <Text>Avg CPU System: {activeModal.stats.avgCpuSystemMS.toFixed(2)}ms</Text>
+                <Text>Avg RSS: {activeModal.stats.avgRSSMB.toFixed(2)} MB</Text>
+                <Text>Avg Heap Used: {activeModal.stats.avgHeapUsedMB.toFixed(2)} MB</Text>
+                <Text>Peak RSS: {activeModal.stats.peakRSSMB.toFixed(2)} MB</Text>
+                <Text>Peak Heap Used: {activeModal.stats.peakHeapUsedMB.toFixed(2)} MB</Text>
+              </Box>
+            </Box>
           </Modal>
         );
       default:
