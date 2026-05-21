@@ -3,7 +3,7 @@
 ## Goal
 Replace the custom TUI (`src/tui/*`) with Ink (`ink` + React) to have a fully functional, well-structured interactive UI.
 
-## Status: In Progress
+## Status: Phase 1 Complete (All Core Features)
 
 ## Components to Implement
 
@@ -31,14 +31,15 @@ Replace the custom TUI (`src/tui/*`) with Ink (`ink` + React) to have a fully fu
 - [x] **Settings**: persist preferences (thinking level, theme)
 - [x] **Session management**: new (Ctrl+P? /new), switch/resume (`/resume` or Ctrl+R)
 
-### Optional (remaining)
+### Optional Enhancements (Phase 2/3)
 - [ ] Proper message scrolling (mouse wheel, arrow keys)
-- [ ] Comprehensive theming (apply semantic colors throughout components)
+- [ ] Comprehensive theming (apply semantic colors to all components)
 - [ ] File browser modal
 - [ ] Memory panel
 - [ ] Debug panel (timing metrics)
 - [ ] Incremental search
 - [ ] Keybindings customization
+- [ ] Unit tests for Ink components
 
 
 

@@ -9,4 +9,7 @@ export { Footer } from './components/Footer/Footer';
 export { CommandPalette } from './modals/CommandPalette';
 export { ThinkingModal } from './modals/ThinkingModal';
 export { LoginModal } from './modals/LoginModal';
+export { HelpModal } from './modals/HelpModal';
+export { ExternalEditorModal } from './modals/ExternalEditorModal';
+export { SessionSelectorModal } from './modals/SessionSelectorModal';
 export { Modal } from './modals/Modal';
