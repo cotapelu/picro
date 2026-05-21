@@ -6,6 +6,9 @@ interface Session {
   id: string;
   path: string;
   cwd: string;
+  modified?: Date;
+  name?: string;
+  firstMessage?: string;
 }
 
 interface SessionSelectorModalProps {
@@ -22,8 +25,14 @@ export const SessionSelectorModal: React.FC<SessionSelectorModalProps> = ({ runt
   useEffect(() => {
     (async () => {
       try {
-        const list = await runtime.listSessions() as any[];
-        setSessions(list);
+        const list = await runtime.listSessions();
+        // Sort by modified descending (most recent first)
+        const sorted = list.sort((a: any, b: any) => {
+          const dateA = a.modified?.getTime() || 0;
+          const dateB = b.modified?.getTime() || 0;
+          return dateB - dateA;
+        });
+        setSessions(sorted);
       } catch (err: any) {
         setError(err.message || 'Failed to load sessions');
       } finally {
@@ -88,21 +97,32 @@ export const SessionSelectorModal: React.FC<SessionSelectorModalProps> = ({ runt
     );
   }
 
+  const formatDate = (d: Date) => d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
   return (
     <Box flexDirection="column" borderStyle="round" borderColor="cyan" padding={1}>
       <Text color="cyan" bold>Select Session to Resume</Text>
       <Box flexDirection="column" marginTop={1}>
-        {sessions.map((session, idx) => (
-          <Box key={session.path}>
-            <Text
-              color={idx === selectedIndex ? 'white' : 'gray'}
-              backgroundColor={idx === selectedIndex ? 'blue' : undefined}
-            >
-              {idx === selectedIndex ? '> ' : '  '}
-              {session.id.slice(0, 8)} ({session.cwd})
-            </Text>
-          </Box>
-        ))}
+        {sessions.map((session, idx) => {
+          const displayName = session.name || session.firstMessage?.substring(0, 50) || session.id.slice(0, 8);
+          const dateStr = session.modified ? formatDate(session.modified) : '';
+          const line = idx === selectedIndex ? `> ${displayName}` : `  ${displayName}`;
+          return (
+            <Box key={session.path} flexDirection="column">
+              <Text
+                color={idx === selectedIndex ? 'white' : 'gray'}
+                backgroundColor={idx === selectedIndex ? 'blue' : undefined}
+              >
+                {line}
+              </Text>
+              {dateStr && (
+                <Text dim color={idx === selectedIndex ? 'white' : 'gray'}>
+                  {dateStr} - {session.cwd}
+                </Text>
+              )}
+            </Box>
+          );
+        })}
       </Box>
       <Box marginTop={1}>
         <Text dim>↑↓ to navigate, Enter to select, Esc to cancel</Text>

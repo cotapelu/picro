@@ -47,17 +47,17 @@ export const MessageItem: React.FC<MessageItemProps> = ({
       return (
         <Box key={tool.id} flexDirection="column" marginLeft={2}>
           <Box>
-            <Text color="yellow" bold>
+            <Text bold color={isExpanded ? theme.accent : theme.warning}>
               {isExpanded ? '▼' : '▶'} {tool.name}
             </Text>
             {hasResult && (
-              <Text color="gray"> - {tool.status}</Text>
+              <Text color={theme.dim}> - {tool.status}</Text>
             )}
           </Box>
           {isExpanded && hasResult && (
             <Box marginLeft={2} flexDirection="column">
-              <Text color="gray">Input: {JSON.stringify(tool.arguments)}</Text>
-              <Text color="gray">Output: {JSON.stringify(tool.result)}</Text>
+              <Text color={theme.dim}>Input: {JSON.stringify(tool.arguments)}</Text>
+              <Text color={theme.dim}>Output: {JSON.stringify(tool.result)}</Text>
             </Box>
           )}
         </Box>
@@ -83,10 +83,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           </Box>
         )}
         {message.error && (
-          <Text color="red">Error: {message.error}</Text>
+          <Text color={theme.error}>Error: {message.error}</Text>
         )}
         {message.streaming && !message.content && (
-          <Text color="gray">...</Text>
+          <Text color={theme.dim}>...</Text>
         )}
       </Box>
     </Box>

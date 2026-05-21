@@ -1,6 +1,7 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { useTheme } from '../../hooks/useTheme';
 
 interface InputBoxProps {
   value: string;
@@ -25,6 +26,7 @@ export const InputBox: React.FC<InputBoxProps> = ({
   onSlashCommand,
   onTab,
 }) => {
+  const { theme } = useTheme();
   const [cursorPosition, setCursorPosition] = useState(value.length);
   const inputRef = useRef<string>(value);
   const historyRef = useRef<string[]>([]);
@@ -194,15 +196,19 @@ export const InputBox: React.FC<InputBoxProps> = ({
   const renderInputLine = () => {
     const beforeCursor = value.slice(0, cursorPosition);
     const afterCursor = value.slice(cursorPosition);
+    const isSlashMode = value.startsWith('/');
 
     return (
       <Box>
         <Text color="cyan">&gt; </Text>
+        {isSlashMode && (
+          <Text bold color={theme.accent}>[CMD] </Text>
+        )}
         <Text>{beforeCursor}</Text>
         <Text inverse>{afterCursor.charAt(0) || ' '}</Text>
         <Text>{afterCursor.slice(1)}</Text>
         {value.length === 0 && cursorPosition === 0 && (
-          <Text color="gray">{placeholder}</Text>
+          <Text color={theme.dim}>{placeholder}</Text>
         )}
       </Box>
     );
