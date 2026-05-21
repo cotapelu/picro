@@ -13,6 +13,9 @@ export interface AgentSessionInterface {
   abort(): void;
   messages: unknown[];
   isStreaming: boolean;
+  // Thinking level
+  get thinkingLevel(): "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
+  setThinkingLevel(level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh"): void;
 }
 
 /**
@@ -21,11 +24,21 @@ export interface AgentSessionInterface {
 export interface AgentSessionRuntimeInterface {
   session: AgentSessionInterface;
   cwd: string;
+  // Session management
   newSession(): Promise<{ cancelled: boolean }>;
   switchSession(path: string): Promise<{ cancelled: boolean }>;
   fork(entryId: string): Promise<{ cancelled: boolean; selectedText?: string }>;
   setBeforeSessionInvalidate(handler: () => void): void;
   setRebindSession(handler: (sessionPath?: string) => Promise<void>): void;
+  // Settings access
+  get settings(): any;
+  // Thinking level (delegated to session)
+  get thinkingLevel(): "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
+  setThinkingLevel(level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh"): void;
+  // Auth
+  get authStorage(): { getProviders(): any[]; setApiKey(provider: string, apiKey: string): Promise<void>; removeApiKey(provider: string): Promise<void>; };
+  // Clipboard (optional, may use system)
+  copyToClipboard(text: string): Promise<void>;
 }
 
 /**

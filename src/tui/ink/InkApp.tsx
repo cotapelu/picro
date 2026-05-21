@@ -12,17 +12,20 @@ import { Footer } from './components/Footer/Footer';
 import { CommandPalette } from './modals/CommandPalette';
 import { ThinkingModal } from './modals/ThinkingModal';
 import { LoginModal } from './modals/LoginModal';
+import { HelpModal } from './modals/HelpModal';
 import { Modal } from './modals/Modal';
+import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands';
 
 interface InkAppInnerProps {
   runtime: AgentSessionRuntimeInterface;
 }
 
 type ModalState =
-  | { type: 'command-palette' }
+  | { type: 'command-palette'; filter?: string; isSlash?: boolean }
   | { type: 'thinking' }
   | { type: 'login' }
   | { type: 'editor'; initialValue: string; onSave: (value: string) => Promise<void> }
+  | { type: 'help' }
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
@@ -69,29 +72,56 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   });
 
-  const handleCommandSelect = useCallback((commandId: string) => {
+  const handleCommandSelect = useCallback(async (commandId: string) => {
+    setActiveModal(null);
+    setInputValue(''); // Clear input
+
     switch (commandId) {
       case 'clear':
-        // Clear messages? Not directly supported; maybe we can reset session?
-        setActiveModal(null);
+        runtime.newSession().catch(console.error);
         break;
       case 'quit':
         process.exit(0);
         break;
+      case 'thinking':
+        setActiveModal({ type: 'thinking' });
+        break;
+      case 'login':
+        setActiveModal({ type: 'login' });
+        break;
+      case 'help':
+        setActiveModal({ type: 'help' });
+        break;
+      case 'new':
+        runtime.newSession().catch(console.error);
+        break;
+      case 'copy':
+        // Copy last assistant message to clipboard
+        const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+        if (lastAssistant) {
+          try {
+            await runtime.copyToClipboard(lastAssistant.content);
+          } catch (err) {
+            console.error('Copy failed:', err);
+          }
+        }
+        break;
       default:
-        setActiveModal(null);
+        // Other commands not yet implemented
+        break;
     }
-  }, []);
+  }, [runtime, messages]);
 
   const handleThinkingChange = useCallback((level: string) => {
     setActiveModal(null);
-    // TODO: update runtime thinking level
-  }, []);
+    runtime.setThinkingLevel(level as any);
+  }, [runtime]);
 
   const handleLogin = useCallback(async (apiKey: string) => {
-    // TODO: implement login
+    const defaultProvider = runtime.settings?.getDefaultProvider() || 'openai';
+    await runtime.authStorage.setApiKey(defaultProvider, apiKey);
     setActiveModal(null);
-  }, []);
+  }, [runtime]);
 
   // Render active modal
   const renderModal = () => {
@@ -99,29 +129,42 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
 
     switch (activeModal.type) {
       case 'command-palette':
+        const commands = BUILTIN_SLASH_COMMANDS.filter(cmd => {
+          const filter = activeModal.filter || '';
+          const search = filter.slice(1).toLowerCase(); // remove leading '/'
+          return cmd.name.toLowerCase().includes(search) ||
+                 cmd.description.toLowerCase().includes(search);
+        }).map(cmd => ({
+          id: cmd.name,
+          label: `/${cmd.name}`,
+          description: cmd.description,
+        }));
         return (
-          <CommandPalette
-            commands={[
-              { id: 'clear', label: 'Clear Chat (not implemented)' },
-              { id: 'quit', label: 'Quit', shortcut: 'Ctrl+C' },
-            ]}
-            onSelect={handleCommandSelect}
-            onClose={() => setActiveModal(null)}
-          />
+          <Modal onClose={() => setActiveModal(null)}>
+            <CommandPalette
+              commands={commands}
+              onSelect={handleCommandSelect}
+              onClose={() => setActiveModal(null)}
+            />
+          </Modal>
         );
       case 'thinking':
         return (
-          <ThinkingModal
-            currentLevel={thinkingLevel}
-            onChange={handleThinkingChange}
-          />
+          <Modal onClose={() => setActiveModal(null)}>
+            <ThinkingModal
+              currentLevel={thinkingLevel}
+              onChange={handleThinkingChange}
+            />
+          </Modal>
         );
       case 'login':
         return (
-          <LoginModal
-            onLogin={handleLogin}
-            onClose={() => setActiveModal(null)}
-          />
+          <Modal onClose={() => setActiveModal(null)}>
+            <LoginModal
+              onLogin={handleLogin}
+              onClose={() => setActiveModal(null)}
+            />
+          </Modal>
         );
       case 'editor':
         return (
@@ -139,6 +182,12 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
                 autoFocus
               />
             </Box>
+          </Modal>
+        );
+      case 'help':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <HelpModal onClose={() => setActiveModal(null)} />
           </Modal>
         );
       default:
@@ -173,6 +222,14 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         onSubmit={handleSubmit}
         placeholder="Type your message..."
         disabled={isSubmitting}
+        onSlashCommand={(prefix) => {
+          // Open command palette with filter
+          setActiveModal({ type: 'command-palette', filter: prefix, isSlash: true });
+        }}
+        onTab={() => {
+          // Autocomplete: open command palette with all commands
+          setActiveModal({ type: 'command-palette', filter: '', isSlash: false });
+        }}
       />
       <Footer hints={['Ctrl+P: Commands', 'Ctrl+T: Thinking', 'Ctrl+E: Edit', 'Ctrl+D: Debug', 'Ctrl+C: Quit']} />
       {activeModal && renderModal()}

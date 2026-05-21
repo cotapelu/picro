@@ -25,7 +25,7 @@ import { handleConfigCommand } from "./package-manager-cli";
 import { isLocalPath } from "./utils/paths";
 import { runMigrations, showDeprecationWarnings } from "./migrations";
 import type { Model } from "./llm";
-import { runInkApp } from "./tui/ink";
+// Ink TUI will be dynamically imported to avoid ESM/CJS conflicts
 import { runPrintMode } from "./modes/print-mode";
 import { runRpcMode } from "./modes/rpc-mode";
 import type { AgentSessionRuntimeDiagnostic } from "./session/agent-session-services";
@@ -379,6 +379,8 @@ async function main(): Promise<void> {
     }
 
     try {
+      // Dynamically import the bundled Ink TUI (ESM)
+      const { runInkApp } = await import("./tui/ink-bundle.js");
       await runInkApp(runtime);
     } catch (err: any) {
       console.error("Interactive mode error:", err.message || err);

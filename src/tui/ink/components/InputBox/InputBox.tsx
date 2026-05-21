@@ -10,6 +10,8 @@ interface InputBoxProps {
   disabled?: boolean;
   multiline?: boolean;
   autoFocus?: boolean;
+  onSlashCommand?: (prefix: string) => void;
+  onTab?: () => void;
 }
 
 export const InputBox: React.FC<InputBoxProps> = ({
@@ -20,6 +22,8 @@ export const InputBox: React.FC<InputBoxProps> = ({
   disabled = false,
   multiline = true,
   autoFocus = true,
+  onSlashCommand,
+  onTab,
 }) => {
   const [cursorPosition, setCursorPosition] = useState(value.length);
   const inputRef = useRef<string>(value);
@@ -31,7 +35,11 @@ export const InputBox: React.FC<InputBoxProps> = ({
   useEffect(() => {
     inputRef.current = value;
     setCursorPosition(value.length);
-  }, [value]);
+    // Notify slash command changes
+    if (onSlashCommand && value.startsWith('/')) {
+      onSlashCommand(value);
+    }
+  }, [value, onSlashCommand]);
 
   // Command history navigation
   const navigateHistory = useCallback((direction: 'up' | 'down') => {
@@ -158,11 +166,27 @@ export const InputBox: React.FC<InputBoxProps> = ({
       return;
     }
 
+    // Tab - autocomplete
+    if (key.tab) {
+      onTab?.();
+      return;
+    }
+
     // Printable characters
     if (input.length === 1 && !key.ctrl && !key.meta) {
       const newValue = value.slice(0, cursorPosition) + input + value.slice(cursorPosition);
       onChange(newValue);
       setCursorPosition(cursorPosition + 1);
+      // Detect slash command at start of input
+      if (input === '/' && cursorPosition === 0) {
+        onSlashCommand?.('/');
+      } else if (onSlashCommand && value.slice(0, cursorPosition).startsWith('/')) {
+        // Update slash filter as user types
+        const newPrefix = newValue.slice(0, cursorPosition + 1);
+        if (newPrefix.startsWith('/')) {
+          onSlashCommand(newPrefix);
+        }
+      }
     }
   });
 

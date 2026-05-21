@@ -26,6 +26,15 @@ interface AgentSessionInterface {
 
 interface AgentSessionRuntimeInterface {
   session: AgentSessionInterface;
+  // Thinking level (delegated to session)
+  thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
+  setThinkingLevel(level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh"): void;
+  // Settings
+  settings?: { getDefaultProvider?(): string; set(key: string, value: any): void; save?(): Promise<void> };
+  // Auth
+  authStorage?: { setApiKey(provider: string, apiKey: string): Promise<void>; removeApiKey(provider: string): Promise<void>; };
+  // Clipboard
+  copyToClipboard?(text: string): Promise<void>;
 }
 
 // Convert from ConversationTurn to Message UI type
@@ -73,6 +82,12 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
   const [thinkingLevel, setThinkingLevel] = useState('medium');
   const [isStreaming, setIsStreaming] = useState(false);
 
+  // Sync thinking level from runtime
+  useEffect(() => {
+    const level = runtime.thinkingLevel as any;
+    if (level) setThinkingLevel(level);
+  }, [runtime.thinkingLevel]);
+
   // Load initial messages on mount
   useEffect(() => {
     if (runtime.session.messages) {
@@ -80,12 +95,6 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
         .map(turnToMessage)
         .filter((msg): msg is Message => msg !== null);
       setMessages(initial);
-    }
-
-    // Get initial thinking level from session if available
-    const sessionAny = runtime.session as any;
-    if (sessionAny.thinkingLevel) {
-      setThinkingLevel(sessionAny.thinkingLevel);
     }
   }, [runtime]);
 
@@ -202,6 +211,44 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
     setStatus('Aborted');
   }, [runtime]);
 
+  const setThinkingLevelPersist = useCallback(async (level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh") => {
+    runtime.setThinkingLevel(level);
+    setThinkingLevel(level);
+    // Also persist to settings if possible
+    try {
+      if (runtime.settings) {
+        runtime.settings.set('defaultThinkingLevel', level);
+        await runtime.settings.save?.();
+      }
+    } catch {
+      // ignore settings errors
+    }
+  }, [runtime]);
+
+  const login = useCallback(async (provider: string, apiKey: string) => {
+    if (!runtime.authStorage) throw new Error('Auth not available');
+    await runtime.authStorage.setApiKey(provider, apiKey);
+  }, [runtime]);
+
+  const logout = useCallback(async (provider: string) => {
+    if (!runtime.authStorage) throw new Error('Auth not available');
+    await runtime.authStorage.removeApiKey(provider);
+  }, [runtime]);
+
+  const copyToClipboard = useCallback(async (text: string) => {
+    if (runtime.copyToClipboard) {
+      await runtime.copyToClipboard(text);
+    } else {
+      // Fallback: just log
+      console.log('[clipboard]', text);
+    }
+  }, [runtime]);
+
+  const clearMessages = useCallback(() => {
+    // Not directly supported; we could create a new session or fork
+    // For now, no-op or could call runtime.newSession()
+  }, [runtime]);
+
   return {
     messages,
     status,
@@ -209,5 +256,11 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
     isStreaming,
     sendMessage,
     abort,
+    setThinkingLevel: setThinkingLevelPersist,
+    login,
+    logout,
+    copyToClipboard,
+    clearMessages,
+    runtime: runtime as any, // expose full runtime for advanced use
   };
 }

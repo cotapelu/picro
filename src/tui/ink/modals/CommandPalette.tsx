@@ -13,14 +13,16 @@ interface CommandPaletteProps {
   commands: Command[];
   onSelect: (commandId: string) => void;
   onClose: () => void;
+  initialFilter?: string;
 }
 
 export const CommandPalette: React.FC<CommandPaletteProps> = ({
   commands,
   onSelect,
   onClose,
+  initialFilter = '',
 }) => {
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useState(initialFilter);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const filteredCommands = commands.filter((cmd) =>

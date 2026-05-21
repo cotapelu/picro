@@ -98,6 +98,69 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
   }
 
   /**
+   * Get current thinking level
+   */
+  get thinkingLevel(): "off" | "minimal" | "low" | "medium" | "high" | "xhigh" {
+    return this._session.thinkingLevel;
+  }
+
+  /**
+   * Set thinking level
+   */
+  setThinkingLevel(level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh"): void {
+    this._session.setThinkingLevel(level);
+  }
+
+  /**
+   * Get auth storage
+   */
+  get authStorage(): any {
+    return this._services.authStorage;
+  }
+
+  /**
+   * Get settings manager
+   */
+  get settings(): any {
+    return this._services.settingsManager;
+  }
+
+  /**
+   * Copy text to clipboard
+   */
+  async copyToClipboard(text: string): Promise<void> {
+    // Try using clipboardy if available, fallback to pbcopy/paste/xclip
+    try {
+      // Dynamic import to avoid adding dependency if not used
+      const clipboardy = await import("clipboardy");
+      await clipboardy.default.write(text);
+    } catch {
+      // Fallback to native commands
+      const isWin = process.platform === "win32";
+      if (isWin) {
+        const { execSync } = await import("node:child_process");
+        execSync(`echo ${JSON.stringify(text)} | clip`, { stdio: "ignore" });
+      } else {
+        const { execSync } = await import("node:child_process");
+        if (process.env.CI) {
+          // In CI, clipboard may not work; just log
+          console.log("[clipboard] ", text);
+        } else {
+          try {
+            execSync(`echo ${JSON.stringify(text)} | pbcopy`, { stdio: "ignore" });
+          } catch {
+            try {
+              execSync(`echo ${JSON.stringify(text)} | xclip -selection clipboard`, { stdio: "ignore" });
+            } catch {
+              console.warn("Clipboard not available");
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * Get diagnostics collected during setup
    */
   get diagnostics(): readonly AgentSessionRuntimeDiagnostic[] {
