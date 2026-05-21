@@ -276,7 +276,7 @@
         {
           "id": "task-51",
           "content": "Review and reduce bundle size (currently 2.8mb)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-52",
@@ -288,5 +288,5 @@
   ],
   "nextTaskId": 53,
   "nextPhaseId": 5,
-  "updatedAt": "2026-05-21T10:24:01.030Z"
+  "updatedAt": "2026-05-21T10:27:05.442Z"
 }

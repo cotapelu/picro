@@ -28,6 +28,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
+    "@types/clipboardy": "^1.1.0",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.15",
     "@typescript/native-preview": "^7.0.0-dev.20260512.1",

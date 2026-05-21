@@ -9,6 +9,7 @@ import { Header } from './components/Header/Header';
 import { MessageList } from './components/MessageList/MessageList';
 import { InputBox } from './components/InputBox/InputBox';
 import { Footer } from './components/Footer/Footer';
+import { ErrorBoundary, useGlobalErrorHandler } from './ErrorBoundary';
 import { CommandPalette } from './modals/CommandPalette';
 import { ThinkingModal } from './modals/ThinkingModal';
 import { LoginModal } from './modals/LoginModal';
@@ -735,6 +736,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
 };
 
 export const InkApp: React.FC<{ runtime: AgentSessionRuntimeInterface }> = ({ runtime }) => {
+  // Set up global error handling for unhandled errors and rejections
+  useGlobalErrorHandler();
   // Determine initial theme from settings
   let initialMode: 'dark' | 'light' = 'dark';
   try {
@@ -745,9 +748,14 @@ export const InkApp: React.FC<{ runtime: AgentSessionRuntimeInterface }> = ({ ru
   }
 
   return (
-    <ThemeProvider initialMode={initialMode}>
-      <InkAppInner runtime={runtime} />
-    </ThemeProvider>
+    <ErrorBoundary onError={(error, errorInfo) => {
+      console.error('App error:', error, errorInfo);
+      // TODO: report to telemetry if available
+    }}>
+      <ThemeProvider initialMode={initialMode}>
+        <InkAppInner runtime={runtime} />
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 
