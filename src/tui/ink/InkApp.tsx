@@ -97,9 +97,19 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   });
 
-  const handleCommandSelect = useCallback(async (commandId: string) => {
+  const handleCommandSelect = useCallback(async (commandId: string, slashArgs?: string) => {
     setActiveModal(null);
     setInputValue(''); // Clear input
+
+    // Extract args after command name if present
+    let args = '';
+    if (slashArgs) {
+      const withoutSlash = slashArgs.slice(1).trim(); // remove leading '/'
+      const parts = withoutSlash.split(' ');
+      if (parts[0] === commandId) {
+        args = parts.slice(1).join(' ').trim();
+      }
+    }
 
     switch (commandId) {
       case 'clear':
@@ -110,7 +120,12 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         process.exit(0);
         break;
       case 'thinking':
-        setActiveModal({ type: 'thinking' });
+        if (args && ['off','minimal','low','medium','high','xhigh'].includes(args)) {
+          runtime.setThinkingLevel(args as any);
+          addToast(`Thinking level set to ${args}`, 'success');
+        } else {
+          setActiveModal({ type: 'thinking' });
+        }
         break;
       case 'login':
         setActiveModal({ type: 'login' });
@@ -177,7 +192,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           <Modal onClose={() => setActiveModal(null)}>
             <CommandPalette
               commands={commands}
-              onSelect={handleCommandSelect}
+              onSelect={(id) => handleCommandSelect(id, activeModal.filter)}
               onClose={() => setActiveModal(null)}
             />
           </Modal>
