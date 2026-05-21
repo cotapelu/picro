@@ -9,34 +9,38 @@ Replace the custom TUI (`src/tui/*`) with Ink (`ink` + React) to have a fully fu
 
 ### Core
 - [x] `InkApp` - main app component with render loop
-- [ ] `Header` - title and status bar
-- [ ] `MessageList` - scrollable list of messages (user/assistant/tool)
-- [ ] `MessageItem` - individual message component with styling
-- [ ] `InputBox` - multiline input with cursor, history, kill ring
-- [ ] `Footer` - status line, hints
+- [x] `Header` - title and status bar with theme display
+- [x] `MessageList` - message list (basic scrolling via terminal)
+- [x] `MessageItem` - individual message component with tool calls
+- [x] `InputBox` - multiline input with cursor, history, kill ring, slash detection
+- [x] `Footer` - status line, hints
 
 ### Features
-- [ ] **Message rendering**: User, Assistant (streaming), Tool (execution)
-- [ ] **Input handling**: printable chars, Enter (submit), Ctrl+Enter (newline), Ctrl+C (exit), arrow keys (nav), history (up/down), kill ring (Ctrl+K, Ctrl+Y, etc.)
-- [ ] **Command Palette**: `Ctrl+P` to open, list commands with descriptions
-- [ ] **Slash commands**: `/clear`, `/share`, `/edit`, `/quit`, `/new`, `/thinking`, `/login`, `/help`
-- [ ] **Thinking level selector**: modal to choose thinking level
-- [ ] **Tool execution display**: collapsible tool calls with output
-- [ ] **Autocomplete**: Tab to trigger, modal with suggestions
-- [ ] **Login dialog**: modal to enter API key
-- [ ] **External editor**: spawn $EDITOR with current input
-- [ ] **Copy to clipboard**: copy chat history
-- [ ] **Notifications**: temporary status messages
-- [ ] **Theme support**: dark/light colors
-- [ ] **Settings**: persist preferences (thinking level, theme, etc.)
-- [ ] **Session management**: new, switch, fork (dialogs)
+- [x] **Message rendering**: User, Assistant (streaming), Tool (execution)
+- [x] **Input handling**: printable chars, Enter (submit), Ctrl+Enter (newline), Ctrl+C (exit), arrow keys (nav), history (up/down), kill ring (Ctrl+K, Ctrl+Y, etc.)
+- [x] **Command Palette**: `Ctrl+P` to open, list commands with descriptions
+- [x] **Slash commands**: `/clear`, `/quit`, `/new`, `/thinking [level]`, `/login`, `/help`, `/resume`, `/copy`
+- [x] **Thinking level selector**: modal to choose thinking level (also direct via `/thinking high`)
+- [x] **Tool execution display**: collapsible tool calls with output
+- [x] **Autocomplete**: Tab to trigger command palette
+- [x] **Login dialog**: modal to enter API key (stores to authStorage)
+- [x] **External editor**: spawn $EDITOR with current input
+- [x] **Copy to clipboard**: `/copy` copies last assistant message
+- [x] **Notifications**: toast system with auto-dismiss
+- [x] **Theme support**: dark/light toggle (Ctrl+Shift+T) and persistence
+- [x] **Settings**: persist preferences (thinking level, theme)
+- [x] **Session management**: new (Ctrl+P? /new), switch/resume (`/resume` or Ctrl+R)
 
-### Advanced (optional)
-- [ ] **File browser**: modal to browse and select files
-- [ ] **Memory panel**: show and insert memories
-- [ ] **Debug panel**: show timing metrics
-- [ ] **Search**: incremental search through messages
-- [ ] **Keybindings customization**
+### Optional (remaining)
+- [ ] Proper message scrolling (mouse wheel, arrow keys)
+- [ ] Comprehensive theming (apply semantic colors throughout components)
+- [ ] File browser modal
+- [ ] Memory panel
+- [ ] Debug panel (timing metrics)
+- [ ] Incremental search
+- [ ] Keybindings customization
+
+
 
 ## Migration Steps
 

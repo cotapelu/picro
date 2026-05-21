@@ -1,6 +1,7 @@
 /** @jsxImportSource react */
 import React from 'react';
 import { Box, Text } from 'ink';
+import { useTheme } from '../../hooks/useTheme';
 import type { Message, ToolCall } from '../../types';
 
 interface MessageItemProps {
@@ -15,6 +16,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   onToolToggle,
   expandedTools = new Set()
 }) => {
+  const { theme } = useTheme();
   const renderContent = (content: string) => {
     // Simple wrapping - in production, use a proper text wrapper
     const maxWidth = 80; // Will be adjusted by parent
@@ -64,11 +66,12 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   };
 
   const shouldShowRole = message.role !== 'user'; // user messages don't need role label in chat
+  const roleColor = message.role === 'assistant' ? theme.success : message.role === 'tool' ? theme.accent : theme.primary;
 
   return (
     <Box flexDirection="column" marginBottom={1}>
       {shouldShowRole && (
-        <Text bold color={message.role === 'assistant' ? 'green' : message.role === 'tool' ? 'yellow' : 'blue'}>
+        <Text bold color={roleColor}>
           {message.role === 'assistant' ? 'Assistant' : message.role === 'tool' ? 'Tool' : 'User'}:
         </Text>
       )}
