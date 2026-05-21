@@ -33,6 +33,8 @@ export const BUILTIN_SLASH_COMMANDS: SlashCommandInfo[] = [
   { name: "resume", description: "Resume a different session" },
   { name: "reload", description: "Reload keybindings, extensions, skills, prompts, and themes" },
   { name: "quit", description: "Quit the application" },
+  { name: "thinking", description: "Set thinking level (off, minimal, low, medium, high, xhigh). Usage: /thinking [level]" },
+  { name: "help", description: "Show help message with available commands" },
 ];
 
 export function getSlashCommand(name: string): SlashCommandInfo | undefined {

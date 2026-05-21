@@ -17,6 +17,8 @@ describe('Slash Commands', () => {
       expect(names).toContain('compact');
       expect(names).toContain('fork');
       expect(names).toContain('tree');
+      expect(names).toContain('thinking');
+      expect(names).toContain('help');
     });
 
     it('should have description for each command', () => {
