@@ -1,6 +1,7 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { useTheme } from '../hooks/useTheme';
 
 interface Command {
   id: string;
@@ -22,6 +23,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onClose,
   initialFilter = '',
 }) => {
+  const { theme } = useTheme();
   const [filter, setFilter] = useState(initialFilter);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -66,32 +68,33 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   // Close on blur? Not really applicable, but Escape handles close.
 
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor="cyan" padding={1}>
-      <Text color="cyan">Command Palette</Text>
+    <Box flexDirection="column" borderStyle="round" borderColor={theme.accent} padding={1}>
+      <Text bold color={theme.accent}>Command Palette</Text>
       <Box>
-        <Text color="gray">Filter: </Text>
-        <Text>{filter}</Text>
+        <Text color={theme.dim}>Filter: </Text>
+        <Text color={theme.foreground}>{filter}</Text>
       </Box>
       <Box flexDirection="column" marginTop={1}>
         {filteredCommands.length === 0 ? (
-          <Text color="gray">No commands match "{filter}"</Text>
+          <Text color={theme.dim}>No commands match "{filter}"</Text>
         ) : (
           filteredCommands.map((cmd, idx) => (
             <Box key={cmd.id}>
               <Text
-                color={idx === selectedIndex ? 'white' : 'gray'}
-                backgroundColor={idx === selectedIndex ? 'blue' : undefined}
+                color={idx === selectedIndex ? theme.selectedForeground || 'white' : theme.secondary}
+                backgroundColor={idx === selectedIndex ? theme.selectedBackground || 'blue' : undefined}
+                bold={idx === selectedIndex}
               >
                 {idx === selectedIndex ? '> ' : '  '}
                 {cmd.label}
               </Text>
               {cmd.shortcut && (
-                <Text color="gray">
+                <Text color={theme.dim}>
                   {' '}[{cmd.shortcut}]
                 </Text>
               )}
               {cmd.description && (
-                <Text color="gray">
+                <Text color={theme.dim}>
                   {' '}- {cmd.description}
                 </Text>
               )}
@@ -100,7 +103,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         )}
       </Box>
       <Box marginTop={1}>
-        <Text>
+        <Text color={theme.dim}>
           Use ↑↓ to navigate, Enter to select, Esc to close
         </Text>
       </Box>

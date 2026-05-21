@@ -12,6 +12,8 @@ export interface Theme {
   error: string;
   border: string;
   selected: string;
+  selectedBackground?: string;
+  selectedForeground?: string;
   highlighted: string;
   dim: string;
 }
@@ -30,6 +32,8 @@ export const darkTheme: Theme = {
   error: '\x1b[38;5;203m', // red
   border: '\x1b[38;5;239m', // dark border
   selected: '\x1b[48;5;24m', // dark blue bg
+  selectedBackground: '\x1b[48;5;24m',
+  selectedForeground: '\x1b[38;5;15m', // bright white
   highlighted: '\x1b[48;5;237m', // slightly lighter bg
   dim: '\x1b[38;5;240m', // dim text
 };
@@ -48,6 +52,8 @@ export const lightTheme: Theme = {
   error: '\x1b[38;5;196m',
   border: '\x1b[38;5;145m',
   selected: '\x1b[48;5;33m',
+  selectedBackground: '\x1b[48;5;33m',
+  selectedForeground: '\x1b[38;5;15m', // bright white
   highlighted: '\x1b[48;5;253m',
   dim: '\x1b[38;5;145m',
 };
