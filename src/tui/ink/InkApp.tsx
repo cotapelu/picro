@@ -118,6 +118,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           const current = '0.0.1'; // TODO: get from package.json dynamically
           if (latest && latest !== current) {
             addToast(`New version available: ${latest} (current: ${current})`, 'info');
+            // Auto-open changelog modal
+            setActiveModal({ type: 'changelog' });
           }
         }
       } catch {
