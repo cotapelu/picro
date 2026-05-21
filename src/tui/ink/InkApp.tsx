@@ -142,10 +142,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       case 'help':
         setActiveModal({ type: 'help' });
         break;
-      case 'new':
-        runtime.newSession().catch(console.error);
-        addToast('New session created', 'info');
-        break;
+
       case 'copy':
         // If args contain 'all', copy full conversation; else copy last assistant
         if (args === 'all') {
