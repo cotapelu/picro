@@ -377,8 +377,22 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         }
         break;
       case 'name':
-        // Not yet implemented - placeholder
-        addToast('Set session name: not yet implemented', 'info');
+        // Set session display name via settings (persisted per session?)
+        const currentName = runtime.settings?.get?.('sessionDisplayName') || '';
+        setActiveModal({ type: 'editor', initialValue: currentName, onSave: async (val) => {
+          const name = val.trim();
+          try {
+            if (runtime.settings) {
+              runtime.settings.set('sessionDisplayName', name);
+              await runtime.settings.save?.();
+              addToast(`Session name set to: ${name || '(default)'}`, 'success');
+            } else {
+              addToast('Settings unavailable', 'error');
+            }
+          } catch (err) {
+            addToast('Failed to set session name', 'error');
+          }
+        }});
         break;
       case 'session':
         setActiveModal({ type: 'session-info' });
