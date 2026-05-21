@@ -9,7 +9,7 @@
  */
 export interface AgentSessionInterface {
   prompt(text: string, options?: { images?: unknown[] }): Promise<void>;
-  subscribe(listener: (event: AgentSessionEvent) => void): () => void;
+  subscribe(listener: (event: AgentSessionRuntimeEvent) => void): () => void;
   abort(): void;
   messages: unknown[];
   isStreaming: boolean;
@@ -45,7 +45,7 @@ export interface AgentSessionRuntimeInterface {
 /**
  * Agent session event types (subset for UI handling)
  */
-export type AgentSessionEvent = 
+export type AgentSessionRuntimeEvent = 
   | { type: 'agent_start' }
   | { type: 'agent_end' }
   | { type: 'message_start'; message: { role: string; id?: string } }

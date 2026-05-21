@@ -14,6 +14,13 @@ export type {
   AgentSessionRuntime,
 } from './agent-session-runtime';
 
+// Session Interfaces (UI/Runtime contracts)
+export type {
+  AgentSessionInterface,
+  AgentSessionRuntimeInterface,
+  AgentSessionRuntimeEvent,
+} from './agent-session-interfaces';
+
 // Re-export core & session for convenience
 export { Agent, AgentConfig, AgentRunResult } from '../agent';
 export { ToolExecutor } from '../agent/tool-executor';

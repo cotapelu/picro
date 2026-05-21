@@ -169,12 +169,124 @@
         {
           "id": "task-32",
           "content": "Final integration test and verification",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Phase 3: Remaining core TUI features (high priority)",
+      "tasks": [
+        {
+          "id": "task-33",
+          "content": "Implement /name command properly (session naming)",
+          "status": "completed"
+        },
+        {
+          "id": "task-34",
+          "content": "Add auto-compaction UI (show loader/countdown during compaction)",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-35",
+          "content": "Add message queuing (follow-up keybinding, dequeue editor)",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-36",
+          "content": "Implement compact mode toggle (hide thinking/tools)",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-37",
+          "content": "Display changelog on startup when new version detected",
+          "status": "completed"
+        },
+        {
+          "id": "task-38",
+          "content": "Show resource diagnostics on startup (conflicts, warnings)",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-39",
+          "content": "Add package update checking (similar to version check)",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-40",
+          "content": "Implement file drop support for images",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-41",
+          "content": "Add extension widgets (above/below editor)",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-42",
+          "content": "Support custom header/footer from extensions",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-43",
+          "content": "Write unit tests for new modal components",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-44",
+          "content": "Write integration tests for slash commands",
+          "status": "abandoned"
+        },
+        {
+          "id": "task-45",
+          "content": "Final performance check and optimization",
+          "status": "abandoned"
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Phase 4: Testing, documentation, and refinements",
+      "tasks": [
+        {
+          "id": "task-46",
+          "content": "Write unit tests for new modal components (Settings, ModelSelector, etc.)",
           "status": "in_progress"
+        },
+        {
+          "id": "task-47",
+          "content": "Write integration tests for slash commands (test all 23 commands)",
+          "status": "pending"
+        },
+        {
+          "id": "task-48",
+          "content": "Add performance metrics and profiling",
+          "status": "pending"
+        },
+        {
+          "id": "task-49",
+          "content": "Document all slash commands in README or docs",
+          "status": "pending"
+        },
+        {
+          "id": "task-50",
+          "content": "Add error boundaries and better error messages",
+          "status": "pending"
+        },
+        {
+          "id": "task-51",
+          "content": "Review and reduce bundle size (currently 2.8mb)",
+          "status": "pending"
+        },
+        {
+          "id": "task-52",
+          "content": "Add TypeScript strictness improvements (reduce any casts)",
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 33,
-  "nextPhaseId": 3,
-  "updatedAt": "2026-05-21T07:13:49.140Z"
+  "nextTaskId": 53,
+  "nextPhaseId": 5,
+  "updatedAt": "2026-05-21T09:31:16.050Z"
 }

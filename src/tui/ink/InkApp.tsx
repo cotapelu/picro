@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import React, { useCallback } from 'react';
 import { render, Box, Text, useInput } from 'ink';
-import type { AgentSessionRuntimeInterface } from '../../types/agent-session';
+import type { AgentSessionRuntimeInterface } from '../../runtime';
 import type { Message } from './types';
 import { ThemeProvider, useTheme } from './hooks/useTheme';
 import { useRuntime } from './hooks/useRuntime';

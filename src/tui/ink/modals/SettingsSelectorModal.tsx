@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import React, { useEffect, useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import type { AgentSessionRuntimeInterface } from '../../../types/agent-session';
+import type { AgentSessionRuntimeInterface } from '../../../runtime';
 import { useTheme } from '../hooks/useTheme';
 import { Modal } from './Modal';
 
