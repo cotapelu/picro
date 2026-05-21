@@ -14,6 +14,7 @@ import { ThinkingModal } from './modals/ThinkingModal';
 import { LoginModal } from './modals/LoginModal';
 import { HelpModal } from './modals/HelpModal';
 import { SessionSelectorModal } from './modals/SessionSelectorModal';
+import { ConfirmationModal } from './modals/ConfirmationModal';
 import { Modal } from './modals/Modal';
 import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands';
 
@@ -28,6 +29,7 @@ type ModalState =
   | { type: 'editor'; initialValue: string; onSave: (value: string) => Promise<void> }
   | { type: 'help' }
   | { type: 'session-selector' }
+  | { type: 'confirmation'; title: string; message: string; onConfirm: () => Promise<void> | void; onCancel?: () => void }
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
@@ -145,21 +147,57 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         addToast('New session created', 'info');
         break;
       case 'copy':
-        // Copy last assistant message to clipboard
-        const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
-        if (lastAssistant) {
+        // If args contain 'all', copy full conversation; else copy last assistant
+        if (args === 'all') {
+          const conversation = messages.map(m => {
+            const role = m.role === 'user' ? 'You' : m.role === 'assistant' ? 'Assistant' : 'Tool';
+            return `${role}: ${m.content}`;
+          }).join('\n\n');
           try {
-            await runtime.copyToClipboard(lastAssistant.content);
-            addToast('Copied last message to clipboard', 'success');
+            await runtime.copyToClipboard(conversation);
+            addToast('Copied full conversation to clipboard', 'success');
           } catch (err) {
             addToast('Copy failed', 'error');
           }
         } else {
-          addToast('No assistant message to copy', 'info');
+          const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+          if (lastAssistant) {
+            try {
+              await runtime.copyToClipboard(lastAssistant.content);
+              addToast('Copied last assistant message', 'success');
+            } catch (err) {
+              addToast('Copy failed', 'error');
+            }
+          } else {
+            addToast('No assistant message to copy', 'info');
+          }
         }
         break;
       case 'resume':
         setActiveModal({ type: 'session-selector' });
+        break;
+      case 'new':
+        // Show confirmation before creating new session
+        setActiveModal({
+          type: 'confirmation',
+          title: 'New Session',
+          message: 'Create a new session? Current session will be saved.',
+          onConfirm: async () => {
+            try {
+              await runtime.newSession();
+              addToast('New session created', 'success');
+            } catch (err) {
+              addToast('Failed to create session', 'error');
+            }
+          },
+          onCancel: () => {
+            // no-op
+          },
+        });
+        break;
+      case 'fork':
+        // Fork requires a message ID – prompt for now
+        addToast('Fork: enter message ID (not yet implemented)', 'info');
         break;
       default:
         // Other commands not yet implemented
@@ -249,6 +287,23 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       case 'session-selector':
         return (
           <SessionSelectorModal runtime={runtime} onClose={() => setActiveModal(null)} />
+        );
+      case 'confirmation':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <ConfirmationModal
+              title={activeModal.title}
+              message={activeModal.message}
+              onConfirm={async () => {
+                await activeModal.onConfirm();
+                setActiveModal(null);
+              }}
+              onCancel={() => {
+                activeModal.onCancel?.();
+                setActiveModal(null);
+              }}
+            />
+          </Modal>
         );
       default:
         return null;

@@ -12,4 +12,5 @@ export { LoginModal } from './modals/LoginModal';
 export { HelpModal } from './modals/HelpModal';
 export { ExternalEditorModal } from './modals/ExternalEditorModal';
 export { SessionSelectorModal } from './modals/SessionSelectorModal';
+export { ConfirmationModal } from './modals/ConfirmationModal';
 export { Modal } from './modals/Modal';
