@@ -13,11 +13,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
         Slash Commands
       </Text>
       <Box flexDirection="column" marginTop={1}>
-        <Text>/clear - Clear chat history (UI only)</Text>
         <Text>/quit - Exit the application</Text>
         <Text>/thinking [level] - Set thinking level (off, minimal, low, medium, high, xhigh)</Text>
         <Text>/help - Show this help message</Text>
-        <Text>/new - Create a new session (WIP)</Text>
+        <Text>/new - Create a new session</Text>
       </Box>
       <Box marginTop={1}>
         <Text dim>Press Esc to close</Text>

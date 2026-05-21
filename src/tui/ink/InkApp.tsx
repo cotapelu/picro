@@ -121,10 +121,6 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
 
     switch (commandId) {
-      case 'clear':
-        runtime.newSession().catch(console.error);
-        addToast('Started new session', 'info');
-        break;
       case 'quit':
         process.exit(0);
         break;
