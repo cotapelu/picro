@@ -377,26 +377,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         }
         break;
       case 'name':
-        // Prompt for new session name
-        setActiveModal({ type: 'editor', initialValue: '', onSave: async (val) => {
-          const name = val.trim();
-          if (name) {
-            try {
-              // Access session manager to set name
-              const sessionManager = (runtime.session as any)?.sessionManager;
-              if (sessionManager?.setSessionName) {
-                sessionManager.setSessionName(name);
-                addToast(`Session named: ${name}`, 'success');
-              } else {
-                addToast('Session naming not supported', 'error');
-              }
-            } catch (err) {
-              addToast('Failed to set session name', 'error');
-            }
-          } else {
-            addToast('Cancelled', 'info');
-          }
-        }});
+        // Not yet implemented - placeholder
+        addToast('Set session name: not yet implemented', 'info');
         break;
       case 'session':
         setActiveModal({ type: 'session-info' });
@@ -435,8 +417,13 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       case 'compact':
         // Trigger manual compaction
         try {
-          await (runtime.session as any).compact?.();
-          addToast('Compaction completed', 'success');
+          const session = runtime.session as any;
+          if (typeof session.compact === 'function') {
+            await session.compact();
+            addToast('Compaction completed', 'success');
+          } else {
+            addToast('Compaction not supported', 'error');
+          }
         } catch (err) {
           addToast('Compaction failed', 'error');
         }
