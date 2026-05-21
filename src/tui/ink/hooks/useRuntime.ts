@@ -37,17 +37,6 @@ interface AgentSessionRuntimeInterface {
   copyToClipboard?(text: string): Promise<void>;
 }
 
-// Helper to read theme from runtime
-function getRuntimeTheme(runtime: AgentSessionRuntimeInterface): 'dark' | 'light' {
-  try {
-    const themeSetting = runtime.settings?.get('theme');
-    if (themeSetting === 'light') return 'light';
-    return 'dark';
-  } catch {
-    return 'dark';
-  }
-}
-
 // Convert from ConversationTurn to Message UI type
 function turnToMessage(turn: any): Message {
   let role: 'user' | 'assistant' | 'tool' = 'user';
