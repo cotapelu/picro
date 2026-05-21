@@ -1,24 +1,12 @@
 /** @jsxImportSource react */
 import { useEffect, useState, useCallback } from 'react';
-import type { Message } from '../types';
+import type { Message, ToolCall } from '../types';
+import type { AgentSessionRuntimeEvent } from '../../../runtime';
 
-// Minimal types for agent session events
-type AgentSessionEvent =
-  | { type: 'agent_start' }
-  | { type: 'agent_end' }
-  | { type: 'message_start'; message: { role: string; id?: string } }
-  | { type: 'message_update'; message: { role: string; id?: string; content?: any[] } }
-  | { type: 'message_end'; message: { role: string; id?: string; stopReason?: string } }
-  | { type: 'tool_execution_start'; toolCallId: string; toolName: string; args: any }
-  | { type: 'tool_execution_update'; toolCallId: string; partialResult?: any }
-  | { type: 'tool_execution_end'; toolCallId: string; result: any; isError?: boolean }
-  | { type: 'queue_update' }
-  | { type: 'error'; error: string };
-
-// Minimal runtime interface
+// Minimal types for agent session events (imported from runtime)
 interface AgentSessionInterface {
   prompt(text: string, options?: { images?: unknown[] }): Promise<void>;
-  subscribe(listener: (event: AgentSessionEvent) => void): () => void;
+  subscribe(listener: (event: AgentSessionRuntimeEvent) => void): () => void;
   abort(): void;
   messages: any[];
   isStreaming: boolean;
@@ -100,7 +88,7 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
 
   // Subscribe to events
   useEffect(() => {
-    const unsubscribe = runtime.session.subscribe((event: AgentSessionEvent) => {
+    const unsubscribe = runtime.session.subscribe((event: AgentSessionRuntimeEvent) => {
       switch (event.type) {
         case 'agent_start':
           setIsStreaming(true);
@@ -110,11 +98,12 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
           setIsStreaming(false);
           setStatus('Ready');
           break;
-        case 'message_start':
+        case 'message_start': {
+          const e = event as { type: 'message_start'; message: { role: string; id?: string } };
           setMessages((prev) => {
             const newMsg: Message = {
-              id: event.message.id || `stream-${Date.now()}`,
-              role: event.message.role as any,
+              id: e.message.id || `stream-${Date.now()}`,
+              role: e.message.role as any,
               content: '',
               timestamp: Date.now(),
               streaming: true,
@@ -122,11 +111,13 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
             return [...prev, newMsg];
           });
           break;
-        case 'message_update':
+        }
+        case 'message_update': {
+          const e = event as { type: 'message_update'; message: { role: string; id?: string; content?: unknown[] } };
           setMessages((prev) =>
             prev.map((msg) => {
-              if (msg.streaming && msg.id === event.message.id) {
-                const newContent = event.message.content
+              if (msg.streaming && msg.id === e.message.id) {
+                const newContent = e.message.content
                   ?.map((c: any) => {
                     if (c.type === 'text') return c.text;
                     if (c.type === 'thinking') return `[Thinking: ${c.thinking}]`;
@@ -140,10 +131,12 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
             })
           );
           break;
-        case 'message_end':
+        }
+        case 'message_end': {
+          const e = event as { type: 'message_end'; message: { role: string; id?: string; stopReason?: string } };
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.streaming && msg.id === event.message.id
+              msg.streaming && msg.id === e.message.id
                 ? { ...msg, streaming: false }
                 : msg
             )
@@ -151,15 +144,17 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
           setIsStreaming(false);
           setStatus('Ready');
           break;
-        case 'tool_execution_start':
+        }
+        case 'tool_execution_start': {
+          const e = event as { type: 'tool_execution_start'; toolCallId: string; toolName: string; args: unknown };
           setMessages((prev) =>
             prev.map((msg) => {
               if (msg.streaming && msg.role === 'assistant') {
-                const toolCall = {
-                  id: event.toolCallId,
-                  name: event.toolName,
-                  arguments: event.args,
-                  status: 'running' as const,
+                const toolCall: ToolCall = {
+                  id: e.toolCallId,
+                  name: e.toolName,
+                  arguments: e.args as Record<string, unknown>,
+                  status: 'running',
                 };
                 return {
                   ...msg,
@@ -170,15 +165,17 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
             })
           );
           break;
-        case 'tool_execution_end':
+        }
+        case 'tool_execution_end': {
+          const e = event as { type: 'tool_execution_end'; toolCallId: string; result: unknown; isError?: boolean };
           setMessages((prev) =>
             prev.map((msg) => {
               if (msg.role === 'assistant' && msg.toolCalls) {
                 return {
                   ...msg,
                   toolCalls: msg.toolCalls.map((tc) =>
-                    tc.id === event.toolCallId
-                      ? { ...tc, status: 'done' as const, result: event.result }
+                    tc.id === e.toolCallId
+                      ? { ...tc, status: 'done' as const, result: e.result } as ToolCall
                       : tc
                   ),
                 };
@@ -187,6 +184,7 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
             })
           );
           break;
+        }
         case 'error':
           setStatus(`Error: ${event.error}`);
           break;

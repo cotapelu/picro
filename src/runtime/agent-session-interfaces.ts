@@ -54,5 +54,5 @@ export type AgentSessionRuntimeEvent =
   | { type: 'tool_execution_start'; toolCallId: string; toolName: string; args: unknown }
   | { type: 'tool_execution_update'; toolCallId: string; partialResult?: unknown }
   | { type: 'tool_execution_end'; toolCallId: string; result: unknown; isError?: boolean }
-  | { type: 'queue_update' }
+  | { type: 'queue_update'; steering: readonly string[]; followUp: readonly string[] }
   | { type: 'error'; error: string };
