@@ -41,6 +41,13 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const [toasts, setToasts] = React.useState<Array<{ id: number; message: string; type: 'info' | 'success' | 'error' }>>([]);
   const toastIdRef = React.useRef(0);
 
+  // Close command palette if slash removed
+  React.useEffect(() => {
+    if (activeModal?.type === 'command-palette' && activeModal.isSlash && !inputValue.startsWith('/')) {
+      setActiveModal(null);
+    }
+  }, [inputValue, activeModal]);
+
   const addToast = useCallback((message: string, type: 'info' | 'success' | 'error' = 'info') => {
     const id = ++toastIdRef.current;
     setToasts(prev => [...prev, { id, message, type }]);
