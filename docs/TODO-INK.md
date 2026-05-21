@@ -19,7 +19,7 @@ Replace the custom TUI (`src/tui/*`) with Ink (`ink` + React) to have a fully fu
 - [ ] **Message rendering**: User, Assistant (streaming), Tool (execution)
 - [ ] **Input handling**: printable chars, Enter (submit), Ctrl+Enter (newline), Ctrl+C (exit), arrow keys (nav), history (up/down), kill ring (Ctrl+K, Ctrl+Y, etc.)
 - [ ] **Command Palette**: `Ctrl+P` to open, list commands with descriptions
-- [ ] **Slash commands**: `/quit`, `/new`, `/thinking`, `/login`, `/help`, `/resume`, `/copy`, `/settings`, `/model`
+- [ ] **Slash commands**: `/quit`, `/new`, `/thinking`, `/login`, `/help`, `/resume`, `/copy`
 - [ ] **Thinking level selector**: modal to choose thinking level
 - [ ] **Tool execution display**: collapsible tool calls with output
 - [ ] **Autocomplete**: Tab to trigger, modal with suggestions

@@ -1,6 +1,7 @@
 /** @jsxImportSource react */
 import React from 'react';
 import { Box, Text } from 'ink';
+import { BUILTIN_SLASH_COMMANDS } from '../../../runtime/slash-commands';
 
 interface HelpModalProps {
   onClose: () => void;
@@ -13,10 +14,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
         Slash Commands
       </Text>
       <Box flexDirection="column" marginTop={1}>
-        <Text>/quit - Exit the application</Text>
-        <Text>/thinking [level] - Set thinking level (off, minimal, low, medium, high, xhigh)</Text>
-        <Text>/help - Show this help message</Text>
-        <Text>/new - Create a new session</Text>
+        {BUILTIN_SLASH_COMMANDS.map(cmd => (
+          <Text key={cmd.name}>/{cmd.name} - {cmd.description}</Text>
+        ))}
       </Box>
       <Box marginTop={1}>
         <Text dim>Press Esc to close</Text>

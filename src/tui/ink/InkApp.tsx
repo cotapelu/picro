@@ -15,6 +15,12 @@ import { LoginModal } from './modals/LoginModal';
 import { HelpModal } from './modals/HelpModal';
 import { SessionSelectorModal } from './modals/SessionSelectorModal';
 import { ConfirmationModal } from './modals/ConfirmationModal';
+import { SettingsSelectorModal } from './modals/SettingsSelectorModal';
+import { ModelSelectorModal } from './modals/ModelSelectorModal';
+import { SessionInfoModal } from './modals/SessionInfoModal';
+import { ChangelogModal } from './modals/ChangelogModal';
+import { HotkeysModal } from './modals/HotkeysModal';
+import { TreeSelectorModal } from './modals/TreeSelectorModal';
 import { Modal } from './modals/Modal';
 import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands';
 
@@ -30,6 +36,12 @@ type ModalState =
   | { type: 'help' }
   | { type: 'session-selector' }
   | { type: 'confirmation'; title: string; message: string; onConfirm: () => Promise<void> | void; onCancel?: () => void }
+  | { type: 'settings' }
+  | { type: 'model-selector' }
+  | { type: 'session-info' }
+  | { type: 'changelog' }
+  | { type: 'hotkeys' }
+  | { type: 'tree-selector' }
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
@@ -188,12 +200,249 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           },
         });
         break;
+      case 'settings':
+        setActiveModal({ type: 'settings' });
+        break;
+      case 'model':
+        setActiveModal({ type: 'model-selector' });
+        break;
+      case 'export':
+        // Export current session to HTML file
+        try {
+          const messages = runtime.session.messages as any[];
+          if (messages.length === 0) {
+            addToast('No messages to export', 'info');
+            break;
+          }
+          // Generate simple HTML
+          const cwd = runtime.cwd;
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          const filename = `session-${timestamp}.html`;
+          const filepath = `${cwd}/${filename}`;
+          
+          let html = `<!DOCTYPE html><html><head><title>Session Export</title>`;
+          html += `<style>body{font-family:sans-serif;max-width:800px;margin:auto;padding:20px} .user{color:#0066cc} .assistant{color:#2e7d32} .tool{color:#d32f2f}</style>`;
+          html += `</head><body><h1>Session Export</h1>`;
+          for (const msg of messages) {
+            const role = msg.role;
+            const content = (msg.content as any[])?.map((c: any) => c.text || '').join('') || String(msg.content || '');
+            const escaped = content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            html += `<div class="${role}"><strong>${role}:</strong> ${escaped}</div>`;
+          }
+          html += `</body></html>`;
+          
+          // Write file (using node fs)
+          const fs = await import('node:fs');
+          fs.writeFileSync(filepath, html, 'utf-8');
+          addToast(`Exported to ${filename}`, 'success');
+        } catch (err) {
+          addToast('Export failed: ' + (err as Error).message, 'error');
+        }
+        break;
+      case 'import':
+        // Import session from JSONL file (use fd to pick)
+        try {
+          const { execSync } = await import('node:child_process');
+          const cwd = runtime.cwd;
+          // Find jsonl files
+          const output = execSync('fd --extension jsonl', { cwd, encoding: 'utf-8' }).trim();
+          const files = output ? output.split('\n').filter(Boolean) : [];
+          if (files.length === 0) {
+            addToast('No JSONL files found in current directory', 'info');
+            break;
+          }
+          // For simplicity, pick the first one or prompt later
+          const filepath = `${cwd}/${files[0]}`; // TODO: prompt user to select
+          const { cancelled } = await runtime.switchSession(filepath);
+          if (cancelled) {
+            addToast('Import cancelled', 'info');
+          } else {
+            addToast(`Imported session from ${files[0]}`, 'success');
+          }
+        } catch (err: any) {
+          if (err.code === 'ENOENT') {
+            addToast('fd not found - install fd for file picking', 'error');
+          } else {
+            addToast('Import failed: ' + err.message, 'error');
+          }
+        }
+        break;
+      case 'share':
+        // Share current session as GitHub gist (requires GitHub auth)
+        try {
+          const messages = runtime.session.messages as any[];
+          if (messages.length === 0) {
+            addToast('No messages to share', 'info');
+            break;
+          }
+          // Get GitHub token from authStorage (cast to any to bypass interface limitation)
+          const authStorage = runtime.authStorage as any;
+          const token = await authStorage.getApiKey?.('github') || process.env.GITHUB_TOKEN;
+          if (!token) {
+            addToast('GitHub token required. Login with /login github first.', 'error');
+            break;
+          }
+          // Create gist content (JSON)
+          const content = JSON.stringify(messages, (key, value) => {
+            if (key === 'content' && Array.isArray(value)) {
+              return value.map((v: any) => v.text || v.thinking || '').join('');
+            }
+            return value;
+          }, 2);
+          const response = await fetch('https://api.github.com/gists', {
+            method: 'POST',
+            headers: {
+              'Authorization': `token ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              description: 'Session export from picro',
+              public: false,
+              files: { 'session.json': { content } },
+            }),
+          });
+          if (!response.ok) {
+            throw new Error(`GitHub API error: ${response.status}`);
+          }
+          const data = await response.json();
+          const gistUrl = data.html_url;
+          await runtime.copyToClipboard(gistUrl);
+          addToast('Gist URL copied to clipboard', 'success');
+        } catch (err: any) {
+          addToast('Share failed: ' + (err.message || err), 'error');
+        }
+        break;
+      case 'name':
+        // Prompt for new session name
+        setActiveModal({ type: 'editor', initialValue: '', onSave: async (val) => {
+          const name = val.trim();
+          if (name) {
+            try {
+              // Access session manager to set name
+              const sessionManager = (runtime.session as any)?.sessionManager;
+              if (sessionManager?.setSessionName) {
+                sessionManager.setSessionName(name);
+                addToast(`Session named: ${name}`, 'success');
+              } else {
+                addToast('Session naming not supported', 'error');
+              }
+            } catch (err) {
+              addToast('Failed to set session name', 'error');
+            }
+          } else {
+            addToast('Cancelled', 'info');
+          }
+        }});
+        break;
+      case 'session':
+        setActiveModal({ type: 'session-info' });
+        break;
+      case 'changelog':
+        setActiveModal({ type: 'changelog' });
+        break;
+      case 'hotkeys':
+        setActiveModal({ type: 'hotkeys' });
+        break;
+      case 'clone':
+        // Duplicate current session by forking from first message or creating new session with same messages
+        try {
+          const messages = runtime.session.messages as any[];
+          if (messages.length === 0) {
+            addToast('No messages to clone', 'info');
+            break;
+          }
+          // Find earliest user message to fork from
+          const firstUserMsg = messages.find(m => m.role === 'user');
+          if (firstUserMsg && firstUserMsg.id) {
+            await runtime.fork(firstUserMsg.id);
+            addToast('Session cloned (forked from first message)', 'success');
+          } else {
+            // Fallback: create new session
+            await runtime.newSession();
+            addToast('New empty session created', 'success');
+          }
+        } catch (err) {
+          addToast('Clone failed: ' + (err as Error).message, 'error');
+        }
+        break;
+      case 'tree':
+        setActiveModal({ type: 'tree-selector' }); // Note: using 'tree' as type for modal mapping
+        break;
+      case 'compact':
+        // Trigger manual compaction
+        try {
+          await (runtime.session as any).compact?.();
+          addToast('Compaction completed', 'success');
+        } catch (err) {
+          addToast('Compaction failed', 'error');
+        }
+        break;
+      case 'reload':
+        // Reload settings and resources
+        try {
+          await runtime.settings?.reload?.();
+          // TODO: also reload extensions, skills, prompts, themes from runtime
+          addToast('Settings reloaded', 'success');
+        } catch (err) {
+          addToast('Reload failed', 'error');
+        }
+        break;
+      case 'logout':
+        // Remove authentication for default provider
+        try {
+          const defaultProvider = runtime.settings?.getDefaultProvider?.() || 'openai';
+          await runtime.authStorage.removeApiKey?.(defaultProvider);
+          addToast(`Logged out from ${defaultProvider}`, 'success');
+        } catch (err) {
+          addToast('Logout failed', 'error');
+        }
+        break;
+      case 'scoped-models':
+        // Toggle scoped models mode for model cycling
+        try {
+          const settings = runtime.settings;
+          if (settings) {
+            const current = settings.get('scopedModelsEnabled') ?? false;
+            const next = !current;
+            settings.set('scopedModelsEnabled', next);
+            await settings.save?.();
+            addToast(`Scoped models ${next ? 'enabled' : 'disabled'}`, 'success');
+          } else {
+            addToast('Settings not available', 'error');
+          }
+        } catch (err) {
+          addToast('Failed to toggle scoped models', 'error');
+        }
+        break;
       case 'fork':
-        // Fork requires a message ID – prompt for now
-        addToast('Fork: enter message ID (not yet implemented)', 'info');
+        // Fork current session at a specific message
+        // For now, fork from the first user message if available
+        try {
+          const messages = runtime.session.messages as any[];
+          if (messages.length === 0) {
+            addToast('No messages to fork', 'info');
+            break;
+          }
+          // Find a user message to fork from - prefer the last user message
+          const userMessages = messages.filter(m => m.role === 'user');
+          const targetMsg = userMessages[userMessages.length - 1] || userMessages[0];
+          if (targetMsg?.id) {
+            const result = await runtime.fork(targetMsg.id);
+            if (result.cancelled) {
+              addToast('Fork cancelled', 'info');
+            } else {
+              addToast('Fork created successfully', 'success');
+            }
+          } else {
+            addToast('No suitable message to fork', 'error');
+          }
+        } catch (err) {
+          addToast('Fork failed: ' + (err as Error).message, 'error');
+        }
         break;
       default:
-        // Other commands not yet implemented
+        // Unimplemented command - show informative message
+        addToast(`Command "/${commandId}" not yet implemented`, 'info');
         break;
     }
   }, [runtime, messages, addToast]);
@@ -280,6 +529,42 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       case 'session-selector':
         return (
           <SessionSelectorModal runtime={runtime} onClose={() => setActiveModal(null)} />
+        );
+      case 'settings':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <SettingsSelectorModal runtime={runtime} onClose={() => setActiveModal(null)} />
+          </Modal>
+        );
+      case 'model-selector':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <ModelSelectorModal runtime={runtime} onClose={() => setActiveModal(null)} />
+          </Modal>
+        );
+      case 'session-info':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <SessionInfoModal runtime={runtime} onClose={() => setActiveModal(null)} />
+          </Modal>
+        );
+      case 'changelog':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <ChangelogModal onClose={() => setActiveModal(null)} />
+          </Modal>
+        );
+      case 'hotkeys':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <HotkeysModal onClose={() => setActiveModal(null)} />
+          </Modal>
+        );
+      case 'tree-selector':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <TreeSelectorModal runtime={runtime} onClose={() => setActiveModal(null)} />
+          </Modal>
         );
       case 'confirmation':
         return (

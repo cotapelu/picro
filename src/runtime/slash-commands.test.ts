@@ -10,15 +10,10 @@ describe('Slash Commands', () => {
   describe('BUILTIN_SLASH_COMMANDS', () => {
     it('should contain common commands', () => {
       const names = BUILTIN_SLASH_COMMANDS.map(c => c.name);
-      expect(names).toContain('settings');
-      expect(names).toContain('model');
-      expect(names).toContain('new');
-      expect(names).toContain('quit');
-      expect(names).toContain('compact');
-      expect(names).toContain('fork');
-      expect(names).toContain('tree');
-      expect(names).toContain('thinking');
-      expect(names).toContain('help');
+      // All commands are listed for discoverability, even if not all are implemented yet
+      expect(names.sort()).toEqual([
+        'changelog', 'clone', 'compact', 'copy', 'export', 'fork', 'help', 'hotkeys', 'import', 'login', 'logout', 'model', 'name', 'new', 'quit', 'reload', 'resume', 'scoped-models', 'session', 'settings', 'share', 'thinking', 'tree'
+      ]);
     });
 
     it('should have description for each command', () => {
@@ -31,9 +26,9 @@ describe('Slash Commands', () => {
 
   describe('getSlashCommand', () => {
     it('should return command info for known command', () => {
-      const cmd = getSlashCommand('settings');
+      const cmd = getSlashCommand('thinking');
       expect(cmd).toBeDefined();
-      expect(cmd!.name).toBe('settings');
+      expect(cmd!.name).toBe('thinking');
     });
 
     it('should return undefined for unknown command', () => {

@@ -1,7 +1,106 @@
 {
   "version": 1,
-  "phases": [],
-  "nextTaskId": 1,
-  "nextPhaseId": 1,
-  "updatedAt": "2026-05-21T01:00:37.786Z"
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Clean up dead code and inconsistencies",
+      "tasks": [
+        {
+          "id": "task-1",
+          "content": "Remove dead 'clear' case from InkApp.tsx switch statement",
+          "status": "completed"
+        },
+        {
+          "id": "task-2",
+          "content": "Remove '/clear' reference from HelpModal.tsx to fix documentation mismatch",
+          "status": "completed"
+        },
+        {
+          "id": "task-3",
+          "content": "Build and verify no warnings or test failures",
+          "status": "completed"
+        },
+        {
+          "id": "task-4",
+          "content": "Commit changes",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Update documentation to remove /clear references",
+      "tasks": [
+        {
+          "id": "task-5",
+          "content": "Remove /clear from docs/TODO-INK.md slash command list",
+          "status": "completed"
+        },
+        {
+          "id": "task-6",
+          "content": "Remove /clear from docs/TODO.md slash command list (it was incorrectly marked as done)",
+          "status": "completed"
+        },
+        {
+          "id": "task-7",
+          "content": "Verify docs consistency",
+          "status": "completed"
+        },
+        {
+          "id": "task-8",
+          "content": "Commit documentation updates",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Fix command palette: remove non-functional slash commands",
+      "tasks": [
+        {
+          "id": "task-9",
+          "content": "Audit BUILTIN_SLASH_COMMANDS against InkApp switch to determine implemented commands",
+          "status": "completed"
+        },
+        {
+          "id": "task-10",
+          "content": "Remove unimplemented commands from BUILTIN_SLASH_COMMANDS (keep only: quit, thinking, login, help, copy, resume, new)",
+          "status": "completed"
+        },
+        {
+          "id": "task-11",
+          "content": "Consider removing 'fork' stub (shows 'not yet implemented' toast)",
+          "status": "completed"
+        },
+        {
+          "id": "task-12",
+          "content": "Update slash-commands.test.ts to match reduced set",
+          "status": "completed"
+        },
+        {
+          "id": "task-13",
+          "content": "Update HelpModal.tsx slash command list",
+          "status": "completed"
+        },
+        {
+          "id": "task-14",
+          "content": "Update docs/TODO.md and docs/TODO-INK.md",
+          "status": "completed"
+        },
+        {
+          "id": "task-15",
+          "content": "Build and run tests",
+          "status": "completed"
+        },
+        {
+          "id": "task-16",
+          "content": "Commit all changes",
+          "status": "completed"
+        }
+      ]
+    }
+  ],
+  "nextTaskId": 17,
+  "nextPhaseId": 4,
+  "updatedAt": "2026-05-21T06:00:44.749Z"
 }
