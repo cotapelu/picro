@@ -52,7 +52,7 @@ type ModalState =
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
-  const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt, steeringMessages, followUpMessages, toolOutputExpanded, setToolOutputExpanded, hideThinkingBlock, setHideThinkingBlock } = useRuntime(runtime as any);
+  const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt, steeringMessages, followUpMessages, toolOutputExpanded, setToolOutputExpanded, hideThinkingBlock, setHideThinkingBlock, currentModel } = useRuntime(runtime as any);
   const [retryCountdown, setRetryCountdown] = React.useState(0);
 
   // Retry countdown timer
@@ -932,7 +932,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   };
 
-  const modelId = (runtime.session as any)?.model?.id || 'No model';
+  const modelId = currentModel?.id || (runtime.session as any)?.model?.id || 'No model';
   const themeLabel = isDark ? 'dark' : 'light';
 
   // Compute resource counts for display
