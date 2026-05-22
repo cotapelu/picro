@@ -327,6 +327,15 @@ async function main(): Promise<void> {
 
   // Construct runtime
   const runtime = new AgentSessionRuntime(session.agent, session, services);
+
+  // Graceful shutdown on SIGTERM/SIGHUP
+  const shutdown = async (signal: string) => {
+    console.log(`\nReceived ${signal}, shutting down gracefully...`);
+    try { await runtime.dispose(); } catch (err) { console.error('Error during shutdown:', err); }
+    process.exit(0);
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGHUP', () => shutdown('SIGHUP'));
   time("createAgentSessionRuntime");
 
   // Check session cwd existence
