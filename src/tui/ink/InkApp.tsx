@@ -51,7 +51,7 @@ type ModalState =
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
-  const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt } = useRuntime(runtime as any);
+  const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt, steeringMessages, followUpMessages } = useRuntime(runtime as any);
   const [retryCountdown, setRetryCountdown] = React.useState(0);
 
   // Retry countdown timer
@@ -808,6 +808,14 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         showArmin={true}
       />
       <Box flexGrow={1} overflow="hidden" position="relative">
+        {/* Pending messages indicator */}
+        {(steeringMessages.length > 0 || followUpMessages.length > 0) && (
+          <Box borderBottom paddingX={1}>
+            <Text color="yellow" dim>
+              Queued: {steeringMessages.length} steer, {followUpMessages.length} follow-up (Ctrl+E to edit)
+            </Text>
+          </Box>
+        )}
         <MessageList
           ref={messageListRef}
           messages={messages}
