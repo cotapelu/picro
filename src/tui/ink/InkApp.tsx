@@ -583,6 +583,37 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           addToast('Performance tracking is disabled or no data available', 'info');
         }
         break;
+      case 'paste':
+        // Paste image from clipboard into input
+        try {
+          // Try Wayland (wl-paste) first, then X11 (xclip)
+          let pngBuffer: Buffer;
+          try {
+            const { execFileSync } = await import('node:child_process');
+            pngBuffer = execFileSync('wl-paste', ['--no-size', '--type', 'image/png']);
+          } catch (e1) {
+            try {
+              const { execFileSync } = await import('node:child_process');
+              pngBuffer = execFileSync('xclip', ['-selection', 'clipboard', '-t', 'image/png', '-o']);
+            } catch (e2) {
+              addToast('No image in clipboard or missing wl-paste/xclip', 'error');
+              break;
+            }
+          }
+          // Save to a PNG file in cwd
+          const fs = await import('node:fs');
+          const path = await import('node:path');
+          const timestamp = Date.now();
+          const filename = `pasted-${timestamp}.png`;
+          const filepath = path.join(runtime.cwd, filename);
+          fs.writeFileSync(filepath, pngBuffer);
+          // Append markdown image reference to input
+          setInputValue(prev => prev + `![](${filename})`);
+          addToast(`Pasted image as ${filename}`, 'success');
+        } catch (err: any) {
+          addToast(`Paste failed: ${err.message}`, 'error');
+        }
+        break;
       case 'debug':
         handleDebugCommand();
         addToast('Debug log written', 'success');
