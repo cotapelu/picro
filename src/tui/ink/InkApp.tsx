@@ -494,6 +494,15 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           addToast('Reload failed', 'error');
         }
         break;
+        // Reload settings and resources
+        try {
+          await runtime.settings?.reload?.();
+          // TODO: also reload extensions, skills, prompts, themes from runtime
+          addToast('Settings reloaded', 'success');
+        } catch (err) {
+          addToast('Reload failed', 'error');
+        }
+        break;
       case 'logout':
         // Remove authentication for all providers
         try {
@@ -627,6 +636,24 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   }, [runtime, addToast]);
 
+  const handleTreeSelect = useCallback(async (branchId: string) => {
+    try {
+      const session = runtime.session as any;
+      if (session.navigateTree) {
+        const result = await session.navigateTree(branchId);
+        if (result.cancelled) {
+          addToast('Branch navigation cancelled', 'info');
+        } else {
+          addToast(`Switched to branch: ${branchId}`, 'success');
+        }
+      } else {
+        addToast('Tree navigation not supported', 'error');
+      }
+    } catch (err: any) {
+      addToast(`Tree navigation failed: ${err.message}`, 'error');
+    }
+  }, [runtime, addToast]);
+
   // Render active modal
   const renderModal = () => {
     if (!activeModal) return null;
@@ -735,7 +762,11 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       case 'tree-selector':
         return (
           <Modal onClose={() => setActiveModal(null)}>
-            <TreeSelectorModal runtime={runtime} onClose={() => setActiveModal(null)} />
+            <TreeSelectorModal
+              runtime={runtime}
+              onClose={() => setActiveModal(null)}
+              onSelect={handleTreeSelect}
+            />
           </Modal>
         );
       case 'bash-output':

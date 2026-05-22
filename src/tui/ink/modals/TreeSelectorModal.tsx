@@ -8,9 +8,10 @@ import { Modal } from './Modal';
 interface TreeSelectorModalProps {
   runtime: AgentSessionRuntimeInterface;
   onClose: () => void;
+  onSelect?: (branchId: string) => Promise<void> | void;
 }
 
-export const TreeSelectorModal: React.FC<TreeSelectorModalProps> = ({ runtime, onClose }) => {
+export const TreeSelectorModal: React.FC<TreeSelectorModalProps> = ({ runtime, onClose, onSelect }) => {
   const { theme } = useTheme();
   const [branches, setBranches] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -39,7 +40,9 @@ export const TreeSelectorModal: React.FC<TreeSelectorModalProps> = ({ runtime, o
     if (key.return) {
       // Switch to selected branch
       const branchId = branches[selectedIndex];
-      // TODO: Implement branch switching
+      if (onSelect) {
+        onSelect(branchId);
+      }
       onClose();
       return;
     }

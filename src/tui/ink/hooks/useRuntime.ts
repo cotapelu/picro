@@ -166,6 +166,16 @@ export function useRuntime(runtime: ExtendedRuntime) {
         case 'error':
           setStatus(`Error: ${event.error}`);
           break;
+        case 'session_tree':
+          // Rebuild full message list from session after branch navigation
+          const sessionMsgs = (runtime.session as any).messages;
+          if (Array.isArray(sessionMsgs)) {
+            const allMessages = sessionMsgs
+              .map(agentMessageToUiMessage)
+              .filter((msg): msg is Message => msg !== null);
+            setMessages(allMessages);
+          }
+          break;
         default:
           break;
       }
