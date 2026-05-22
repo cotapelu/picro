@@ -29,6 +29,7 @@ interface InputBoxProps {
   onTab?: () => void;
   cwd?: string;
   onPathComplete?: (partial: string) => Promise<string[]>;
+  onExternalEdit?: (text: string) => Promise<string> | string;
 }
 
 export const InputBox: React.FC<InputBoxProps> = ({
@@ -43,6 +44,7 @@ export const InputBox: React.FC<InputBoxProps> = ({
   onTab,
   cwd,
   onPathComplete,
+  onExternalEdit,
 }) => {
   const { theme } = useTheme();
   const [cursorPosition, setCursorPosition] = useState(value.length);
@@ -213,6 +215,16 @@ export const InputBox: React.FC<InputBoxProps> = ({
       }
       if (!handled) {
         onTab?.();
+      }
+      return;
+    }
+
+    // External editor (Ctrl+E)
+    if (key.ctrl && input === 'e') {
+      if (onExternalEdit) {
+        const edited = await onExternalEdit(value);
+        onChange(edited);
+        setCursorPosition(edited.length);
       }
       return;
     }

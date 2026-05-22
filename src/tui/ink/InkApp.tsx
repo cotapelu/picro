@@ -685,6 +685,26 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   }, [runtime.cwd]);
 
+  // External editor (Ctrl+E)
+  const handleExternalEdit = useCallback(async (text: string): Promise<string> => {
+    const editor = process.env.EDITOR || process.env.VISUAL || 'vim';
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const os = await import('node:os');
+    const { spawnSync } = await import('node:child_process');
+    const tmpdir = os.tmpdir();
+    const dir = fs.mkdtempSync(path.join(tmpdir, 'picro-'));
+    const filepath = path.join(dir, 'edit.txt');
+    try {
+      fs.writeFileSync(filepath, text, 'utf-8');
+      spawnSync(editor, [filepath], { stdio: 'inherit', cwd: runtime.cwd });
+      const newText = fs.readFileSync(filepath, 'utf-8');
+      return newText;
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }, [runtime.cwd]);
+
   // Render active modal
   const renderModal = () => {
     if (!activeModal) return null;
@@ -950,6 +970,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         }}
         cwd={runtime.cwd}
         onPathComplete={handlePathComplete}
+        onExternalEdit={handleExternalEdit}
       />
       {/* Status line for compaction/retry */}
       {(isCompacting || retryAttempt > 0) && (
