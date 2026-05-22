@@ -31,6 +31,7 @@ function agentMessageToUiMessage(msg: any): Message | null {
   let role: 'user' | 'assistant' | 'tool' = 'user';
   let content = '';
   let toolCalls: ToolCall[] | undefined;
+  let thinkingBlocks: string[] | undefined;
 
   if (msg.role === 'user') {
     role = 'user';
@@ -43,8 +44,17 @@ function agentMessageToUiMessage(msg: any): Message | null {
   } else if (msg.role === 'assistant') {
     role = 'assistant';
     if (Array.isArray(msg.content)) {
-      const textBlocks = msg.content.filter((c: any) => c.type === 'text');
-      content = textBlocks.map((c: any) => c.text).join('') || '';
+      const textBlocks: string[] = [];
+      const thinking: string[] = [];
+      for (const c of msg.content) {
+        if (c.type === 'text') textBlocks.push(c.text);
+        else if (c.type === 'thinking') thinking.push(c.thinking);
+        else if (c.type === 'toolCall') {
+          // toolCalls handled below
+        }
+      }
+      content = textBlocks.join('');
+      if (thinking.length > 0) thinkingBlocks = thinking;
       const toolCallBlocks = msg.content.filter((c: any) => c.type === 'toolCall');
       toolCalls = toolCallBlocks.map((c: any) => ({
         id: c.id,
@@ -62,9 +72,20 @@ function agentMessageToUiMessage(msg: any): Message | null {
     } else {
       content = String(msg.content || '');
     }
-  } else if (msg.role === 'custom' || msg.role === 'bashExecution' || msg.role === 'compactionSummary' || msg.role === 'branchSummary') {
+  } else if (msg.role === 'bashExecution') {
+    role = 'assistant';
+    const cmd = msg.command || '';
+    const out = msg.output || '';
+    const exit = msg.exitCode !== undefined ? ` (exit ${msg.exitCode})` : '';
+    const cancelled = msg.cancelled ? ' (cancelled)' : '';
+    const truncated = msg.truncated ? ' [truncated]' : '';
+    content = `!${cmd}\n${out}${exit}${cancelled}${truncated}`;
+  } else if (msg.role === 'compactionSummary' || msg.role === 'branchSummary') {
     role = 'assistant';
     content = msg.content?.toString() || `[${msg.role}]`;
+  } else if (msg.role === 'custom') {
+    role = 'assistant';
+    content = `[Custom: ${msg.customType}]`;
   }
 
   return {
@@ -73,6 +94,7 @@ function agentMessageToUiMessage(msg: any): Message | null {
     content,
     timestamp: msg.timestamp || Date.now(),
     toolCalls,
+    thinkingBlocks,
     streaming: false,
   };
 }

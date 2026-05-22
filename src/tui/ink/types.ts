@@ -4,6 +4,7 @@ export interface Message {
   content: string;
   timestamp: number;
   toolCalls?: ToolCall[];
+  thinkingBlocks?: string[];
   error?: string;
   streaming?: boolean;
 }

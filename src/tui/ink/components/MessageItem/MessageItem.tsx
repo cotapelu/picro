@@ -5,6 +5,7 @@ import { useTheme } from '../../hooks/useTheme';
 import type { Message, ToolCall } from '../../types';
 import { AssistantMessage } from './AssistantMessage';
 import { UserMessage } from './UserMessage';
+import { ToolExecution } from './ToolExecution';
 
 interface MessageItemProps {
   message: Message;
@@ -44,25 +45,13 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   const renderToolCalls = (toolCalls: ToolCall[]) => {
     return toolCalls.map((tool) => {
       const isExpanded = expandedTools.has(tool.id);
-      const hasResult = tool.result !== undefined;
-
       return (
-        <Box key={tool.id} flexDirection="column" marginLeft={2}>
-          <Box>
-            <Text bold color={isExpanded ? theme.accent : theme.warning}>
-              {isExpanded ? '▼' : '▶'} {tool.name}
-            </Text>
-            {hasResult && (
-              <Text color={theme.dim}> - {tool.status}</Text>
-            )}
-          </Box>
-          {isExpanded && hasResult && (
-            <Box marginLeft={2} flexDirection="column">
-              <Text color={theme.dim}>Input: {JSON.stringify(tool.arguments)}</Text>
-              <Text color={theme.dim}>Output: {JSON.stringify(tool.result)}</Text>
-            </Box>
-          )}
-        </Box>
+        <ToolExecution
+          key={tool.id}
+          toolCall={tool}
+          expanded={isExpanded}
+          onToggle={() => onToolToggle?.(tool.id)}
+        />
       );
     });
   };
@@ -81,7 +70,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         {message.role === 'user' ? (
           <UserMessage text={message.content} />
         ) : message.role === 'assistant' ? (
-          <AssistantMessage content={message.content} />
+          <AssistantMessage
+            content={message.content}
+            thinkingBlocks={message.thinkingBlocks}
+          />
         ) : (
           <Text>{message.content}</Text>
         )}

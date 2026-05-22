@@ -4,27 +4,45 @@ import { Box, Text } from 'ink';
 import { useTheme } from '../../hooks/useTheme';
 
 interface AssistantMessageProps {
-  content: string; // plain text representation (our useRuntime currently builds this)
+  content: string;
   thinkingBlocks?: string[];
-  // In future, accept full message with content blocks
+  hideThinkingBlock?: boolean;
+  hiddenThinkingLabel?: string;
 }
 
-export const AssistantMessage: React.FC<AssistantMessageProps> = ({ content, thinkingBlocks }) => {
+export const AssistantMessage: React.FC<AssistantMessageProps> = ({
+  content,
+  thinkingBlocks,
+  hideThinkingBlock = false,
+  hiddenThinkingLabel = 'Thinking...',
+}) => {
   const { theme } = useTheme();
+
+  const renderThinking = () => {
+    if (!thinkingBlocks || thinkingBlocks.length === 0) return null;
+
+    if (hideThinkingBlock) {
+      return (
+        <Text italic color={theme.thinkingText || theme.dim}>
+          {hiddenThinkingLabel}
+        </Text>
+      );
+    }
+
+    return (
+      <Box flexDirection="column">
+        {thinkingBlocks.map((tb, i) => (
+          <Text key={i} italic color={theme.thinkingText || theme.dim}>
+            [Thinking: {tb}]
+          </Text>
+        ))}
+      </Box>
+    );
+  };
 
   return (
     <Box flexDirection="column">
-      {/* Thinking blocks if any */}
-      {thinkingBlocks && thinkingBlocks.length > 0 && (
-        <Box flexDirection="column" marginBottom={1}>
-          {thinkingBlocks.map((tb, i) => (
-            <Text key={i} italic color={theme.thinkingText || theme.dim}>
-              [Thinking: {tb}]
-            </Text>
-          ))}
-        </Box>
-      )}
-      {/* Main text */}
+      {renderThinking()}
       <Text>{content}</Text>
     </Box>
   );
