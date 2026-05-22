@@ -1041,7 +1041,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         {(steeringMessages.length > 0 || followUpMessages.length > 0) && (
           <Box borderBottom paddingX={1}>
             <Text color="yellow" dim>
-              Queued: {steeringMessages.length} steer, {followUpMessages.length} follow-up (Ctrl+E to edit)
+              Queued: {steeringMessages.length} steer, {followUpMessages.length} follow-up (Ctrl+Alt+E to edit)
             </Text>
           </Box>
         )}
@@ -1087,7 +1087,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         'Ctrl+T: Thinking',
         'Ctrl+Shift+T: Toggle Theme',
         'Ctrl+R: Resume Session',
-        'Ctrl+E: Edit',
+        'Ctrl+Alt+E: Edit',
         'Ctrl+D: Debug',
         'Ctrl+C: Quit'
       ]} />

@@ -25,7 +25,7 @@ export const HotkeysModal: React.FC<HotkeysModalProps> = ({ onClose }) => {
     { key: 'Ctrl+Shift+T', desc: 'Toggle theme' },
     { key: 'Ctrl+L', desc: 'Login' },
     { key: 'Ctrl+R', desc: 'Resume session' },
-    { key: 'Ctrl+E', desc: 'Edit input in external editor' },
+    { key: 'Ctrl+Alt+E', desc: 'Edit input in external editor' },
     { key: 'Ctrl+D', desc: 'Toggle debug mode' },
     { key: 'Ctrl+C', desc: 'Exit application' },
     { key: 'Tab', desc: 'Autocomplete / command palette' },
