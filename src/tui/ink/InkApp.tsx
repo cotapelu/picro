@@ -25,6 +25,7 @@ import { TreeSelectorModal } from './modals/TreeSelectorModal';
 import { BashOutputModal } from './modals/BashOutputModal';
 import { Modal } from './modals/Modal';
 import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands';
+import { VERSION } from '../../config';
 
 interface InkAppInnerProps {
   runtime: AgentSessionRuntimeInterface;
@@ -922,6 +923,24 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   }
   const resourceCounts = { extensions: extCount, skills: skillCount, prompts: promptCount, themes: themeCount };
+
+  // Check for latest version on startup
+  React.useEffect(() => {
+    const checkVersion = async () => {
+      try {
+        const res = await fetch('https://registry.npmjs.org/picro');
+        if (!res.ok) return;
+        const data = await res.json();
+        const latest = data?.['dist-tags']?.latest;
+        if (latest && latest !== VERSION) {
+          addToast(`New version ${latest} available (current: ${VERSION})`, 'info');
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    checkVersion();
+  }, [addToast]);
 
   return (
     <Box flexDirection="column" width="100%" position="relative">
