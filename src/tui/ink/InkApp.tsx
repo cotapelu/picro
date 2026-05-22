@@ -565,6 +565,9 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         handleDebugCommand();
         addToast('Debug log written', 'success');
         break;
+      case 'help':
+        setActiveModal({ type: 'help' });
+        break;
       case 'arminsayshi':
         setActiveModal({ type: 'armin' });
         break;
