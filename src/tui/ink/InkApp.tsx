@@ -883,6 +883,26 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const modelId = (runtime.session as any)?.model?.id || 'No model';
   const themeLabel = isDark ? 'dark' : 'light';
 
+  // Compute resource counts for display
+  const session = runtime.session as any;
+  const resourceLoader = session._resourceLoader;
+  let extCount = 0, skillCount = 0, promptCount = 0, themeCount = 0;
+  if (resourceLoader) {
+    try {
+      const extResult = resourceLoader.getExtensions?.();
+      if (extResult?.extensions?.length) extCount = extResult.extensions.length;
+      const skillsResult = resourceLoader.getSkills?.();
+      if (skillsResult?.skills?.length) skillCount = skillsResult.skills.length;
+      const promptsResult = resourceLoader.getPromptTemplates?.();
+      if (promptsResult?.length) promptCount = promptsResult.length;
+      const themesResult = resourceLoader.getThemes?.();
+      if (themesResult?.themes?.length) themeCount = themesResult.themes.length;
+    } catch (e) {
+      // ignore errors
+    }
+  }
+  const resourceCounts = { extensions: extCount, skills: skillCount, prompts: promptCount, themes: themeCount };
+
   return (
     <Box flexDirection="column" width="100%" position="relative">
       <Header
@@ -892,6 +912,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         model={modelId}
         theme={themeLabel}
         showArmin={true}
+        resourceCounts={resourceCounts}
       />
       <Box flexGrow={1} overflow="hidden" position="relative">
         {/* Pending messages indicator */}
