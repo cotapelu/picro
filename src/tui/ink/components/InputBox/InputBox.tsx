@@ -30,6 +30,7 @@ interface InputBoxProps {
   cwd?: string;
   onPathComplete?: (partial: string) => Promise<string[]>;
   onExternalEdit?: (text: string) => Promise<string> | string;
+  onAutocomplete?: (filter: string) => Promise<string[]>;
 }
 
 export const InputBox: React.FC<InputBoxProps> = ({
@@ -45,6 +46,7 @@ export const InputBox: React.FC<InputBoxProps> = ({
   cwd,
   onPathComplete,
   onExternalEdit,
+  onAutocomplete,
 }) => {
   const { theme } = useTheme();
   const [cursorPosition, setCursorPosition] = useState(value.length);
@@ -188,32 +190,39 @@ export const InputBox: React.FC<InputBoxProps> = ({
       return;
     }
 
-    // Tab - autocomplete (path or command)
+    // Tab - autocomplete (path completion + extension providers)
     if (key.tab) {
-      let handled = false;
-      if (onPathComplete && cwd) {
-        const before = value.slice(0, cursorPosition);
-        const lastSpace = before.lastIndexOf(' ');
-        const tokenStart = lastSpace === -1 ? 0 : lastSpace + 1;
-        const partial = before.slice(tokenStart);
-        if (partial.includes('/')) {
-          const completions = await onPathComplete(partial);
-          if (completions.length > 0) {
-            let replacement: string;
-            if (completions.length === 1) {
-              replacement = completions[0];
-            } else {
-              const common = getCommonPrefix(completions);
-              replacement = common.length > partial.length ? common : completions[0];
-            }
-            const newValue = value.slice(0, tokenStart) + replacement + value.slice(cursorPosition);
-            onChange(newValue);
-            setCursorPosition(tokenStart + replacement.length);
-            handled = true;
-          }
-        }
+      const before = value.slice(0, cursorPosition);
+      const lastSpace = before.lastIndexOf(' ');
+      const tokenStart = lastSpace === -1 ? 0 : lastSpace + 1;
+      const partial = before.slice(tokenStart);
+      const completions: string[] = [];
+      // Path completion (if token contains '/' and onPathComplete provided)
+      if (onPathComplete && partial.includes('/')) {
+        try {
+          const pathCompletions = await onPathComplete(partial);
+          completions.push(...pathCompletions);
+        } catch {}
       }
-      if (!handled) {
+      // Generic autocomplete from extension providers
+      if (!completions.length && onAutocomplete && partial.length > 0) {
+        try {
+          const autoCompletions = await onAutocomplete(partial);
+          completions.push(...autoCompletions);
+        } catch {}
+      }
+      if (completions.length > 0) {
+        let replacement: string;
+        if (completions.length === 1) {
+          replacement = completions[0];
+        } else {
+          const common = getCommonPrefix(completions);
+          replacement = common.length > partial.length ? common : completions[0];
+        }
+        const newValue = value.slice(0, tokenStart) + replacement + value.slice(cursorPosition);
+        onChange(newValue);
+        setCursorPosition(tokenStart + replacement.length);
+      } else {
         onTab?.();
       }
       return;

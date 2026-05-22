@@ -995,8 +995,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const resourceCounts = { extensions: extCount, skills: skillCount, prompts: promptCount, themes: themeCount };
 
   // Extension widget management (above editor)
-  const [extensionWidgetsAbove, setExtensionWidgetsAbove] = React.useState<Map<string, string>>(new Map());
-  const [extensionWidgetsBelow, setExtensionWidgetsBelow] = React.useState<Map<string, string>>(new Map());
+  const [extensionWidgetsAbove, setExtensionWidgetsAbove] = React.useState<Map<string, string>>(new Map<string, string>());
+  const [extensionWidgetsBelow, setExtensionWidgetsBelow] = React.useState<Map<string, string>>(new Map<string, string>());
   const setExtensionWidget = React.useCallback((key: string, content: any, options?: any) => {
     const placement = options?.placement || 'above';
     if (placement === 'above') {
@@ -1015,6 +1015,29 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       });
     }
   }, []);
+
+  // Autocomplete provider management
+  type AutocompleteProvider = (ctx: {sessionId: string; cwd: string; filter: string}) => Promise<Array<{label: string; description?: string; insertText?: string}>>;
+  const [autocompleteProviderFactories, setAutocompleteProviderFactories] = React.useState<AutocompleteProvider[]>([]);
+  const registerAutocompleteProvider = React.useCallback((factory: AutocompleteProvider) => {
+    setAutocompleteProviderFactories(prev => [...prev, factory]);
+  }, []);
+
+  const handleAutocomplete = useCallback(async (filter: string): Promise<string[]> => {
+    const ctx = { sessionId: '', cwd: runtime.cwd, filter };
+    const suggestions: string[] = [];
+    for (const factory of autocompleteProviderFactories) {
+      try {
+        const result = await factory(ctx);
+        for (const item of result) {
+          suggestions.push(item.insertText || item.label);
+        }
+      } catch {
+        // ignore provider errors
+      }
+    }
+    return suggestions;
+  }, [runtime.cwd, autocompleteProviderFactories]);
 
   // Custom header/footer replacement
   const [customHeader, setCustomHeader] = React.useState<React.ReactNode>(null);
@@ -1183,6 +1206,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         cwd={runtime.cwd}
         onPathComplete={handlePathComplete}
         onExternalEdit={handleExternalEdit}
+        onAutocomplete={handleAutocomplete}
       />
       {extensionWidgetsBelow.size > 0 && (
         <Box flexDirection="column" paddingX={1} borderTop="thin">
