@@ -27,6 +27,7 @@ import { Modal } from './modals/Modal';
 import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands';
 import { VERSION } from '../../config';
 
+
 interface InkAppInnerProps {
   runtime: AgentSessionRuntimeInterface;
 }
@@ -80,7 +81,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     const maxAttempts = 3; // should get from runtime? For now hardcoded
     displayStatus = `Retrying (${retryAttempt}/${maxAttempts}) in ${retryCountdown}s... (Esc to cancel)`;
   }
-  const { toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark, theme } = useTheme();
   const [inputValue, setInputValue] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [activeModal, setActiveModal] = React.useState<ModalState>(null);
@@ -954,6 +955,57 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   }
   const resourceCounts = { extensions: extCount, skills: skillCount, prompts: promptCount, themes: themeCount };
+
+  // Create ExtensionUIContext factory
+  const createExtensionUIContext = () => ({
+    select: (title: string, options: readonly string[], opts?: any) => Promise.reject(new Error('Extension select not implemented')),
+    confirm: (title: string, message: string, opts?: any) => Promise.reject(new Error('Extension confirm not implemented')),
+    input: (title: string, placeholder?: string, opts?: any) => Promise.reject(new Error('Extension input not implemented')),
+    notify: (message: string, type: 'info' | 'warning' | 'error' = 'info') => addToast(message, type as any),
+    onTerminalInput: (handler: any) => { return () => {}; },
+    setStatus: (key: string, text: string | undefined) => {},
+    setWorkingMessage: (message?: string) => {},
+    setWorkingIndicator: (options?: any) => {},
+    setHiddenThinkingLabel: setHideThinkingBlock,
+    setWidget: (key: string, content: any, options?: any) => {},
+    setFooter: (factory: any) => {},
+    setHeader: (factory: any) => {},
+    setTitle: (title: string) => { try { process.title = title; } catch {} },
+    custom: (factory: any, options?: any) => Promise.reject(new Error('Extension custom not implemented')),
+    pasteToEditor: (text: string) => setInputValue(prev => prev + text),
+    setEditorText: (text: string) => setInputValue(text),
+    getEditorText: () => inputValue,
+    editor: (title: string, prefill?: string) => Promise.resolve(prefill),
+    addAutocompleteProvider: (factory: any) => {},
+    setEditorComponent: (factory: any) => {},
+    get theme() { return theme; },
+    getAllThemes: () => [],
+    getTheme: (name: string) => null,
+    setTheme: () => ({ success: true }),
+    getToolsExpanded: () => toolOutputExpanded,
+    setToolsExpanded: (expanded: boolean) => setToolOutputExpanded(expanded),
+  });
+
+  // Bind extensions on mount
+  React.useEffect(() => {
+    const session = runtime.session as any;
+    if (session?.bindExtensions && !session.__picroBound) {
+      session.bindExtensions({
+        uiContext: createExtensionUIContext(),
+        commandContextActions: {
+          waitForIdle: async () => {},
+          newSession: async (options: any) => ({ cancelled: true }),
+          fork: async (entryId: string, options: any) => ({ cancelled: true }),
+          navigateTree: async (targetId: string, options: any) => ({ cancelled: true }),
+          switchSession: async (path: string, options: any) => ({ cancelled: true }),
+          reload: async () => {}
+        },
+        shutdownHandler: () => {},
+        onError: (err: any) => console.error('Extension error:', err)
+      });
+      session.__picroBound = true;
+    }
+  }, [runtime, createExtensionUIContext]);
 
   // Check for latest version on startup
   React.useEffect(() => {
