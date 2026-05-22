@@ -112,6 +112,20 @@ export const Footer: React.FC<FooterProps> = ({ runtime, hints = [], autoCompact
     }
     if (hints.length > 0) rightParts.push('·');
   }
+  // Performance metrics if tracking enabled
+  const perfStats = (() => {
+    try {
+      const session = runtime.session as any;
+      return session?.getPerformanceStats?.() ?? null;
+    } catch {
+      return null;
+    }
+  })();
+  if (perfStats && perfStats.sampleCount > 0) {
+    if (tokenStats) rightParts.push('·'); // separator
+    rightParts.push(`CPU:${perfStats.avgCpuUserMS.toFixed(1)}ms`);
+    rightParts.push(`RSS:${perfStats.avgRSSMB.toFixed(1)}MB`);
+  }
   if (hints.length > 0) {
     rightParts.push(hints.join(' | '));
   }

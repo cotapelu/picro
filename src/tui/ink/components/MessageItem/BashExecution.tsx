@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
 import { useTheme } from '../../hooks/useTheme';
+import { sanitizeAndTruncate } from '../../utils/output-guards';
 
 interface BashExecutionProps {
   command: string;
@@ -41,7 +42,7 @@ export const BashExecution: React.FC<BashExecutionProps> = ({
       </Box>
       {showOutput && output && (
         <Box marginLeft={2} flexDirection="column">
-          <Text color={theme.dim}>{output}</Text>
+          <Text color={theme.dim}>{sanitizeAndTruncate(output)}</Text>
         </Box>
       )}
     </Box>

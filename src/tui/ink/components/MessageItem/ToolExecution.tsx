@@ -3,6 +3,7 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import { useTheme } from '../../hooks/useTheme';
 import type { ToolCall } from '../../types';
+import { sanitizeAndTruncate } from '../../utils/output-guards';
 
 interface ToolExecutionProps {
   toolCall: ToolCall;
@@ -49,7 +50,7 @@ export const ToolExecution: React.FC<ToolExecutionProps> = ({ toolCall, expanded
           <Text color={theme.dim}>Input: {renderArgs()}</Text>
           {toolCall.result && (
             <Text color={toolCall.status === 'error' ? theme.error : theme.dim}>
-              Output: {renderResult()}
+              Output: {sanitizeAndTruncate(renderResult() ?? '')}
             </Text>
           )}
         </Box>
