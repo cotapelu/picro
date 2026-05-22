@@ -13,12 +13,14 @@ interface MessageItemProps {
   theme?: any;
   onToolToggle?: (toolId: string) => void;
   expandedTools?: Set<string>;
+  hideThinkingBlock?: boolean;
 }
 
 export const MessageItem: React.FC<MessageItemProps> = ({
   message,
   onToolToggle,
-  expandedTools = new Set()
+  expandedTools = new Set(),
+  hideThinkingBlock = false,
 }) => {
   const { theme } = useTheme();
   const renderContent = (content: string) => {
@@ -75,6 +77,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           <AssistantMessage
             content={message.content}
             thinkingBlocks={message.thinkingBlocks}
+            hideThinkingBlock={hideThinkingBlock}
           />
         )}
         {message.role === 'bashExecution' && (
