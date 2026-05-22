@@ -51,7 +51,34 @@ type ModalState =
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
-  const { messages, status, thinkingLevel, sendMessage } = useRuntime(runtime as any);
+  const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt } = useRuntime(runtime as any);
+  const [retryCountdown, setRetryCountdown] = React.useState(0);
+
+  // Retry countdown timer
+  React.useEffect(() => {
+    if (retryAttempt > 0) {
+      setRetryCountdown(3); // Assuming 3-second delay; could be configurable
+      const timer = setInterval(() => {
+        setRetryCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [retryAttempt]);
+
+  // Compute status display
+  let displayStatus = runtimeStatus || 'Ready';
+  if (isCompacting) {
+    displayStatus = 'Compacting... (Esc to cancel)';
+  } else if (retryAttempt > 0) {
+    const maxAttempts = 3; // should get from runtime? For now hardcoded
+    displayStatus = `Retrying (${retryAttempt}/${maxAttempts}) in ${retryCountdown}s... (Esc to cancel)`;
+  }
   const { toggleTheme, isDark } = useTheme();
   const [inputValue, setInputValue] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -806,6 +833,14 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           setActiveModal({ type: 'command-palette', filter: '', isSlash: false });
         }}
       />
+      {/* Status line for compaction/retry */}
+      {(isCompacting || retryAttempt > 0) && (
+        <Box paddingX={1}>
+          <Text color={isCompacting ? 'yellow' : 'orange'}>
+            {displayStatus}
+          </Text>
+        </Box>
+      )}
       <Footer runtime={runtime} hints={[
         'Ctrl+P: Commands',
         'Ctrl+T: Thinking',
