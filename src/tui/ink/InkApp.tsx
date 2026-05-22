@@ -57,7 +57,7 @@ type ModalState =
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
-  const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt, steeringMessages, followUpMessages, toolOutputExpanded, setToolOutputExpanded, hideThinkingBlock, setHideThinkingBlock, currentModel } = useRuntime(runtime as any);
+  const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt, steeringMessages, followUpMessages, toolOutputExpanded, setToolOutputExpanded, hideThinkingBlock, setHideThinkingBlock, hiddenThinkingLabel, setHiddenThinkingLabel, currentModel } = useRuntime(runtime as any);
   const [retryCountdown, setRetryCountdown] = React.useState(0);
 
   // Retry countdown timer
@@ -1053,7 +1053,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     setStatus: (key: string, text: string | undefined) => {},
     setWorkingMessage: (message?: string) => {},
     setWorkingIndicator: (options?: any) => {},
-    setHiddenThinkingLabel: setHideThinkingBlock,
+    setHiddenThinkingLabel: setHiddenThinkingLabel,
     setWidget: (key: string, content: any, options?: any) => { setExtensionWidget(key, content, options); },
     setFooter: (factory: any) => {},
     setHeader: (factory: any) => {},
