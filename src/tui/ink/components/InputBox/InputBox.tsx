@@ -3,6 +3,20 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { useTheme } from '../../hooks/useTheme';
 
+function getCommonPrefix(strings: string[]): string {
+  if (strings.length === 0) return '';
+  const first = strings[0];
+  for (let i = 0; i < first.length; i++) {
+    const char = first[i];
+    for (let j = 1; j < strings.length; j++) {
+      if (strings[j][i] !== char) {
+        return first.slice(0, i);
+      }
+    }
+  }
+  return first;
+}
+
 interface InputBoxProps {
   value: string;
   onChange: (value: string) => void;
@@ -13,6 +27,8 @@ interface InputBoxProps {
   autoFocus?: boolean;
   onSlashCommand?: (prefix: string) => void;
   onTab?: () => void;
+  cwd?: string;
+  onPathComplete?: (partial: string) => Promise<string[]>;
 }
 
 export const InputBox: React.FC<InputBoxProps> = ({
@@ -25,6 +41,8 @@ export const InputBox: React.FC<InputBoxProps> = ({
   autoFocus = true,
   onSlashCommand,
   onTab,
+  cwd,
+  onPathComplete,
 }) => {
   const { theme } = useTheme();
   const [cursorPosition, setCursorPosition] = useState(value.length);
@@ -67,7 +85,7 @@ export const InputBox: React.FC<InputBoxProps> = ({
   }, [onChange]);
 
   // Handle input
-  useInput((input, key) => {
+  useInput(async (input, key) => {
     if (disabled) return;
 
     // Submit with Enter
@@ -168,9 +186,34 @@ export const InputBox: React.FC<InputBoxProps> = ({
       return;
     }
 
-    // Tab - autocomplete
+    // Tab - autocomplete (path or command)
     if (key.tab) {
-      onTab?.();
+      let handled = false;
+      if (onPathComplete && cwd) {
+        const before = value.slice(0, cursorPosition);
+        const lastSpace = before.lastIndexOf(' ');
+        const tokenStart = lastSpace === -1 ? 0 : lastSpace + 1;
+        const partial = before.slice(tokenStart);
+        if (partial.includes('/')) {
+          const completions = await onPathComplete(partial);
+          if (completions.length > 0) {
+            let replacement: string;
+            if (completions.length === 1) {
+              replacement = completions[0];
+            } else {
+              const common = getCommonPrefix(completions);
+              replacement = common.length > partial.length ? common : completions[0];
+            }
+            const newValue = value.slice(0, tokenStart) + replacement + value.slice(cursorPosition);
+            onChange(newValue);
+            setCursorPosition(tokenStart + replacement.length);
+            handled = true;
+          }
+        }
+      }
+      if (!handled) {
+        onTab?.();
+      }
       return;
     }
 

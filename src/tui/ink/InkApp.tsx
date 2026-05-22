@@ -586,9 +586,6 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         handleDebugCommand();
         addToast('Debug log written', 'success');
         break;
-      case 'help':
-        setActiveModal({ type: 'help' });
-        break;
       case 'arminsayshi':
         setActiveModal({ type: 'armin' });
         break;
@@ -666,6 +663,27 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       addToast(`Tree navigation failed: ${err.message}`, 'error');
     }
   }, [runtime, addToast]);
+
+  // Path autocomplete using fd
+  const handlePathComplete = useCallback(async (partial: string): Promise<string[]> => {
+    if (!runtime.cwd) return [];
+    try {
+      const { execFile } = await import('node:child_process');
+      return new Promise<string[]>((resolve) => {
+        execFile('fd', ['--color', 'never', '--base-path', '.', '--', partial + '*'], { cwd: runtime.cwd }, (err, stdout) => {
+          if (err) {
+            resolve([]);
+            return;
+          }
+          const files = stdout.trim().split('\n').filter(Boolean);
+          resolve(files);
+        });
+      });
+    } catch (e) {
+      console.error('fd autocomplete error:', e);
+      return [];
+    }
+  }, [runtime.cwd]);
 
   // Render active modal
   const renderModal = () => {
@@ -909,6 +927,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           // Autocomplete: open command palette with all commands
           setActiveModal({ type: 'command-palette', filter: '', isSlash: false });
         }}
+        cwd={runtime.cwd}
+        onPathComplete={handlePathComplete}
       />
       {/* Status line for compaction/retry */}
       {(isCompacting || retryAttempt > 0) && (
