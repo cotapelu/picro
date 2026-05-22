@@ -23,6 +23,9 @@ export class ExtensionRunner {
   private extensions: Extension[] = [];
   private runtime: ExtensionRuntime;
   private handlers: Map<string, Set<Function>> = new Map();
+  private _uiContext?: any;
+  private _commandContextActions?: any;
+  private _errorListener?: (error: any) => void;
 
   constructor(runtime?: ExtensionRuntime) {
     this.runtime = runtime ?? createExtensionRuntime();
@@ -175,6 +178,47 @@ export class ExtensionRunner {
     // Clear all handlers
     this.handlers.clear();
     this.extensions = [];
+  }
+
+  // =========================================================================
+  // UI Binding Support
+  // =========================================================================
+
+  setUIContext(uiContext: any): void {
+    this._uiContext = uiContext;
+  }
+
+  bindCommandContext(actions: any): void {
+    this._commandContextActions = actions;
+  }
+
+  bindCore(actions: any): void {
+    Object.assign(this.runtime, actions);
+  }
+
+  onError(handler: (error: any) => void): () => void {
+    // For simplicity store single; should support multiple
+    this._errorListener = handler;
+    return () => { this._errorListener = undefined; };
+  }
+
+  createContext(): any {
+    return {
+      ui: this._uiContext,
+      hasUI: !!this._uiContext,
+      cwd: '',
+      sessionManager: null,
+      modelRegistry: null,
+      model: undefined,
+      isIdle: () => false,
+      signal: undefined,
+      abort: () => {},
+      hasPendingMessages: () => false,
+      shutdown: () => {},
+      getContextUsage: () => undefined,
+      compact: () => {},
+      getSystemPrompt: () => '',
+    };
   }
 
   /**

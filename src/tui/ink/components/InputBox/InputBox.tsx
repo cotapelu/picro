@@ -219,8 +219,8 @@ export const InputBox: React.FC<InputBoxProps> = ({
       return;
     }
 
-    // External editor (Ctrl+E)
-    if (key.ctrl && input === 'e') {
+    // External editor (Ctrl+Alt+E)
+    if (key.ctrl && input === 'e' && key.alt) {
       if (onExternalEdit) {
         const edited = await onExternalEdit(value);
         onChange(edited);

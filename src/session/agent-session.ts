@@ -123,6 +123,12 @@ export class AgentSession {
   private _config: any;
   // Extension runner
   private _extensionRunner?: any;
+  // Extension UI binding
+  private _extensionUIContext?: any;
+  private _extensionCommandContextActions?: any;
+  private _extensionShutdownHandler?: () => void;
+  private _extensionErrorListener?: (error: any) => void;
+  private _sessionStartEvent?: any;
   // Queue size limits
   private _maxSteeringQueueSize?: number;
   private _maxFollowUpQueueSize?: number;
@@ -1046,6 +1052,37 @@ export class AgentSession {
           this.agent.registerTool(def);
         }
       }
+    }
+  }
+
+  // =========================================================================
+  // Extension Binding
+  // =========================================================================
+
+  async bindExtensions(bindings: {
+    uiContext?: any;
+    commandContextActions?: any;
+    shutdownHandler?: () => void;
+    onError?: (error: any) => void;
+  }): Promise<void> {
+    if (bindings.uiContext !== undefined) this._extensionUIContext = bindings.uiContext;
+    if (bindings.commandContextActions !== undefined) this._extensionCommandContextActions = bindings.commandContextActions;
+    if (bindings.shutdownHandler !== undefined) this._extensionShutdownHandler = bindings.shutdownHandler;
+    if (bindings.onError !== undefined) this._extensionErrorListener = bindings.onError;
+
+    this._applyExtensionBindings(this._extensionRunner!);
+    await this._extensionRunner?.emit(this._sessionStartEvent ?? { type: "session_start", reason: "startup" });
+  }
+
+  private _applyExtensionBindings(runner: any): void {
+    if (runner.setUIContext && this._extensionUIContext) {
+      runner.setUIContext(this._extensionUIContext);
+    }
+    if (runner.bindCommandContext && this._extensionCommandContextActions) {
+      runner.bindCommandContext(this._extensionCommandContextActions);
+    }
+    if (this._extensionErrorListener && runner.onError) {
+      runner.onError(this._extensionErrorListener);
     }
   }
 
