@@ -226,7 +226,14 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
 
   const handleCommandSelect = useCallback(async (commandId: string, slashArgs?: string) => {
     setActiveModal(null);
-    setInputValue(''); // Clear input
+
+    const builtIn = BUILTIN_SLASH_COMMANDS.find(cmd => cmd.name === commandId);
+
+    if (!builtIn) {
+      // Non-built-in: insert into input for sending as user message
+      setInputValue(commandId);
+      return;
+    }
 
     // Extract args after command name if present
     let args = '';
@@ -588,7 +595,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         addToast(`Command "/${commandId}" not yet implemented`, 'info');
         break;
     }
-  }, [runtime, messages, addToast]);
+    setInputValue('');
+  }, [runtime, messages, addToast, setActiveModal, setInputValue, BUILTIN_SLASH_COMMANDS]);
 
   const handleThinkingChange = useCallback((level: string) => {
     setActiveModal(null);
