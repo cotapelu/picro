@@ -956,6 +956,18 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   }
   const resourceCounts = { extensions: extCount, skills: skillCount, prompts: promptCount, themes: themeCount };
 
+  // Extension widget management (above editor)
+  const [extensionWidgetsAbove, setExtensionWidgetsAbove] = React.useState<Map<string, string>>(new Map());
+  const setExtensionWidget = React.useCallback((key: string, content: any, options?: any) => {
+    if (options?.placement !== 'above') return; // only above supported for now
+    setExtensionWidgetsAbove(prev => {
+      const next = new Map(prev);
+      if (content == null) next.delete(key);
+      else if (typeof content === 'string') next.set(key, content);
+      return next;
+    });
+  }, []);
+
   // Create ExtensionUIContext factory
   const createExtensionUIContext = () => ({
     select: (title: string, options: readonly string[], opts?: any) => Promise.reject(new Error('Extension select not implemented')),
@@ -967,7 +979,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     setWorkingMessage: (message?: string) => {},
     setWorkingIndicator: (options?: any) => {},
     setHiddenThinkingLabel: setHideThinkingBlock,
-    setWidget: (key: string, content: any, options?: any) => {},
+    setWidget: (key: string, content: any, options?: any) => { setExtensionWidget(key, content, options); },
     setFooter: (factory: any) => {},
     setHeader: (factory: any) => {},
     setTitle: (title: string) => { try { process.title = title; } catch {} },
@@ -1056,6 +1068,13 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           </Box>
         )}
       </Box>
+      {extensionWidgetsAbove.size > 0 && (
+        <Box flexDirection="column" paddingX={1} borderTop="thin">
+          {Array.from(extensionWidgetsAbove.entries()).map(([key, text]) => (
+            <Text key={key}>{text}</Text>
+          ))}
+        </Box>
+      )}
       <InputBox
         value={inputValue}
         onChange={setInputValue}
