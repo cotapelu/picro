@@ -144,11 +144,11 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   React.useEffect(() => {
     const checkVersion = async () => {
       try {
-        const response = await fetch('https://registry.npmjs.org/@mariozechner/pi-coding-agent/latest', { signal: AbortSignal.timeout(5000) });
+        const response = await fetch('https://registry.npmjs.org/@picro/picro/latest', { signal: AbortSignal.timeout(5000) });
         if (response.ok) {
           const data = await response.json();
           const latest = data.version;
-          const current = '0.0.1'; // TODO: get from package.json dynamically
+          const current = VERSION;
           if (latest && latest !== current) {
             addToast(`New version available: ${latest} (current: ${current})`, 'info');
             // Auto-open changelog modal
