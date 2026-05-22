@@ -996,15 +996,29 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
 
   // Extension widget management (above editor)
   const [extensionWidgetsAbove, setExtensionWidgetsAbove] = React.useState<Map<string, string>>(new Map());
+  const [extensionWidgetsBelow, setExtensionWidgetsBelow] = React.useState<Map<string, string>>(new Map());
   const setExtensionWidget = React.useCallback((key: string, content: any, options?: any) => {
-    if (options?.placement !== 'above') return; // only above supported for now
-    setExtensionWidgetsAbove(prev => {
-      const next = new Map(prev);
-      if (content == null) next.delete(key);
-      else if (typeof content === 'string') next.set(key, content);
-      return next;
-    });
+    const placement = options?.placement || 'above';
+    if (placement === 'above') {
+      setExtensionWidgetsAbove(prev => {
+        const next = new Map(prev);
+        if (content == null) next.delete(key);
+        else if (typeof content === 'string') next.set(key, content);
+        return next;
+      });
+    } else if (placement === 'below') {
+      setExtensionWidgetsBelow(prev => {
+        const next = new Map(prev);
+        if (content == null) next.delete(key);
+        else if (typeof content === 'string') next.set(key, content);
+        return next;
+      });
+    }
   }, []);
+
+  // Custom header/footer replacement
+  const [customHeader, setCustomHeader] = React.useState<React.ReactNode>(null);
+  const [customFooter, setCustomFooter] = React.useState<React.ReactNode>(null);
 
   // Extension UI dialog helpers
   const showConfirm = (title: string, message: string, opts?: any): Promise<boolean> => {
@@ -1055,8 +1069,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     setWorkingIndicator: (options?: any) => {},
     setHiddenThinkingLabel: setHiddenThinkingLabel,
     setWidget: (key: string, content: any, options?: any) => { setExtensionWidget(key, content, options); },
-    setFooter: (factory: any) => {},
-    setHeader: (factory: any) => {},
+    setFooter: setCustomFooter,
+    setHeader: setCustomHeader,
     setTitle: (title: string) => { try { process.title = title; } catch {} },
     custom: (factory: any, options?: any) => Promise.reject(new Error('Extension custom not implemented')),
     pasteToEditor: (text: string) => setInputValue(prev => prev + text),
@@ -1114,15 +1128,17 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
 
   return (
     <Box flexDirection="column" width="100%" position="relative">
-      <Header
-        title="Picro Agent"
-        status={status || 'Ready'}
-        thinkingLevel={thinkingLevel}
-        model={modelId}
-        theme={themeLabel}
-        showArmin={true}
-        resourceCounts={resourceCounts}
-      />
+      {customHeader || (
+        <Header
+          title="Picro Agent"
+          status={status || 'Ready'}
+          thinkingLevel={thinkingLevel}
+          model={modelId}
+          theme={themeLabel}
+          showArmin={true}
+          resourceCounts={resourceCounts}
+        />
+      )}
       <Box flexGrow={1} overflow="hidden" position="relative">
         {/* Pending messages indicator */}
         {(steeringMessages.length > 0 || followUpMessages.length > 0) && (
@@ -1168,6 +1184,13 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         onPathComplete={handlePathComplete}
         onExternalEdit={handleExternalEdit}
       />
+      {extensionWidgetsBelow.size > 0 && (
+        <Box flexDirection="column" paddingX={1} borderTop="thin">
+          {Array.from(extensionWidgetsBelow.entries()).map(([key, text]) => (
+            <Text key={key}>{text}</Text>
+          ))}
+        </Box>
+      )}
       {/* Status line for compaction/retry */}
       {(isCompacting || retryAttempt > 0) && (
         <Box paddingX={1}>
@@ -1176,7 +1199,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           </Text>
         </Box>
       )}
-      <Footer runtime={runtime} hints={[
+      {customFooter || <Footer runtime={runtime} hints={[
         'Ctrl+P: Commands',
         'Ctrl+T: Thinking',
         'Ctrl+Shift+T: Toggle Theme',
@@ -1184,7 +1207,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         'Ctrl+Alt+E: Edit',
         'Ctrl+D: Debug',
         'Ctrl+C: Quit'
-      ]} />
+      ]} />}
       {activeModal && renderModal()}
       {/* Toast notifications */}
       <Box flexDirection="column" position="absolute" top={0} right={0}>
