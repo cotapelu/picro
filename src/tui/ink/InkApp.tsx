@@ -51,7 +51,7 @@ type ModalState =
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
-  const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt, steeringMessages, followUpMessages } = useRuntime(runtime as any);
+  const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt, steeringMessages, followUpMessages, toolOutputExpanded, setToolOutputExpanded } = useRuntime(runtime as any);
   const [retryCountdown, setRetryCountdown] = React.useState(0);
 
   // Retry countdown timer
@@ -179,6 +179,10 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       } catch {
         // ignore
       }
+    } else if (key.ctrl && key.shift && input === 'x') {
+      // Toggle tool output expansion
+      setToolOutputExpanded(prev => !prev);
+      addToast('Tool output ' + (!toolOutputExpanded ? 'expanded' : 'collapsed'));
     } else if (key.ctrl && input === 'l') {
       setActiveModal({ type: 'login' });
     } else if (key.ctrl && input === 'r') {
