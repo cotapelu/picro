@@ -1036,6 +1036,9 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   }, []);
 
+  // Custom editor component support
+  const [customEditor, setCustomEditor] = React.useState<React.ComponentType<any> | null>(null);
+
   // Autocomplete provider management
   type AutocompleteProvider = (ctx: {sessionId: string; cwd: string; filter: string}) => Promise<Array<{label: string; description?: string; insertText?: string}>>;
   const [autocompleteProviderFactories, setAutocompleteProviderFactories] = React.useState<AutocompleteProvider[]>([]);
@@ -1129,7 +1132,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     getEditorText: () => inputValue,
     editor: (title: string, prefill?: string) => Promise.resolve(prefill),
     addAutocompleteProvider: (factory: any) => {},
-    setEditorComponent: (factory: any) => {},
+    setEditorComponent: setCustomEditor,
     get theme() { return theme; },
     getAllThemes: () => [],
     getTheme: (name: string) => null,
@@ -1177,6 +1180,25 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     checkVersion();
   }, [addToast]);
 
+  // Input editor (default or custom) props
+  const inputProps = {
+    value: inputValue,
+    onChange: setInputValue,
+    onSubmit: handleSubmit,
+    placeholder: 'Type your message...',
+    disabled: isSubmitting,
+    onSlashCommand: (prefix: string) => {
+      setActiveModal({ type: 'command-palette', filter: prefix, isSlash: true });
+    },
+    onTab: () => {
+      setActiveModal({ type: 'command-palette', filter: '', isSlash: false });
+    },
+    cwd: runtime.cwd,
+    onPathComplete: handlePathComplete,
+    onExternalEdit: handleExternalEdit,
+    onAutocomplete: handleAutocomplete,
+  };
+
   return (
     <Box flexDirection="column" width="100%" position="relative">
       {customHeader || (
@@ -1217,25 +1239,9 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           ))}
         </Box>
       )}
-      <InputBox
-        value={inputValue}
-        onChange={setInputValue}
-        onSubmit={handleSubmit}
-        placeholder="Type your message..."
-        disabled={isSubmitting}
-        onSlashCommand={(prefix) => {
-          // Open command palette with filter
-          setActiveModal({ type: 'command-palette', filter: prefix, isSlash: true });
-        }}
-        onTab={() => {
-          // Autocomplete: open command palette with all commands
-          setActiveModal({ type: 'command-palette', filter: '', isSlash: false });
-        }}
-        cwd={runtime.cwd}
-        onPathComplete={handlePathComplete}
-        onExternalEdit={handleExternalEdit}
-        onAutocomplete={handleAutocomplete}
-      />
+      {customEditor
+        ? React.createElement(customEditor, inputProps)
+        : <InputBox {...inputProps} />}
       {extensionWidgetsBelow.size > 0 && (
         <Box flexDirection="column" paddingX={1} borderTop="thin">
           {Array.from(extensionWidgetsBelow.entries()).map(([key, text]) => (
