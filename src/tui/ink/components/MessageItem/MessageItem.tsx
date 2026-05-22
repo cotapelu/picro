@@ -3,6 +3,8 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import { useTheme } from '../../hooks/useTheme';
 import type { Message, ToolCall } from '../../types';
+import { AssistantMessage } from './AssistantMessage';
+import { UserMessage } from './UserMessage';
 
 interface MessageItemProps {
   message: Message;
@@ -76,7 +78,13 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         </Text>
       )}
       <Box flexDirection="column" marginLeft={shouldShowRole ? 2 : 0}>
-        {renderContent(message.content || '')}
+        {message.role === 'user' ? (
+          <UserMessage text={message.content} />
+        ) : message.role === 'assistant' ? (
+          <AssistantMessage content={message.content} />
+        ) : (
+          <Text>{message.content}</Text>
+        )}
         {message.toolCalls && message.toolCalls.length > 0 && (
           <Box flexDirection="column">
             {renderToolCalls(message.toolCalls)}

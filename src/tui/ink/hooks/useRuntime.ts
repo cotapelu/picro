@@ -3,84 +3,103 @@ import { useEffect, useState, useCallback } from 'react';
 import type { Message, ToolCall } from '../types';
 import type { AgentSessionRuntimeEvent } from '../../../runtime';
 
-// Minimal types for agent session events (imported from runtime)
-interface AgentSessionInterface {
-  prompt(text: string, options?: { images?: unknown[] }): Promise<void>;
-  subscribe(listener: (event: AgentSessionRuntimeEvent) => void): () => void;
-  abort(): void;
-  messages: any[];
-  isStreaming: boolean;
-}
+// Extend runtime with session methods we need
+type ExtendedRuntime = import('../../../runtime').AgentSessionRuntimeInterface & {
+  session: {
+    messages: any[];
+    isStreaming: boolean;
+    thinkingLevel: string;
+    // Methods
+    prompt(text: string, options?: any): Promise<void>;
+    abort(): void;
+    getSteeringMessages(): readonly string[];
+    getFollowUpMessages(): readonly string[];
+    getToolDefinition(name: string): any;
+    cycleThinkingLevel(): string | undefined;
+    setModel(model: any): Promise<void>;
+    sessionManager: {
+      getSessionName(): string | undefined;
+      getEntries(): any[];
+      getCwd(): string;
+    };
+  };
+  settings?: { get?(key: string): any; set?(key: string, value: any): void; save?(): Promise<void> };
+};
 
-interface AgentSessionRuntimeInterface {
-  session: AgentSessionInterface;
-  // Thinking level (delegated to session)
-  thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
-  setThinkingLevel(level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh"): void;
-  // Settings
-  settings?: { get(key: string): any; set(key: string, value: any): void; save?(): Promise<void> };
-  // Auth
-  authStorage?: { setApiKey(provider: string, apiKey: string): Promise<void>; removeApiKey(provider: string): Promise<void>; };
-  // Clipboard
-  copyToClipboard?(text: string): Promise<void>;
-}
-
-// Convert from ConversationTurn to Message UI type
-function turnToMessage(turn: any): Message {
+function agentMessageToUiMessage(msg: any): Message | null {
+  if (!msg || typeof msg !== 'object') return null;
   let role: 'user' | 'assistant' | 'tool' = 'user';
   let content = '';
-  let toolCalls: any[] | undefined;
+  let toolCalls: ToolCall[] | undefined;
 
-  if (turn.role === 'user') {
+  if (msg.role === 'user') {
     role = 'user';
-    content = turn.content?.map((c: any) => c.type === 'text' ? c.text : '').join('') || '';
-  } else if (turn.role === 'assistant') {
+    if (typeof msg.content === 'string') {
+      content = msg.content;
+    } else if (Array.isArray(msg.content)) {
+      const textBlocks = msg.content.filter((c: any) => c.type === 'text');
+      content = textBlocks.map((c: any) => c.text).join('') || '';
+    }
+  } else if (msg.role === 'assistant') {
     role = 'assistant';
-    content = turn.content?.map((c: any) => {
-      if (c.type === 'text') return c.text;
-      if (c.type === 'thinking') return `[Thinking: ${c.thinking}]`;
-      return '';
-    }).join('') || '';
-    toolCalls = turn.content
-      ?.filter((c: any) => c.type === 'toolCall')
-      .map((c: any) => ({
+    if (Array.isArray(msg.content)) {
+      const textBlocks = msg.content.filter((c: any) => c.type === 'text');
+      content = textBlocks.map((c: any) => c.text).join('') || '';
+      const toolCallBlocks = msg.content.filter((c: any) => c.type === 'toolCall');
+      toolCalls = toolCallBlocks.map((c: any) => ({
         id: c.id,
         name: c.name,
         arguments: c.arguments,
         status: 'pending' as const,
       }));
-  } else if (turn.role === 'tool') {
+    } else if (typeof msg.content === 'string') {
+      content = msg.content;
+    }
+  } else if (msg.role === 'tool') {
     role = 'tool';
-    content = turn.content?.map((c: any) => c.text).join('') || '';
+    if (Array.isArray(msg.content)) {
+      content = msg.content.map((c: any) => c.text).join('') || '';
+    } else {
+      content = String(msg.content || '');
+    }
+  } else if (msg.role === 'custom' || msg.role === 'bashExecution' || msg.role === 'compactionSummary' || msg.role === 'branchSummary') {
+    role = 'assistant';
+    content = msg.content?.toString() || `[${msg.role}]`;
   }
 
   return {
-    id: turn.id || `msg-${Date.now()}`,
+    id: msg.id || `msg-${Date.now()}`,
     role,
     content,
-    timestamp: turn.timestamp || Date.now(),
+    timestamp: msg.timestamp || Date.now(),
     toolCalls,
     streaming: false,
   };
 }
 
-export function useRuntime(runtime: AgentSessionRuntimeInterface) {
+export function useRuntime(runtime: ExtendedRuntime) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState('Ready');
-  const [thinkingLevel, setThinkingLevel] = useState('medium');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isCompacting, setIsCompacting] = useState(false);
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [toolOutputExpanded, setToolOutputExpanded] = useState(false);
+  const [hideThinkingBlock, setHideThinkingBlock] = useState(false);
+  const [hiddenThinkingLabel, setHiddenThinkingLabel] = useState('Thinking...');
+  const [currentModel, setCurrentModel] = useState<any>(null);
+  const [thinkingLevel, setThinkingLevelState] = useState<any>(() => {
+    try { return runtime.thinkingLevel ?? 'medium'; } catch { return 'medium'; }
+  });
 
-  // Sync thinking level from runtime
-  useEffect(() => {
-    const level = runtime.thinkingLevel as any;
-    if (level) setThinkingLevel(level);
-  }, [runtime.thinkingLevel]);
+  const [steeringMessages, setSteeringMessages] = useState<string[]>([]);
+  const [followUpMessages, setFollowUpMessages] = useState<string[]>([]);
 
-  // Load initial messages on mount
+  // Load initial messages
   useEffect(() => {
-    if (runtime.session.messages) {
-      const initial = runtime.session.messages
-        .map(turnToMessage)
+    const sessionMsgs = runtime.session.messages;
+    if (Array.isArray(sessionMsgs)) {
+      const initial = sessionMsgs
+        .map(agentMessageToUiMessage)
         .filter((msg): msg is Message => msg !== null);
       setMessages(initial);
     }
@@ -88,7 +107,8 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
 
   // Subscribe to events
   useEffect(() => {
-    const unsubscribe = runtime.session.subscribe((event: AgentSessionRuntimeEvent) => {
+    const session = runtime.session as any;
+    const unsubscribe = session.subscribe((event: any) => {
       switch (event.type) {
         case 'agent_start':
           setIsStreaming(true);
@@ -98,93 +118,26 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
           setIsStreaming(false);
           setStatus('Ready');
           break;
-        case 'message_start': {
-          const e = event as { type: 'message_start'; message: { role: string; id?: string } };
-          setMessages((prev) => {
-            const newMsg: Message = {
-              id: e.message.id || `stream-${Date.now()}`,
-              role: e.message.role as any,
-              content: '',
-              timestamp: Date.now(),
-              streaming: true,
-            };
-            return [...prev, newMsg];
-          });
+        case 'queue_update':
+          setSteeringMessages(Array.isArray(event.steering) ? event.steering : []);
+          setFollowUpMessages(Array.isArray(event.followUp) ? event.followUp : []);
           break;
-        }
-        case 'message_update': {
-          const e = event as { type: 'message_update'; message: { role: string; id?: string; content?: unknown[] } };
-          setMessages((prev) =>
-            prev.map((msg) => {
-              if (msg.streaming && msg.id === e.message.id) {
-                const newContent = e.message.content
-                  ?.map((c: any) => {
-                    if (c.type === 'text') return c.text;
-                    if (c.type === 'thinking') return `[Thinking: ${c.thinking}]`;
-                    if (c.type === 'toolCall') return `[Tool: ${c.name}]`;
-                    return '';
-                  })
-                  .join('') || msg.content;
-                return { ...msg, content: newContent };
-              }
-              return msg;
-            })
-          );
+        case 'compaction_start':
+          setIsCompacting(true);
           break;
-        }
-        case 'message_end': {
-          const e = event as { type: 'message_end'; message: { role: string; id?: string; stopReason?: string } };
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.streaming && msg.id === e.message.id
-                ? { ...msg, streaming: false }
-                : msg
-            )
-          );
-          setIsStreaming(false);
-          setStatus('Ready');
+        case 'compaction_end':
+          setIsCompacting(false);
           break;
-        }
-        case 'tool_execution_start': {
-          const e = event as { type: 'tool_execution_start'; toolCallId: string; toolName: string; args: unknown };
-          setMessages((prev) =>
-            prev.map((msg) => {
-              if (msg.streaming && msg.role === 'assistant') {
-                const toolCall: ToolCall = {
-                  id: e.toolCallId,
-                  name: e.toolName,
-                  arguments: e.args as Record<string, unknown>,
-                  status: 'running',
-                };
-                return {
-                  ...msg,
-                  toolCalls: [...(msg.toolCalls || []), toolCall],
-                };
-              }
-              return msg;
-            })
-          );
+        case 'auto_retry_start':
+          setRetryAttempt(event.attempt ?? 0);
           break;
-        }
-        case 'tool_execution_end': {
-          const e = event as { type: 'tool_execution_end'; toolCallId: string; result: unknown; isError?: boolean };
-          setMessages((prev) =>
-            prev.map((msg) => {
-              if (msg.role === 'assistant' && msg.toolCalls) {
-                return {
-                  ...msg,
-                  toolCalls: msg.toolCalls.map((tc) =>
-                    tc.id === e.toolCallId
-                      ? { ...tc, status: 'done' as const, result: e.result } as ToolCall
-                      : tc
-                  ),
-                };
-              }
-              return msg;
-            })
-          );
+        case 'auto_retry_end':
+          setRetryAttempt(0);
           break;
-        }
+        case 'model_change':
+          setCurrentModel(event.model ?? null);
+          setThinkingLevelState(runtime.thinkingLevel ?? thinkingLevel);
+          break;
         case 'error':
           setStatus(`Error: ${event.error}`);
           break;
@@ -193,15 +146,19 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
       }
     });
 
-    return unsubscribe;
-  }, [runtime]);
+    // Set initial model
+    try {
+      setCurrentModel(session.model);
+    } catch {
+      setCurrentModel(null);
+    }
 
-  const sendMessage = useCallback(
-    async (text: string) => {
-      await runtime.session.prompt(text);
-    },
-    [runtime]
-  );
+    return unsubscribe;
+  }, [runtime, thinkingLevel]);
+
+  const sendMessage = useCallback(async (text: string) => {
+    await runtime.session.prompt(text);
+  }, [runtime]);
 
   const abort = useCallback(() => {
     runtime.session.abort();
@@ -209,56 +166,40 @@ export function useRuntime(runtime: AgentSessionRuntimeInterface) {
     setStatus('Aborted');
   }, [runtime]);
 
-  const setThinkingLevelPersist = useCallback(async (level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh") => {
-    runtime.setThinkingLevel(level);
-    setThinkingLevel(level);
-    // Also persist to settings if possible
+  const setThinkingLevel = useCallback(async (level: any) => {
+    runtime.setThinkingLevel(level as any);
+    setThinkingLevelState(level);
     try {
-      if (runtime.settings) {
+      if (runtime.settings?.set) {
         runtime.settings.set('defaultThinkingLevel', level);
         await runtime.settings.save?.();
       }
     } catch {
-      // ignore settings errors
+      // ignore
     }
-  }, [runtime]);
-
-  const login = useCallback(async (provider: string, apiKey: string) => {
-    if (!runtime.authStorage) throw new Error('Auth not available');
-    await runtime.authStorage.setApiKey(provider, apiKey);
-  }, [runtime]);
-
-  const logout = useCallback(async (provider: string) => {
-    if (!runtime.authStorage) throw new Error('Auth not available');
-    await runtime.authStorage.removeApiKey(provider);
-  }, [runtime]);
-
-  const copyToClipboard = useCallback(async (text: string) => {
-    if (runtime.copyToClipboard) {
-      await runtime.copyToClipboard(text);
-    } else {
-      // Fallback: just log
-      console.log('[clipboard]', text);
-    }
-  }, [runtime]);
-
-  const clearMessages = useCallback(() => {
-    // Not directly supported; we could create a new session or fork
-    // For now, no-op or could call runtime.newSession()
   }, [runtime]);
 
   return {
     messages,
     status,
-    thinkingLevel,
     isStreaming,
+    isCompacting,
+    retryAttempt,
+    toolOutputExpanded,
+    setToolOutputExpanded,
+    hideThinkingBlock,
+    setHideThinkingBlock,
+    hiddenThinkingLabel,
+    setHiddenThinkingLabel,
+    steeringMessages,
+    followUpMessages,
+    currentModel,
+    thinkingLevel,
+
     sendMessage,
     abort,
-    setThinkingLevel: setThinkingLevelPersist,
-    login,
-    logout,
-    copyToClipboard,
-    clearMessages,
-    runtime: runtime as any, // expose full runtime for advanced use
+    setThinkingLevel,
+
+    runtime,
   };
 }

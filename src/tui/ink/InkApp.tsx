@@ -46,10 +46,12 @@ type ModalState =
   | { type: 'tree-selector' }
   | { type: 'bash-output'; command: string; output: string; error?: boolean }
   | { type: 'stats'; stats: { sampleCount: number; timeSpanMS: number; avgCpuUserMS: number; avgCpuSystemMS: number; avgRSSMB: number; avgHeapUsedMB: number; peakRSSMB: number; peakHeapUsedMB: number } }
+  | { type: 'armin' }
+  | { type: 'earendil' }
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
-  const { messages, status, thinkingLevel, sendMessage } = useRuntime(runtime);
+  const { messages, status, thinkingLevel, sendMessage } = useRuntime(runtime as any);
   const { toggleTheme, isDark } = useTheme();
   const [inputValue, setInputValue] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -59,6 +61,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const [toasts, setToasts] = React.useState<Array<{ id: number; message: string; type: 'info' | 'success' | 'error' }>>([]);
   const toastIdRef = React.useRef(0);
   const lastCtrlCTimeRef = React.useRef<number>(0);
+  const [modelRefresh, setModelRefresh] = React.useState(0); // used to trigger footer re-render on model change
 
   // Close command palette if slash removed
   React.useEffect(() => {
@@ -523,6 +526,16 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           addToast('Performance tracking is disabled or no data available', 'info');
         }
         break;
+      case 'debug':
+        handleDebugCommand();
+        addToast('Debug log written', 'success');
+        break;
+      case 'arminsayshi':
+        setActiveModal({ type: 'armin' });
+        break;
+      case 'dementedelves':
+        setActiveModal({ type: 'earendil' });
+        break;
       default:
         // Unimplemented command - show informative message
         addToast(`Command "/${commandId}" not yet implemented`, 'info');
@@ -540,6 +553,40 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     await runtime.authStorage.setApiKey(defaultProvider, apiKey);
     addToast('Logged in successfully', 'success');
     setActiveModal(null);
+  }, [runtime, addToast]);
+
+  const handleDebugCommand = useCallback(() => {
+    try {
+      const rt = runtime as any;
+      const session = rt.session;
+      const { messages } = session;
+      const stats = session.getSessionStats?.();
+      const debugLogPath = require('node:path').join(require('node:os').tmpdir(), `picro-debug-${Date.now()}.log`);
+      const lines: string[] = [
+        `Picro Debug Log`,
+        `Generated: ${new Date().toISOString()}`,
+        `CWD: ${rt.cwd}`,
+        `Session: ${stats?.sessionFile || 'in-memory'}`,
+        `Model: ${session.model?.provider}/${session.model?.id}`,
+        `Thinking level: ${session.thinkingLevel}`,
+        `Messages: ${messages.length} total`,
+        `  User: ${stats?.userMessages || 0}`,
+        `  Assistant: ${stats?.assistantMessages || 0}`,
+        `  ToolCalls: ${stats?.toolCalls || 0}`,
+        `  ToolResults: ${stats?.toolResults || 0}`,
+        `Tokens: in=${stats?.tokens?.input || 0}, out=${stats?.tokens?.output || 0}, total=${stats?.tokens?.total || 0}`,
+        `Cost: $${stats?.cost?.toFixed(4) || 0}`,
+        '',
+        '=== Full Message History (JSONL) ===',
+      ];
+      for (const msg of messages) {
+        lines.push(JSON.stringify(msg));
+      }
+      require('node:fs').writeFileSync(debugLogPath, lines.join('\n'), 'utf-8');
+      addToast(`Debug log written to ${debugLogPath}`, 'success');
+    } catch (err: any) {
+      addToast(`Debug failed: ${err.message}`, 'error');
+    }
   }, [runtime, addToast]);
 
   // Render active modal
@@ -622,7 +669,11 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       case 'model-selector':
         return (
           <Modal onClose={() => setActiveModal(null)}>
-            <ModelSelectorModal runtime={runtime} onClose={() => setActiveModal(null)} />
+            <ModelSelectorModal
+              runtime={runtime}
+              onClose={() => setActiveModal(null)}
+              onSelect={() => setModelRefresh(v => v + 1)}
+            />
           </Modal>
         );
       case 'session-info':
@@ -695,6 +746,22 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
             </Box>
           </Modal>
         );
+      case 'armin':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <Box justifyContent="center" alignItems="center" flexDirection="column">
+              <Text>HI! I'M ARMIN!</Text>
+            </Box>
+          </Modal>
+        );
+      case 'earendil':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <Box justifyContent="center" alignItems="center" flexDirection="column">
+              <Text bold color="yellow">DEMENTED ELVES HAVE EMERGED</Text>
+            </Box>
+          </Modal>
+        );
       default:
         return null;
     }
@@ -739,7 +806,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           setActiveModal({ type: 'command-palette', filter: '', isSlash: false });
         }}
       />
-      <Footer hints={[
+      <Footer runtime={runtime} hints={[
         'Ctrl+P: Commands',
         'Ctrl+T: Thinking',
         'Ctrl+Shift+T: Toggle Theme',
