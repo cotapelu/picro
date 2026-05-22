@@ -6,6 +6,7 @@ import type { Message, ToolCall } from '../../types';
 import { AssistantMessage } from './AssistantMessage';
 import { UserMessage } from './UserMessage';
 import { ToolExecution } from './ToolExecution';
+import { BashExecution } from './BashExecution';
 
 interface MessageItemProps {
   message: Message;
@@ -67,14 +68,25 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         </Text>
       )}
       <Box flexDirection="column" marginLeft={shouldShowRole ? 2 : 0}>
-        {message.role === 'user' ? (
+        {message.role === 'user' && (
           <UserMessage text={message.content} />
-        ) : message.role === 'assistant' ? (
+        )}
+        {message.role === 'assistant' && (
           <AssistantMessage
             content={message.content}
             thinkingBlocks={message.thinkingBlocks}
           />
-        ) : (
+        )}
+        {message.role === 'bashExecution' && (
+          <BashExecution
+            command={message.bashCommand || ''}
+            output={message.bashOutput || ''}
+            exitCode={message.bashExitCode}
+            cancelled={message.bashCancelled}
+            truncated={message.bashTruncated}
+          />
+        )}
+        {(message.role === 'tool' || message.role === 'compactionSummary' || message.role === 'branchSummary' || message.role === 'custom') && (
           <Text>{message.content}</Text>
         )}
         {message.toolCalls && message.toolCalls.length > 0 && (

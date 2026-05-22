@@ -28,7 +28,7 @@ type ExtendedRuntime = import('../../../runtime').AgentSessionRuntimeInterface &
 
 function agentMessageToUiMessage(msg: any): Message | null {
   if (!msg || typeof msg !== 'object') return null;
-  let role: 'user' | 'assistant' | 'tool' = 'user';
+  let role: any; // 'user' | 'assistant' | 'tool' | 'bashExecution' | 'compactionSummary' | 'branchSummary' | 'custom'
   let content = '';
   let toolCalls: ToolCall[] | undefined;
   let thinkingBlocks: string[] | undefined;
@@ -73,13 +73,16 @@ function agentMessageToUiMessage(msg: any): Message | null {
       content = String(msg.content || '');
     }
   } else if (msg.role === 'bashExecution') {
-    role = 'assistant';
-    const cmd = msg.command || '';
-    const out = msg.output || '';
-    const exit = msg.exitCode !== undefined ? ` (exit ${msg.exitCode})` : '';
-    const cancelled = msg.cancelled ? ' (cancelled)' : '';
-    const truncated = msg.truncated ? ' [truncated]' : '';
-    content = `!${cmd}\n${out}${exit}${cancelled}${truncated}`;
+    role = 'bashExecution';
+    // Preserve bash fields in the returned Message
+    const bashMsg: any = {
+      bashCommand: msg.command,
+      bashOutput: msg.output,
+      bashExitCode: msg.exitCode,
+      bashCancelled: msg.cancelled,
+      bashTruncated: msg.truncated,
+    };
+    return { ...bashMsg, id: msg.id || `msg-${Date.now()}`, role, timestamp: msg.timestamp || Date.now(), content: '', streaming: false } as Message;
   } else if (msg.role === 'compactionSummary' || msg.role === 'branchSummary') {
     role = 'assistant';
     content = msg.content?.toString() || `[${msg.role}]`;
