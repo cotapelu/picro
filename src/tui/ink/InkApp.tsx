@@ -23,6 +23,8 @@ import { ChangelogModal } from './modals/ChangelogModal';
 import { HotkeysModal } from './modals/HotkeysModal';
 import { TreeSelectorModal } from './modals/TreeSelectorModal';
 import { BashOutputModal } from './modals/BashOutputModal';
+import { InputModal } from './modals/InputModal';
+import { SelectModal } from './modals/SelectModal';
 import { Modal } from './modals/Modal';
 import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands';
 import { VERSION } from '../../config';
@@ -50,6 +52,8 @@ type ModalState =
   | { type: 'stats'; stats: { sampleCount: number; timeSpanMS: number; avgCpuUserMS: number; avgCpuSystemMS: number; avgRSSMB: number; avgHeapUsedMB: number; peakRSSMB: number; peakHeapUsedMB: number } }
   | { type: 'armin' }
   | { type: 'earendil' }
+  | { type: 'input'; title: string; placeholder?: string; onSubmit: (value: string) => void; onCancel?: () => void }
+  | { type: 'select'; title: string; options: readonly string[]; onSelect: (option: string) => void; onCancel?: () => void }
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
@@ -928,6 +932,40 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
             </Box>
           </Modal>
         );
+      case 'input':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <InputModal
+              title={activeModal.title}
+              placeholder={activeModal.placeholder}
+              onSubmit={(value) => {
+                activeModal.onSubmit(value);
+                setActiveModal(null);
+              }}
+              onCancel={() => {
+                activeModal.onCancel?.();
+                setActiveModal(null);
+              }}
+            />
+          </Modal>
+        );
+      case 'select':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <SelectModal
+              title={activeModal.title}
+              options={activeModal.options}
+              onSelect={(opt) => {
+                activeModal.onSelect(opt);
+                setActiveModal(null);
+              }}
+              onCancel={() => {
+                activeModal.onCancel?.();
+                setActiveModal(null);
+              }}
+            />
+          </Modal>
+        );
       default:
         return null;
     }
@@ -968,11 +1006,48 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     });
   }, []);
 
+  // Extension UI dialog helpers
+  const showConfirm = (title: string, message: string, opts?: any): Promise<boolean> => {
+    return new Promise(resolve => {
+      setActiveModal({
+        type: 'confirmation',
+        title,
+        message,
+        onConfirm: () => { resolve(true); setActiveModal(null); },
+        onCancel: () => { resolve(false); setActiveModal(null); },
+      });
+    });
+  };
+
+  const showInput = (title: string, placeholder?: string, opts?: any): Promise<string | undefined> => {
+    return new Promise(resolve => {
+      setActiveModal({
+        type: 'input',
+        title,
+        placeholder,
+        onSubmit: (value: string) => { resolve(value); setActiveModal(null); },
+        onCancel: () => { resolve(undefined); setActiveModal(null); },
+      });
+    });
+  };
+
+  const showSelect = (title: string, options: readonly string[], opts?: any): Promise<string | undefined> => {
+    return new Promise(resolve => {
+      setActiveModal({
+        type: 'select',
+        title,
+        options,
+        onSelect: (option: string) => { resolve(option); setActiveModal(null); },
+        onCancel: () => { resolve(undefined); setActiveModal(null); },
+      });
+    });
+  };
+
   // Create ExtensionUIContext factory
   const createExtensionUIContext = () => ({
-    select: (title: string, options: readonly string[], opts?: any) => Promise.reject(new Error('Extension select not implemented')),
-    confirm: (title: string, message: string, opts?: any) => Promise.reject(new Error('Extension confirm not implemented')),
-    input: (title: string, placeholder?: string, opts?: any) => Promise.reject(new Error('Extension input not implemented')),
+    select: showSelect,
+    confirm: showConfirm,
+    input: showInput,
     notify: (message: string, type: 'info' | 'warning' | 'error' = 'info') => addToast(message, type as any),
     onTerminalInput: (handler: any) => { return () => {}; },
     setStatus: (key: string, text: string | undefined) => {},
