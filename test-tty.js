@@ -1,1 +1,0 @@
-console.log('isTTY:', process.stdin.isTTY);

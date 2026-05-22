@@ -660,21 +660,34 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
 
     switch (activeModal.type) {
       case 'command-palette':
-        const commands = BUILTIN_SLASH_COMMANDS.filter(cmd => {
-          const filter = activeModal.filter || '';
-          const search = filter.slice(1).toLowerCase(); // remove leading '/'
-          return cmd.name.toLowerCase().includes(search) ||
-                 cmd.description.toLowerCase().includes(search);
-        }).map(cmd => ({
-          id: cmd.name,
-          label: `/${cmd.name}`,
-          description: cmd.description,
-        }));
+        // Collect commands from multiple sources
+        const session = runtime.session as any;
+        const builtinCmds = BUILTIN_SLASH_COMMANDS;
+        const extensionCommands: any[] = session._extensionRunner?.getCommands?.() || [];
+        const skills: any[] = session._resourceLoader?.getSkills?.()?.skills || [];
+        const promptTemplates: any[] = session._resourceLoader?.getPromptTemplates?.() || [];
+
+        // Merge and map to Command shape
+        const allCommands = [
+          ...builtinCmds.map(c => ({ id: c.name, label: `/${c.name}`, description: c.description, source: 'builtin' })),
+          ...extensionCommands.map(c => ({ id: c.invocationName, label: c.invocationName.startsWith('/') ? c.invocationName : `/${c.invocationName}`, description: c.description, source: 'extension' })),
+          ...skills.map(s => ({ id: `skill:${s.name}`, label: `skill:${s.name}`, description: s.description, source: 'skill' })),
+          ...promptTemplates.map(t => ({ id: t.name, label: `template:${t.name}`, description: t.description, source: 'template' })),
+        ];
+
+        const filter = activeModal.filter || '';
+        // For slash-prefixed filter, strip leading slashes for matching
+        const search = filter.toLowerCase().replace(/^\/+/g, '');
+        const filtered = allCommands.filter(cmd =>
+          cmd.label.toLowerCase().includes(search) ||
+          (cmd.description && cmd.description.toLowerCase().includes(search))
+        );
+
         return (
           <Modal onClose={() => setActiveModal(null)}>
             <CommandPalette
-              commands={commands}
-              onSelect={(id) => handleCommandSelect(id, activeModal.filter)}
+              commands={filtered}
+              onSelect={(id) => handleCommandSelect(id, filter)}
               onClose={() => setActiveModal(null)}
             />
           </Modal>
