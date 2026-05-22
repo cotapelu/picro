@@ -52,6 +52,7 @@ type ModalState =
   | { type: 'stats'; stats: { sampleCount: number; timeSpanMS: number; avgCpuUserMS: number; avgCpuSystemMS: number; avgRSSMB: number; avgHeapUsedMB: number; peakRSSMB: number; peakHeapUsedMB: number } }
   | { type: 'armin' }
   | { type: 'earendil' }
+  | { type: 'custom' }
   | { type: 'input'; title: string; placeholder?: string; onSubmit: (value: string) => void; onCancel?: () => void }
   | { type: 'select'; title: string; options: readonly string[]; onSelect: (option: string) => void; onCancel?: () => void }
   | null;
@@ -966,6 +967,25 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
             />
           </Modal>
         );
+      case 'custom':
+        if (!customOverlay) return null;
+        const CustomFactory = customOverlay.factory;
+        return (
+          <Modal onClose={() => { setCustomOverlay(null); }}>
+            {(() => {
+              const component = CustomFactory({
+                tui: null,
+                theme,
+                keybindings: {},
+                done: (result: any) => {
+                  customOverlay.resolve(result);
+                  setCustomOverlay(null);
+                },
+              });
+              return component;
+            })()}
+          </Modal>
+        );
       default:
         return null;
     }
@@ -1043,6 +1063,14 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const [customHeader, setCustomHeader] = React.useState<React.ReactNode>(null);
   const [customFooter, setCustomFooter] = React.useState<React.ReactNode>(null);
 
+  // Custom overlay (for extensions)
+  const [customOverlay, setCustomOverlay] = React.useState<{factory: Function; resolve: (value: any) => void} | null>(null);
+  const showCustomOverlay = React.useCallback((factory: Function, options?: any): Promise<any> => {
+    return new Promise(resolve => {
+      setCustomOverlay({ factory, resolve });
+    });
+  }, []);
+
   // Extension UI dialog helpers
   const showConfirm = (title: string, message: string, opts?: any): Promise<boolean> => {
     return new Promise(resolve => {
@@ -1095,7 +1123,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     setFooter: setCustomFooter,
     setHeader: setCustomHeader,
     setTitle: (title: string) => { try { process.title = title; } catch {} },
-    custom: (factory: any, options?: any) => Promise.reject(new Error('Extension custom not implemented')),
+    custom: showCustomOverlay,
     pasteToEditor: (text: string) => setInputValue(prev => prev + text),
     setEditorText: (text: string) => setInputValue(text),
     getEditorText: () => inputValue,
