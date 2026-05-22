@@ -492,13 +492,18 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         }
         break;
       case 'reload':
-        // Reload settings and resources
+        // Reload all resources (extensions, skills, prompts, themes, keybindings)
         try {
-          await runtime.settings?.reload?.();
-          // TODO: also reload extensions, skills, prompts, themes from runtime
-          addToast('Settings reloaded', 'success');
+          const session = runtime.session as any;
+          if (typeof session.reload === 'function') {
+            await session.reload();
+            addToast('All resources reloaded', 'success');
+          } else {
+            await runtime.settings?.reload?.();
+            addToast('Settings reloaded (full reload not available)', 'success');
+          }
         } catch (err) {
-          addToast('Reload failed', 'error');
+          addToast('Reload failed: ' + (err as Error).message, 'error');
         }
         break;
         // Reload settings and resources
