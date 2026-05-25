@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "npm run build:tui && tsc && chmod +x dist/cli.js",
-    "build:tui": "esbuild \"tui/**/*.ts*\" --bundle=false --platform=node --target=node20 --format=esm --outdir=dist/tui && echo '{\"type\":\"module\"}' > dist/tui/package.json",
+    "build:tui": "esbuild src/tui/ink/InkApp.tsx --bundle --platform=node --target=node20 --format=esm --outdir=dist/tui && echo '{\"type\":\"module\"}' > dist/tui/package.json",
     "dev": "VERBOSE=1 picro",
     "test": "vitest run",
     "test:watch": "vitest"

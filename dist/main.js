@@ -401,9 +401,8 @@ async function main() {
             await session.prompt(msg);
         }
         try {
-            // Load unbundled Ink TUI (ESM) - compiled at build time
             // @ts-ignore - module exists at runtime after build
-            const { runInkApp } = await Promise.resolve().then(() => __importStar(require("./tui/ink/index.js")));
+            const { runInkApp } = await Promise.resolve().then(() => __importStar(require("./tui/InkApp.js")));
             await runInkApp(runtime);
         }
         catch (err) {

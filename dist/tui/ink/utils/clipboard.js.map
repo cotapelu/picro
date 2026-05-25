@@ -1,1 +1,0 @@
-{"version":3,"file":"clipboard.js","sourceRoot":"","sources":["../../../../src/tui/ink/utils/clipboard.ts"],"names":[],"mappings":";;;;;AAEA,0CAOC;AATD,4DAAmC;AAE5B,KAAK,UAAU,eAAe,CAAC,IAAY;IAChD,IAAI,CAAC;QACH,MAAM,oBAAS,CAAC,KAAK,CAAC,IAAI,CAAC,CAAC;IAC9B,CAAC;IAAC,OAAO,GAAG,EAAE,CAAC;QACb,OAAO,CAAC,KAAK,CAAC,8BAA8B,EAAE,GAAG,CAAC,CAAC;QACnD,MAAM,GAAG,CAAC;IACZ,CAAC;AACH,CAAC"}

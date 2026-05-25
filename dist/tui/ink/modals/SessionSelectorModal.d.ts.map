@@ -1,1 +1,0 @@
-{"version":3,"file":"SessionSelectorModal.d.ts","sourceRoot":"","sources":["../../../../src/tui/ink/modals/SessionSelectorModal.tsx"],"names":[],"mappings":"AAAA,6BAA6B;AAC7B,OAAO,KAA8B,MAAM,OAAO,CAAC;AAYnD,UAAU,yBAAyB;IACjC,OAAO,EAAE,GAAG,CAAC;IACb,OAAO,EAAE,MAAM,IAAI,CAAC;CACrB;AAED,eAAO,MAAM,oBAAoB,EAAE,KAAK,CAAC,EAAE,CAAC,yBAAyB,CAiHpE,CAAC"}

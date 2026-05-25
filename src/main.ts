@@ -388,9 +388,8 @@ async function main(): Promise<void> {
     }
 
     try {
-      // Load unbundled Ink TUI (ESM) - compiled at build time
       // @ts-ignore - module exists at runtime after build
-      const { runInkApp } = await import("./tui/ink/index.js");
+      const { runInkApp } = await import("./tui/InkApp.js");
       await runInkApp(runtime);
     } catch (err: any) {
       console.error("Interactive mode error:", err.message || err);

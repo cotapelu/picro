@@ -111,27 +111,64 @@
         {
           "id": "task-18",
           "content": "All work finished - picro runs successfully",
-          "status": "in_progress"
+          "status": "completed"
         },
         {
           "id": "task-19",
           "content": "141 tests passing",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-20",
           "content": "Build system stable",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-21",
           "content": "Codebase clean and properly structured",
-          "status": "pending"
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Production Readiness",
+      "tasks": [
+        {
+          "id": "task-22",
+          "content": "Analyze bundle size (dist/tui size, total dist size)",
+          "status": "completed"
+        },
+        {
+          "id": "task-23",
+          "content": "Verify all execution modes: --print, --json, --rpc, interactive",
+          "status": "completed"
+        },
+        {
+          "id": "task-24",
+          "content": "Test with a real API key (smoke test if possible)",
+          "status": "completed"
+        },
+        {
+          "id": "task-25",
+          "content": "Review .gitignore for completeness (no src/*.js, tui/*.js)",
+          "status": "completed"
+        },
+        {
+          "id": "task-26",
+          "content": "Final integration validation against reference implementations",
+          "status": "completed"
+        },
+        {
+          "id": "task-27",
+          "content": "Update README with build and run instructions if needed",
+          "status": "completed"
         }
       ]
     }
   ],
-  "nextTaskId": 22,
-  "nextPhaseId": 5,
-  "updatedAt": "2026-05-25T03:51:41.715Z"
+  "nextTaskId": 28,
+  "nextPhaseId": 6,
+  "updatedAt": "2026-05-25T03:58:05.627Z"
+}
 }

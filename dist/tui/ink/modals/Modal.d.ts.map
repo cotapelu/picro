@@ -1,1 +1,0 @@
-{"version":3,"file":"Modal.d.ts","sourceRoot":"","sources":["../../../../src/tui/ink/modals/Modal.tsx"],"names":[],"mappings":"AAAA,6BAA6B;AAC7B,OAAO,KAAK,MAAM,OAAO,CAAC;AAG1B,UAAU,UAAU;IAClB,QAAQ,EAAE,KAAK,CAAC,SAAS,CAAC;IAC1B,OAAO,CAAC,EAAE,MAAM,IAAI,CAAC;CACtB;AAED,eAAO,MAAM,KAAK,EAAE,KAAK,CAAC,EAAE,CAAC,UAAU,CAiBtC,CAAC"}
