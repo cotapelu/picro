@@ -1,33 +1,33 @@
 /** @jsxImportSource react */
 import React, { useCallback } from 'react';
 import { render, Box, Text, useInput } from 'ink';
-import type { AgentSessionRuntimeInterface } from '../../runtime';
-import type { Message } from './types';
-import { ThemeProvider, useTheme } from './hooks/useTheme';
-import { useRuntime } from './hooks/useRuntime';
-import { Header } from './components/Header/Header';
-import { MessageList } from './components/MessageList/MessageList';
-import { InputBox } from './components/InputBox/InputBox';
-import { Footer } from './components/Footer/Footer';
-import { ErrorBoundary, useGlobalErrorHandler } from './ErrorBoundary';
-import { CommandPalette } from './modals/CommandPalette';
-import { ThinkingModal } from './modals/ThinkingModal';
-import { LoginModal } from './modals/LoginModal';
-import { HelpModal } from './modals/HelpModal';
-import { SessionSelectorModal } from './modals/SessionSelectorModal';
-import { ConfirmationModal } from './modals/ConfirmationModal';
-import { SettingsSelectorModal } from './modals/SettingsSelectorModal';
-import { ModelSelectorModal } from './modals/ModelSelectorModal';
-import { SessionInfoModal } from './modals/SessionInfoModal';
-import { ChangelogModal } from './modals/ChangelogModal';
-import { HotkeysModal } from './modals/HotkeysModal';
-import { TreeSelectorModal } from './modals/TreeSelectorModal';
-import { BashOutputModal } from './modals/BashOutputModal';
-import { InputModal } from './modals/InputModal';
-import { SelectModal } from './modals/SelectModal';
-import { Modal } from './modals/Modal';
-import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands';
-import { VERSION } from '../../config';
+import type { AgentSessionRuntimeInterface } from '../../runtime.js';
+import type { Message } from './types.js';
+import { ThemeProvider, useTheme } from './hooks/useTheme.js';
+import { useRuntime } from './hooks/useRuntime.js';
+import { Header } from './components/Header/Header.js';
+import { MessageList } from './components/MessageList/MessageList.js';
+import { InputBox } from './components/InputBox/InputBox.js';
+import { Footer } from './components/Footer/Footer.js';
+import { ErrorBoundary, useGlobalErrorHandler } from './ErrorBoundary.js';
+import { CommandPalette } from './modals/CommandPalette.js';
+import { ThinkingModal } from './modals/ThinkingModal.js';
+import { LoginModal } from './modals/LoginModal.js';
+import { HelpModal } from './modals/HelpModal.js';
+import { SessionSelectorModal } from './modals/SessionSelectorModal.js';
+import { ConfirmationModal } from './modals/ConfirmationModal.js';
+import { SettingsSelectorModal } from './modals/SettingsSelectorModal.js';
+import { ModelSelectorModal } from './modals/ModelSelectorModal.js';
+import { SessionInfoModal } from './modals/SessionInfoModal.js';
+import { ChangelogModal } from './modals/ChangelogModal.js';
+import { HotkeysModal } from './modals/HotkeysModal.js';
+import { TreeSelectorModal } from './modals/TreeSelectorModal.js';
+import { BashOutputModal } from './modals/BashOutputModal.js';
+import { InputModal } from './modals/InputModal.js';
+import { SelectModal } from './modals/SelectModal.js';
+import { Modal } from './modals/Modal.js';
+import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands.js';
+import { VERSION } from '../../config.js';
 
 
 interface InkAppInnerProps {
@@ -1204,7 +1204,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       {customHeader || (
         <Header
           title="Picro Agent"
-          status={status || 'Ready'}
+          status={runtimeStatus || 'Ready'}
           thinkingLevel={thinkingLevel}
           model={modelId}
           theme={themeLabel}
@@ -1311,3 +1311,4 @@ export const runInkApp = async (runtime: AgentSessionRuntimeInterface): Promise<
   );
   await waitUntilExit();
 };
+

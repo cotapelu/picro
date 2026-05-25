@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import React from 'react';
 import { Box, Text } from 'ink';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../hooks/useTheme.js';
 
 interface AssistantMessageProps {
   content: string;
@@ -47,3 +47,4 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
     </Box>
   );
 };
+

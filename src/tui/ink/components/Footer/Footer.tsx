@@ -1,8 +1,8 @@
 /** @jsxImportSource react */
 import React from 'react';
 import { Box, Text } from 'ink';
-import { useTheme } from '../../hooks/useTheme';
-import type { AgentSessionRuntimeInterface } from '../../../../runtime';
+import { useTheme } from '../../hooks/useTheme.js';
+import type { AgentSessionRuntimeInterface } from '../../../../runtime.js';
 
 function formatNumber(num: number): string {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -144,3 +144,4 @@ export const Footer: React.FC<FooterProps> = ({ runtime, hints = [], autoCompact
     </Box>
   );
 };
+

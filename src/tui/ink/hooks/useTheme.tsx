@@ -1,5 +1,5 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { darkTheme, lightTheme } from '../themes';
+import { darkTheme, lightTheme } from '../themes.js';
 
 interface ThemeContextValue {
   theme: any;
@@ -36,3 +36,4 @@ export function useTheme(): ThemeContextValue {
   }
   return ctx;
 }
+

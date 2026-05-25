@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../hooks/useTheme.js';
 
 interface Command {
   id: string;
@@ -110,3 +110,4 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     </Box>
   );
 };
+

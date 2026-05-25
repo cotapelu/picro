@@ -1,8 +1,8 @@
 /** @jsxImportSource react */
 import React, { useEffect, useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { useTheme } from '../hooks/useTheme';
-import { Modal } from './Modal';
+import { useTheme } from '../hooks/useTheme.js';
+import { Modal } from './Modal.js';
 
 interface ChangelogModalProps {
   onClose: () => void;
@@ -41,3 +41,4 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ onClose }) => {
     </Modal>
   );
 };
+

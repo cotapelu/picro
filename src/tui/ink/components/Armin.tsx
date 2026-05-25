@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import React from 'react';
 import { Box, Text } from 'ink';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../hooks/useTheme.js';
 
 export const Armin: React.FC<{ size?: number }> = ({ size = 1 }) => {
   const { theme } = useTheme();
@@ -23,3 +23,4 @@ export const Armin: React.FC<{ size?: number }> = ({ size = 1 }) => {
     </Box>
   );
 };
+

@@ -1,12 +1,12 @@
 /** @jsxImportSource react */
 import React from 'react';
 import { Box, Text } from 'ink';
-import { useTheme } from '../../hooks/useTheme';
-import type { Message, ToolCall } from '../../types';
-import { AssistantMessage } from './AssistantMessage';
-import { UserMessage } from './UserMessage';
-import { ToolExecution } from './ToolExecution';
-import { BashExecution } from './BashExecution';
+import { useTheme } from '../../hooks/useTheme.js';
+import type { Message, ToolCall } from '../../types.js';
+import { AssistantMessage } from './AssistantMessage.js';
+import { UserMessage } from './UserMessage.js';
+import { ToolExecution } from './ToolExecution.js';
+import { BashExecution } from './BashExecution.js';
 
 interface MessageItemProps {
   message: Message;
@@ -107,3 +107,4 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     </Box>
   );
 };
+

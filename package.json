@@ -3,13 +3,12 @@
   "version": "0.0.1",
   "description": "picro agnent",
   "private": false,
-  "type": "module",
   "bin": {
     "picro": "./dist/cli.js"
   },
   "scripts": {
-    "build": "npm run build:tui && tsc && chmod +x dist/cli.js",
-    "build:tui": "tsup src/tui/ink/index.ts --format esm --platform node --target node20 --out-dir dist/tui && echo '{\"type\":\"module\"}' > dist/tui/package.json",
+    "build": "tsc && npm run build:tui && cp src/tui-bootstrap.js dist/ && chmod +x dist/cli.js",
+    "build:tui": "node scripts/build-tui.js",
     "dev": "VERBOSE=1 picro",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -34,6 +33,7 @@
     "@types/react": "^19.2.15",
     "@typescript/native-preview": "^7.0.0-dev.20260512.1",
     "@vitest/coverage-v8": "^4.1.5",
+    "glob": "^13.0.6",
     "highlight.js": "^11.11.1",
     "jsdom": "^29.1.1",
     "react-test-renderer": "^19.2.6",

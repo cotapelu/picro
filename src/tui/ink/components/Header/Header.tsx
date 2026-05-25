@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import React from 'react';
 import { Box, Text } from 'ink';
-import { Armin } from '../Armin';
+import { Armin } from '../Armin.js';
 
 interface HeaderProps {
   title: string;
@@ -39,3 +39,4 @@ export const Header: React.FC<HeaderProps> = ({ title, status, thinkingLevel, mo
     </Box>
   );
 };
+

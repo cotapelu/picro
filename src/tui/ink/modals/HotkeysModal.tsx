@@ -1,8 +1,8 @@
 /** @jsxImportSource react */
 import React from 'react';
 import { Box, Text, useInput } from 'ink';
-import { useTheme } from '../hooks/useTheme';
-import { Modal } from './Modal';
+import { useTheme } from '../hooks/useTheme.js';
+import { Modal } from './Modal.js';
 
 interface HotkeysModalProps {
   onClose: () => void;
@@ -53,3 +53,4 @@ export const HotkeysModal: React.FC<HotkeysModalProps> = ({ onClose }) => {
     </Modal>
   );
 };
+

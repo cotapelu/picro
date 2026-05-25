@@ -1,8 +1,8 @@
 /** @jsxImportSource react */
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { InputBox } from '../components/InputBox/InputBox';
-import { Modal } from './Modal';
+import { InputBox } from '../components/InputBox/InputBox.js';
+import { Modal } from './Modal.js';
 
 interface InputModalProps {
   title: string;
@@ -49,3 +49,4 @@ export const InputModal: React.FC<InputModalProps> = ({ title, placeholder, onSu
     </Modal>
   );
 };
+

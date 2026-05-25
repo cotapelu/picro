@@ -1,9 +1,9 @@
 /** @jsxImportSource react */
 import React from 'react';
 import { Box, Text } from 'ink';
-import { useTheme } from '../../hooks/useTheme';
-import type { ToolCall } from '../../types';
-import { sanitizeAndTruncate } from '../../utils/output-guards';
+import { useTheme } from '../../hooks/useTheme.js';
+import type { ToolCall } from '../../types.js';
+import { sanitizeAndTruncate } from '../../utils/output-guards.js';
 
 interface ToolExecutionProps {
   toolCall: ToolCall;
@@ -58,3 +58,4 @@ export const ToolExecution: React.FC<ToolExecutionProps> = ({ toolCall, expanded
     </Box>
   );
 };
+

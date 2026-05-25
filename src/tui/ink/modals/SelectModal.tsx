@@ -1,8 +1,8 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { Modal } from './Modal';
-import { useTheme } from '../hooks/useTheme';
+import { Modal } from './Modal.js';
+import { useTheme } from '../hooks/useTheme.js';
 
 interface SelectModalProps {
   title: string;
@@ -63,3 +63,4 @@ export const SelectModal: React.FC<SelectModalProps> = ({ title, options, onSele
     </Modal>
   );
 };
+

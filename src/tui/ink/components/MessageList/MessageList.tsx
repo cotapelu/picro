@@ -1,8 +1,8 @@
 /** @jsxImportSource react */
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { Box, Text } from 'ink';
-import { MessageItem } from '../MessageItem/MessageItem';
-import type { Message } from '../../types';
+import { MessageItem } from '../MessageItem/MessageItem.js';
+import type { Message } from '../../types.js';
 
 export interface MessageListRef {
   scrollToBottom: () => void;
@@ -86,3 +86,4 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
 );
 
 MessageList.displayName = 'MessageList';
+

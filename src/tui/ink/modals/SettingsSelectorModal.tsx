@@ -1,9 +1,9 @@
 /** @jsxImportSource react */
 import React, { useEffect, useState, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
-import type { AgentSessionRuntimeInterface } from '../../../runtime';
-import { useTheme } from '../hooks/useTheme';
-import { Modal } from './Modal';
+import type { AgentSessionRuntimeInterface } from '../../../runtime.js';
+import { useTheme } from '../hooks/useTheme.js';
+import { Modal } from './Modal.js';
 
 interface SettingDef {
   label: string;
@@ -230,3 +230,4 @@ export const SettingsSelectorModal: React.FC<SettingsSelectorModalProps> = ({ ru
     </Modal>
   );
 };
+

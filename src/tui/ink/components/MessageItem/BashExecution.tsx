@@ -1,8 +1,8 @@
 /** @jsxImportSource react */
 import React, { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
-import { useTheme } from '../../hooks/useTheme';
-import { sanitizeAndTruncate } from '../../utils/output-guards';
+import { useTheme } from '../../hooks/useTheme.js';
+import { sanitizeAndTruncate } from '../../utils/output-guards.js';
 
 interface BashExecutionProps {
   command: string;
@@ -48,3 +48,4 @@ export const BashExecution: React.FC<BashExecutionProps> = ({
     </Box>
   );
 };
+

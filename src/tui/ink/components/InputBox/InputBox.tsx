@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../hooks/useTheme.js';
 
 function getCommonPrefix(strings: string[]): string {
   if (strings.length === 0) return '';
@@ -289,3 +289,4 @@ export const InputBox: React.FC<InputBoxProps> = ({
     </Box>
   );
 };
+

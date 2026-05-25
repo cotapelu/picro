@@ -388,12 +388,11 @@ async function main(): Promise<void> {
     }
 
     try {
-      // Load TUI (ESM module)
-      // @ts-ignore - module exists at runtime after build
-      const { runInkApp } = await import("./tui/index.mjs");
-      await runInkApp(runtime);
+      // Use TUI bootstrap to load ESM TUI
+      const { runTui } = require('./tui-bootstrap.js');
+      await runTui(runtime);
     } catch (err: any) {
-      console.error("Interactive mode error:", err.message || err);
+      console.error('Interactive mode error:', err.message || err);
     }
   } else if (appMode === "print" || appMode === "json") {
     // If no input at all, show helpful message

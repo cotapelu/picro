@@ -1,9 +1,9 @@
 /** @jsxImportSource react */
 import React, { useEffect, useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import type { AgentSessionRuntimeInterface } from '../../../runtime';
-import { useTheme } from '../hooks/useTheme';
-import { Modal } from './Modal';
+import type { AgentSessionRuntimeInterface } from '../../../runtime.js';
+import { useTheme } from '../hooks/useTheme.js';
+import { Modal } from './Modal.js';
 
 interface TreeSelectorModalProps {
   runtime: AgentSessionRuntimeInterface;
@@ -80,3 +80,4 @@ export const TreeSelectorModal: React.FC<TreeSelectorModalProps> = ({ runtime, o
     </Modal>
   );
 };
+
