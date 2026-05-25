@@ -388,9 +388,8 @@ async function main(): Promise<void> {
     }
 
     try {
-      // Dynamically import the bundled Ink TUI (ESM)
-      // @ts-ignore - ink-bundle is generated at build time
-      const { runInkApp } = await import("./tui/ink-bundle.js");
+      // Load unbundled Ink TUI (ESM) directly from source to support top-level await
+      const { runInkApp } = await import("./tui/ink/index.js");
       await runInkApp(runtime);
     } catch (err: any) {
       console.error("Interactive mode error:", err.message || err);

@@ -33,12 +33,79 @@
         {
           "id": "task-6",
           "content": "Test build and run",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Code Reference Review & Alignment",
+      "tasks": [
+        {
+          "id": "task-7",
+          "content": "Read llm-context/agent and compare with src/agent - identify alignment issues",
           "status": "in_progress"
+        },
+        {
+          "id": "task-8",
+          "content": "Read llm-context/coding-agent and compare with src/main.ts, src/cli.ts, src/runtime, src/modes",
+          "status": "pending"
+        },
+        {
+          "id": "task-9",
+          "content": "Read llm-context/tui (if exists) and compare with src/tui",
+          "status": "pending"
+        },
+        {
+          "id": "task-10",
+          "content": "Fix any discrepancies found (architectural, patterns, features)",
+          "status": "pending"
+        },
+        {
+          "id": "task-11",
+          "content": "Run tests to ensure correctness",
+          "status": "pending"
+        },
+        {
+          "id": "task-12",
+          "content": "Build and verify final output",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Fix Interactive Mode",
+      "tasks": [
+        {
+          "id": "task-13",
+          "content": "Update main.ts to import TUI from src/tui/ink/index.js instead of bundled ink-bundle.js",
+          "status": "completed"
+        },
+        {
+          "id": "task-14",
+          "content": "Remove build:ink script and ink-bundle generation from package.json",
+          "status": "completed"
+        },
+        {
+          "id": "task-15",
+          "content": "Delete obsolete ink-bundle declaration file",
+          "status": "completed"
+        },
+        {
+          "id": "task-16",
+          "content": "Test interactive mode functionality",
+          "status": "completed"
+        },
+        {
+          "id": "task-17",
+          "content": "Commit changes",
+          "status": "completed"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
-  "nextPhaseId": 2,
-  "updatedAt": "2026-05-25T00:43:07.408Z"
+  "nextTaskId": 18,
+  "nextPhaseId": 4,
+  "updatedAt": "2026-05-25T03:10:25.773Z"
 }

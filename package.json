@@ -4,11 +4,11 @@
   "description": "picro agnent",
   "private": false,
   "bin": {
-    "picro": "./dist/main.js"
+    "picro": "./dist/cli.js"
   },
   "scripts": {
-    "build": "npm run build:ink && tsc && echo '#!/usr/bin/env node' | cat - dist/main.js > dist/main.js.tmp && mv dist/main.js.tmp dist/main.js && chmod +x dist/main.js",
-    "build:ink": "esbuild src/tui/ink/index.ts --bundle --platform=node --target=node20 --minify --outfile=dist/tui/ink-bundle.js --format=esm",
+    "build": "npm run build:tui && tsc && chmod +x dist/cli.js",
+    "build:tui": "esbuild \"src/tui/**/*.ts*\" --bundle=false --platform=node --target=node20 --format=esm --outdir=dist/tui && echo '{\"type\":\"module\"}' > dist/tui/package.json",
     "dev": "VERBOSE=1 picro",
     "test": "vitest run",
     "test:watch": "vitest"
