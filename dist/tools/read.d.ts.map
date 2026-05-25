@@ -1,0 +1,1 @@
+{"version":3,"file":"read.d.ts","sourceRoot":"","sources":["../../src/tools/read.ts"],"names":[],"mappings":"AACA;;GAEG;AAKH;;GAEG;AACH,MAAM,WAAW,aAAa;IAC5B,IAAI,EAAE,MAAM,CAAC;IACb,QAAQ,CAAC,EAAE,MAAM,CAAC;IAClB,MAAM,CAAC,EAAE,MAAM,CAAC;CACjB;AAED;;;;GAIG;AACH,wBAAgB,wBAAwB,CAAC,GAAG,EAAE,MAAM;;;;mBAK3B,aAAa,GAAG,OAAO,CAAC,GAAG,CAAC;EAqCpD"}
