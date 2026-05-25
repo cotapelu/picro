@@ -388,7 +388,8 @@ async function main(): Promise<void> {
     }
 
     try {
-      // Load unbundled Ink TUI (ESM) directly from source to support top-level await
+      // Load unbundled Ink TUI (ESM) - compiled at build time
+      // @ts-ignore - module exists at runtime after build
       const { runInkApp } = await import("./tui/ink/index.js");
       await runInkApp(runtime);
     } catch (err: any) {
