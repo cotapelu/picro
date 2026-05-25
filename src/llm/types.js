@@ -1,0 +1,4 @@
+/**
+ * Minimal types
+ */
+export {};

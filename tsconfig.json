@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
@@ -12,9 +12,8 @@
     "jsx": "react-jsx",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
-
+    "sourceMap": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist", "src/tui", "src/tui/**", "**/*.test.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/tui/**/*", "**/*.test.ts"]
 }

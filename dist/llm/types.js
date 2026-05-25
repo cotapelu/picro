@@ -1,6 +1,5 @@
-"use strict";
 /**
  * Minimal types
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+export {};
 //# sourceMappingURL=types.js.map

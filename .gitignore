@@ -69,11 +69,4 @@ temp/
 # TypeScript
 *.tsbuildinfo
 
-# Compiled output from esbuild/tsc - only dist/ should be tracked
-src/**/*.js
-src/**/*.d.ts
-src/**/*.d.ts.map
-tui/**/*.js
-tui/**/*.d.ts
-tui/**/*.d.ts.map
-tui/**/*.js.map
+dist/

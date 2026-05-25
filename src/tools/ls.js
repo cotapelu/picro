@@ -1,0 +1,65 @@
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Ls tool - List directory contents
+ */
+import { readdirSync, statSync } from 'fs';
+import { join } from 'path';
+import { resolveToCwd, validatePathWithinBase } from './path-utils.js';
+/**
+ * Create ls tool definition
+ *
+ * @param cwd - Working directory to resolve relative paths against
+ */
+export function createLsToolDefinition(cwd) {
+    return {
+        name: 'ls',
+        description: 'List directory contents',
+        schema: {},
+        async execute(input) {
+            const { path: dirPath = '.', recursive = false, includeHidden = false } = input;
+            // Resolve directory path safely within cwd
+            const resolvedDir = resolveToCwd(dirPath, cwd);
+            // Validate the resolved directory is within cwd (security)
+            if (!validatePathWithinBase(resolvedDir, cwd)) {
+                throw new Error(`Access denied: Path outside working directory`);
+            }
+            const entries = [];
+            const walk = (dir, depth) => {
+                if (depth > 5)
+                    return;
+                try {
+                    const files = readdirSync(dir, { withFileTypes: true });
+                    for (const file of files) {
+                        if (!includeHidden && file.name.startsWith('.'))
+                            continue;
+                        const fullPath = join(dir, file.name);
+                        try {
+                            const stats = statSync(fullPath);
+                            entries.push({
+                                name: file.name,
+                                path: fullPath,
+                                type: file.isDirectory() ? 'directory' : file.isSymbolicLink() ? 'symlink' : 'file',
+                                size: stats.size,
+                                modified: stats.mtimeMs,
+                            });
+                            if (recursive && file.isDirectory()) {
+                                walk(fullPath, depth + 1);
+                            }
+                        }
+                        catch {
+                            // Skip
+                        }
+                    }
+                }
+                catch (err) {
+                    throw new Error(`Failed to read directory ${dir}: ${err}`);
+                }
+            };
+            walk(resolvedDir, 0);
+            return {
+                entries,
+                count: entries.length,
+            };
+        },
+    };
+}

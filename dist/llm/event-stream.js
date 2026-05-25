@@ -1,10 +1,7 @@
-"use strict";
 /**
  * Simple event stream implementation
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AssistantMessageEventStream = void 0;
-class AssistantMessageEventStream {
+export class AssistantMessageEventStream {
     queue = [];
     waiting = [];
     done = false;
@@ -63,5 +60,4 @@ class AssistantMessageEventStream {
         }
     }
 }
-exports.AssistantMessageEventStream = AssistantMessageEventStream;
 //# sourceMappingURL=event-stream.js.map

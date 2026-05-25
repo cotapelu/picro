@@ -1,0 +1,1 @@
+{"version":3,"file":"slash-commands.d.ts","sourceRoot":"","sources":["slash-commands.ts"],"names":[],"mappings":"AACA;;;;;GAKG;AAEH,MAAM,WAAW,gBAAgB;IAC/B,IAAI,EAAE,MAAM,CAAC;IACb,WAAW,EAAE,MAAM,CAAC;CACrB;AAED,eAAO,MAAM,sBAAsB,EAAE,gBAAgB,EA0BpD,CAAC;AAEF,wBAAgB,eAAe,CAAC,IAAI,EAAE,MAAM,GAAG,gBAAgB,GAAG,SAAS,CAE1E;AAED,wBAAgB,iBAAiB,IAAI,gBAAgB,EAAE,CAEtD"}

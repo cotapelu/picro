@@ -1,7 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.transformMessages = transformMessages;
-exports.transformAssistantMessages = transformAssistantMessages;
 /**
  * Chuẩn hóa tool call ID để tương thích với provider yêu cầu định dạng ID đặc biệt.
  */
@@ -21,7 +17,7 @@ function shouldSkipMessage(msg) {
 /**
  * Biến đổi lịch sử tin nhắn để tương thích provider.
  */
-function transformMessages(messages) {
+export function transformMessages(messages) {
     const transformed = [];
     let pendingToolCalls = [];
     const seenToolResultIds = new Set();
@@ -106,7 +102,7 @@ function transformMessages(messages) {
 /**
  * Loại bỏ các assistant message rỗng khỏi lịch sử.
  */
-function transformAssistantMessages(messages) {
+export function transformAssistantMessages(messages) {
     return messages.filter(msg => {
         if (msg.role !== 'assistant')
             return true;

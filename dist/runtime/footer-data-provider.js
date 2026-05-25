@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Footer Data Provider
@@ -9,48 +8,11 @@
  * - Session statistics
  * - Other dynamic status info
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.DefaultFooterDataProvider = void 0;
-exports.createFooterDataProvider = createFooterDataProvider;
-exports.getGitInfo = getGitInfo;
-const child_process_1 = require("child_process");
+import { spawnSync } from 'child_process';
 /**
  * Simple footer data provider with manual updates
  */
-class DefaultFooterDataProvider {
+export class DefaultFooterDataProvider {
     data = {
         extensions: [],
         custom: {},
@@ -110,29 +72,28 @@ class DefaultFooterDataProvider {
         }
     }
 }
-exports.DefaultFooterDataProvider = DefaultFooterDataProvider;
 /**
  * Create default footer data provider
  */
-function createFooterDataProvider() {
+export function createFooterDataProvider() {
     return new DefaultFooterDataProvider();
 }
 /**
  * Simple utility to read git info from command line
  * Used by modes that want to display git status in footer
  */
-async function getGitInfo(cwd = process.cwd()) {
+export async function getGitInfo(cwd = process.cwd()) {
     try {
-        const { spawn } = await Promise.resolve().then(() => __importStar(require('child_process')));
-        const result = (0, child_process_1.spawnSync)('git', ['branch', '--show-current'], { cwd, encoding: 'utf-8' });
+        const { spawn } = await import('child_process');
+        const result = spawnSync('git', ['branch', '--show-current'], { cwd, encoding: 'utf-8' });
         if (result.status !== 0)
             return null;
         const branch = result.stdout?.trim() || 'unknown';
         // Check if dirty
-        const statusResult = (0, child_process_1.spawnSync)('git', ['status', '--porcelain'], { cwd, encoding: 'utf-8' });
+        const statusResult = spawnSync('git', ['status', '--porcelain'], { cwd, encoding: 'utf-8' });
         const dirty = statusResult.status === 0 && statusResult.stdout?.trim().length > 0;
         // Get ahead/behind
-        const revListResult = (0, child_process_1.spawnSync)('git', ['rev-list', '--count', '--left-right', '@{upstream}...HEAD'], {
+        const revListResult = spawnSync('git', ['rev-list', '--count', '--left-right', '@{upstream}...HEAD'], {
             cwd,
             encoding: 'utf-8',
         });

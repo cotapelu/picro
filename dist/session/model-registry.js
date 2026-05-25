@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Model Registry - Wrapper around llm package
@@ -6,13 +5,7 @@
  *
  * Uses @picro/llm MODELS and lookup functions
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getModels = exports.getProviders = exports.getModel = exports.DefaultModelRegistry = void 0;
-exports.createModelRegistry = createModelRegistry;
-const index_js_1 = require("../llm/index.js");
-Object.defineProperty(exports, "getModel", { enumerable: true, get: function () { return index_js_1.getModel; } });
-Object.defineProperty(exports, "getProviders", { enumerable: true, get: function () { return index_js_1.getProviders; } });
-Object.defineProperty(exports, "getModels", { enumerable: true, get: function () { return index_js_1.getModels; } });
+import { getModel, getProviders, getModels } from "../llm/index.js";
 const PROVIDER_API_KEYS = {
     anthropic: "ANTHROPIC_API_KEY",
     openai: "OPENAI_API_KEY",
@@ -29,7 +22,7 @@ const PROVIDER_API_KEYS = {
 /**
  * Default model registry using llm MODELS
  */
-class DefaultModelRegistry {
+export class DefaultModelRegistry {
     customApiKeys = new Map();
     customHeaders = new Map();
     modelsPath;
@@ -37,12 +30,12 @@ class DefaultModelRegistry {
         this.modelsPath = modelsPath;
     }
     find(provider, modelId) {
-        return (0, index_js_1.getModel)(provider, modelId);
+        return getModel(provider, modelId);
     }
     async getAvailable() {
         const available = [];
-        for (const provider of (0, index_js_1.getProviders)()) {
-            const models = (0, index_js_1.getModels)(provider);
+        for (const provider of getProviders()) {
+            const models = getModels(provider);
             for (const model of models) {
                 if (this.hasConfiguredAuth(model)) {
                     available.push(model);
@@ -53,13 +46,13 @@ class DefaultModelRegistry {
     }
     getAll() {
         const all = [];
-        for (const provider of (0, index_js_1.getProviders)()) {
-            all.push(...(0, index_js_1.getModels)(provider));
+        for (const provider of getProviders()) {
+            all.push(...getModels(provider));
         }
         return all;
     }
     getProviders() {
-        return (0, index_js_1.getProviders)();
+        return getProviders();
     }
     hasConfiguredAuth(model) {
         const key = this._getKey(model.provider, "*");
@@ -117,8 +110,9 @@ class DefaultModelRegistry {
         return `${provider}:${modelId}`;
     }
 }
-exports.DefaultModelRegistry = DefaultModelRegistry;
-function createModelRegistry(_modelsPath) {
+export function createModelRegistry(_modelsPath) {
     return new DefaultModelRegistry();
 }
+// Export llm functions for direct use
+export { getModel, getProviders, getModels };
 //# sourceMappingURL=model-registry.js.map

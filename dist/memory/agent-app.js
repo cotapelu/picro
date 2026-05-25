@@ -1,15 +1,12 @@
-"use strict";
 /**
  * AgentMemoryApp - High-level wrapper for agents
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AgentMemoryApp = void 0;
-const engine_js_1 = require("./engine.js");
-class AgentMemoryApp {
+import { MemoryEngine } from './engine.js';
+export class AgentMemoryApp {
     engine;
     initialized = false;
     constructor(store, project, cacheTTL) {
-        this.engine = new engine_js_1.MemoryEngine({
+        this.engine = new MemoryEngine({
             store,
             project: project || "default",
             topK: 10,
@@ -131,5 +128,4 @@ class AgentMemoryApp {
         return true;
     }
 }
-exports.AgentMemoryApp = AgentMemoryApp;
 //# sourceMappingURL=agent-app.js.map

@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Compaction - Session context compaction
@@ -9,25 +8,7 @@
  * - Compaction preparation
  * - Summarization (stub)
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_COMPACTION_SETTINGS = void 0;
-exports.createFileOps = createFileOps;
-exports.extractFileOpsFromMessage = extractFileOpsFromMessage;
-exports.computeFileLists = computeFileLists;
-exports.formatFileOperations = formatFileOperations;
-exports.estimateTokens = estimateTokens;
-exports.estimateContextTokens = estimateContextTokens;
-exports.findCutPoint = findCutPoint;
-exports.calculateContextTokens = calculateContextTokens;
-exports.getAssistantUsage = getAssistantUsage;
-exports.estimateContextUsage = estimateContextUsage;
-exports.shouldCompact = shouldCompact;
-exports.compactSession = compactSession;
-exports.getMessageFromEntry = getMessageFromEntry;
-exports.findValidCutPoints = findValidCutPoints;
-exports.prepareCompaction = prepareCompaction;
-exports.compact = compact;
-const index_js_1 = require("../llm/index.js");
+import { complete } from "../llm/index.js";
 const SUMMARIZATION_SYSTEM_PROMPT = `You are a summarization assistant. Your task is to create a concise summary of a conversation branch.
 Include:
 - Key decisions, conclusions, and outcomes
@@ -37,19 +18,19 @@ Include:
 - Any context needed to continue the conversation without the full transcript.
 
 Keep the summary under 4000 tokens. Be factual and succinct. Do not add commentary.`;
-exports.DEFAULT_COMPACTION_SETTINGS = {
+export const DEFAULT_COMPACTION_SETTINGS = {
     enabled: true,
     reserveTokens: 16384,
     keepRecentTokens: 20000,
 };
-function createFileOps() {
+export function createFileOps() {
     return {
         read: new Set(),
         written: new Set(),
         edited: new Set(),
     };
 }
-function extractFileOpsFromMessage(message, fileOps) {
+export function extractFileOpsFromMessage(message, fileOps) {
     if (message.role !== "assistant")
         return;
     const content = message.content;
@@ -95,13 +76,13 @@ function serializeConversation(messages) {
         return `[${role}]: ${text}`;
     }).join('\n\n');
 }
-function computeFileLists(fileOps) {
+export function computeFileLists(fileOps) {
     const modified = new Set([...fileOps.edited, ...fileOps.written]);
     const readOnly = [...fileOps.read].filter(f => !modified.has(f)).sort();
     const modifiedFiles = [...modified].sort();
     return { readFiles: readOnly, modifiedFiles };
 }
-function formatFileOperations(readFiles, modifiedFiles) {
+export function formatFileOperations(readFiles, modifiedFiles) {
     const sections = [];
     if (readFiles.length > 0)
         sections.push(`<read-files>\n${readFiles.join("\n")}\n</read-files>`);
@@ -112,7 +93,7 @@ function formatFileOperations(readFiles, modifiedFiles) {
 // ============================================================================
 // Token Estimation
 // ============================================================================
-function estimateTokens(message) {
+export function estimateTokens(message) {
     let chars = 0;
     const role = message.role;
     if (role === 'user') {
@@ -172,14 +153,14 @@ function estimateTokens(message) {
 /**
  * Simple total token estimation (sum of per-message estimates).
  */
-function estimateContextTokens(messages) {
+export function estimateContextTokens(messages) {
     let total = 0;
     for (const msg of messages) {
         total += estimateTokens(msg);
     }
     return total;
 }
-function findCutPoint(messages, keepRecentTokens) {
+export function findCutPoint(messages, keepRecentTokens) {
     let accumulatedTokens = 0;
     for (let i = messages.length - 1; i >= 0; i--) {
         const msgTokens = estimateTokens(messages[i]);
@@ -201,7 +182,7 @@ function findCutPoint(messages, keepRecentTokens) {
 // ============================================================================
 // Compaction Check
 // ============================================================================
-function calculateContextTokens(usage) {
+export function calculateContextTokens(usage) {
     // usage can be from AgentMessage.usage or any compatible shape
     return (usage.total ??
         usage.totalTokens ??
@@ -211,7 +192,7 @@ function calculateContextTokens(usage) {
  * Get usage from an assistant message if available.
  * Skips aborted and error messages.
  */
-function getAssistantUsage(msg) {
+export function getAssistantUsage(msg) {
     if (msg.role === "assistant" && "usage" in msg) {
         const assistantMsg = msg;
         if (assistantMsg.stopReason !== "aborted" && assistantMsg.stopReason !== "error" && assistantMsg.usage) {
@@ -224,7 +205,7 @@ function getAssistantUsage(msg) {
  * Estimate context tokens from messages, using last assistant usage when available.
  * Returns total tokens, tokens from usage, trailing tokens after usage, and index of last usage.
  */
-function estimateContextUsage(messages) {
+export function estimateContextUsage(messages) {
     let lastUsageIndex = null;
     let usageTokens = 0;
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -257,12 +238,12 @@ function estimateContextUsage(messages) {
 /**
  * Check if compaction should trigger based on context usage.
  */
-function shouldCompact(contextTokens, contextWindow, settings) {
+export function shouldCompact(contextTokens, contextWindow, settings) {
     if (!settings.enabled)
         return false;
     return contextTokens > contextWindow - settings.reserveTokens;
 }
-async function compactSession(messages, settings = exports.DEFAULT_COMPACTION_SETTINGS, _llmSummarize) {
+export async function compactSession(messages, settings = DEFAULT_COMPACTION_SETTINGS, _llmSummarize) {
     const totalTokens = estimateContextTokens(messages);
     if (!shouldCompact(totalTokens, 128000, settings)) {
         return {
@@ -287,7 +268,7 @@ async function compactSession(messages, settings = exports.DEFAULT_COMPACTION_SE
  * Extract AgentMessage from a SessionEntry.
  * Returns undefined for entries that don't contribute to LLM context.
  */
-function getMessageFromEntry(entry) {
+export function getMessageFromEntry(entry) {
     if (entry.type === "message") {
         return entry.message;
     }
@@ -299,7 +280,7 @@ function getMessageFromEntry(entry) {
  * Find indices of valid cut points in entries array.
  * Returns array of indices that are valid cut positions (user, assistant, custom, bashExecution).
  */
-function findValidCutPoints(entries) {
+export function findValidCutPoints(entries) {
     const cutPoints = [];
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
@@ -317,7 +298,7 @@ function findValidCutPoints(entries) {
  * Prepare compaction: determine what to summarize, token counts, file ops.
  * This is the core logic before LLM summarization.
  */
-function prepareCompaction(entries, settings) {
+export function prepareCompaction(entries, settings) {
     // Convert entries to messages for token estimation
     const messages = [];
     const entryIndices = []; // track which entries correspond to which message
@@ -399,7 +380,7 @@ function prepareCompaction(entries, settings) {
  * Core compaction function that generates summary via LLM.
  * This is a stub - should call LLM API.
  */
-async function compact(preparation, _model, _apiKey, _headers, _customInstructions, _signal, _thinkingLevel) {
+export async function compact(preparation, _model, _apiKey, _headers, _customInstructions, _signal, _thinkingLevel) {
     const { messagesToSummarize, turnPrefixMessages, isSplitTurn, previousSummary, fileOps, firstKeptEntryId, tokensBefore } = preparation;
     // Compute file lists for details and prompt
     const { readFiles, modifiedFiles } = computeFileLists(fileOps);
@@ -424,7 +405,7 @@ async function compact(preparation, _model, _apiKey, _headers, _customInstructio
                 { role: 'user', content: userPrompt, timestamp: Date.now() }
             ]
         };
-        const llmResult = await (0, index_js_1.complete)(model, context, {
+        const llmResult = await complete(model, context, {
             maxTokens: 2000,
             temperature: 0.3,
             signal: _signal,

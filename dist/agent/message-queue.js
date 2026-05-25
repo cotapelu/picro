@@ -1,16 +1,13 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Message queue for pending conversation turns.
  * Different implementation: uses array with head index for efficient dequeue.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.MessageQueue = void 0;
 /**
  * Efficient message queue using circular buffer pattern.
  * Internal array never shrinks, uses head index for O(1) dequeue.
  */
-class MessageQueue {
+export class MessageQueue {
     storage = [];
     head = 0;
     mode;
@@ -103,5 +100,4 @@ class MessageQueue {
         return this.storage.slice(this.head);
     }
 }
-exports.MessageQueue = MessageQueue;
 //# sourceMappingURL=message-queue.js.map

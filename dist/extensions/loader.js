@@ -1,56 +1,17 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Extensions Loader - Load extensions from file system
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadExtensions = loadExtensions;
-exports.loadExtension = loadExtension;
-exports.loadExtensionFromFactory = loadExtensionFromFactory;
-exports.discoverAndLoadExtensions = discoverAndLoadExtensions;
-const node_fs_1 = require("node:fs");
-const node_path_1 = require("node:path");
-const runner_js_1 = require("./runner.js");
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { createExtensionRuntime } from "./runner.js";
 /**
  * Load extensions from paths
  */
-async function loadExtensions(paths, cwd, eventBus) {
+export async function loadExtensions(paths, cwd, eventBus) {
     const extensions = [];
     const errors = [];
-    const runtime = (0, runner_js_1.createExtensionRuntime)();
+    const runtime = createExtensionRuntime();
     for (const path of paths) {
         try {
             const extension = await loadExtension(path, cwd, eventBus, runtime);
@@ -99,30 +60,30 @@ async function loadExtensions(paths, cwd, eventBus) {
 /**
  * Load a single extension
  */
-async function loadExtension(path, cwd, eventBus, runtime) {
-    const resolvedPath = (0, node_path_1.resolve)(cwd, path);
-    if (!(0, node_fs_1.existsSync)(resolvedPath)) {
+export async function loadExtension(path, cwd, eventBus, runtime) {
+    const resolvedPath = resolve(cwd, path);
+    if (!existsSync(resolvedPath)) {
         throw new Error(`Extension path does not exist: ${resolvedPath}`);
     }
     // Check if it's a directory or file
-    const stats = await Promise.resolve().then(() => __importStar(require("node:fs"))).then(fs => fs.statSync(resolvedPath));
+    const stats = await import("node:fs").then(fs => fs.statSync(resolvedPath));
     let extensionPath = resolvedPath;
     let extensionDir = resolvedPath;
     if (stats.isDirectory()) {
         // Look for index.js or package.json
-        const indexPath = (0, node_path_1.join)(resolvedPath, "index.js");
-        if ((0, node_fs_1.existsSync)(indexPath)) {
+        const indexPath = join(resolvedPath, "index.js");
+        if (existsSync(indexPath)) {
             extensionPath = indexPath;
         }
     }
     else if (resolvedPath.endsWith(".js")) {
-        extensionDir = (0, node_path_1.resolve)(resolvedPath, "..");
+        extensionDir = resolve(resolvedPath, "..");
     }
     // Load the extension module
     let module;
     try {
         // Try dynamic import
-        module = await Promise.resolve(`${extensionPath}`).then(s => __importStar(require(s)));
+        module = await import(extensionPath);
     }
     catch (error) {
         throw new Error(`Failed to load extension: ${error instanceof Error ? error.message : String(error)}`);
@@ -156,7 +117,7 @@ async function loadExtension(path, cwd, eventBus, runtime) {
 /**
  * Load extension from factory
  */
-async function loadExtensionFromFactory(factory, cwd, eventBus, runtime, path) {
+export async function loadExtensionFromFactory(factory, cwd, eventBus, runtime, path) {
     const context = {
         extensionDir: path,
         cwd,
@@ -188,16 +149,16 @@ function createExtensionAPI(runtime) {
  */
 function resolveExtensionEntries(dir) {
     // Check for package.json with pi field first
-    const packageJsonPath = (0, node_path_1.join)(dir, "package.json");
-    if ((0, node_fs_1.existsSync)(packageJsonPath)) {
+    const packageJsonPath = join(dir, "package.json");
+    if (existsSync(packageJsonPath)) {
         try {
-            const content = (0, node_fs_1.readFileSync)(packageJsonPath, "utf-8");
+            const content = readFileSync(packageJsonPath, "utf-8");
             const pkg = JSON.parse(content);
             if (pkg.pi?.extensions?.length) {
                 const entries = [];
                 for (const extPath of pkg.pi.extensions) {
-                    const resolved = (0, node_path_1.resolve)(dir, extPath);
-                    if ((0, node_fs_1.existsSync)(resolved))
+                    const resolved = resolve(dir, extPath);
+                    if (existsSync(resolved))
                         entries.push(resolved);
                 }
                 if (entries.length)
@@ -209,31 +170,31 @@ function resolveExtensionEntries(dir) {
         }
     }
     // Check for index.ts or index.js (prefer .ts for development)
-    const indexTs = (0, node_path_1.join)(dir, "index.ts");
-    const indexJs = (0, node_path_1.join)(dir, "index.js");
-    if ((0, node_fs_1.existsSync)(indexTs))
+    const indexTs = join(dir, "index.ts");
+    const indexJs = join(dir, "index.js");
+    if (existsSync(indexTs))
         return [indexTs];
-    if ((0, node_fs_1.existsSync)(indexJs))
+    if (existsSync(indexJs))
         return [indexJs];
     return null;
 }
 /**
  * Discover and load extensions from standard locations
  */
-async function discoverAndLoadExtensions(options) {
+export async function discoverAndLoadExtensions(options) {
     const paths = [];
     // Add default extension paths
     const defaultPaths = [
-        (0, node_path_1.join)(options.agentDir, "extensions"),
-        (0, node_path_1.join)(options.cwd, ".pi", "extensions"),
+        join(options.agentDir, "extensions"),
+        join(options.cwd, ".pi", "extensions"),
     ];
     for (const basePath of defaultPaths) {
-        if (!(0, node_fs_1.existsSync)(basePath))
+        if (!existsSync(basePath))
             continue;
         try {
-            const entries = (0, node_fs_1.readdirSync)(basePath, { withFileTypes: true });
+            const entries = readdirSync(basePath, { withFileTypes: true });
             for (const entry of entries) {
-                const fullPath = (0, node_path_1.join)(basePath, entry.name);
+                const fullPath = join(basePath, entry.name);
                 if (entry.isDirectory()) {
                     // Resolve extension entry points from directory
                     const extEntries = resolveExtensionEntries(fullPath);
@@ -259,9 +220,9 @@ async function discoverAndLoadExtensions(options) {
     // Add additional paths
     if (options.additionalPaths) {
         for (const additionalPath of options.additionalPaths) {
-            const resolvedPath = (0, node_path_1.resolve)(options.cwd, additionalPath);
-            if ((0, node_fs_1.existsSync)(resolvedPath)) {
-                const stats = (0, node_fs_1.statSync)(resolvedPath);
+            const resolvedPath = resolve(options.cwd, additionalPath);
+            if (existsSync(resolvedPath)) {
+                const stats = statSync(resolvedPath);
                 if (stats.isDirectory()) {
                     const extEntries = resolveExtensionEntries(resolvedPath);
                     if (extEntries) {
@@ -270,11 +231,11 @@ async function discoverAndLoadExtensions(options) {
                     else {
                         // Discover individual .js/.ts files in directory
                         try {
-                            const files = (0, node_fs_1.readdirSync)(resolvedPath, { withFileTypes: true });
+                            const files = readdirSync(resolvedPath, { withFileTypes: true });
                             for (const file of files) {
                                 if ((file.isFile() || file.isSymbolicLink()) &&
                                     (file.name.endsWith('.js') || file.name.endsWith('.ts'))) {
-                                    paths.push((0, node_path_1.join)(resolvedPath, file.name));
+                                    paths.push(join(resolvedPath, file.name));
                                 }
                             }
                         }

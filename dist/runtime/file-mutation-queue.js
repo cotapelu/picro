@@ -1,16 +1,13 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * File Mutation Queue - Sequential execution for file write/edit operations
  * Moved from agent/ to runtime/ as it's not core agent logic.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.FileMutationQueue = void 0;
 /**
  * FileMutationQueue manages sequential file mutations.
  * Operations are executed in FIFO order.
  */
-class FileMutationQueue {
+export class FileMutationQueue {
     queue = [];
     processing = false;
     options;
@@ -138,5 +135,4 @@ class FileMutationQueue {
         }
     }
 }
-exports.FileMutationQueue = FileMutationQueue;
 //# sourceMappingURL=file-mutation-queue.js.map

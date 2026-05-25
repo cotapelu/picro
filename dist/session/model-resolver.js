@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Model Resolver - Resolve model patterns to actual Model objects
@@ -6,17 +5,10 @@
  *
  * Uses @picro/llm functions
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.defaultModelPerProvider = void 0;
-exports.parseModelPattern = parseModelPattern;
-exports.resolveModelScope = resolveModelScope;
-exports.resolveCliModel = resolveCliModel;
-exports.findInitialModel = findInitialModel;
-exports.restoreModelFromSession = restoreModelFromSession;
 // ============================================================================
 // Constants
 // ============================================================================
-exports.defaultModelPerProvider = {
+export const defaultModelPerProvider = {
     anthropic: "claude-opus-4-7",
     openai: "gpt-5.4",
     google: "gemini-3.1-pro-preview",
@@ -89,7 +81,7 @@ const thinkingLevels = ["off", "low", "medium", "high", "auto"];
 function isValidThinkingLevel(level) {
     return thinkingLevels.includes(level);
 }
-function parseModelPattern(pattern, models, options) {
+export function parseModelPattern(pattern, models, options) {
     const exactMatch = tryMatchModel(pattern, models);
     if (exactMatch) {
         return { model: exactMatch, thinkingLevel: undefined, warning: undefined };
@@ -112,7 +104,7 @@ function parseModelPattern(pattern, models, options) {
     }
     return { model: undefined, thinkingLevel: undefined, warning: undefined };
 }
-function resolveModelScope(scope, model, registry) {
+export function resolveModelScope(scope, model, registry) {
     if (!scope)
         return undefined;
     // Check for just thinking level
@@ -126,7 +118,7 @@ function resolveModelScope(scope, model, registry) {
     }
     return undefined;
 }
-async function resolveCliModel(options, signal) {
+export async function resolveCliModel(options, signal) {
     const { initialModel, modelScope, registry } = options;
     let error;
     if (signal?.aborted) {
@@ -166,7 +158,7 @@ async function resolveCliModel(options, signal) {
     }
     return { model, thinkingLevel, warning: undefined, error };
 }
-function findInitialModel(options, signal) {
+export function findInitialModel(options, signal) {
     const { defaultModel, configModel, initialModel, registry } = options;
     const models = registry.getAll();
     // Priority: initialModel > configModel > defaultModel
@@ -192,7 +184,7 @@ function findInitialModel(options, signal) {
         fallbackMessage: "No model selected or available. Use --model to specify a model.",
     };
 }
-async function restoreModelFromSession(sessionModel, registry, signal) {
+export async function restoreModelFromSession(sessionModel, registry, signal) {
     if (!sessionModel)
         return undefined;
     const models = registry.getAll();

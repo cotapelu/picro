@@ -1,19 +1,16 @@
-"use strict";
 /**
  * Memory Engine
  * Core memory system with crypto integrity
  * Uses: storage.ts, retrieval.ts, types.ts
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.MemoryEngine = void 0;
-const storage_js_1 = require("./storage.js");
-const retrieval_js_1 = require("./retrieval.js");
-const events_js_1 = require("./events.js");
-const perf_hooks_1 = require("perf_hooks");
+import { MemoryStorage, memoryHash } from './storage.js';
+import { MemoryRetriever } from './retrieval.js';
+import { MemoryEventLog } from './events.js';
+import { performance } from 'perf_hooks';
 // ---------------------------------------------------------------------------
 // Engine
 // ---------------------------------------------------------------------------
-class MemoryEngine {
+export class MemoryEngine {
     storage;
     retriever;
     eventLog;
@@ -40,13 +37,13 @@ class MemoryEngine {
     totalResultScores = 0;
     resultCount = 0;
     constructor(config) {
-        this.storage = new storage_js_1.MemoryStorage({
+        this.storage = new MemoryStorage({
             store: config.store,
             maxMemories: config.maxMemories || 100,
         });
-        this.retriever = new retrieval_js_1.MemoryRetriever();
+        this.retriever = new MemoryRetriever();
         this.retriever.setCacheTTL(config.cacheTTL || 300000); // 5 min default
-        this.eventLog = new events_js_1.MemoryEventLog();
+        this.eventLog = new MemoryEventLog();
         this.currentProject = config.project || "default";
         this.topK = config.topK || 50;
         this.forgettingDays = config.forgettingDays || 7;
@@ -75,7 +72,7 @@ class MemoryEngine {
     async add(content, action, metadata) {
         // Auto-apply forgetting to keep memory fresh
         this.applyForgetting();
-        const hash = (0, storage_js_1.memoryHash)(content, { action, ...metadata });
+        const hash = memoryHash(content, { action, ...metadata });
         const memId = await this.storage.add(content, action, this.currentProject, metadata);
         this.eventLog.log("SAVE", memId, content, action, undefined, hash);
         this.stats.saves++;
@@ -94,7 +91,7 @@ class MemoryEngine {
      */
     async recall(query) {
         this.stats.queries++;
-        const startTime = perf_hooks_1.performance.now();
+        const startTime = performance.now();
         const allMemories = await this.storage.getAll();
         if (allMemories.length === 0) {
             this.queryCount++;
@@ -151,7 +148,7 @@ class MemoryEngine {
         filtered.sort((a, b) => b.score - a.score);
         const memories = filtered.slice(0, this.topK).map(item => item.mem);
         // Track metrics: latency and result scores
-        const latency = perf_hooks_1.performance.now() - startTime;
+        const latency = performance.now() - startTime;
         this.queryCount++;
         this.queryLatencySum += latency;
         this.queryLatencies.push(latency);
@@ -421,5 +418,4 @@ class MemoryEngine {
         return this.eventLog;
     }
 }
-exports.MemoryEngine = MemoryEngine;
 //# sourceMappingURL=engine.js.map

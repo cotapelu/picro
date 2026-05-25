@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Diagnostics - System and runtime information collection
@@ -8,34 +7,23 @@
  * - Performance profiling
  * - Support requests
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSystemInfo = getSystemInfo;
-exports.getMemoryInfo = getMemoryInfo;
-exports.getNetworkInterfaces = getNetworkInterfaces;
-exports.getPerformanceMetrics = getPerformanceMetrics;
-exports.getFileStats = getFileStats;
-exports.formatFileSize = formatFileSize;
-exports.isDevelopment = isDevelopment;
-exports.isTest = isTest;
-exports.collectDiagnostics = collectDiagnostics;
-exports.generateDiagnosticReport = generateDiagnosticReport;
-const os_1 = require("os");
-const fs_1 = require("fs");
-const promises_1 = require("fs/promises");
-const path_1 = require("path");
+import { cpus, freemem, totalmem, arch, platform, release, version, hostname, networkInterfaces } from 'os';
+import { existsSync } from 'fs';
+import { stat } from 'fs/promises';
+import { join } from 'path';
 /**
  * Get system information
  */
-function getSystemInfo() {
-    const cpusInfo = (0, os_1.cpus)();
-    const totalMem = (0, os_1.totalmem)();
-    const freeMem = (0, os_1.freemem)();
+export function getSystemInfo() {
+    const cpusInfo = cpus();
+    const totalMem = totalmem();
+    const freeMem = freemem();
     return {
-        arch: (0, os_1.arch)(),
-        platform: (0, os_1.platform)(),
-        osRelease: (0, os_1.release)(),
-        nodeVersion: (0, os_1.version)(),
-        hostname: (0, os_1.hostname)(),
+        arch: arch(),
+        platform: platform(),
+        osRelease: release(),
+        nodeVersion: version(),
+        hostname: hostname(),
         cpuModel: cpusInfo.length > 0 ? cpusInfo[0].model : 'Unknown',
         cpuCores: cpusInfo.length,
         totalMemoryMB: Math.round(totalMem / 1024 / 1024),
@@ -46,7 +34,7 @@ function getSystemInfo() {
 /**
  * Get current memory usage of this process
  */
-function getMemoryInfo() {
+export function getMemoryInfo() {
     const usage = process.memoryUsage();
     return {
         rss: usage.rss,
@@ -56,8 +44,8 @@ function getMemoryInfo() {
         arrayBuffers: usage.arrayBuffers ?? 0,
     };
 }
-function getNetworkInterfaces() {
-    const ifaces = (0, os_1.networkInterfaces)();
+export function getNetworkInterfaces() {
+    const ifaces = networkInterfaces();
     const result = [];
     for (const [iface, addresses] of Object.entries(ifaces)) {
         if (!addresses)
@@ -80,7 +68,7 @@ function getNetworkInterfaces() {
 /**
  * Get performance metrics
  */
-function getPerformanceMetrics() {
+export function getPerformanceMetrics() {
     const start = process.cpuUsage();
     const end = process.hrtime();
     // Approximate event loop delay (simple check)
@@ -97,9 +85,9 @@ function getPerformanceMetrics() {
 /**
  * Get file stats with error handling
  */
-async function getFileStats(filePath) {
+export async function getFileStats(filePath) {
     try {
-        return await (0, promises_1.stat)(filePath);
+        return await stat(filePath);
     }
     catch {
         return null;
@@ -108,7 +96,7 @@ async function getFileStats(filePath) {
 /**
  * Format file size for display
  */
-function formatFileSize(bytes) {
+export function formatFileSize(bytes) {
     if (bytes < 1024)
         return bytes + ' B';
     if (bytes < 1024 * 1024)
@@ -120,7 +108,7 @@ function formatFileSize(bytes) {
 /**
  * Check if running in development mode
  */
-function isDevelopment() {
+export function isDevelopment() {
     return process.env.NODE_ENV === 'development' ||
         process.env.PI_DEV === '1' ||
         process.argv.includes('--dev');
@@ -128,7 +116,7 @@ function isDevelopment() {
 /**
  * Check if running in test mode
  */
-function isTest() {
+export function isTest() {
     return process.env.NODE_ENV === 'test' ||
         process.argv.includes('--test') ||
         process.argv.includes('vitest');
@@ -136,7 +124,7 @@ function isTest() {
 /**
  * Collect comprehensive diagnostic information
  */
-function collectDiagnostics() {
+export function collectDiagnostics() {
     const mem = getMemoryInfo();
     const sys = getSystemInfo();
     const perf = getPerformanceMetrics();
@@ -178,8 +166,8 @@ function collectDiagnostics() {
  */
 function getPackageVersion() {
     try {
-        const pkgPath = (0, path_1.join)(process.cwd(), 'package.json');
-        if ((0, fs_1.existsSync)(pkgPath)) {
+        const pkgPath = join(process.cwd(), 'package.json');
+        if (existsSync(pkgPath)) {
             const pkg = JSON.parse(require('fs').readFileSync(pkgPath, 'utf8'));
             return pkg.version;
         }
@@ -190,7 +178,7 @@ function getPackageVersion() {
 /**
  * Generate a diagnostic report string
  */
-function generateDiagnosticReport() {
+export function generateDiagnosticReport() {
     const diag = collectDiagnostics(); // Cast for simplicity
     const lines = [];
     lines.push('=== Diagnostic Report ===');

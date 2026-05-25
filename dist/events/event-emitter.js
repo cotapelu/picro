@@ -1,17 +1,13 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Event emitter for agent lifecycle events.
  * Uses typed event handlers with async emission.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.EventEmitter = void 0;
-exports.createConsoleLogger = createConsoleLogger;
 /**
  * Central event emitter for agent events.
  * Supports typed subscriptions and global listeners.
  */
-class EventEmitter {
+export class EventEmitter {
     typedListeners = new Map();
     globalListeners = new Set();
     eventMetrics = new Map();
@@ -132,12 +128,11 @@ class EventEmitter {
         this.eventMetrics.clear();
     }
 }
-exports.EventEmitter = EventEmitter;
 /**
  * Create a simple console logger emitter.
  * Logs events to console when verbose is true.
  */
-function createConsoleLogger(verbose = true) {
+export function createConsoleLogger(verbose = true) {
     const emitter = new EventEmitter();
     if (verbose) {
         const formatTimestamp = (ts) => {

@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * System prompt construction for AgentSession.
@@ -10,10 +9,8 @@
  * - Skills
  * - Date and working directory
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildSystemPrompt = buildSystemPrompt;
 /** Build the system prompt */
-function buildSystemPrompt(options) {
+export function buildSystemPrompt(options) {
     const { customPrompt, selectedTools, toolSnippets, promptGuidelines, appendSystemPrompt, cwd, contextFiles, skills, } = options;
     const promptCwd = cwd.replace(/\\/g, "/");
     const now = new Date();

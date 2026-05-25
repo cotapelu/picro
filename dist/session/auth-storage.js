@@ -1,40 +1,37 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Auth Storage - Quản lý API keys và OAuth credentials
  * Moved from agent/ to session/ because it's session-specific.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuthStorage = void 0;
-const node_fs_1 = require("node:fs");
-const node_path_1 = require("node:path");
-const node_os_1 = require("node:os");
+import { existsSync, mkdirSync, readFileSync, writeFileSync, chmodSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { homedir } from "node:os";
 class FileAuthStorageBackend {
     authPath;
-    constructor(authPath = (0, node_path_1.join)((0, node_os_1.homedir)(), ".pi", "agent", "auth.json")) {
+    constructor(authPath = join(homedir(), ".pi", "agent", "auth.json")) {
         this.authPath = authPath;
     }
     ensureParentDir() {
-        const dir = (0, node_path_1.dirname)(this.authPath);
-        if (!(0, node_fs_1.existsSync)(dir)) {
-            (0, node_fs_1.mkdirSync)(dir, { recursive: true, mode: 0o700 });
+        const dir = dirname(this.authPath);
+        if (!existsSync(dir)) {
+            mkdirSync(dir, { recursive: true, mode: 0o700 });
         }
     }
     ensureFileExists() {
-        if (!(0, node_fs_1.existsSync)(this.authPath)) {
-            (0, node_fs_1.writeFileSync)(this.authPath, "{}", "utf-8");
-            (0, node_fs_1.chmodSync)(this.authPath, 0o600);
+        if (!existsSync(this.authPath)) {
+            writeFileSync(this.authPath, "{}", "utf-8");
+            chmodSync(this.authPath, 0o600);
         }
     }
     withLock(fn) {
         this.ensureParentDir();
         this.ensureFileExists();
         try {
-            const current = (0, node_fs_1.existsSync)(this.authPath) ? (0, node_fs_1.readFileSync)(this.authPath, "utf-8") : undefined;
+            const current = existsSync(this.authPath) ? readFileSync(this.authPath, "utf-8") : undefined;
             const { result, next } = fn(current);
             if (next !== undefined) {
-                (0, node_fs_1.writeFileSync)(this.authPath, next, "utf-8");
-                (0, node_fs_1.chmodSync)(this.authPath, 0o600);
+                writeFileSync(this.authPath, next, "utf-8");
+                chmodSync(this.authPath, 0o600);
             }
             return result;
         }
@@ -57,7 +54,7 @@ class InMemoryAuthStorageBackend {
 // ============================================================================
 // AuthStorage Class
 // ============================================================================
-class AuthStorage {
+export class AuthStorage {
     storage;
     data = {};
     runtimeOverrides = new Map();
@@ -233,5 +230,4 @@ class AuthStorage {
         return undefined;
     }
 }
-exports.AuthStorage = AuthStorage;
 //# sourceMappingURL=auth-storage.js.map

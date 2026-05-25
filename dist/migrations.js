@@ -1,49 +1,42 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Startup migrations for upgrading from older versions.
  * These are safe to run on every startup; they skip if already done.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.migrateAuthToAuthJson = migrateAuthToAuthJson;
-exports.migrateSessionsFromAgentRoot = migrateSessionsFromAgentRoot;
-exports.migrateCommandsToPrompts = migrateCommandsToPrompts;
-exports.runMigrations = runMigrations;
-exports.showDeprecationWarnings = showDeprecationWarnings;
-const node_fs_1 = require("node:fs");
-const node_path_1 = require("node:path");
-const config_js_1 = require("./config.js");
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { getAgentDir } from "./config.js";
 /**
  * Migrate legacy oauth.json and settings.json apiKeys to auth.json.
  * Returns list of provider names that were migrated.
  */
-function migrateAuthToAuthJson() {
-    const agentDir = (0, config_js_1.getAgentDir)();
-    const authPath = (0, node_path_1.join)(agentDir, "auth.json");
-    const oauthPath = (0, node_path_1.join)(agentDir, "oauth.json");
-    const settingsPath = (0, node_path_1.join)(agentDir, "settings.json");
-    if ((0, node_fs_1.existsSync)(authPath))
+export function migrateAuthToAuthJson() {
+    const agentDir = getAgentDir();
+    const authPath = join(agentDir, "auth.json");
+    const oauthPath = join(agentDir, "oauth.json");
+    const settingsPath = join(agentDir, "settings.json");
+    if (existsSync(authPath))
         return [];
     const migrated = {};
     const providers = [];
     // Migrate oauth.json
-    if ((0, node_fs_1.existsSync)(oauthPath)) {
+    if (existsSync(oauthPath)) {
         try {
-            const oauth = JSON.parse((0, node_fs_1.readFileSync)(oauthPath, "utf-8"));
+            const oauth = JSON.parse(readFileSync(oauthPath, "utf-8"));
             for (const [provider, cred] of Object.entries(oauth)) {
                 migrated[provider] = { type: "oauth", ...cred };
                 providers.push(provider);
             }
-            (0, node_fs_1.renameSync)(oauthPath, `${oauthPath}.migrated`);
+            renameSync(oauthPath, `${oauthPath}.migrated`);
         }
         catch {
             // ignore errors
         }
     }
     // Migrate settings.json apiKeys
-    if ((0, node_fs_1.existsSync)(settingsPath)) {
+    if (existsSync(settingsPath)) {
         try {
-            const content = (0, node_fs_1.readFileSync)(settingsPath, "utf-8");
+            const content = readFileSync(settingsPath, "utf-8");
             const settings = JSON.parse(content);
             if (settings.apiKeys && typeof settings.apiKeys === "object") {
                 for (const [provider, key] of Object.entries(settings.apiKeys)) {
@@ -53,7 +46,7 @@ function migrateAuthToAuthJson() {
                     }
                 }
                 delete settings.apiKeys;
-                (0, node_fs_1.writeFileSync)(settingsPath, JSON.stringify(settings, null, 2));
+                writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
             }
         }
         catch {
@@ -61,8 +54,8 @@ function migrateAuthToAuthJson() {
         }
     }
     if (Object.keys(migrated).length > 0) {
-        (0, node_fs_1.mkdirSync)((0, node_path_1.dirname)(authPath), { recursive: true });
-        (0, node_fs_1.writeFileSync)(authPath, JSON.stringify(migrated, null, 2), { mode: 0o600 });
+        mkdirSync(dirname(authPath), { recursive: true });
+        writeFileSync(authPath, JSON.stringify(migrated, null, 2), { mode: 0o600 });
     }
     return providers;
 }
@@ -70,13 +63,13 @@ function migrateAuthToAuthJson() {
  * Migrate sessions from ~/.pi/agent/*.jsonl to proper session directories.
  * This fixes bug where sessions were saved in agent root instead of sessions/<cwd-hash>/.
  */
-function migrateSessionsFromAgentRoot() {
-    const agentDir = (0, config_js_1.getAgentDir)();
+export function migrateSessionsFromAgentRoot() {
+    const agentDir = getAgentDir();
     let files;
     try {
-        files = (0, node_fs_1.readdirSync)(agentDir)
+        files = readdirSync(agentDir)
             .filter((f) => f.endsWith(".jsonl"))
-            .map((f) => (0, node_path_1.join)(agentDir, f));
+            .map((f) => join(agentDir, f));
     }
     catch {
         return 0;
@@ -86,7 +79,7 @@ function migrateSessionsFromAgentRoot() {
     let moved = 0;
     for (const file of files) {
         try {
-            const content = (0, node_fs_1.readFileSync)(file, "utf8");
+            const content = readFileSync(file, "utf8");
             const firstLine = content.split("\n")[0];
             if (!firstLine?.trim())
                 continue;
@@ -95,15 +88,15 @@ function migrateSessionsFromAgentRoot() {
                 continue;
             const cwd = header.cwd;
             const safePath = `--${cwd.replace(/^[/\\]/, "").replace(/[/\\:]/g, "-")}--`;
-            const correctDir = (0, node_path_1.join)(agentDir, "sessions", safePath);
-            if (!(0, node_fs_1.existsSync)(correctDir)) {
-                (0, node_fs_1.mkdirSync)(correctDir, { recursive: true });
+            const correctDir = join(agentDir, "sessions", safePath);
+            if (!existsSync(correctDir)) {
+                mkdirSync(correctDir, { recursive: true });
             }
             const fileName = file.split("/").pop() || file.split("\\").pop();
-            const newPath = (0, node_path_1.join)(correctDir, fileName);
-            if ((0, node_fs_1.existsSync)(newPath))
+            const newPath = join(correctDir, fileName);
+            if (existsSync(newPath))
                 continue;
-            (0, node_fs_1.renameSync)(file, newPath);
+            renameSync(file, newPath);
             moved++;
         }
         catch {
@@ -115,12 +108,12 @@ function migrateSessionsFromAgentRoot() {
 /**
  * Migrate commands/ to prompts/ if needed.
  */
-function migrateCommandsToPrompts(baseDir, label) {
-    const commandsDir = (0, node_path_1.join)(baseDir, "commands");
-    const promptsDir = (0, node_path_1.join)(baseDir, "prompts");
-    if ((0, node_fs_1.existsSync)(commandsDir) && !(0, node_fs_1.existsSync)(promptsDir)) {
+export function migrateCommandsToPrompts(baseDir, label) {
+    const commandsDir = join(baseDir, "commands");
+    const promptsDir = join(baseDir, "prompts");
+    if (existsSync(commandsDir) && !existsSync(promptsDir)) {
         try {
-            (0, node_fs_1.renameSync)(commandsDir, promptsDir);
+            renameSync(commandsDir, promptsDir);
             return true;
         }
         catch {
@@ -133,7 +126,7 @@ function migrateCommandsToPrompts(baseDir, label) {
  * Run all migrations.
  * Returns list of provider names that were migrated (for auth) and warnings.
  */
-function runMigrations(_cwd) {
+export function runMigrations(_cwd) {
     const migratedAuthProviders = [];
     const deprecationWarnings = [];
     // Auth migration
@@ -154,7 +147,7 @@ function runMigrations(_cwd) {
     catch { }
     // Commands -> Prompts migration (global agent dir)
     try {
-        const agentDir = (0, config_js_1.getAgentDir)();
+        const agentDir = getAgentDir();
         if (migrateCommandsToPrompts(agentDir, "global")) {
             deprecationWarnings.push("Migrated global commands/ to prompts/.");
         }
@@ -165,7 +158,7 @@ function runMigrations(_cwd) {
 /**
  * Show deprecation warnings in interactive mode.
  */
-async function showDeprecationWarnings(warnings) {
+export async function showDeprecationWarnings(warnings) {
     if (warnings.length === 0)
         return;
     for (const w of warnings) {

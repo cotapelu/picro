@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * LsTool - List directory contents
@@ -8,18 +7,15 @@
  * - Entry sorting
  * - Limit support
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.lsToolDefinition = void 0;
-exports.lsTool = lsTool;
-const promises_1 = require("node:fs/promises");
-const node_path_1 = require("node:path");
+import { readdir, stat } from "node:fs/promises";
+import { resolve } from "node:path";
 const DEFAULT_LIMIT = 500;
-async function lsTool(input, cwd) {
+export async function lsTool(input, cwd) {
     const { path = ".", limit = DEFAULT_LIMIT } = input;
-    const dirPath = (0, node_path_1.resolve)(cwd, path);
+    const dirPath = resolve(cwd, path);
     let entries;
     try {
-        entries = await (0, promises_1.readdir)(dirPath);
+        entries = await readdir(dirPath);
     }
     catch {
         throw new Error(`Cannot read directory: ${path}`);
@@ -34,10 +30,10 @@ async function lsTool(input, cwd) {
             entryLimitReached = true;
             break;
         }
-        const fullPath = (0, node_path_1.resolve)(dirPath, entry);
+        const fullPath = resolve(dirPath, entry);
         let suffix = "";
         try {
-            const stats = await (0, promises_1.stat)(fullPath);
+            const stats = await stat(fullPath);
             if (stats.isDirectory()) {
                 suffix = "/";
             }
@@ -63,7 +59,7 @@ async function lsTool(input, cwd) {
         details: { entryCount: results.length },
     };
 }
-exports.lsToolDefinition = {
+export const lsToolDefinition = {
     name: "ls",
     description: "List directory contents. Returns entries sorted alphabetically with '/' suffix for directories.",
     parameters: {

@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * CLI Args - Full argument parsing
@@ -8,15 +7,11 @@
  * - @fileArgs support
  * - Extension flags support
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.isValidThinkingLevel = isValidThinkingLevel;
-exports.parseArgs = parseArgs;
-exports.printHelp = printHelp;
 const VALID_THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh"];
-function isValidThinkingLevel(level) {
+export function isValidThinkingLevel(level) {
     return VALID_THINKING_LEVELS.includes(level);
 }
-function parseArgs(args) {
+export function parseArgs(args) {
     const result = {
         messages: [],
         fileArgs: [],
@@ -178,7 +173,7 @@ function parseArgs(args) {
     }
     return result;
 }
-function printHelp() {
+export function printHelp() {
     console.log(`pi - AI coding assistant with read, bash, edit, write tools
 
 Usage:

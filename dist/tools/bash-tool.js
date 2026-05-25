@@ -1,26 +1,20 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Bash Tool - Execute bash commands
  *
  * This tool allows the agent to execute shell commands.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createBashHandler = createBashHandler;
-exports.createBashToolDefinition = createBashToolDefinition;
-exports.createBashTool = createBashTool;
-exports.isBashToolResult = isBashToolResult;
-const child_process_1 = require("child_process");
-const node_crypto_1 = require("node:crypto");
-const node_fs_1 = require("node:fs");
-const node_os_1 = require("node:os");
-const node_path_1 = require("node:path");
+import { spawn } from "child_process";
+import { randomBytes } from "node:crypto";
+import { existsSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 /**
  * Generate a unique temp file path for bash output.
  */
 function getTempFilePath() {
-    const id = (0, node_crypto_1.randomBytes)(8).toString("hex");
-    return (0, node_path_1.join)((0, node_os_1.tmpdir)(), `pi-bash-${id}.log`);
+    const id = randomBytes(8).toString("hex");
+    return join(tmpdir(), `pi-bash-${id}.log`);
 }
 /**
  * Default timeout in seconds
@@ -52,7 +46,7 @@ function getShellEnv() {
 function killProcessTree(pid) {
     try {
         if (process.platform === "win32") {
-            (0, child_process_1.spawn)("taskkill", ["/pid", pid.toString(), "/T", "/F"], { shell: true });
+            spawn("taskkill", ["/pid", pid.toString(), "/T", "/F"], { shell: true });
         }
         else {
             // Kill process group
@@ -111,11 +105,11 @@ async function executeBash(command, cwd, options = {}) {
     const { shell, args } = getShellConfig();
     const timeout = options.timeout ?? DEFAULT_TIMEOUT;
     const maxBytes = options.maxBytes ?? MAX_OUTPUT_BYTES;
-    if (!(0, node_fs_1.existsSync)(cwd)) {
+    if (!existsSync(cwd)) {
         throw new Error(`Working directory does not exist: ${cwd}\nCannot execute bash commands.`);
     }
     return new Promise((resolve, reject) => {
-        const child = (0, child_process_1.spawn)(shell, [...args, command], {
+        const child = spawn(shell, [...args, command], {
             cwd,
             detached: true,
             env: getShellEnv(),
@@ -184,7 +178,7 @@ async function executeBash(command, cwd, options = {}) {
 /**
  * Create bash tool handler
  */
-function createBashHandler(cwd, options) {
+export function createBashHandler(cwd, options) {
     const actualCwd = options?.cwd || cwd || process.cwd();
     const maxBytes = options?.maxBytes ?? MAX_OUTPUT_BYTES;
     return async (args, context) => {
@@ -221,7 +215,7 @@ function createBashHandler(cwd, options) {
 /**
  * Create a bash tool definition.
  */
-function createBashToolDefinition(cwd, options) {
+export function createBashToolDefinition(cwd, options) {
     return {
         name: "bash",
         description: "Execute a bash command. Use for git operations, running tests, npm commands, etc. Returns command output.",
@@ -245,7 +239,7 @@ function createBashToolDefinition(cwd, options) {
 /**
  * Create a bash tool instance.
  */
-function createBashTool(cwd, options) {
+export function createBashTool(cwd, options) {
     const definition = createBashToolDefinition(cwd, options);
     return {
         ...definition,
@@ -255,7 +249,7 @@ function createBashTool(cwd, options) {
 /**
  * Check if result is a bash tool result
  */
-function isBashToolResult(result) {
+export function isBashToolResult(result) {
     // This is a simple check - could be enhanced
     return typeof result === "string" && result.length > 0;
 }

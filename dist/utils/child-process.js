@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Child Process Utils - Wait for child process
@@ -6,10 +5,8 @@
  * Học từ legacy mà KHÔNG copy code:
  * - waitForChildProcess - wait for process to exit without hanging
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.waitForChildProcess = waitForChildProcess;
 const EXIT_STDIO_GRACE_MS = 100;
-function waitForChildProcess(child) {
+export function waitForChildProcess(child) {
     return new Promise((resolve, reject) => {
         let settled = false;
         let exited = false;

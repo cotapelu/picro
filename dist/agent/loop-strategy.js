@@ -1,15 +1,12 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Loop strategies for agent behavior.
  * Different naming and structure, same conceptual strategies.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.LoopStrategyFactory = exports.SelfRefineLoopStrategy = exports.SimpleLoopStrategy = exports.ReflectionLoopStrategy = exports.PlanSolveLoopStrategy = exports.ReActLoopStrategy = void 0;
 /**
  * ReAct strategy: Reason + Act pattern.
  */
-class ReActLoopStrategy {
+export class ReActLoopStrategy {
     shouldContinue(response, _state) {
         return !!(response.toolCalls && response.toolCalls.length > 0);
     }
@@ -30,11 +27,10 @@ class ReActLoopStrategy {
         return `${prompt}\n\n[ReAct Pattern - Round ${state.round + 1}]\nThink step by step and use tools when needed.`;
     }
 }
-exports.ReActLoopStrategy = ReActLoopStrategy;
 /**
  * Plan & Solve strategy.
  */
-class PlanSolveLoopStrategy {
+export class PlanSolveLoopStrategy {
     shouldContinue(response, _state) {
         return !!(response.toolCalls && response.toolCalls.length > 0);
     }
@@ -60,11 +56,10 @@ class PlanSolveLoopStrategy {
         return `${prompt}\n\n[Execution Phase - Round ${state.round}]\nContinue with your plan.`;
     }
 }
-exports.PlanSolveLoopStrategy = PlanSolveLoopStrategy;
 /**
  * Reflection strategy: self-critique before final.
  */
-class ReflectionLoopStrategy {
+export class ReflectionLoopStrategy {
     reflectRound = 0;
     shouldContinue(response, state) {
         if (response.toolCalls && response.toolCalls.length > 0) {
@@ -98,11 +93,10 @@ class ReflectionLoopStrategy {
         return prompt;
     }
 }
-exports.ReflectionLoopStrategy = ReflectionLoopStrategy;
 /**
  * Simple strategy: just continue while tool calls exist.
  */
-class SimpleLoopStrategy {
+export class SimpleLoopStrategy {
     shouldContinue(response, _state) {
         return !!(response.toolCalls && response.toolCalls.length > 0);
     }
@@ -119,11 +113,10 @@ class SimpleLoopStrategy {
         return prompt;
     }
 }
-exports.SimpleLoopStrategy = SimpleLoopStrategy;
 /**
  * Self-refine strategy: improve iteratively.
  */
-class SelfRefineLoopStrategy {
+export class SelfRefineLoopStrategy {
     phase = 'initial';
     refineCount = 0;
     maxRefines = 2;
@@ -185,11 +178,10 @@ class SelfRefineLoopStrategy {
         return prompt;
     }
 }
-exports.SelfRefineLoopStrategy = SelfRefineLoopStrategy;
 /**
  * Strategy factory.
  */
-class LoopStrategyFactory {
+export class LoopStrategyFactory {
     static create(name) {
         switch (name) {
             case 'react':
@@ -210,5 +202,4 @@ class LoopStrategyFactory {
         return ['react', 'plan-solve', 'reflection', 'simple', 'self-refine'];
     }
 }
-exports.LoopStrategyFactory = LoopStrategyFactory;
 //# sourceMappingURL=loop-strategy.js.map

@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * AgentSession - Core abstraction for agent lifecycle and session management.
@@ -13,16 +12,13 @@
  * Designed as a clean-room implementation inspired by pi-agent-legacy
  * but with different internal architecture.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AgentSession = void 0;
-exports.parseSkillBlock = parseSkillBlock;
-const auth_guidance_js_1 = require("../runtime/auth-guidance.js");
-const performance_tracker_js_1 = require("../runtime/performance-tracker.js");
-const compaction_js_1 = require("../session/compaction.js");
-const pi_ai_shim_js_1 = require("../agent/pi-ai-shim.js");
-const system_prompt_js_1 = require("../runtime/system-prompt.js");
-const branch_summarization_js_1 = require("../session/branch-summarization.js");
-const event_emitter_js_1 = require("../events/event-emitter.js");
+import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "../runtime/auth-guidance.js";
+import { PerformanceTracker } from "../runtime/performance-tracker.js";
+import { estimateContextUsage, shouldCompact, prepareCompaction, compact as performCompaction, calculateContextTokens, } from "../session/compaction.js";
+import { isContextOverflow } from "../agent/pi-ai-shim.js";
+import { buildSystemPrompt } from "../runtime/system-prompt.js";
+import { collectEntriesForBranchSummary, generateBranchSummary } from "../session/branch-summarization.js";
+import { EventEmitter } from "../events/event-emitter.js";
 // ============================================================================
 // Constants
 // ============================================================================
@@ -55,7 +51,7 @@ const THINKING_LEVELS_WITH_XHIGH = [
  * - Compaction and memory management
  * - Event subscription
  */
-class AgentSession {
+export class AgentSession {
     // Core dependencies
     agent;
     sessionManager;
@@ -146,10 +142,10 @@ class AgentSession {
         this._maxFollowUpQueueSize = config.maxFollowUpQueueSize;
         this._enablePerformanceTracking = config.enablePerformanceTracking ?? false;
         if (this._enablePerformanceTracking) {
-            this._performanceTracker = new performance_tracker_js_1.PerformanceTracker({ autoStart: true });
+            this._performanceTracker = new PerformanceTracker({ autoStart: true });
         }
         // Create emitter for session events
-        this._emitter = new event_emitter_js_1.EventEmitter();
+        this._emitter = new EventEmitter();
         // Subscribe to agent events for internal handling
         this._unsubscribeAgent = this.agent.subscribe(this._handleAgentEvent);
         // Register tools
@@ -247,7 +243,7 @@ class AgentSession {
     }
     /** Build system prompt from current tool snippets and guidelines */
     _buildSystemPrompt() {
-        return (0, system_prompt_js_1.buildSystemPrompt)({
+        return buildSystemPrompt({
             selectedTools: this.getActiveToolNames(),
             toolSnippets: Object.fromEntries(this._toolPromptSnippets),
             promptGuidelines: Array.from(this._toolPromptGuidelines.values()).flat(),
@@ -371,10 +367,10 @@ class AgentSession {
         }
         // Validate model
         if (!this._model) {
-            throw new Error((0, auth_guidance_js_1.formatNoModelSelectedMessage)());
+            throw new Error(formatNoModelSelectedMessage());
         }
         if (!this.modelRegistry.hasConfiguredAuth(this._model)) {
-            throw new Error((0, auth_guidance_js_1.formatNoApiKeyFoundMessage)(this._model.provider));
+            throw new Error(formatNoApiKeyFoundMessage(this._model.provider));
         }
         // Build user message
         const userContent = [{ type: "text", text }];
@@ -500,12 +496,12 @@ class AgentSession {
                 throw new Error(`No API key for ${model.provider}/${model.id}`);
             const entries = this.sessionManager.getBranch();
             const settings = this.settingsManager.getCompactionSettings();
-            const preparation = (0, compaction_js_1.prepareCompaction)(entries, settings);
+            const preparation = prepareCompaction(entries, settings);
             if (!preparation) {
                 this._emit({ type: 'compaction_end', reason: 'manual', result: undefined, aborted: false, willRetry: false });
                 return;
             }
-            const result = await (0, compaction_js_1.compact)(preparation, model, auth.apiKey, auth.headers, undefined, this._compactionAbortController.signal, this.thinkingLevel);
+            const result = await performCompaction(preparation, model, auth.apiKey, auth.headers, undefined, this._compactionAbortController.signal, this.thinkingLevel);
             this.sessionManager.appendCompaction(result.summary, result.firstKeptEntryId, result.tokensBefore, result.details, false);
             const sessionContext = this.sessionManager.buildSessionContext();
             this._agentState.history = sessionContext.messages;
@@ -657,7 +653,7 @@ class AgentSession {
         if (options.summarize && !this._model) {
             throw new Error('No model available for summarization');
         }
-        const { entries: entriesToSummarize, commonAncestorId } = (0, branch_summarization_js_1.collectEntriesForBranchSummary)(this.sessionManager, oldLeafId, targetId);
+        const { entries: entriesToSummarize, commonAncestorId } = collectEntriesForBranchSummary(this.sessionManager, oldLeafId, targetId);
         let customInstructions = options.customInstructions;
         let replaceInstructions = options.replaceInstructions;
         let label = options.label;
@@ -708,7 +704,7 @@ class AgentSession {
             if (!auth.ok || !auth.apiKey) {
                 throw new Error(`No API key for ${model.provider}/${model.id}`);
             }
-            const result = await (0, branch_summarization_js_1.generateBranchSummary)(entriesToSummarize, {
+            const result = await generateBranchSummary(entriesToSummarize, {
                 model,
                 apiKey: auth.apiKey,
                 headers: auth.headers,
@@ -1208,7 +1204,7 @@ class AgentSession {
         if (assistantIsFromBeforeCompaction)
             return;
         // Case 1: Overflow - LLM returned context overflow error
-        if (sameModel && (0, pi_ai_shim_js_1.isContextOverflow)(assistantMessage, contextWindow)) {
+        if (sameModel && isContextOverflow(assistantMessage, contextWindow)) {
             if (this._overflowRecoveryAttempted) {
                 this._emit({
                     type: 'compaction_end',
@@ -1233,7 +1229,7 @@ class AgentSession {
         let contextTokens;
         if (assistantMessage.stopReason === 'error') {
             // Estimate from all messages since no usage data
-            const estimate = (0, compaction_js_1.estimateContextUsage)(this._agentState.history);
+            const estimate = estimateContextUsage(this._agentState.history);
             if (estimate.lastUsageIndex === null)
                 return; // No usage at all
             // Verify usage is after latest compaction
@@ -1246,9 +1242,9 @@ class AgentSession {
             contextTokens = estimate.tokens;
         }
         else {
-            contextTokens = (0, compaction_js_1.calculateContextTokens)(assistantMessage.usage);
+            contextTokens = calculateContextTokens(assistantMessage.usage);
         }
-        if ((0, compaction_js_1.shouldCompact)(contextTokens, contextWindow, settings)) {
+        if (shouldCompact(contextTokens, contextWindow, settings)) {
             await this._runAutoCompaction('threshold', false);
         }
     }
@@ -1275,13 +1271,13 @@ class AgentSession {
                 this._emit({ type: 'compaction_end', reason, result: undefined, aborted: false, willRetry });
                 return;
             }
-            const preparation = (0, compaction_js_1.prepareCompaction)(entries, settings);
+            const preparation = prepareCompaction(entries, settings);
             if (!preparation) {
                 this._emit({ type: 'compaction_end', reason, result: undefined, aborted: false, willRetry });
                 return;
             }
             // Call compact (stub for now)
-            const compactResult = await (0, compaction_js_1.compact)(preparation, model, auth.apiKey, auth.headers, undefined, this._autoCompactionAbortController.signal, this.thinkingLevel);
+            const compactResult = await performCompaction(preparation, model, auth.apiKey, auth.headers, undefined, this._autoCompactionAbortController.signal, this.thinkingLevel);
             // Append compaction entry to session
             this.sessionManager.appendCompaction(compactResult.summary, compactResult.firstKeptEntryId, compactResult.tokensBefore, compactResult.details, false // fromExtension
             );
@@ -1372,14 +1368,13 @@ class AgentSession {
         this._performanceTracker?.stop();
     }
 }
-exports.AgentSession = AgentSession;
 // ============================================================================
 // Utility Functions
 // ============================================================================
 /**
  * Parse a skill block from message text.
  */
-function parseSkillBlock(text) {
+export function parseSkillBlock(text) {
     const match = text.match(/^<skill name="([^"]+)" location="([^"]+)">\n([\s\S]*?)\n<\/skill>(?:\n\n([\s\S]+))?$/);
     if (!match)
         return null;

@@ -1,18 +1,12 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.computeSimilarity = computeSimilarity;
-exports.findByHash = findByHash;
-exports.findBySimilarity = findBySimilarity;
-exports.detectDuplicate = detectDuplicate;
 /**
  * Deduplication utilities for MemoryEngine
  * Extracted to avoid circular dependencies
  */
-const storage_js_1 = require("./storage.js");
+import { memoryHash } from './storage.js';
 /**
  * Compute Jaccard similarity between two strings
  */
-function computeSimilarity(a, b) {
+export function computeSimilarity(a, b) {
     if (a === b)
         return 1.0;
     if (!a || !b)
@@ -32,14 +26,14 @@ function computeSimilarity(a, b) {
 /**
  * Find duplicate memory by exact hash match
  */
-function findByHash(memories, content, action, metadata) {
-    const newHash = (0, storage_js_1.memoryHash)(content, { action, ...metadata });
+export function findByHash(memories, content, action, metadata) {
+    const newHash = memoryHash(content, { action, ...metadata });
     return memories.find(m => m.hash === newHash) || null;
 }
 /**
  * Find similar memory by content similarity
  */
-function findBySimilarity(memories, content, action, threshold = 0.95) {
+export function findBySimilarity(memories, content, action, threshold = 0.95) {
     const candidates = memories.filter(m => m.metadata.action === action);
     let bestMatch = null;
     let bestScore = 0;
@@ -55,7 +49,7 @@ function findBySimilarity(memories, content, action, threshold = 0.95) {
 /**
  * Detect if a new memory would be a duplicate
  */
-function detectDuplicate(memories, content, action, metadata, config = { enabled: true, similarityThreshold: 0.95 }) {
+export function detectDuplicate(memories, content, action, metadata, config = { enabled: true, similarityThreshold: 0.95 }) {
     if (!config.enabled)
         return null;
     // Check exact hash first

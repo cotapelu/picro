@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * FindTool - Find files using fd
@@ -7,18 +6,15 @@
  * - Glob pattern matching
  * - Output truncation
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.findToolDefinition = void 0;
-exports.findTool = findTool;
-const node_child_process_1 = require("node:child_process");
-const node_readline_1 = require("node:readline");
-const node_fs_1 = require("node:fs");
-const node_path_1 = require("node:path");
+import { spawn } from "node:child_process";
+import { createInterface } from "node:readline";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 const DEFAULT_LIMIT = 1000;
-async function findTool(input, cwd) {
+export async function findTool(input, cwd) {
     const { pattern, path = ".", limit = DEFAULT_LIMIT } = input;
-    const searchPath = (0, node_path_1.resolve)(cwd, path);
-    if (!(0, node_fs_1.existsSync)(searchPath)) {
+    const searchPath = resolve(cwd, path);
+    if (!existsSync(searchPath)) {
         throw new Error(`Path not found: ${path}`);
     }
     return new Promise((resolvePromise, reject) => {
@@ -30,8 +26,8 @@ async function findTool(input, cwd) {
             "--max-results", String(limit),
             searchPath
         ];
-        const child = (0, node_child_process_1.spawn)("fd", args, { stdio: ["ignore", "pipe", "pipe"] });
-        const rl = (0, node_readline_1.createInterface)({ input: child.stdout });
+        const child = spawn("fd", args, { stdio: ["ignore", "pipe", "pipe"] });
+        const rl = createInterface({ input: child.stdout });
         let output = "";
         rl.on("line", (line) => {
             if (line.trim()) {
@@ -62,7 +58,7 @@ async function findTool(input, cwd) {
         });
     });
 }
-exports.findToolDefinition = {
+export const findToolDefinition = {
     name: "find",
     description: "Search for files by glob pattern. Returns matching file paths.",
     parameters: {

@@ -388,8 +388,9 @@ async function main(): Promise<void> {
     }
 
     try {
+      // Load TUI (ESM module)
       // @ts-ignore - module exists at runtime after build
-      const { runInkApp } = await import("./tui/InkApp.js");
+      const { runInkApp } = await import("./tui/index.mjs");
       await runInkApp(runtime);
     } catch (err: any) {
       console.error("Interactive mode error:", err.message || err);

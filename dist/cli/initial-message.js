@@ -1,16 +1,13 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Build the initial message for the agent from stdin, file contents, and CLI arguments.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildInitialMessage = buildInitialMessage;
 /**
  * Combine stdin, file text, and the first CLI message into a single
  * initial prompt. The first message from parsed.messages is consumed
  * (removed from the array).
  */
-function buildInitialMessage(input) {
+export function buildInitialMessage(input) {
     const { parsed, fileText, fileImages, stdinContent } = input;
     const parts = [];
     if (stdinContent !== undefined) {

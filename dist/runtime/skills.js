@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Skills - Skill loading and discovery
@@ -9,13 +8,9 @@
  * - Validation
  * - Format for prompt
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadSkillsFromDir = loadSkillsFromDir;
-exports.formatSkillsForPrompt = formatSkillsForPrompt;
-exports.loadSkills = loadSkills;
-const node_fs_1 = require("node:fs");
-const node_path_1 = require("node:path");
-const node_os_1 = require("node:os");
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
+import { homedir } from "node:os";
 const MAX_NAME_LENGTH = 64;
 const MAX_DESCRIPTION_LENGTH = 1024;
 function parseFrontmatter(content) {
@@ -38,10 +33,10 @@ function parseFrontmatter(content) {
 }
 function loadSkillFromFile(filePath) {
     try {
-        const rawContent = (0, node_fs_1.readFileSync)(filePath, "utf-8");
+        const rawContent = readFileSync(filePath, "utf-8");
         const { frontmatter } = parseFrontmatter(rawContent);
-        const skillDir = (0, node_path_1.dirname)(filePath);
-        const parentDirName = (0, node_path_1.basename)(skillDir);
+        const skillDir = dirname(filePath);
+        const parentDirName = basename(skillDir);
         const name = frontmatter.name || parentDirName;
         const description = frontmatter.description || "";
         const disableModelInvocation = frontmatter["disable-model-invocation"] === true;
@@ -67,18 +62,18 @@ function loadSkillFromFile(filePath) {
         return null;
     }
 }
-function loadSkillsFromDir(dir) {
+export function loadSkillsFromDir(dir) {
     const skills = [];
-    if (!(0, node_fs_1.existsSync)(dir)) {
+    if (!existsSync(dir)) {
         return skills;
     }
     try {
-        const entries = (0, node_fs_1.readdirSync)(dir, { withFileTypes: true });
+        const entries = readdirSync(dir, { withFileTypes: true });
         for (const entry of entries) {
             if (!entry.isDirectory())
                 continue;
-            const skillPath = (0, node_path_1.join)(dir, entry.name, "SKILL.md");
-            if ((0, node_fs_1.existsSync)(skillPath)) {
+            const skillPath = join(dir, entry.name, "SKILL.md");
+            if (existsSync(skillPath)) {
                 const skill = loadSkillFromFile(skillPath);
                 if (skill) {
                     skills.push(skill);
@@ -91,7 +86,7 @@ function loadSkillsFromDir(dir) {
     }
     return skills;
 }
-function formatSkillsForPrompt(skills) {
+export function formatSkillsForPrompt(skills) {
     const visibleSkills = skills.filter(s => !s.disableModelInvocation);
     if (visibleSkills.length === 0) {
         return "";
@@ -111,14 +106,14 @@ function formatSkillsForPrompt(skills) {
     lines.push("</available_skills>");
     return lines.join("\n");
 }
-function loadSkills(options) {
-    const { cwd, agentDir = (0, node_path_1.join)((0, node_os_1.homedir)(), ".pi", "agent"), skillPaths = [], includeDefaults = true } = options;
+export function loadSkills(options) {
+    const { cwd, agentDir = join(homedir(), ".pi", "agent"), skillPaths = [], includeDefaults = true } = options;
     const allSkills = [];
     const seen = new Set();
     // Load from default directories
     if (includeDefaults) {
-        const userSkills = loadSkillsFromDir((0, node_path_1.join)(agentDir, "skills"));
-        const projectSkills = loadSkillsFromDir((0, node_path_1.join)(cwd, ".pi", "skills"));
+        const userSkills = loadSkillsFromDir(join(agentDir, "skills"));
+        const projectSkills = loadSkillsFromDir(join(cwd, ".pi", "skills"));
         for (const skill of [...userSkills, ...projectSkills]) {
             if (!seen.has(skill.name)) {
                 seen.add(skill.name);

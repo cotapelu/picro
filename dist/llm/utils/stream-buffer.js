@@ -1,18 +1,13 @@
-"use strict";
 /**
  * Stream buffering utilities
  * Optimizes streaming for providers with high-frequency small chunks
  * Reduces UI re-renders by coalescing rapid chunks
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.providerBufferConfigs = exports.StreamBuffer = void 0;
-exports.getProviderBufferConfig = getProviderBufferConfig;
-exports.createStreamBuffer = createStreamBuffer;
 /**
  * Stream buffer for coalescing rapid chunks
  * Optimized for terminal UI rendering
  */
-class StreamBuffer {
+export class StreamBuffer {
     buffer = '';
     chunks = [];
     lastFlush = Date.now();
@@ -130,11 +125,10 @@ class StreamBuffer {
         }, this.config.accumulationMs);
     }
 }
-exports.StreamBuffer = StreamBuffer;
 /**
  * Provider-specific buffer configurations
  */
-exports.providerBufferConfigs = {
+export const providerBufferConfigs = {
     // Fast providers - minimal buffering
     openai: { minChunkSize: 4, maxDelay: 16, accumulationMs: 8 },
     'openai-copilot': { minChunkSize: 4, maxDelay: 16, accumulationMs: 8 },
@@ -154,13 +148,13 @@ exports.providerBufferConfigs = {
 /**
  * Get buffer config for provider
  */
-function getProviderBufferConfig(provider) {
-    return exports.providerBufferConfigs[provider.toLowerCase()] ?? exports.providerBufferConfigs.default;
+export function getProviderBufferConfig(provider) {
+    return providerBufferConfigs[provider.toLowerCase()] ?? providerBufferConfigs.default;
 }
 /**
  * Create buffer for provider
  */
-function createStreamBuffer(provider) {
+export function createStreamBuffer(provider) {
     const config = getProviderBufferConfig(provider);
     return new StreamBuffer(config);
 }

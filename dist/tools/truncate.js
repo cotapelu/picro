@@ -1,20 +1,13 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Truncation utilities for tool output
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_MAX_LINES = exports.DEFAULT_MAX_BYTES = void 0;
-exports.truncateHead = truncateHead;
-exports.truncateTail = truncateTail;
-exports.truncateLines = truncateLines;
-exports.truncateOutput = truncateOutput;
-exports.DEFAULT_MAX_BYTES = 1024 * 1024; // 1MB
-exports.DEFAULT_MAX_LINES = 10000;
+export const DEFAULT_MAX_BYTES = 1024 * 1024; // 1MB
+export const DEFAULT_MAX_LINES = 10000;
 /**
  * Truncate text from head (keep end)
  */
-function truncateHead(text, maxBytes, ellipsis = '... [TRUNCATED FROM HEAD]') {
+export function truncateHead(text, maxBytes, ellipsis = '... [TRUNCATED FROM HEAD]') {
     if (text.length <= maxBytes)
         return text;
     const ellipsisBytes = Buffer.byteLength(ellipsis, 'utf8');
@@ -36,7 +29,7 @@ function truncateHead(text, maxBytes, ellipsis = '... [TRUNCATED FROM HEAD]') {
 /**
  * Truncate text from tail (keep beginning)
  */
-function truncateTail(text, maxBytes, ellipsis = '... [TRUNCATED]') {
+export function truncateTail(text, maxBytes, ellipsis = '... [TRUNCATED]') {
     if (text.length <= maxBytes)
         return text;
     const ellipsisBytes = Buffer.byteLength(ellipsis, 'utf8');
@@ -57,7 +50,7 @@ function truncateTail(text, maxBytes, ellipsis = '... [TRUNCATED]') {
 /**
  * Truncate by lines
  */
-function truncateLines(text, maxLines, ellipsis = '... [MORE LINES]') {
+export function truncateLines(text, maxLines, ellipsis = '... [MORE LINES]') {
     const lines = text.split('\n');
     if (lines.length <= maxLines)
         return text;
@@ -66,7 +59,7 @@ function truncateLines(text, maxLines, ellipsis = '... [MORE LINES]') {
 /**
  * Smart truncate: by bytes and lines
  */
-function truncateOutput(text, maxBytes = exports.DEFAULT_MAX_BYTES, maxLines = exports.DEFAULT_MAX_LINES, ellipsis = '... [TRUNCATED]') {
+export function truncateOutput(text, maxBytes = DEFAULT_MAX_BYTES, maxLines = DEFAULT_MAX_LINES, ellipsis = '... [TRUNCATED]') {
     const originalSize = text.length;
     const lines = text.split('\n');
     const originalLines = lines.length;

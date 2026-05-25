@@ -1,27 +1,16 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Branch Summarization for Tree Navigation
  *
  * Generates summaries of abandoned branches when navigating session tree.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createFileOps = createFileOps;
-exports.extractFileOpsFromMessage = extractFileOpsFromMessage;
-exports.computeFileLists = computeFileLists;
-exports.formatFileOperations = formatFileOperations;
-exports.estimateTokens = estimateTokens;
-exports.collectEntriesForBranchSummary = collectEntriesForBranchSummary;
-exports.getMessageFromEntry = getMessageFromEntry;
-exports.prepareBranchEntries = prepareBranchEntries;
-exports.generateBranchSummary = generateBranchSummary;
-function createFileOps() {
+export function createFileOps() {
     return { read: new Set(), written: new Set(), edited: new Set() };
 }
 /**
  * Extract file operations from assistant message tool calls.
  */
-function extractFileOpsFromMessage(message, fileOps) {
+export function extractFileOpsFromMessage(message, fileOps) {
     if (message.role !== "assistant")
         return;
     const content = message.content;
@@ -47,13 +36,13 @@ function extractFileOpsFromMessage(message, fileOps) {
         }
     }
 }
-function computeFileLists(fileOps) {
+export function computeFileLists(fileOps) {
     const modified = new Set([...fileOps.edited, ...fileOps.written]);
     const readOnly = [...fileOps.read].filter((f) => !modified.has(f)).sort();
     const modifiedFiles = [...modified].sort();
     return { readFiles: readOnly, modifiedFiles };
 }
-function formatFileOperations(readFiles, modifiedFiles) {
+export function formatFileOperations(readFiles, modifiedFiles) {
     const sections = [];
     if (readFiles.length > 0)
         sections.push(`<read-files>\n${readFiles.join("\n")}\n</read-files>`);
@@ -64,7 +53,7 @@ function formatFileOperations(readFiles, modifiedFiles) {
 // ============================================================================
 // Token Estimation
 // ============================================================================
-function estimateTokens(message) {
+export function estimateTokens(message) {
     return 0; // stub - would use from compaction module
 }
 // ============================================================================
@@ -73,7 +62,7 @@ function estimateTokens(message) {
 /**
  * Collect entries to summarize when navigating from oldLeafId to targetId.
  */
-function collectEntriesForBranchSummary(session, oldLeafId, targetId) {
+export function collectEntriesForBranchSummary(session, oldLeafId, targetId) {
     if (!oldLeafId) {
         return { entries: [], commonAncestorId: null };
     }
@@ -105,7 +94,7 @@ function collectEntriesForBranchSummary(session, oldLeafId, targetId) {
 /**
  * Convert SessionEntry to AgentMessage (simplified).
  */
-function getMessageFromEntry(entry) {
+export function getMessageFromEntry(entry) {
     if (entry.type === "message") {
         return entry.message;
     }
@@ -115,7 +104,7 @@ function getMessageFromEntry(entry) {
 /**
  * Prepare branch entries for summarization with token budget.
  */
-function prepareBranchEntries(entries, tokenBudget = 0) {
+export function prepareBranchEntries(entries, tokenBudget = 0) {
     const messages = [];
     const fileOps = createFileOps();
     let totalTokens = 0;
@@ -189,7 +178,7 @@ Keep each section concise. Preserve exact file paths, function names, error mess
  * Generate branch summary (stub implementation).
  * In production, this would call the LLM API.
  */
-async function generateBranchSummary(_entries, options) {
+export async function generateBranchSummary(_entries, options) {
     const { signal, customInstructions, replaceInstructions, reserveTokens = 16384 } = options;
     if (signal.aborted) {
         return { aborted: true };

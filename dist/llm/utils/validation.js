@@ -1,24 +1,18 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateToolCall = validateToolCall;
-const ajv_1 = __importDefault(require("ajv"));
-const ajv_formats_1 = __importDefault(require("ajv-formats"));
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 // Cấu hình Ajv khác với legacy (thêm useDefaults)
-const validator = new ajv_1.default({
+const validator = new Ajv({
     allErrors: true,
     strict: false,
     coerceTypes: true,
     useDefaults: true,
 });
-(0, ajv_formats_1.default)(validator);
+addFormats(validator);
 /**
  * Validate tham số tool call với JSON Schema.
  * Trả về tham số đã validate (có type coercion), ném lỗi nếu thất bại.
  */
-function validateToolCall(tools, toolCall) {
+export function validateToolCall(tools, toolCall) {
     const targetTool = tools.find(tool => tool.name === toolCall.name);
     if (!targetTool) {
         throw new Error(`Tool "${toolCall.name}" chưa được đăng ký`);

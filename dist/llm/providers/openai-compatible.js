@@ -1,27 +1,23 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.stream = stream;
-exports.complete = complete;
-const json_parse_js_1 = require("../utils/json-parse.js");
-const sanitize_unicode_js_1 = require("../utils/sanitize-unicode.js");
-const event_stream_js_1 = require("../event-stream.js");
-const env_api_keys_js_1 = require("../env-api-keys.js");
-const overflow_js_1 = require("../overflow.js");
-const transform_messages_js_1 = require("../transform-messages.js");
-const compat_detection_js_1 = require("../compat-detection.js");
-const api_registry_js_1 = require("../api-registry.js");
-const models_js_1 = require("../models.js");
+import { parseStreamingJson } from '../utils/json-parse.js';
+import { sanitizeSurrogates } from '../utils/sanitize-unicode.js';
+import { AssistantMessageEventStream } from '../event-stream.js';
+import { getApiKey } from '../env-api-keys.js';
+import { truncateContext } from '../overflow.js';
+import { transformMessages } from '../transform-messages.js';
+import { detectCompat, mergeCompat } from '../compat-detection.js';
+import { apiRegistry } from '../api-registry.js';
+import { calculateCost } from '../models.js';
 function resolveCompat(model) {
-    const detected = (0, compat_detection_js_1.detectCompat)(model.provider, model.baseUrl, model.id);
-    return model.compat ? (0, compat_detection_js_1.mergeCompat)(detected, model.compat) : detected;
+    const detected = detectCompat(model.provider, model.baseUrl, model.id);
+    return model.compat ? mergeCompat(detected, model.compat) : detected;
 }
 function getClient(model, apiKey, headers) {
-    return api_registry_js_1.apiRegistry.getOrCreate(model, apiKey, headers);
+    return apiRegistry.getOrCreate(model, apiKey, headers);
 }
 function buildParams(model, context, options, compat) {
     const reservedTokens = options.maxTokens || Math.min(model.maxTokens, 4096);
-    const adjustedCtx = (0, overflow_js_1.truncateContext)(context, model.contextWindow, reservedTokens);
-    let messages = (0, transform_messages_js_1.transformMessages)(adjustedCtx.messages);
+    const adjustedCtx = truncateContext(context, model.contextWindow, reservedTokens);
+    let messages = transformMessages(adjustedCtx.messages);
     messages = messages.map(msg => {
         if (msg.role !== 'assistant')
             return msg;
@@ -41,7 +37,7 @@ function buildParams(model, context, options, compat) {
     const params = { model: model.id, messages: [], stream: true };
     if (adjustedCtx.systemPrompt) {
         const role = model.reasoning && compat.supportsDeveloperRole ? 'developer' : 'system';
-        params.messages.push({ role, content: (0, sanitize_unicode_js_1.sanitizeSurrogates)(adjustedCtx.systemPrompt) });
+        params.messages.push({ role, content: sanitizeSurrogates(adjustedCtx.systemPrompt) });
     }
     let lastRole = null;
     for (const msg of messages) {
@@ -50,10 +46,10 @@ function buildParams(model, context, options, compat) {
         }
         if (msg.role === 'user') {
             const blocks = typeof msg.content === 'string'
-                ? [{ type: 'text', text: (0, sanitize_unicode_js_1.sanitizeSurrogates)(msg.content) }]
+                ? [{ type: 'text', text: sanitizeSurrogates(msg.content) }]
                 : msg.content.map((b) => {
                     if (b.type === 'text')
-                        return { type: 'text', text: (0, sanitize_unicode_js_1.sanitizeSurrogates)(b.text) };
+                        return { type: 'text', text: sanitizeSurrogates(b.text) };
                     if (b.type === 'image' && model.input.includes('image')) {
                         return { type: 'image_url', image_url: { url: `data:${b.mimeType};base64,${b.data}` } };
                     }
@@ -69,7 +65,7 @@ function buildParams(model, context, options, compat) {
             const asstMsg = { role: 'assistant' };
             const textBlocks = asst.content.filter((b) => b.type === 'text');
             if (textBlocks.length > 0)
-                asstMsg.content = textBlocks.map((b) => (0, sanitize_unicode_js_1.sanitizeSurrogates)(b.text)).join('');
+                asstMsg.content = textBlocks.map((b) => sanitizeSurrogates(b.text)).join('');
             const thinkingBlocks = asst.content.filter((b) => b.type === 'thinking');
             if (thinkingBlocks.length > 0 && compat.requiresThinkingAsText) {
                 const text = thinkingBlocks.map((b) => b.thinking).join('\n');
@@ -93,7 +89,7 @@ function buildParams(model, context, options, compat) {
         else if (msg.role === 'toolResult') {
             const toolMsg = {
                 role: 'tool',
-                content: (0, sanitize_unicode_js_1.sanitizeSurrogates)(msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n') || '(see image)'),
+                content: sanitizeSurrogates(msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n') || '(see image)'),
                 tool_call_id: msg.toolCallId,
             };
             if (compat.needToolResultName && msg.toolName)
@@ -184,11 +180,11 @@ function calcUsage(rawUsage, model) {
         input, output, cacheRead, cacheWrite, totalTokens: total,
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
     };
-    (0, models_js_1.calculateCost)(model, usage);
+    calculateCost(model, usage);
     return usage;
 }
-async function stream(model, context, options = {}) {
-    const eventStream = new event_stream_js_1.AssistantMessageEventStream();
+export async function stream(model, context, options = {}) {
+    const eventStream = new AssistantMessageEventStream();
     const compat = resolveCompat(model);
     (async () => {
         const output = {
@@ -197,7 +193,7 @@ async function stream(model, context, options = {}) {
             stopReason: 'stop', timestamp: Date.now(),
         };
         try {
-            const apiKey = options.apiKey || (0, env_api_keys_js_1.getApiKey)(model.provider) || '';
+            const apiKey = options.apiKey || getApiKey(model.provider) || '';
             if (!apiKey)
                 throw new Error(`No API key for provider: ${model.provider}`);
             let params = buildParams(model, context, options, compat);
@@ -273,7 +269,7 @@ async function stream(model, context, options = {}) {
                         }
                         if (currentBlock?.type === 'toolCall' && tc.function?.arguments) {
                             currentBlock.partialArgs += tc.function.arguments;
-                            currentBlock.arguments = (0, json_parse_js_1.parseStreamingJson)(currentBlock.partialArgs);
+                            currentBlock.arguments = parseStreamingJson(currentBlock.partialArgs);
                             eventStream.push({ type: 'toolcall_delta', contentIndex: blocks.length - 1, delta: tc.function.arguments, partial: output });
                         }
                     }
@@ -305,7 +301,7 @@ async function stream(model, context, options = {}) {
     })();
     return eventStream;
 }
-async function complete(model, context, options = {}) {
+export async function complete(model, context, options = {}) {
     const resultStream = await stream(model, context, options);
     return resultStream.result();
 }

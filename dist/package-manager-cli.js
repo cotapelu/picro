@@ -1,19 +1,15 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Package Manager CLI - handle install/remove/update/list commands.
  * Called from main.ts when args start with these commands.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.parsePackageCommand = parsePackageCommand;
-exports.handleConfigCommand = handleConfigCommand;
-const config_js_1 = require("./config.js");
-const settings_manager_js_1 = require("./runtime/settings-manager.js");
+import { getAgentDir } from "./config.js";
+import { SettingsManager } from "./runtime/settings-manager.js";
 /**
  * Parse command line arguments for package commands.
  * Returns undefined if not a package command.
  */
-function parsePackageCommand(args) {
+export function parsePackageCommand(args) {
     if (args.length === 0)
         return undefined;
     const cmd = args[0];
@@ -47,7 +43,7 @@ function parsePackageCommand(args) {
 /**
  * Handle package commands. Returns true if command was handled.
  */
-async function handleConfigCommand(args) {
+export async function handleConfigCommand(args) {
     if (args[0] !== "config") {
         return false;
     }
@@ -57,8 +53,8 @@ async function handleConfigCommand(args) {
         return true;
     }
     const cwd = process.cwd();
-    const agentDir = (0, config_js_1.getAgentDir)();
-    const settingsManager = settings_manager_js_1.SettingsManager.create(cwd, agentDir);
+    const agentDir = getAgentDir();
+    const settingsManager = SettingsManager.create(cwd, agentDir);
     if (sub === "install") {
         const source = args[2];
         if (!source) {

@@ -1,69 +1,34 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Picro Agent - Main entry point.
  *
  * Orchestrates CLI parsing, session management, and interactive/print modes.
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-const node_fs_1 = require("node:fs");
-const node_path_1 = require("node:path");
-const readline = __importStar(require("node:readline"));
-const cli_args_js_1 = require("./runtime/cli-args.js");
-const file_processor_js_1 = require("./cli/file-processor.js");
-const initial_message_js_1 = require("./cli/initial-message.js");
-const list_models_js_1 = require("./cli/list-models.js");
-const session_picker_js_1 = require("./cli/session-picker.js");
-const session_cwd_js_1 = require("./session/session-cwd.js");
-const agent_session_services_js_1 = require("./session/agent-session-services.js");
-const agent_session_services_js_2 = require("./session/agent-session-services.js");
-const session_manager_js_1 = require("./session/session-manager.js");
-const agent_session_runtime_js_1 = require("./runtime/agent-session-runtime.js");
-const config_js_1 = require("./config.js");
-const timings_js_1 = require("./utils/timings.js");
-const package_manager_cli_js_1 = require("./package-manager-cli.js");
-const migrations_js_1 = require("./migrations.js");
+import { existsSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import * as readline from "node:readline";
+import { parseArgs } from "./runtime/cli-args.js";
+import { processFileArguments } from "./cli/file-processor.js";
+import { buildInitialMessage } from "./cli/initial-message.js";
+import { listModels } from "./cli/list-models.js";
+import { selectSession } from "./cli/session-picker.js";
+import { getMissingSessionCwdIssue, MissingSessionCwdError } from "./session/session-cwd.js";
+import { createAgentSessionServices } from "./session/agent-session-services.js";
+import { createAgentSessionFromServices } from "./session/agent-session-services.js";
+import { SessionManager } from "./session/session-manager.js";
+import { AgentSessionRuntime } from "./runtime/agent-session-runtime.js";
+import { getAgentDir, VERSION } from "./config.js";
+import { resetTimings, time, printTimings } from "./utils/timings.js";
+import { handleConfigCommand } from "./package-manager-cli.js";
+import { runMigrations, showDeprecationWarnings } from "./migrations.js";
 // Ink TUI will be dynamically imported to avoid ESM/CJS conflicts
-const print_mode_js_1 = require("./modes/print-mode.js");
-const rpc_mode_js_1 = require("./modes/rpc-mode.js");
+import { runPrintMode } from "./modes/print-mode.js";
+import { runRpcMode } from "./modes/rpc-mode.js";
 // Load environment variables from .env
 function loadEnvFile() {
-    const envPath = (0, node_path_1.join)(process.cwd(), ".env");
-    if ((0, node_fs_1.existsSync)(envPath)) {
-        const content = (0, node_fs_1.readFileSync)(envPath, "utf-8");
+    const envPath = join(process.cwd(), ".env");
+    if (existsSync(envPath)) {
+        const content = readFileSync(envPath, "utf-8");
         for (const line of content.split("\n")) {
             const trimmed = line.trim();
             if (trimmed && !trimmed.startsWith("#")) {
@@ -170,17 +135,17 @@ function promptConfirm(message) {
 // Resolve a session argument to a file path
 async function resolveSessionPath(arg, cwd, sessionDir) {
     if (arg.includes("/") || arg.includes("\\") || arg.endsWith(".jsonl")) {
-        const path = (0, node_path_1.resolve)(arg);
+        const path = resolve(arg);
         return { type: "path", path, arg };
     }
     // Try local
-    const local = await session_manager_js_1.SessionManager.list(cwd, sessionDir);
+    const local = await SessionManager.list(cwd, sessionDir);
     const localMatch = local.find((s) => s.id.startsWith(arg));
     if (localMatch) {
         return { type: "local", path: localMatch.path, arg };
     }
     // Try global
-    const all = await session_manager_js_1.SessionManager.listAll();
+    const all = await SessionManager.listAll();
     const globalMatch = all.find((s) => s.id.startsWith(arg));
     if (globalMatch) {
         return { type: "global", path: globalMatch.path, cwd: globalMatch.cwd, arg };
@@ -189,15 +154,15 @@ async function resolveSessionPath(arg, cwd, sessionDir) {
 }
 async function main() {
     loadEnvFile();
-    (0, timings_js_1.resetTimings)();
-    (0, timings_js_1.time)("total");
+    resetTimings();
+    time("total");
     const args = process.argv.slice(2);
     // Handle config commands early
-    if (await (0, package_manager_cli_js_1.handleConfigCommand)(args)) {
+    if (await handleConfigCommand(args)) {
         return;
     }
-    const parsed = (0, cli_args_js_1.parseArgs)(args);
-    (0, timings_js_1.time)("parseArgs");
+    const parsed = parseArgs(args);
+    time("parseArgs");
     // Enable verbose debugging if flag set
     if (parsed.verbose) {
         process.env.VERBOSE = "true";
@@ -216,7 +181,7 @@ async function main() {
         return;
     }
     if (parsed.version) {
-        console.log(config_js_1.VERSION);
+        console.log(VERSION);
         return;
     }
     const stdinIsTTY = process.stdin.isTTY;
@@ -225,42 +190,42 @@ async function main() {
     if (parsed.verbose) {
         console.log("DEBUG: stdin.isTTY=", stdinIsTTY, "appMode=", appMode);
     }
-    (0, timings_js_1.time)("resolveAppMode");
+    time("resolveAppMode");
     // Setup
     const cwd = process.cwd();
-    const agentDir = (0, config_js_1.getAgentDir)();
+    const agentDir = getAgentDir();
     // Run migrations
-    const { migratedAuthProviders, deprecationWarnings } = (0, migrations_js_1.runMigrations)(cwd);
+    const { migratedAuthProviders, deprecationWarnings } = runMigrations(cwd);
     if (migratedAuthProviders.length > 0) {
         console.log(`Migrated auth config for providers: ${migratedAuthProviders.join(", ")}`);
     }
     if (appMode === "interactive" && deprecationWarnings.length > 0) {
-        await (0, migrations_js_1.showDeprecationWarnings)(deprecationWarnings);
+        await showDeprecationWarnings(deprecationWarnings);
     }
     // Create services (settings, model registry, resource loader, auth)
-    const services = await (0, agent_session_services_js_1.createAgentSessionServices)({
+    const services = await createAgentSessionServices({
         cwd,
         agentDir,
     });
-    (0, timings_js_1.time)("createAgentSessionServices");
+    time("createAgentSessionServices");
     // Handle --list-models after services ready
     if (parsed.listModels) {
         const search = typeof parsed.listModels === "string" ? parsed.listModels : undefined;
-        await (0, list_models_js_1.listModels)(services.modelRegistry, search);
+        await listModels(services.modelRegistry, search);
         return;
     }
     // Determine session manager based on flags
     let sessionManager;
     const sessionStartEvent = { type: "session_start", reason: "startup" };
     if (parsed.noSession) {
-        sessionManager = session_manager_js_1.SessionManager.inMemory(cwd);
+        sessionManager = SessionManager.inMemory(cwd);
         sessionStartEvent.reason = "new";
     }
     else if (parsed.fork) {
         const resolved = await resolveSessionPath(parsed.fork, cwd, services.sessionDir);
         if (resolved.type === "path" || resolved.type === "local") {
             // For now, fork is treated like open (forkFrom not implemented)
-            sessionManager = session_manager_js_1.SessionManager.open(resolved.path, services.sessionDir);
+            sessionManager = SessionManager.open(resolved.path, services.sessionDir);
         }
         else {
             console.error(`No session found matching '${resolved.arg}'`);
@@ -272,7 +237,7 @@ async function main() {
     else if (parsed.session) {
         const resolved = await resolveSessionPath(parsed.session, cwd, services.sessionDir);
         if (resolved.type === "path" || resolved.type === "local") {
-            sessionManager = session_manager_js_1.SessionManager.open(resolved.path, services.sessionDir);
+            sessionManager = SessionManager.open(resolved.path, services.sessionDir);
         }
         else if (resolved.type === "global") {
             console.log(`Session found in different project: ${resolved.cwd}`);
@@ -280,7 +245,7 @@ async function main() {
             if (!shouldFork) {
                 process.exit(0);
             }
-            sessionManager = session_manager_js_1.SessionManager.open(resolved.path, services.sessionDir);
+            sessionManager = SessionManager.open(resolved.path, services.sessionDir);
         }
         else {
             console.error(`No session found matching '${resolved.arg}'`);
@@ -290,24 +255,24 @@ async function main() {
         sessionStartEvent.previousSessionFile = resolved.path;
     }
     else if (parsed.resume) {
-        const loader = async () => await session_manager_js_1.SessionManager.list(cwd, services.sessionDir);
-        const selectedPath = await (0, session_picker_js_1.selectSession)(loader);
+        const loader = async () => await SessionManager.list(cwd, services.sessionDir);
+        const selectedPath = await selectSession(loader);
         if (!selectedPath) {
             process.exit(0);
         }
-        sessionManager = session_manager_js_1.SessionManager.open(selectedPath, services.sessionDir);
+        sessionManager = SessionManager.open(selectedPath, services.sessionDir);
         sessionStartEvent.reason = "resume";
         sessionStartEvent.previousSessionFile = selectedPath;
     }
     else if (parsed.continue) {
-        sessionManager = session_manager_js_1.SessionManager.continueRecent(cwd, services.sessionDir);
+        sessionManager = SessionManager.continueRecent(cwd, services.sessionDir);
         sessionStartEvent.reason = "resume";
     }
     else {
-        sessionManager = session_manager_js_1.SessionManager.create(cwd, services.sessionDir);
+        sessionManager = SessionManager.create(cwd, services.sessionDir);
         sessionStartEvent.reason = "new";
     }
-    (0, timings_js_1.time)("createSessionManager");
+    time("createSessionManager");
     // Resolve model from args or settings
     let resolvedModel;
     if (parsed.model) {
@@ -331,16 +296,16 @@ async function main() {
         }
     }
     // Create session from services
-    const session = await (0, agent_session_services_js_2.createAgentSessionFromServices)({
+    const session = await createAgentSessionFromServices({
         services,
         sessionManager,
         sessionStartEvent,
         model: resolvedModel,
         thinkingLevel: parsed.thinking,
     });
-    (0, timings_js_1.time)("createAgentSession");
+    time("createAgentSession");
     // Construct runtime
-    const runtime = new agent_session_runtime_js_1.AgentSessionRuntime(session.agent, session, services);
+    const runtime = new AgentSessionRuntime(session.agent, session, services);
     // Graceful shutdown on SIGTERM/SIGHUP
     const shutdown = async (signal) => {
         console.log(`\nReceived ${signal}, shutting down gracefully...`);
@@ -354,9 +319,9 @@ async function main() {
     };
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('SIGHUP', () => shutdown('SIGHUP'));
-    (0, timings_js_1.time)("createAgentSessionRuntime");
+    time("createAgentSessionRuntime");
     // Check session cwd existence
-    const missingCwdIssue = (0, session_cwd_js_1.getMissingSessionCwdIssue)(session.sessionManager, cwd);
+    const missingCwdIssue = getMissingSessionCwdIssue(session.sessionManager, cwd);
     if (missingCwdIssue) {
         if (appMode === "interactive") {
             const ok = await promptConfirm(`Session cwd "${missingCwdIssue.sessionCwd}" not found. Use current cwd "${cwd}"? (y/N): `);
@@ -368,7 +333,7 @@ async function main() {
             await runtime.switchSession(missingCwdIssue.sessionFile, { cwdOverride: selectedCwd });
         }
         else {
-            console.error(new session_cwd_js_1.MissingSessionCwdError(missingCwdIssue).message);
+            console.error(new MissingSessionCwdError(missingCwdIssue).message);
             process.exit(1);
         }
     }
@@ -376,7 +341,7 @@ async function main() {
     let fileText = "";
     let fileImages = [];
     if (parsed.fileArgs.length > 0) {
-        const fileResult = await (0, file_processor_js_1.processFileArguments)(parsed.fileArgs);
+        const fileResult = await processFileArguments(parsed.fileArgs);
         fileText = fileResult.text;
         fileImages = fileResult.images;
     }
@@ -384,7 +349,7 @@ async function main() {
     if (!stdinIsTTY) {
         stdinContent = await readStdin();
     }
-    const initialResult = (0, initial_message_js_1.buildInitialMessage)({
+    const initialResult = buildInitialMessage({
         parsed,
         fileText: fileText || undefined,
         fileImages: fileImages.length > 0 ? fileImages : undefined,
@@ -401,8 +366,9 @@ async function main() {
             await session.prompt(msg);
         }
         try {
+            // Load TUI (ESM module)
             // @ts-ignore - module exists at runtime after build
-            const { runInkApp } = await Promise.resolve().then(() => __importStar(require("./tui/InkApp.js")));
+            const { runInkApp } = await import("./tui/index.mjs");
             await runInkApp(runtime);
         }
         catch (err) {
@@ -418,29 +384,29 @@ async function main() {
             console.log("  picro --mode interactive             # interactive TUI (requires TTY)");
             console.log("  picro --list-models                  # list models");
             await runtime.dispose();
-            (0, timings_js_1.printTimings)();
+            printTimings();
             process.exit(0);
         }
-        const exitCode = await (0, print_mode_js_1.runPrintMode)(runtime, {
+        const exitCode = await runPrintMode(runtime, {
             mode: appMode === "json" ? "json" : "text",
             messages: parsed.messages,
             initialMessage: initialResult.initialMessage,
             initialImages: initialResult.initialImages,
         });
         await runtime.dispose();
-        (0, timings_js_1.printTimings)();
+        printTimings();
         process.exit(exitCode);
     }
     else if (appMode === "rpc") {
         try {
-            await (0, rpc_mode_js_1.runRpcMode)(runtime);
+            await runRpcMode(runtime);
         }
         catch (err) {
             console.error("RPC mode error:", err.message || err);
             process.exit(1);
         }
     }
-    (0, timings_js_1.printTimings)();
+    printTimings();
 }
 main().catch((err) => {
     console.error("Fatal error:", err);

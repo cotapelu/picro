@@ -1,11 +1,8 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * List available models, optionally filtered by search pattern.
  * Simple implementation: plain text table, no colors.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.listModels = listModels;
 /** Format a number as human-readable (e.g., 200000 -> "200K", 1M -> "1M") */
 function formatTokenCount(count) {
     if (count >= 1_000_000) {
@@ -22,7 +19,7 @@ function formatTokenCount(count) {
  * List models from registry, optionally matching a search pattern.
  * This function prints to stdout and does not throw.
  */
-async function listModels(modelRegistry, searchPattern) {
+export async function listModels(modelRegistry, searchPattern) {
     // Get all models from registry
     const models = modelRegistry.getAll();
     if (models.length === 0) {

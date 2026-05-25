@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Session Manager - Quản lý conversation sessions
@@ -9,35 +8,28 @@
  * - Branching support
  * - Labels và bookmarks
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.SessionManager = exports.CURRENT_SESSION_VERSION = void 0;
-exports.parseSessionEntries = parseSessionEntries;
-exports.findMostRecentSession = findMostRecentSession;
-exports.getDefaultSessionDir = getDefaultSessionDir;
-exports.buildSessionInfo = buildSessionInfo;
-exports.buildSessionContext = buildSessionContext;
-const node_crypto_1 = require("node:crypto");
-const node_fs_1 = require("node:fs");
-const promises_1 = require("node:fs/promises");
-const node_path_1 = require("node:path");
-const config_js_1 = require("../config.js");
+import { randomUUID } from "node:crypto";
+import { appendFileSync, closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, statSync, writeFileSync, } from "node:fs";
+import { readFile, stat } from "node:fs/promises";
+import { join, resolve } from "node:path";
+import { getAgentDir } from "../config.js";
 // ============================================================================
 // Constants
 // ============================================================================
-exports.CURRENT_SESSION_VERSION = 3;
+export const CURRENT_SESSION_VERSION = 3;
 // ============================================================================
 // Helper Functions
 // ============================================================================
 function createSessionId() {
-    return (0, node_crypto_1.randomUUID)();
+    return randomUUID();
 }
 function generateId(byId) {
     for (let i = 0; i < 100; i++) {
-        const id = (0, node_crypto_1.randomUUID)().slice(0, 8);
+        const id = randomUUID().slice(0, 8);
         if (!byId.has(id))
             return id;
     }
-    return (0, node_crypto_1.randomUUID)();
+    return randomUUID();
 }
 function migrateV1ToV2(entries) {
     const ids = new Set();
@@ -79,7 +71,7 @@ function migrateV2ToV3(entries) {
 function migrateToCurrentVersion(entries) {
     const header = entries.find((e) => e.type === "session");
     const version = header?.version ?? 1;
-    if (version >= exports.CURRENT_SESSION_VERSION)
+    if (version >= CURRENT_SESSION_VERSION)
         return false;
     if (version < 2)
         migrateV1ToV2(entries);
@@ -87,7 +79,7 @@ function migrateToCurrentVersion(entries) {
         migrateV2ToV3(entries);
     return true;
 }
-function parseSessionEntries(content) {
+export function parseSessionEntries(content) {
     const entries = [];
     const lines = content.trim().split("\n");
     for (const line of lines) {
@@ -106,17 +98,17 @@ function parseSessionEntries(content) {
     return entries;
 }
 function loadEntriesFromFile(filePath) {
-    if (!(0, node_fs_1.existsSync)(filePath))
+    if (!existsSync(filePath))
         return [];
-    const content = (0, node_fs_1.readFileSync)(filePath, "utf8");
+    const content = readFileSync(filePath, "utf8");
     return parseSessionEntries(content);
 }
 function isValidSessionFile(filePath) {
     try {
-        const fd = (0, node_fs_1.openSync)(filePath, "r");
+        const fd = openSync(filePath, "r");
         const buffer = Buffer.alloc(512);
-        const bytesRead = (0, node_fs_1.readSync)(fd, buffer, 0, 512, 0);
-        (0, node_fs_1.closeSync)(fd);
+        const bytesRead = readSync(fd, buffer, 0, 512, 0);
+        closeSync(fd);
         const firstLine = buffer.toString("utf8", 0, bytesRead).split("\n")[0];
         if (!firstLine)
             return false;
@@ -127,13 +119,13 @@ function isValidSessionFile(filePath) {
         return false;
     }
 }
-function findMostRecentSession(sessionDir) {
+export function findMostRecentSession(sessionDir) {
     try {
-        const files = (0, node_fs_1.readdirSync)(sessionDir)
+        const files = readdirSync(sessionDir)
             .filter((f) => f.endsWith(".jsonl"))
-            .map((f) => (0, node_path_1.join)(sessionDir, f))
+            .map((f) => join(sessionDir, f))
             .filter(isValidSessionFile)
-            .map((path) => ({ path, mtime: (0, node_fs_1.statSync)(path).mtime }))
+            .map((path) => ({ path, mtime: statSync(path).mtime }))
             .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
         return files[0]?.path || null;
     }
@@ -141,11 +133,11 @@ function findMostRecentSession(sessionDir) {
         return null;
     }
 }
-function getDefaultSessionDir(cwd, agentDir) {
+export function getDefaultSessionDir(cwd, agentDir) {
     const safePath = `--${cwd.replace(/^[/\\]/, "").replace(/[/\\:]/g, "-")}--`;
-    const sessionDir = (0, node_path_1.join)(agentDir, "sessions", safePath);
-    if (!(0, node_fs_1.existsSync)(sessionDir)) {
-        (0, node_fs_1.mkdirSync)(sessionDir, { recursive: true });
+    const sessionDir = join(agentDir, "sessions", safePath);
+    if (!existsSync(sessionDir)) {
+        mkdirSync(sessionDir, { recursive: true });
     }
     return sessionDir;
 }
@@ -161,10 +153,10 @@ function getLatestCompactionEntry(entries) {
  * Build SessionInfo from a session file.
  * Extracts metadata, name, first message, message count.
  */
-async function buildSessionInfo(filePath) {
+export async function buildSessionInfo(filePath) {
     try {
-        const content = await (0, promises_1.readFile)(filePath, 'utf8');
-        const mtime = await (0, promises_1.stat)(filePath);
+        const content = await readFile(filePath, 'utf8');
+        const mtime = await stat(filePath);
         const lines = content.trim().split('\n').filter(l => l.trim());
         const entries = [];
         for (const line of lines) {
@@ -237,8 +229,8 @@ async function buildSessionInfo(filePath) {
 // ============================================================================
 // Session Context Building
 // ============================================================================
-const convert_to_llm_js_1 = require("./convert-to-llm.js");
-function buildSessionContext(entries, leafId, byId) {
+import { convertSessionMessagesToLlm } from './convert-to-llm.js';
+export function buildSessionContext(entries, leafId, byId) {
     if (!byId) {
         byId = new Map();
         for (const entry of entries) {
@@ -346,13 +338,13 @@ function buildSessionContext(entries, leafId, byId) {
         }
     }
     // Convert session-specific messages to LLM-compatible format
-    const convertedMessages = (0, convert_to_llm_js_1.convertSessionMessagesToLlm)(messages);
+    const convertedMessages = convertSessionMessagesToLlm(messages);
     return { messages: convertedMessages, thinkingLevel, model };
 }
 // ============================================================================
 // SessionManager Class
 // ============================================================================
-class SessionManager {
+export class SessionManager {
     sessionId = "";
     sessionFile;
     sessionDir;
@@ -368,8 +360,8 @@ class SessionManager {
         this.cwd = cwd;
         this.sessionDir = sessionDir;
         this.persist = persist;
-        if (persist && sessionDir && !(0, node_fs_1.existsSync)(sessionDir)) {
-            (0, node_fs_1.mkdirSync)(sessionDir, { recursive: true });
+        if (persist && sessionDir && !existsSync(sessionDir)) {
+            mkdirSync(sessionDir, { recursive: true });
         }
         if (sessionFile) {
             this.setSessionFile(sessionFile);
@@ -379,8 +371,8 @@ class SessionManager {
         }
     }
     setSessionFile(sessionFile) {
-        this.sessionFile = (0, node_path_1.resolve)(sessionFile);
-        if ((0, node_fs_1.existsSync)(this.sessionFile)) {
+        this.sessionFile = resolve(sessionFile);
+        if (existsSync(this.sessionFile)) {
             this.fileEntries = loadEntriesFromFile(this.sessionFile);
             if (this.fileEntries.length === 0) {
                 const explicitPath = this.sessionFile;
@@ -409,7 +401,7 @@ class SessionManager {
         const timestamp = new Date().toISOString();
         const header = {
             type: "session",
-            version: exports.CURRENT_SESSION_VERSION,
+            version: CURRENT_SESSION_VERSION,
             id: this.sessionId,
             timestamp,
             cwd: this.cwd,
@@ -422,7 +414,7 @@ class SessionManager {
         this.flushed = false;
         if (this.persist) {
             const fileTimestamp = timestamp.replace(/[:.]/g, "-");
-            this.sessionFile = (0, node_path_1.join)(this.getSessionDir(), `${fileTimestamp}_${this.sessionId}.jsonl`);
+            this.sessionFile = join(this.getSessionDir(), `${fileTimestamp}_${this.sessionId}.jsonl`);
         }
         return this.sessionFile;
     }
@@ -453,7 +445,7 @@ class SessionManager {
         if (!this.persist || !this.sessionFile)
             return;
         const content = `${this.fileEntries.map((e) => JSON.stringify(e)).join("\n")}\n`;
-        (0, node_fs_1.writeFileSync)(this.sessionFile, content);
+        writeFileSync(this.sessionFile, content);
     }
     isPersisted() {
         return this.persist;
@@ -633,12 +625,12 @@ class SessionManager {
         }
         if (!this.flushed) {
             for (const e of this.fileEntries) {
-                (0, node_fs_1.appendFileSync)(this.sessionFile, `${JSON.stringify(e)}\n`);
+                appendFileSync(this.sessionFile, `${JSON.stringify(e)}\n`);
             }
             this.flushed = true;
         }
         else {
-            (0, node_fs_1.appendFileSync)(this.sessionFile, `${JSON.stringify(entry)}\n`);
+            appendFileSync(this.sessionFile, `${JSON.stringify(entry)}\n`);
         }
     }
     getBranch(fromId) {
@@ -667,7 +659,7 @@ class SessionManager {
     }
     exportSession(encrypt = false, password) {
         const sessionData = {
-            version: exports.CURRENT_SESSION_VERSION,
+            version: CURRENT_SESSION_VERSION,
             header: this.getHeader(),
             entries: this.getEntries(),
             labels: Object.fromEntries(this.labelsById),
@@ -738,7 +730,7 @@ class SessionManager {
         // Write to file if persist
         if (manager.persist && manager.sessionFile) {
             const content = entries.map(e => JSON.stringify(e)).join('\n') + '\n';
-            (0, node_fs_1.writeFileSync)(manager.sessionFile, content);
+            writeFileSync(manager.sessionFile, content);
         }
         return manager;
     }
@@ -879,18 +871,18 @@ class SessionManager {
     // Static Methods
     // ============================================================================
     static create(cwd, sessionDir) {
-        const dir = sessionDir ?? getDefaultSessionDir(cwd, process.env.PI_AGENT_DIR || (0, node_path_1.join)(process.env.HOME || "", ".pi", "agent"));
+        const dir = sessionDir ?? getDefaultSessionDir(cwd, process.env.PI_AGENT_DIR || join(process.env.HOME || "", ".pi", "agent"));
         return new SessionManager(cwd, dir, undefined, true);
     }
     static open(path, sessionDir, cwdOverride) {
         const entries = loadEntriesFromFile(path);
         const header = entries.find((e) => e.type === "session");
         const cwd = cwdOverride ?? header?.cwd ?? process.cwd();
-        const dir = sessionDir ?? (0, node_path_1.resolve)(path, "..");
+        const dir = sessionDir ?? resolve(path, "..");
         return new SessionManager(cwd, dir, path, true);
     }
     static continueRecent(cwd, sessionDir) {
-        const dir = sessionDir ?? getDefaultSessionDir(cwd, process.env.PI_AGENT_DIR || (0, node_path_1.join)(process.env.HOME || "", ".pi", "agent"));
+        const dir = sessionDir ?? getDefaultSessionDir(cwd, process.env.PI_AGENT_DIR || join(process.env.HOME || "", ".pi", "agent"));
         const mostRecent = findMostRecentSession(dir);
         if (mostRecent) {
             return new SessionManager(cwd, dir, mostRecent, true);
@@ -904,13 +896,13 @@ class SessionManager {
      * List sessions in the project's session directory.
      */
     static async list(cwd, sessionDir) {
-        const dir = sessionDir ?? getDefaultSessionDir(cwd, (0, config_js_1.getAgentDir)());
-        if (!(0, node_fs_1.existsSync)(dir))
+        const dir = sessionDir ?? getDefaultSessionDir(cwd, getAgentDir());
+        if (!existsSync(dir))
             return [];
-        const files = (0, node_fs_1.readdirSync)(dir).filter(f => f.endsWith('.jsonl'));
+        const files = readdirSync(dir).filter(f => f.endsWith('.jsonl'));
         const infos = [];
         for (const file of files) {
-            const full = (0, node_path_1.join)(dir, file);
+            const full = join(dir, file);
             const info = await buildSessionInfo(full);
             if (info)
                 infos.push(info);
@@ -921,16 +913,16 @@ class SessionManager {
      * List all sessions across all projects under the agent's sessions directory.
      */
     static async listAll() {
-        const sessionsRoot = (0, node_path_1.join)((0, config_js_1.getAgentDir)(), "sessions");
-        if (!(0, node_fs_1.existsSync)(sessionsRoot))
+        const sessionsRoot = join(getAgentDir(), "sessions");
+        if (!existsSync(sessionsRoot))
             return [];
-        const projectDirs = (0, node_fs_1.readdirSync)(sessionsRoot).filter(d => (0, node_fs_1.existsSync)((0, node_path_1.join)(sessionsRoot, d)));
+        const projectDirs = readdirSync(sessionsRoot).filter(d => existsSync(join(sessionsRoot, d)));
         const infos = [];
         for (const proj of projectDirs) {
-            const dir = (0, node_path_1.join)(sessionsRoot, proj);
-            const files = (0, node_fs_1.readdirSync)(dir).filter(f => f.endsWith('.jsonl'));
+            const dir = join(sessionsRoot, proj);
+            const files = readdirSync(dir).filter(f => f.endsWith('.jsonl'));
             for (const file of files) {
-                const full = (0, node_path_1.join)(dir, file);
+                const full = join(dir, file);
                 const info = await buildSessionInfo(full);
                 if (info)
                     infos.push(info);
@@ -939,5 +931,4 @@ class SessionManager {
         return infos.sort((a, b) => b.modified.getTime() - a.modified.getTime());
     }
 }
-exports.SessionManager = SessionManager;
 //# sourceMappingURL=session-manager.js.map

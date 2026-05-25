@@ -1,18 +1,15 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseStreamingJson = parseStreamingJson;
-const partial_json_1 = require("partial-json");
+import { parse as incrementalParse } from 'partial-json';
 /**
  * Phân tích chuỗi JSON chưa hoàn chỉnh từ streaming.
  * Thử incremental parse trước (tối ưu cho streaming), fallback sang full parse.
  */
-function parseStreamingJson(input) {
+export function parseStreamingJson(input) {
     if (typeof input !== 'string' || input.trim().length === 0) {
         return {};
     }
     // Thử incremental parse trước (dành riêng cho streaming chunks)
     try {
-        const parsed = (0, partial_json_1.parse)(input);
+        const parsed = incrementalParse(input);
         if (parsed !== undefined && parsed !== null) {
             return parsed;
         }

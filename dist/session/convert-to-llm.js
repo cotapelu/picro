@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Convert session-specific message types to LLM-compatible Messages.
@@ -10,8 +9,6 @@
  * - CompactionSummaryMessage -> user message with summary prefix
  * - CustomMessage -> user message with content
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.convertSessionMessagesToLlm = convertSessionMessagesToLlm;
 const COMPACTION_SUMMARY_PREFIX = `The conversation history before this point was compacted into the following summary:
 
 <summary>
@@ -57,7 +54,7 @@ function bashExecutionToText(msg) {
  * - CustomMessage -> user message with custom content
  * - Standard messages (user, assistant, toolResult) are passed through unchanged
  */
-function convertSessionMessagesToLlm(messages) {
+export function convertSessionMessagesToLlm(messages) {
     return messages
         .map((m) => {
         // Standard LLM messages pass through

@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * ReadTool - Read files with text/image support, offset/limit
@@ -9,11 +8,8 @@
  * - Output truncation
  * - Image resizing
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.readToolDefinition = void 0;
-exports.readFileTool = readFileTool;
-const promises_1 = require("node:fs/promises");
-const node_path_1 = require("node:path");
+import { constants, readFile as fsReadFile } from "node:fs/promises";
+import { resolve } from "node:path";
 // ============================================================================
 // Constants
 // ============================================================================
@@ -59,23 +55,23 @@ function truncateHead(text, options = {}) {
     };
 }
 function resolvePath(path, cwd) {
-    return (0, node_path_1.resolve)(cwd, path);
+    return resolve(cwd, path);
 }
 // ============================================================================
 // ReadTool Implementation
 // ============================================================================
-async function readFileTool(input, cwd, options = {}) {
+export async function readFileTool(input, cwd, options = {}) {
     const { path, offset, limit } = input;
     const absolutePath = resolvePath(path, cwd);
     try {
         // Check if file is readable
-        await (0, promises_1.readFile)(absolutePath, { flag: promises_1.constants.O_RDONLY });
+        await fsReadFile(absolutePath, { flag: constants.O_RDONLY });
     }
     catch (error) {
         throw new Error(`File not found: ${path}`);
     }
     // Read the file
-    const buffer = await (0, promises_1.readFile)(absolutePath);
+    const buffer = await fsReadFile(absolutePath);
     const textContent = buffer.toString("utf-8");
     const allLines = textContent.split("\n");
     const totalFileLines = allLines.length;
@@ -144,7 +140,7 @@ async function readFileTool(input, cwd, options = {}) {
         details,
     };
 }
-exports.readToolDefinition = {
+export const readToolDefinition = {
     name: "read",
     description: "Read the contents of a file. Supports text files. Output is truncated to 10000 lines or 512KB. Use offset/limit for large files.",
     parameters: {

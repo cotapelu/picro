@@ -1,16 +1,13 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * AgentLoop: core loop execution.
  * Different from pi-agent-legacy: class-based, simpler flow.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AgentLoop = void 0;
 /**
  * Manages the agent execution loop.
  * Separated from Agent class for cleaner architecture.
  */
-class AgentLoop {
+export class AgentLoop {
     state;
     config;
     emitter;
@@ -678,5 +675,4 @@ class AgentLoop {
         return result.result;
     }
 }
-exports.AgentLoop = AgentLoop;
 //# sourceMappingURL=agent-loop.js.map

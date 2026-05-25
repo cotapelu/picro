@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Telemetry - Anonymous usage statistics (opt-in)
@@ -12,17 +11,11 @@
  * - Privacy-focused (no PII)
  * - Opt-in only
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Telemetry = void 0;
-exports.getTelemetry = getTelemetry;
-exports.setTelemetry = setTelemetry;
-exports.track = track;
-exports.telemetryMethod = telemetryMethod;
 const DEFAULT_RATE_LIMIT_MS = 5000;
 /**
  * Telemetry singleton
  */
-class Telemetry {
+export class Telemetry {
     enabled = false;
     endpoint = '';
     rateLimitMs = DEFAULT_RATE_LIMIT_MS;
@@ -134,13 +127,12 @@ class Telemetry {
         return this.queue.length;
     }
 }
-exports.Telemetry = Telemetry;
 // Global singleton instance
 let globalTelemetry = null;
 /**
  * Get or create global telemetry instance
  */
-function getTelemetry(config) {
+export function getTelemetry(config) {
     if (!globalTelemetry) {
         globalTelemetry = new Telemetry(config);
     }
@@ -149,19 +141,19 @@ function getTelemetry(config) {
 /**
  * Set global telemetry instance (for testing)
  */
-function setTelemetry(telemetry) {
+export function setTelemetry(telemetry) {
     globalTelemetry = telemetry;
 }
 /**
  * Track an event using global telemetry
  */
-function track(event, properties) {
+export function track(event, properties) {
     getTelemetry().track(event, properties);
 }
 /**
  * Create decorator for automatic telemetry on methods
  */
-function telemetryMethod(eventName, options = {}) {
+export function telemetryMethod(eventName, options = {}) {
     return function (target, propertyKey, descriptor) {
         const originalMethod = descriptor.value;
         const telemetry = getTelemetry();

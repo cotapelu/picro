@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Prompt Templates - Load and expand prompt templates from markdown files
@@ -8,15 +7,10 @@
  * - Frontmatter parsing
  * - Directory scanning
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseCommandArgs = parseCommandArgs;
-exports.substituteArgs = substituteArgs;
-exports.loadPromptTemplates = loadPromptTemplates;
-exports.expandPromptTemplate = expandPromptTemplate;
-const node_fs_1 = require("node:fs");
-const node_path_1 = require("node:path");
-const node_os_1 = require("node:os");
-const source_info_js_1 = require("./source-info.js");
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { basename, dirname, isAbsolute, join, resolve, sep } from "node:path";
+import { homedir } from "node:os";
+import { createSyntheticSourceInfo } from "./source-info.js";
 // ============================================================================
 // Constants
 // ============================================================================
@@ -52,7 +46,7 @@ function parseFrontmatter(content) {
  * Parse command arguments respecting quoted strings (bash-style)
  * Returns array of arguments
  */
-function parseCommandArgs(argsString) {
+export function parseCommandArgs(argsString) {
     const args = [];
     let current = "";
     let inQuote = null;
@@ -95,7 +89,7 @@ function parseCommandArgs(argsString) {
  * - ${@:N} for args from Nth onwards (bash-style slicing)
  * - ${@:N:L} for L args starting from Nth
  */
-function substituteArgs(content, args) {
+export function substituteArgs(content, args) {
     let result = content;
     // Replace $1, $2, etc. with positional args FIRST (before wildcards)
     result = result.replace(/\$(\d+)/g, (_, num) => {
@@ -128,9 +122,9 @@ function substituteArgs(content, args) {
  */
 function loadTemplateFromFile(filePath, getSourceInfo) {
     try {
-        const rawContent = (0, node_fs_1.readFileSync)(filePath, "utf-8");
+        const rawContent = readFileSync(filePath, "utf-8");
         const { frontmatter, content: body } = parseFrontmatter(rawContent);
-        const name = (0, node_path_1.basename)(filePath).replace(/\.md$/, "");
+        const name = basename(filePath).replace(/\.md$/, "");
         // Get description from frontmatter or first non-empty line
         let description = frontmatter.description || "";
         if (!description) {
@@ -161,18 +155,18 @@ function loadTemplateFromFile(filePath, getSourceInfo) {
  */
 function loadTemplatesFromDir(dir, getSourceInfo) {
     const templates = [];
-    if (!(0, node_fs_1.existsSync)(dir)) {
+    if (!existsSync(dir)) {
         return templates;
     }
     try {
-        const entries = (0, node_fs_1.readdirSync)(dir, { withFileTypes: true });
+        const entries = readdirSync(dir, { withFileTypes: true });
         for (const entry of entries) {
-            const fullPath = (0, node_path_1.join)(dir, entry.name);
+            const fullPath = join(dir, entry.name);
             // For symlinks, check if they point to a file
             let isFile = entry.isFile();
             if (entry.isSymbolicLink()) {
                 try {
-                    const stats = (0, node_fs_1.statSync)(fullPath);
+                    const stats = statSync(fullPath);
                     isFile = stats.isFile();
                 }
                 catch {
@@ -199,25 +193,25 @@ function loadTemplatesFromDir(dir, getSourceInfo) {
 function normalizePath(input) {
     const trimmed = input.trim();
     if (trimmed === "~")
-        return (0, node_os_1.homedir)();
+        return homedir();
     if (trimmed.startsWith("~/"))
-        return (0, node_path_1.join)((0, node_os_1.homedir)(), trimmed.slice(2));
+        return join(homedir(), trimmed.slice(2));
     if (trimmed.startsWith("~"))
-        return (0, node_path_1.join)((0, node_os_1.homedir)(), trimmed.slice(1));
+        return join(homedir(), trimmed.slice(1));
     return trimmed;
 }
 function resolvePromptPath(p, cwd) {
     const normalized = normalizePath(p);
-    return (0, node_path_1.isAbsolute)(normalized) ? normalized : (0, node_path_1.resolve)(cwd, normalized);
+    return isAbsolute(normalized) ? normalized : resolve(cwd, normalized);
 }
 function isUnderPath(target, root) {
-    const normalizedRoot = (0, node_path_1.resolve)(root);
+    const normalizedRoot = resolve(root);
     if (target === normalizedRoot) {
         return true;
     }
-    const prefix = normalizedRoot.endsWith(node_path_1.sep)
+    const prefix = normalizedRoot.endsWith(sep)
         ? normalizedRoot
-        : `${normalizedRoot}${node_path_1.sep}`;
+        : `${normalizedRoot}${sep}`;
     return target.startsWith(prefix);
 }
 // ============================================================================
@@ -229,22 +223,22 @@ function isUnderPath(target, root) {
  * 2. Project: cwd/{CONFIG_DIR_NAME}/prompts/
  * 3. Explicit prompt paths
  */
-function loadPromptTemplates(options) {
+export function loadPromptTemplates(options) {
     const resolvedCwd = options.cwd;
     const resolvedAgentDir = options.agentDir;
     const promptPaths = options.promptPaths;
     const includeDefaults = options.includeDefaults;
     const templates = [];
-    const globalPromptsDir = (0, node_path_1.join)(resolvedAgentDir, "prompts");
-    const projectPromptsDir = (0, node_path_1.resolve)(resolvedCwd, CONFIG_DIR_NAME, "prompts");
+    const globalPromptsDir = join(resolvedAgentDir, "prompts");
+    const projectPromptsDir = resolve(resolvedCwd, CONFIG_DIR_NAME, "prompts");
     const getSourceInfo = (resolvedPath) => {
         if (isUnderPath(resolvedPath, globalPromptsDir)) {
-            return (0, source_info_js_1.createSyntheticSourceInfo)("file", resolvedPath, {
+            return createSyntheticSourceInfo("file", resolvedPath, {
                 metadata: { source: "local", scope: "user", baseDir: globalPromptsDir },
             });
         }
         if (isUnderPath(resolvedPath, projectPromptsDir)) {
-            return (0, source_info_js_1.createSyntheticSourceInfo)("file", resolvedPath, {
+            return createSyntheticSourceInfo("file", resolvedPath, {
                 metadata: {
                     source: "local",
                     scope: "project",
@@ -252,11 +246,11 @@ function loadPromptTemplates(options) {
                 },
             });
         }
-        return (0, source_info_js_1.createSyntheticSourceInfo)("file", resolvedPath, {
+        return createSyntheticSourceInfo("file", resolvedPath, {
             metadata: {
-                baseDir: (0, node_fs_1.statSync)(resolvedPath).isDirectory()
+                baseDir: statSync(resolvedPath).isDirectory()
                     ? resolvedPath
-                    : (0, node_path_1.dirname)(resolvedPath),
+                    : dirname(resolvedPath),
             },
         });
     };
@@ -267,11 +261,11 @@ function loadPromptTemplates(options) {
     // Load explicit prompt paths
     for (const rawPath of promptPaths) {
         const resolvedPath = resolvePromptPath(rawPath, resolvedCwd);
-        if (!(0, node_fs_1.existsSync)(resolvedPath)) {
+        if (!existsSync(resolvedPath)) {
             continue;
         }
         try {
-            const stats = (0, node_fs_1.statSync)(resolvedPath);
+            const stats = statSync(resolvedPath);
             if (stats.isDirectory()) {
                 templates.push(...loadTemplatesFromDir(resolvedPath, getSourceInfo));
             }
@@ -292,7 +286,7 @@ function loadPromptTemplates(options) {
  * Expand a prompt template if it matches a template name.
  * Returns the expanded content or the original text if not a template.
  */
-function expandPromptTemplate(text, templates) {
+export function expandPromptTemplate(text, templates) {
     if (!text.startsWith("/"))
         return text;
     const spaceIndex = text.indexOf(" ");

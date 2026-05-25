@@ -1,16 +1,12 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Settings Validator - Validate settings values to prevent invalid configurations
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateSettings = validateSettings;
-exports.validateOrThrow = validateOrThrow;
 /**
  * Validate settings object
  * @returns empty array if valid, otherwise list of errors
  */
-function validateSettings(settings) {
+export function validateSettings(settings) {
     const errors = [];
     // defaultProvider must be string if present
     if (settings.defaultProvider !== undefined && typeof settings.defaultProvider !== 'string') {
@@ -113,7 +109,7 @@ function validateSettings(settings) {
 /**
  * Validate settings and throw if invalid
  */
-function validateOrThrow(settings) {
+export function validateOrThrow(settings) {
     const errors = validateSettings(settings);
     if (errors.length > 0) {
         const messages = errors.map(e => `${e.field}: ${e.message}`).join('; ');

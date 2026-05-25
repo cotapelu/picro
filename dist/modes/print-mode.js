@@ -1,16 +1,13 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Print Mode - Single-shot, non-interactive.
  * Sends prompts and outputs the final text response.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.runPrintMode = runPrintMode;
 /**
  * Run print mode.
  * Returns exit code (0 = success, non-zero = error).
  */
-async function runPrintMode(runtime, options) {
+export async function runPrintMode(runtime, options) {
     const session = runtime.session;
     let exitCode = 0;
     try {

@@ -1,4 +1,3 @@
-"use strict";
 /**
  * Schema Validation using AJV
  *
@@ -7,23 +6,14 @@
  * - API responses
  * - Model configurations
  */
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.validate = validate;
-exports.validateToolArguments = validateToolArguments;
-exports.validateModelConfig = validateModelConfig;
-exports.matchesType = matchesType;
-exports.hasRequiredProperties = hasRequiredProperties;
-const ajv_1 = __importDefault(require("ajv"));
-const ajv_formats_1 = __importDefault(require("ajv-formats"));
-const ajv = new ajv_1.default({ allErrors: true, strict: false });
-(0, ajv_formats_1.default)(ajv);
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+const ajv = new Ajv({ allErrors: true, strict: false });
+addFormats(ajv);
 /**
  * Validate data against JSON Schema
  */
-function validate(schema, data) {
+export function validate(schema, data) {
     try {
         const validateFn = ajv.compile(schema);
         const valid = validateFn(data);
@@ -42,7 +32,7 @@ function validate(schema, data) {
 /**
  * Validate tool arguments before sending to API
  */
-function validateToolArguments(toolParameters, arguments_) {
+export function validateToolArguments(toolParameters, arguments_) {
     // Ensure toolParameters is a valid JSON Schema
     if (!toolParameters.type || toolParameters.type !== 'object') {
         return { valid: false, errors: ['Tool parameters must have type "object"'] };
@@ -55,7 +45,7 @@ function validateToolArguments(toolParameters, arguments_) {
 /**
  * Validate that a model configuration is complete
  */
-function validateModelConfig(model) {
+export function validateModelConfig(model) {
     const required = ['id', 'name', 'api', 'provider', 'baseUrl', 'reasoning', 'input', 'cost', 'contextWindow', 'maxTokens'];
     const missing = required.filter(field => model[field] === undefined);
     if (missing.length > 0) {
@@ -72,7 +62,7 @@ function validateModelConfig(model) {
 /**
  * Check if a value matches a type schema (lightweight)
  */
-function matchesType(value, expectedType) {
+export function matchesType(value, expectedType) {
     switch (expectedType) {
         case 'string': return typeof value === 'string';
         case 'number': return typeof value === 'number';
@@ -86,7 +76,7 @@ function matchesType(value, expectedType) {
 /**
  * Deep check: ensure all required properties exist
  */
-function hasRequiredProperties(obj, required) {
+export function hasRequiredProperties(obj, required) {
     return required.every(prop => obj.hasOwnProperty(prop));
 }
 //# sourceMappingURL=validation.js.map

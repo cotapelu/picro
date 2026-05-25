@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * AgentSessionRuntime - Owns the current AgentSession plus its cwd-bound services
@@ -6,49 +5,13 @@
  * This is the highest-level API for creating and managing agent sessions.
  * It serves as the composition root for the entire agent system.
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AgentSessionRuntime = void 0;
-exports.createAgentSessionRuntime = createAgentSessionRuntime;
-const node_fs_1 = require("node:fs");
-const agent_session_services_js_1 = require("../session/agent-session-services.js");
-const session_manager_js_1 = require("../session/session-manager.js");
+import { existsSync, mkdirSync } from "node:fs";
+import { createAgentSessionServices, createAgentSessionFromServices } from "../session/agent-session-services.js";
+import { SessionManager } from "../session/session-manager.js";
 /**
  * AgentSessionRuntime - The top-level runtime that owns everything
  */
-class AgentSessionRuntime {
+export class AgentSessionRuntime {
     _agent; // Agent - avoid circular import
     _session;
     _services;
@@ -111,18 +74,18 @@ class AgentSessionRuntime {
         // Try using clipboardy if available, fallback to pbcopy/paste/xclip
         try {
             // Dynamic import to avoid adding dependency if not used
-            const clipboardy = await Promise.resolve().then(() => __importStar(require("clipboardy")));
+            const clipboardy = await import("clipboardy");
             await clipboardy.default.write(text);
         }
         catch {
             // Fallback to native commands
             const isWin = process.platform === "win32";
             if (isWin) {
-                const { execSync } = await Promise.resolve().then(() => __importStar(require("node:child_process")));
+                const { execSync } = await import("node:child_process");
                 execSync(`echo ${JSON.stringify(text)} | clip`, { stdio: "ignore" });
             }
             else {
-                const { execSync } = await Promise.resolve().then(() => __importStar(require("node:child_process")));
+                const { execSync } = await import("node:child_process");
                 if (process.env.CI) {
                     // In CI, clipboard may not work; just log
                     console.log("[clipboard] ", text);
@@ -168,9 +131,9 @@ class AgentSessionRuntime {
                 await this._rebindSession(sessionPath);
             }
             const cwd = options?.cwdOverride ?? this._cwd;
-            const newSessionManager = session_manager_js_1.SessionManager.open(sessionPath, this._services.sessionDir, cwd);
+            const newSessionManager = SessionManager.open(sessionPath, this._services.sessionDir, cwd);
             // Create new session with same agent and services
-            this._session = await (0, agent_session_services_js_1.createAgentSessionFromServices)({
+            this._session = await createAgentSessionFromServices({
                 services: this._services,
                 sessionManager: newSessionManager,
             });
@@ -193,13 +156,13 @@ class AgentSessionRuntime {
             if (this._beforeSessionInvalidate) {
                 this._beforeSessionInvalidate();
             }
-            const newSessionManager = session_manager_js_1.SessionManager.continueRecent(this._cwd, this._services.sessionDir);
+            const newSessionManager = SessionManager.continueRecent(this._cwd, this._services.sessionDir);
             newSessionManager.newSession({ parentSession: options?.parentSession });
             if (options?.setup) {
                 await options.setup(newSessionManager);
             }
             // Create new session with same agent and services
-            this._session = await (0, agent_session_services_js_1.createAgentSessionFromServices)({
+            this._session = await createAgentSessionFromServices({
                 services: this._services,
                 sessionManager: newSessionManager,
             });
@@ -241,8 +204,8 @@ class AgentSessionRuntime {
         if (this._disposed)
             return [];
         // List all sessions accessible to this cwd
-        const local = await session_manager_js_1.SessionManager.list(this._cwd, this._services.sessionDir);
-        const global = await session_manager_js_1.SessionManager.listAll();
+        const local = await SessionManager.list(this._cwd, this._services.sessionDir);
+        const global = await SessionManager.listAll();
         // Combine and dedupe by path
         const all = new Map();
         for (const s of local) {
@@ -263,16 +226,16 @@ class AgentSessionRuntime {
             return { cancelled: true };
         }
         try {
-            if (!(0, node_fs_1.existsSync)(inputPath)) {
+            if (!existsSync(inputPath)) {
                 console.error(`Session file not found: ${inputPath}`);
                 return { cancelled: true };
             }
             const content = require('node:fs').readFileSync(inputPath, "utf-8");
             const cwd = cwdOverride ?? this._cwd;
             const sessionDir = this._services.sessionDir;
-            const newSessionManager = session_manager_js_1.SessionManager.importSession(cwd, sessionDir, content);
+            const newSessionManager = SessionManager.importSession(cwd, sessionDir, content);
             // Create new session with same agent and services
-            this._session = await (0, agent_session_services_js_1.createAgentSessionFromServices)({
+            this._session = await createAgentSessionFromServices({
                 services: this._services,
                 sessionManager: newSessionManager,
             });
@@ -310,22 +273,21 @@ class AgentSessionRuntime {
         this._rebindSession = handler;
     }
 }
-exports.AgentSessionRuntime = AgentSessionRuntime;
 /**
  * Create initial runtime
  *
  * This is the main entry point for creating an AgentSessionRuntime.
  * It sets up all services and creates the initial session.
  */
-async function createAgentSessionRuntime(createRuntime, options) {
+export async function createAgentSessionRuntime(createRuntime, options) {
     const cwd = options.cwd;
     const agentDir = options.agentDir;
     // Ensure agent directory exists
-    if (!(0, node_fs_1.existsSync)(agentDir)) {
-        (0, node_fs_1.mkdirSync)(agentDir, { recursive: true });
+    if (!existsSync(agentDir)) {
+        mkdirSync(agentDir, { recursive: true });
     }
     // Create services
-    const services = await (0, agent_session_services_js_1.createAgentSessionServices)({
+    const services = await createAgentSessionServices({
         cwd,
         agentDir,
     });
@@ -336,7 +298,7 @@ async function createAgentSessionRuntime(createRuntime, options) {
     }
     else {
         // Try to continue recent session, or create new
-        sessionManager = session_manager_js_1.SessionManager.continueRecent(cwd, services.sessionDir);
+        sessionManager = SessionManager.continueRecent(cwd, services.sessionDir);
     }
     // Resolve model string to Model object if necessary
     let resolvedModel;
@@ -379,7 +341,7 @@ async function createAgentSessionRuntime(createRuntime, options) {
         }
     }
     // Create session from services
-    const session = await (0, agent_session_services_js_1.createAgentSessionFromServices)({
+    const session = await createAgentSessionFromServices({
         services,
         sessionManager,
         sessionStartEvent: options.sessionStartEvent,

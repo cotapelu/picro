@@ -1,4 +1,3 @@
-"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * GrepTool - Search content using ripgrep
@@ -9,18 +8,15 @@
  * - Context lines
  * - Output truncation
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.grepToolDefinition = void 0;
-exports.grepTool = grepTool;
-const node_child_process_1 = require("node:child_process");
-const node_readline_1 = require("node:readline");
-const node_fs_1 = require("node:fs");
-const node_path_1 = require("node:path");
+import { spawn } from "node:child_process";
+import { createInterface } from "node:readline";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 const DEFAULT_LIMIT = 100;
-async function grepTool(input, cwd) {
+export async function grepTool(input, cwd) {
     const { pattern, path = ".", glob, ignoreCase, literal, context, limit = DEFAULT_LIMIT } = input;
-    const searchPath = (0, node_path_1.resolve)(cwd, path);
-    if (!(0, node_fs_1.existsSync)(searchPath)) {
+    const searchPath = resolve(cwd, path);
+    if (!existsSync(searchPath)) {
         throw new Error(`Path not found: ${path}`);
     }
     return new Promise((resolvePromise, reject) => {
@@ -35,8 +31,8 @@ async function grepTool(input, cwd) {
             args.push(`--context=${context}`);
         }
         args.push(pattern, searchPath);
-        const child = (0, node_child_process_1.spawn)("rg", args, { stdio: ["ignore", "pipe", "pipe"] });
-        const rl = (0, node_readline_1.createInterface)({ input: child.stdout });
+        const child = spawn("rg", args, { stdio: ["ignore", "pipe", "pipe"] });
+        const rl = createInterface({ input: child.stdout });
         let output = "";
         let matchCount = 0;
         rl.on("line", (line) => {
@@ -81,7 +77,7 @@ async function grepTool(input, cwd) {
         });
     });
 }
-exports.grepToolDefinition = {
+export const grepToolDefinition = {
     name: "grep",
     description: "Search file contents for a pattern. Returns matching lines with file paths and line numbers.",
     parameters: {
