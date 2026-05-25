@@ -3,8 +3,8 @@
  * Bash tool - Execute shell commands
  */
 
-import { executeBash, type BashResult } from './bash-executor';
-import { truncateOutput, truncateTail, DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES } from './truncate';
+import { executeBash, type BashResult } from './bash-executor.js';
+import { truncateOutput, truncateTail, DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES } from './truncate.js';
 
 /**
  * Bash tool input

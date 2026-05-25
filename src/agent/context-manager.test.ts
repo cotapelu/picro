@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ContextBuilder } from './context-manager';
-import type { ConversationTurn, MemoryEntry } from './types';
+import { ContextBuilder } from './context-manager.js';
+import type { ConversationTurn, MemoryEntry } from './types.js';
 
 // Helper to create a user turn
 function user(text: string): ConversationTurn {

@@ -9,11 +9,11 @@
  */
 
 // Agent
-export { Agent } from './agent';
-export type { AgentConfig, AgentRuntimeState, AgentRunResult } from './types';
+export { Agent } from './agent.js';
+export type { AgentConfig, AgentRuntimeState, AgentRunResult } from './types.js';
 
 // Tool Execution
-export { ToolExecutor } from './tool-executor';
+export { ToolExecutor } from './tool-executor.js';
 export type {
   ToolDefinition,
   ToolHandler,
@@ -24,13 +24,13 @@ export type {
   ToolExecutionMetadata,
   SuccessfulToolResult,
   FailedToolResult,
-} from './types';
+} from './types.js';
 
 // Event System (Agent emits events)
-export { EventEmitter, createConsoleLogger } from '../events/event-emitter';
-export { createEventBus, type EventBus, type EventBusController } from '../events/event-bus';
-export { PrioritizedEventEmitter } from '../events/prioritized-event-emitter';
-export { EventRecorder } from '../events/event-recorder';
+export { EventEmitter, createConsoleLogger } from '../events/event-emitter.js';
+export { createEventBus, type EventBus, type EventBusController } from '../events/event-bus.js';
+export { PrioritizedEventEmitter } from '../events/prioritized-event-emitter.js';
+export { EventRecorder } from '../events/event-recorder.js';
 export type {
   AgentEvent,
   AgentStartEvent,
@@ -48,12 +48,12 @@ export type {
   LLMResponseEvent,
   MemoryRetrievalEvent,
   ErrorEvent,
-} from '../events/events';
-export * from '../events/event-guards';
+} from '../events/events.js';
+export * from '../events/event-guards.js';
 
 // Utilities (agent-specific)
-export { isContextOverflow } from './pi-ai-shim';
-export { ExtensionRunner, createExtensionRuntime } from '../extensions/runner';
+export { isContextOverflow } from './pi-ai-shim.js';
+export { ExtensionRunner, createExtensionRuntime } from '../extensions/runner.js';
 
 // Core Types
 export type {
@@ -78,11 +78,11 @@ export type {
   StreamOptions,
   StreamFunction,
   QueueMode,
-} from './types';
+} from './types.js';
 
 // Components
-export { ContextBuilder } from './context-manager';
-export { MessageQueue } from './message-queue';
+export { ContextBuilder } from './context-manager.js';
+export { MessageQueue } from './message-queue.js';
 
 // Loop Strategies
 export {
@@ -92,8 +92,8 @@ export {
   ReflectionLoopStrategy,
   SimpleLoopStrategy,
   SelfRefineLoopStrategy,
-} from './loop-strategy';
-export type { LoopStrategy } from './loop-strategy';
+} from './loop-strategy.js';
+export type { LoopStrategy } from './loop-strategy.js';
 
 // Proxy Streaming
-export { createProxyStream, type ProxyOptions } from './proxy-stream';
+export { createProxyStream, type ProxyOptions } from './proxy-stream.js';

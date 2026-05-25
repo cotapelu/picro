@@ -3,290 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Phase 1: Implement missing slash commands",
+      "name": "Fix picro launcher",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Add case 'settings' - open settings modal",
+          "content": "Create cli.ts launcher file (ESM)",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Add case 'model' - open model selector",
+          "content": "Update package.json to type module",
           "status": "completed"
         },
         {
           "id": "task-3",
-          "content": "Add case 'export' - export session to HTML",
+          "content": "Update tsconfig for ESM",
           "status": "completed"
         },
         {
           "id": "task-4",
-          "content": "Add case 'import' - import from JSONL",
+          "content": "Fix main.ts imports to ESM",
           "status": "completed"
         },
         {
           "id": "task-5",
-          "content": "Add case 'share' - share as GitHub gist",
+          "content": "Update build script",
           "status": "completed"
         },
         {
           "id": "task-6",
-          "content": "Add case 'name' - set session name",
-          "status": "completed"
-        },
-        {
-          "id": "task-7",
-          "content": "Add case 'session' - show session info",
-          "status": "completed"
-        },
-        {
-          "id": "task-8",
-          "content": "Add case 'changelog' - show changelog",
-          "status": "completed"
-        },
-        {
-          "id": "task-9",
-          "content": "Add case 'hotkeys' - show keybindings help",
-          "status": "completed"
-        },
-        {
-          "id": "task-10",
-          "content": "Add case 'clone' - duplicate session",
-          "status": "completed"
-        },
-        {
-          "id": "task-11",
-          "content": "Add case 'tree' - navigate session tree",
-          "status": "completed"
-        },
-        {
-          "id": "task-12",
-          "content": "Add case 'compact' - trigger manual compaction",
-          "status": "completed"
-        },
-        {
-          "id": "task-13",
-          "content": "Add case 'reload' - reload resources",
-          "status": "completed"
-        },
-        {
-          "id": "task-14",
-          "content": "Add case 'logout' - remove authentication",
-          "status": "completed"
-        },
-        {
-          "id": "task-15",
-          "content": "Add case 'scoped-models' - manage model scopes",
-          "status": "completed"
-        },
-        {
-          "id": "task-16",
-          "content": "Keep case 'fork' with improved message or remove",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-2",
-      "name": "Phase 2: Core TUI features from interactive-mode",
-      "tasks": [
-        {
-          "id": "task-17",
-          "content": "Implement bash mode (! and !!) in InputBox",
-          "status": "completed"
-        },
-        {
-          "id": "task-18",
-          "content": "Add image paste from clipboard",
-          "status": "completed"
-        },
-        {
-          "id": "task-19",
-          "content": "Add file drop support",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-20",
-          "content": "Implement message queuing (follow-up, dequeue)",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-21",
-          "content": "Add auto-compaction UI (loader, countdown)",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-22",
-          "content": "Add version check on startup",
-          "status": "completed"
-        },
-        {
-          "id": "task-23",
-          "content": "Add package update notifications",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-24",
-          "content": "Add extension widgets (above/below editor)",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-25",
-          "content": "Support custom header/footer from extensions",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-26",
-          "content": "Add Armin component to header",
-          "status": "completed"
-        },
-        {
-          "id": "task-27",
-          "content": "Improve signal handling (double Ctrl+C)",
-          "status": "completed"
-        },
-        {
-          "id": "task-28",
-          "content": "Add compact mode toggle (hide thinking/tools)",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-29",
-          "content": "Display changelog on startup when new",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-30",
-          "content": "Show resource diagnostics on startup",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-31",
-          "content": "Write tests for new features",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-32",
-          "content": "Final integration test and verification",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-3",
-      "name": "Phase 3: Remaining core TUI features (high priority)",
-      "tasks": [
-        {
-          "id": "task-33",
-          "content": "Implement /name command properly (session naming)",
-          "status": "completed"
-        },
-        {
-          "id": "task-34",
-          "content": "Add auto-compaction UI (show loader/countdown during compaction)",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-35",
-          "content": "Add message queuing (follow-up keybinding, dequeue editor)",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-36",
-          "content": "Implement compact mode toggle (hide thinking/tools)",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-37",
-          "content": "Display changelog on startup when new version detected",
-          "status": "completed"
-        },
-        {
-          "id": "task-38",
-          "content": "Show resource diagnostics on startup (conflicts, warnings)",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-39",
-          "content": "Add package update checking (similar to version check)",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-40",
-          "content": "Implement file drop support for images",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-41",
-          "content": "Add extension widgets (above/below editor)",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-42",
-          "content": "Support custom header/footer from extensions",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-43",
-          "content": "Write unit tests for new modal components",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-44",
-          "content": "Write integration tests for slash commands",
-          "status": "abandoned"
-        },
-        {
-          "id": "task-45",
-          "content": "Final performance check and optimization",
-          "status": "abandoned"
-        }
-      ]
-    },
-    {
-      "id": "phase-4",
-      "name": "Phase 4: Testing, documentation, and refinements",
-      "tasks": [
-        {
-          "id": "task-46",
-          "content": "Write unit tests for new modal components (Settings, ModelSelector, etc.)",
+          "content": "Test build and run",
           "status": "in_progress"
-        },
-        {
-          "id": "task-47",
-          "content": "Write integration tests for slash commands (test all 23 commands)",
-          "status": "pending"
-        },
-        {
-          "id": "task-48",
-          "content": "Add performance metrics and profiling",
-          "status": "completed"
-        },
-        {
-          "id": "task-49",
-          "content": "Document all slash commands in README or docs",
-          "status": "completed"
-        },
-        {
-          "id": "task-50",
-          "content": "Add error boundaries and better error messages",
-          "status": "completed"
-        },
-        {
-          "id": "task-51",
-          "content": "Review and reduce bundle size (currently 2.8mb)",
-          "status": "completed"
-        },
-        {
-          "id": "task-52",
-          "content": "Add TypeScript strictness improvements (reduce any casts)",
-          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 53,
-  "nextPhaseId": 5,
-  "updatedAt": "2026-05-21T10:50:18.762Z"
+  "nextTaskId": 7,
+  "nextPhaseId": 2,
+  "updatedAt": "2026-05-25T00:43:07.408Z"
 }

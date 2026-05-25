@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { DefaultModelRegistry } from './model-registry';
-import { getProviders, getModels } from '../llm';
+import { DefaultModelRegistry } from './model-registry.js';
+import { getProviders, getModels } from '../llm/index.js';
 
 describe('DefaultModelRegistry', () => {
   let registry: DefaultModelRegistry;

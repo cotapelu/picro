@@ -4,9 +4,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ToolExecutor } from './tool-executor';
-import { EventEmitter } from '../events/event-emitter';
-import type { ToolDefinition, ToolContext, ToolCallData } from './types';
+import { ToolExecutor } from './tool-executor.js';
+import { EventEmitter } from '../events/event-emitter.js';
+import type { ToolDefinition, ToolContext, ToolCallData } from './types.js';
 
 // Helper to create a tool definition with custom async handler
 function createTool(name: string, fn: (...args: any[]) => any): ToolDefinition {

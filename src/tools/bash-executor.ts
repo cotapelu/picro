@@ -14,7 +14,7 @@ import { spawn } from 'child_process';
 import { existsSync, mkdirSync, writeFileSync, unlinkSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import type { EventEmitter } from '../events/event-emitter';
+import type { EventEmitter } from '../events/event-emitter.js';
 
 const DEFAULT_MAX_BYTES = 1024 * 1024; // 1MB
 const DEFAULT_MAX_LINES = 10000;

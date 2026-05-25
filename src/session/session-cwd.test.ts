@@ -10,7 +10,7 @@ import {
   formatMissingSessionCwdPrompt,
   MissingSessionCwdError,
   SessionCwdSource
-} from "./session-cwd";
+} from "./session-cwd.js";
 
 class FakeSessionManager implements SessionCwdSource {
   constructor(

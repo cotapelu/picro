@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-export { EventEmitter, createConsoleLogger } from './event-emitter';
-export { createEventBus, type EventBus, type EventBusController } from './event-bus';
-export { PrioritizedEventEmitter } from './prioritized-event-emitter';
-export { EventRecorder } from './event-recorder';
+export { EventEmitter, createConsoleLogger } from './event-emitter.js';
+export { createEventBus, type EventBus, type EventBusController } from './event-bus.js';
+export { PrioritizedEventEmitter } from './prioritized-event-emitter.js';
+export { EventRecorder } from './event-recorder.js';
 
-export * from './events';
-export * from './event-guards';
+export * from './events.js';
+export * from './event-guards.js';

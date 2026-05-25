@@ -4,13 +4,13 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AgentLoop } from './agent-loop';
-import { ToolExecutor } from './tool-executor';
-import { ContextBuilder } from './context-manager';
-import { EventEmitter } from '../events/event-emitter';
-import { LoopStrategy } from './loop-strategy';
-import { MessageQueue } from './message-queue';
-import type { AgentConfig, LLMResponse } from './types';
+import { AgentLoop } from './agent-loop.js';
+import { ToolExecutor } from './tool-executor.js';
+import { ContextBuilder } from './context-manager.js';
+import { EventEmitter } from '../events/event-emitter.js';
+import { LoopStrategy } from './loop-strategy.js';
+import { MessageQueue } from './message-queue.js';
+import type { AgentConfig, LLMResponse } from './types.js';
 
 // Mock LLM provider
 const mockLLMProvider = async (prompt: string, tools: any[], options?: any): Promise<LLMResponse> => {

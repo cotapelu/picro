@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, it, expect, vi } from 'vitest';
-import { Agent } from './agent';
-import type { AgentConfig, LLMResponse } from './types';
+import { Agent } from './agent.js';
+import type { AgentConfig, LLMResponse } from './types.js';
 
 // Mock LLM provider
 const mockLLMProvider = async (prompt: string, tools: any[], options?: any): Promise<LLMResponse> => {

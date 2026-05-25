@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Telemetry, setTelemetry, getTelemetry } from './telemetry';
+import { Telemetry, setTelemetry, getTelemetry } from './telemetry.js';
 
 describe('Telemetry', () => {
   beforeEach(() => {

@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { discoverAndLoadExtensions } from './loader';
-import type { LoadExtensionsResult } from './types';
+import { discoverAndLoadExtensions } from './loader.js';
+import type { LoadExtensionsResult } from './types.js';
 import { tmpdir } from 'os';
 
 describe('Extension Loader', () => {

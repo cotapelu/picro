@@ -18,20 +18,20 @@ import type {
   ThinkingLevel,
   ConversationTurn,
   ToolDefinition
-} from "../agent/types";
-import { Agent } from "../agent/agent";
-import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "../runtime/auth-guidance";
-import type { AgentTool } from "./agent-types";
-import { PerformanceTracker } from "../runtime/performance-tracker";
-import type { Model } from "../llm";
-import type { ModelEntry } from "./model-registry";
-import type { ModelRegistry } from "./model-registry";
+} from "../agent/types.js";
+import { Agent } from "../agent/agent.js";
+import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "../runtime/auth-guidance.js";
+import type { AgentTool } from "./agent-types.js";
+import { PerformanceTracker } from "../runtime/performance-tracker.js";
+import type { Model } from "../llm/index.js";
+import type { ModelEntry } from "./model-registry.js";
+import type { ModelRegistry } from "./model-registry.js";
 
 // Backward compatible alias
 type ModelAny = ModelEntry;
-import type { SessionManager, CompactionEntry, BranchSummaryEntry } from "../session/session-manager";
-import type { SettingsManager } from "../runtime/settings-manager";
-import type { ResourceLoader } from "../runtime/resource-loader";
+import type { SessionManager, CompactionEntry, BranchSummaryEntry } from "../session/session-manager.js";
+import type { SettingsManager } from "../runtime/settings-manager.js";
+import type { ResourceLoader } from "../runtime/resource-loader.js";
 import {
   estimateContextTokens,
   estimateContextUsage,
@@ -41,13 +41,13 @@ import {
   calculateContextTokens,
   type CompactionPreparation,
   type FileOperations,
-} from "../session/compaction";
-import { isContextOverflow } from "../agent/pi-ai-shim";
-import { buildSystemPrompt } from "../runtime/system-prompt";
-import { collectEntriesForBranchSummary, generateBranchSummary, type BranchSummaryDetails } from "../session/branch-summarization";
+} from "../session/compaction.js";
+import { isContextOverflow } from "../agent/pi-ai-shim.js";
+import { buildSystemPrompt } from "../runtime/system-prompt.js";
+import { collectEntriesForBranchSummary, generateBranchSummary, type BranchSummaryDetails } from "../session/branch-summarization.js";
 
 // Re-export types
-export type { AgentSessionEventListener, AgentSessionConfig } from "./agent-session-types";
+export type { AgentSessionEventListener, AgentSessionConfig } from "./agent-session-types.js";
 export type {
   AgentSessionEvent,
   QueueUpdateEvent,
@@ -60,10 +60,10 @@ export type {
   ModelCycleResult,
   SessionStats,
   ParsedSkillBlock
-} from "./agent-session-types";
+} from "./agent-session-types.js";
 
-import { EventEmitter } from "../events/event-emitter";
-import type { AgentEvent } from "../agent/types";
+import { EventEmitter } from "../events/event-emitter.js";
+import type { AgentEvent } from "../agent/types.js";
 
 // ============================================================================
 // Constants

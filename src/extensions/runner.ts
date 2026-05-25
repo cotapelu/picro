@@ -3,8 +3,8 @@
  * Extensions Runner - Run extensions and emit events
  */
 
-import type { Extension, ExtensionRuntime, ExtensionAPI, ExtensionCommand, LoadExtensionsResult } from "./types";
-import type { BeforeAgentStartEventResult, InputEventResult } from "./types";
+import type { Extension, ExtensionRuntime, ExtensionAPI, ExtensionCommand, LoadExtensionsResult } from "./types.js";
+import type { BeforeAgentStartEventResult, InputEventResult } from "./types.js";
 
 /**
  * Create extension runtime

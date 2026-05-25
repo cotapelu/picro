@@ -9,10 +9,10 @@ vi.mock('../llm', async () => {
   };
 });
 
-import { compact } from './compaction';
-import type { CompactionPreparation } from './compaction';
-import type { Model } from '../llm';
-import { complete as llmComplete } from '../llm';
+import { compact } from './compaction.js';
+import type { CompactionPreparation } from './compaction.js';
+import type { Model } from '../llm/index.js';
+import { complete as llmComplete } from '../llm/index.js';
 
 describe('compact (LLM summarization)', () => {
   const mockModel = {} as Model;

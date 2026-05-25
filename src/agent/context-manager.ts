@@ -4,7 +4,7 @@
  * Different design: functional approach, no stateful memory injection.
  */
 
-import type { ConversationTurn, MemoryEntry, ContextBuilderConfig } from './types';
+import type { ConversationTurn, MemoryEntry, ContextBuilderConfig } from './types.js';
 
 /**
  * Builds LLM prompt from conversation history.

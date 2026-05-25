@@ -5,8 +5,8 @@
  * Extensions allow adding custom tools, commands, and event handlers to pi.
  */
 
-import type { AgentTool } from "../session/agent-types";
-import type { ToolDefinition } from "../agent/types";
+import type { AgentTool } from "../session/agent-types.js";
+import type { ToolDefinition } from "../agent/types.js";
 
 // ============================================================================
 // Extension Types

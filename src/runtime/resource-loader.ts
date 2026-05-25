@@ -5,15 +5,15 @@
  * This is a stub implementation - full implementation coming in Phase B
  */
 
-import type { AgentMessage } from "../session/agent-types";
-import type { Skill } from "./skills";
-import { loadSkills } from "./skills";
-import { loadPromptTemplates } from "./prompt-templates";
+import type { AgentMessage } from "../session/agent-types.js";
+import type { Skill } from "./skills.js";
+import { loadSkills } from "./skills.js";
+import { loadPromptTemplates } from "./prompt-templates.js";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { discoverAndLoadExtensions } from "../extensions/loader";
-import { createExtensionRuntime } from "../extensions/runner";
-import { ExtensionRunner } from "../extensions/runner";
+import { discoverAndLoadExtensions } from "../extensions/loader.js";
+import { createExtensionRuntime } from "../extensions/runner.js";
+import { ExtensionRunner } from "../extensions/runner.js";
 
 /**
  * Resource loader interface for loading external resources

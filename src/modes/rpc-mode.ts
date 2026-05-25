@@ -4,7 +4,7 @@
  * Not implemented yet.
  */
 
-import type { AgentSessionRuntime } from "../runtime/agent-session-runtime";
+import type { AgentSessionRuntime } from "../runtime/agent-session-runtime.js";
 
 /**
  * Run RPC mode.

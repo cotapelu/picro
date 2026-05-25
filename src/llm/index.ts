@@ -9,7 +9,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 // Models and lookup functions
-export { MODELS, getModel, getProviders, getModels } from './models';
+export { MODELS, getModel, getProviders, getModels } from './models.js';
 
 // Re-export from types
 export type { 
@@ -29,14 +29,14 @@ export type {
   Usage, 
   StreamOptions,
   AssistantMessageEvent
-} from './types';
+} from './types.js';
 
 // Provider APIs  
-export { stream, complete } from './providers/openai-compatible';
+export { stream, complete } from './providers/openai-compatible.js';
 
 // Stream optimization
-export { StreamBuffer, getProviderBufferConfig, createStreamBuffer, providerBufferConfigs } from './utils/stream-buffer';
-export type { BufferConfig } from './utils/stream-buffer';
+export { StreamBuffer, getProviderBufferConfig, createStreamBuffer, providerBufferConfigs } from './utils/stream-buffer.js';
+export type { BufferConfig } from './utils/stream-buffer.js';
 
 // Api type - simple alias for provider API object
 export type Api = "openai" | "anthropic" | "google" | "custom";
@@ -47,8 +47,8 @@ export function getModelById(modelId: string): any {
 }
 
 // Default export
-import { MODELS, getModel, getProviders, getModels } from './models';
-import { stream, complete } from './providers/openai-compatible';
+import { MODELS, getModel, getProviders, getModels } from './models.js';
+import { stream, complete } from './providers/openai-compatible.js';
 
 export default {
   MODELS,

@@ -3,5 +3,5 @@
  * Modes index - exports for different application modes
  */
 
-export * from "./print-mode";
-export * from "./rpc-mode";
+export * from "./print-mode.js";
+export * from "./rpc-mode.js";

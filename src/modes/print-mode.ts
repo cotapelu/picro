@@ -4,9 +4,9 @@
  * Sends prompts and outputs the final text response.
  */
 
-import type { AgentSessionRuntime } from "../runtime/agent-session-runtime";
-import type { ImageContent } from "../llm";
-import type { AssistantTurn } from "../agent/types";
+import type { AgentSessionRuntime } from "../runtime/agent-session-runtime.js";
+import type { ImageContent } from "../llm/index.js";
+import type { AssistantTurn } from "../agent/types.js";
 
 /**
  * Options for print mode.

@@ -18,9 +18,9 @@ import type {
   AfterToolHook,
   HookResult,
   ToolCallData,
-} from './types';
-import { EventEmitter } from '../events/event-emitter';
-import { validateToolArguments } from '../llm/validation';
+} from './types.js';
+import { EventEmitter } from '../events/event-emitter.js';
+import { validateToolArguments } from '../llm/validation.js';
 
 /**
  * Manages tool registration and execution.

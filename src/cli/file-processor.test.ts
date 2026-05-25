@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { tmpdir } from "node:os";
-import { processFileArguments } from "./file-processor";
+import { processFileArguments } from "./file-processor.js";
 
 describe("processFileArguments", () => {
   const testDir = path.join(tmpdir(), "picro-test-" + Math.random().toString(36).substring(2));

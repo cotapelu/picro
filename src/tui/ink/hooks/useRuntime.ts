@@ -1,10 +1,10 @@
 /** @jsxImportSource react */
 import { useEffect, useState, useCallback } from 'react';
-import type { Message, ToolCall } from '../types';
-import type { AgentSessionRuntimeEvent } from '../../../runtime';
+import type { Message, ToolCall } from '../types.js';
+import type { AgentSessionRuntimeEvent } from '../../../runtime/index.js';
 
 // Extend runtime with session methods we need
-type ExtendedRuntime = import('../../../runtime').AgentSessionRuntimeInterface & {
+type ExtendedRuntime = import('../../../runtime/index.js').AgentSessionRuntimeInterface & {
   session: {
     messages: any[];
     isStreaming: boolean;

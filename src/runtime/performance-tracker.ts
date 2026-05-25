@@ -3,7 +3,7 @@
  * Performance Tracker - Collect CPU and memory metrics over time
  */
 
-import type { PerformanceMetrics as SnapshotMetrics } from './diagnostics';
+import type { PerformanceMetrics as SnapshotMetrics } from './diagnostics.js';
 
 /**
  * Performance sample point

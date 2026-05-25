@@ -5,7 +5,7 @@
  */
 
 import * as readline from 'node:readline';
-import type { SessionInfo } from "../session/session-manager";
+import type { SessionInfo } from "../session/session-manager.js";
 
 /** Sessions loader function type */
 export type SessionsLoader = (onProgress?: (info: any) => void) => Promise<SessionInfo[]>;

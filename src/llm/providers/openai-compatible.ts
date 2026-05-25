@@ -1,14 +1,14 @@
 import OpenAI from 'openai';
-import type { Model, Context, StreamOptions, Message, Tool, Usage, TextContent, ThinkingContent, ToolCall } from '../types';
-import { parseStreamingJson } from '../utils/json-parse';
-import { sanitizeSurrogates } from '../utils/sanitize-unicode';
-import { AssistantMessageEventStream } from '../event-stream';
-import { getApiKey } from '../env-api-keys';
-import { truncateContext } from '../overflow';
-import { transformMessages } from '../transform-messages';
-import { detectCompat, mergeCompat, CompatSettings } from '../compat-detection';
-import { apiRegistry } from '../api-registry';
-import { calculateCost } from '../models';
+import type { Model, Context, StreamOptions, Message, Tool, Usage, TextContent, ThinkingContent, ToolCall } from '../types.js';
+import { parseStreamingJson } from '../utils/json-parse.js';
+import { sanitizeSurrogates } from '../utils/sanitize-unicode.js';
+import { AssistantMessageEventStream } from '../event-stream.js';
+import { getApiKey } from '../env-api-keys.js';
+import { truncateContext } from '../overflow.js';
+import { transformMessages } from '../transform-messages.js';
+import { detectCompat, mergeCompat, CompatSettings } from '../compat-detection.js';
+import { apiRegistry } from '../api-registry.js';
+import { calculateCost } from '../models.js';
 
 interface OpenAICompatOptions extends StreamOptions {
   toolChoice?: 'auto' | 'none' | 'required' | { type: 'function'; function: { name: string } };

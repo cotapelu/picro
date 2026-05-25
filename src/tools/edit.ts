@@ -4,7 +4,7 @@
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { resolveToCwd, validatePathWithinBase } from './path-utils';
+import { resolveToCwd, validatePathWithinBase } from './path-utils.js';
 
 /**
  * Edit tool input

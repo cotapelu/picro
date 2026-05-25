@@ -2,8 +2,8 @@
  * Deduplication utilities for MemoryEngine
  * Extracted to avoid circular dependencies
  */
-import { memoryHash } from './storage';
-import type { AgentAction, AgentMemoryMetadata, MemoryEntry } from './types';
+import { memoryHash } from './storage.js';
+import type { AgentAction, AgentMemoryMetadata, MemoryEntry } from './types.js';
 
 export interface DeduplicationConfig {
   enabled: boolean;

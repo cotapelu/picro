@@ -7,7 +7,7 @@
  */
 
 // Main Session Class
-export { AgentSession } from './agent-session';
+export { AgentSession } from './agent-session.js';
 export type {
   AgentSessionConfig,
   AgentSessionEventListener,
@@ -21,7 +21,7 @@ export type {
   ModelCycleResult,
   SessionStats,
   ParsedSkillBlock,
-} from './agent-session-types';
+} from './agent-session-types.js';
 
 // Session Message Types (Message-based types)
 export type {
@@ -36,27 +36,27 @@ export type {
   ThinkingContent,
   ToolCallContent,
   ToolResultContent,
-} from './agent-types';
-export type { ThinkingLevel } from './agent-types';
+} from './agent-types.js';
+export type { ThinkingLevel } from './agent-types.js';
 
 // Services
-export { createAgentSessionServices, type AgentSessionServices } from './agent-session-services';
+export { createAgentSessionServices, type AgentSessionServices } from './agent-session-services.js';
 
 // Session Manager
-export { SessionManager } from './session-manager';
+export { SessionManager } from './session-manager.js';
 export type {
   SessionEntry,
   BranchSummaryEntry,
   CompactionEntry,
   SessionHeader,
-} from './session-manager';
+} from './session-manager.js';
 
 // Conversion utilities
-export { convertSessionMessagesToLlm } from './convert-to-llm';
+export { convertSessionMessagesToLlm } from './convert-to-llm.js';
 
 // Model Registry & Resolver
-export { DefaultModelRegistry, type ModelRegistry, type ModelEntry, createModelRegistry } from './model-registry';
-export { type Model as LlmModel } from '../llm'; // re-export for convenience
+export { DefaultModelRegistry, type ModelRegistry, type ModelEntry, createModelRegistry } from './model-registry.js';
+export { type Model as LlmModel } from '../llm/index.js'; // re-export for convenience
 export {
   defaultModelPerProvider,
   parseModelPattern,
@@ -64,10 +64,10 @@ export {
   resolveCliModel,
   findInitialModel,
   restoreModelFromSession,
-} from './model-resolver';
+} from './model-resolver.js';
 
 // Auth Storage
-export { AuthStorage, type AuthCredential, type ApiKeyCredential, type OAuthCredential, type AuthStorageData, type AuthStatus } from './auth-storage';
+export { AuthStorage, type AuthCredential, type ApiKeyCredential, type OAuthCredential, type AuthStorageData, type AuthStatus } from './auth-storage.js';
 
 // Defaults
 export {
@@ -80,7 +80,7 @@ export {
   DEFAULT_TEMPERATURE,
   DEFAULT_TOP_P,
   DEFAULT_MAX_RETRIES,
-} from './defaults';
+} from './defaults.js';
 
 // Compaction
 export {
@@ -93,7 +93,7 @@ export {
   prepareCompaction,
   compact as performCompaction,
   type CompactionResult,
-} from './compaction';
+} from './compaction.js';
 
 // Branch Summarization
 export {
@@ -102,4 +102,4 @@ export {
   type BranchPreparation,
   collectEntriesForBranchSummary,
   generateBranchSummary,
-} from './branch-summarization';
+} from './branch-summarization.js';

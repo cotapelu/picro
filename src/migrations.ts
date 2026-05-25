@@ -6,7 +6,7 @@
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { getAgentDir } from "./config";
+import { getAgentDir } from "./config.js";
 
 /**
  * Migrate legacy oauth.json and settings.json apiKeys to auth.json.

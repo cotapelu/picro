@@ -3,7 +3,7 @@
  * Memory persistence with JSON file storage
  */
 
-import * as fs from 'fs/promises';import * as crypto from 'crypto';import * as zlib from 'zlib';import type { AgentAction, AgentMemoryMetadata } from './types';
+import * as fs from 'fs/promises';import * as crypto from 'crypto';import * as zlib from 'zlib';import type { AgentAction, AgentMemoryMetadata } from './types.js';
 
 // ---------------------------------------------------------------------------
 // MemoryStore - Base storage (from prepare.ts)

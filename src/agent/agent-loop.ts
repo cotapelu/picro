@@ -18,13 +18,13 @@ import type {
    MemoryStore,
    LoopStrategy,
    ToolDefinition,
- } from './types';
-import type { Model } from '../llm';
-import type { AgentEvent } from '../events/events';
- import { EventEmitter } from '../events/event-emitter';
- import { ToolExecutor } from './tool-executor';
- import { ContextBuilder } from './context-manager';
- import { MessageQueue } from './message-queue';
+ } from './types.js';
+import type { Model } from '../llm/index.js';
+import type { AgentEvent } from '../events/events.js';
+ import { EventEmitter } from '../events/event-emitter.js';
+ import { ToolExecutor } from './tool-executor.js';
+ import { ContextBuilder } from './context-manager.js';
+ import { MessageQueue } from './message-queue.js';
 
 /**
  * Manages the agent execution loop.

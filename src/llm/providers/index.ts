@@ -7,4 +7,4 @@
  * Future: Add native providers (bedrock, vertex, etc.)
  */
 
-export { stream, complete } from './openai-compatible';
+export { stream, complete } from './openai-compatible.js';

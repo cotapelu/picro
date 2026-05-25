@@ -6,8 +6,8 @@
  * Uses @picro/llm MODELS and lookup functions
  */
 
-import { getModel, getProviders, getModels } from "../llm";
-import type { Model } from "../llm";
+import { getModel, getProviders, getModels } from "../llm/index.js";
+import type { Model } from "../llm/index.js";
 
 import { existsSync } from "node:fs";
 

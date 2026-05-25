@@ -9,27 +9,27 @@ import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 
-import { AuthStorage } from "./auth-storage";
-import { SettingsManager } from "../runtime/settings-manager";
-import { DefaultModelRegistry } from "./model-registry";
-import { DefaultResourceLoader } from "../runtime/resource-loader";
-import { SessionManager } from "../session/session-manager";
-import { Agent } from "../agent/agent";
-import { AgentSession } from "../session/agent-session";
-import { DEFAULT_TOOL_TIMEOUT } from "./defaults";
-import { discoverAndLoadExtensions } from "../extensions/loader";
-import { ExtensionRunner, createExtensionRuntime } from "../extensions/runner";
-import type { ToolDefinition } from "../agent/types";
+import { AuthStorage } from "./auth-storage.js";
+import { SettingsManager } from "../runtime/settings-manager.js";
+import { DefaultModelRegistry } from "./model-registry.js";
+import { DefaultResourceLoader } from "../runtime/resource-loader.js";
+import { SessionManager } from "../session/session-manager.js";
+import { Agent } from "../agent/agent.js";
+import { AgentSession } from "../session/agent-session.js";
+import { DEFAULT_TOOL_TIMEOUT } from "./defaults.js";
+import { discoverAndLoadExtensions } from "../extensions/loader.js";
+import { ExtensionRunner, createExtensionRuntime } from "../extensions/runner.js";
+import type { ToolDefinition } from "../agent/types.js";
 
 import {
   createBashToolDefinition,
-} from "../tools/bash-tool";
-import { createReadToolDefinition } from "../tools/read";
-import { createWriteToolDefinition } from "../tools/write";
-import { createEditToolDefinition } from "../tools/edit";
-import { createLsToolDefinition } from "../tools/ls";
+} from "../tools/bash-tool.js";
+import { createReadToolDefinition } from "../tools/read.js";
+import { createWriteToolDefinition } from "../tools/write.js";
+import { createEditToolDefinition } from "../tools/edit.js";
+import { createLsToolDefinition } from "../tools/ls.js";
 
-import type { Model } from "../llm";
+import type { Model } from "../llm/index.js";
 
 /**
  * Session start event metadata

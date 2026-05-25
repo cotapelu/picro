@@ -3,7 +3,7 @@
  * Search and filter memories
  */
 
-import type { AgentAction } from './types';
+import type { AgentAction } from './types.js';
 import { performance } from 'perf_hooks';
 
 export interface RetrievalOptions {

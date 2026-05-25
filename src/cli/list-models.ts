@@ -4,8 +4,8 @@
  * Simple implementation: plain text table, no colors.
  */
 
-import type { Model } from "../llm";
-import type { ModelRegistry } from "../session/model-registry";
+import type { Model } from "../llm/index.js";
+import type { ModelRegistry } from "../session/model-registry.js";
 
 /** Format a number as human-readable (e.g., 200000 -> "200K", 1M -> "1M") */
 function formatTokenCount(count: number): string {

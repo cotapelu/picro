@@ -129,6 +129,6 @@ export interface AgentRuntimeState {
 
 // Re-export from types (core types are still in ../agent/types)
 // These are the Turn-based core types used by the Agent class
-export type { QueueMode } from '../agent/types';
-export type { AgentEvent } from '../agent/types';
-export type { Agent } from '../agent/agent';
+export type { QueueMode } from '../agent/types.js';
+export type { AgentEvent } from '../agent/types.js';
+export type { Agent } from '../agent/agent.js';

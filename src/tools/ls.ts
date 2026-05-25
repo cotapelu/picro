@@ -5,7 +5,7 @@
 
 import { readdirSync, statSync } from 'fs';
 import { join, resolve } from 'path';
-import { resolveToCwd, validatePathWithinBase } from './path-utils';
+import { resolveToCwd, validatePathWithinBase } from './path-utils.js';
 
 /**
  * Ls tool input

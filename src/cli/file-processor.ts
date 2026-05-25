@@ -8,8 +8,8 @@
  */
 
 import { readFile, stat } from "node:fs/promises";
-import type { ImageContent } from "../llm";
-import { resolveReadPath } from "../tools/path-utils";
+import type { ImageContent } from "../llm/index.js";
+import { resolveReadPath } from "../tools/path-utils.js";
 
 export interface ProcessedFiles {
   text: string;

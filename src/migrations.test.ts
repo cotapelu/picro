@@ -12,8 +12,8 @@ import {
   migrateAuthToAuthJson,
   migrateSessionsFromAgentRoot,
   migrateCommandsToPrompts,
-} from "./migrations";
-import { ENV_AGENT_DIR } from "./config";
+} from "./migrations.js";
+import { ENV_AGENT_DIR } from "./config.js";
 
 describe("migrations", () => {
   let testAgentDir: string;

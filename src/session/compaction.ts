@@ -9,10 +9,10 @@
  * - Summarization (stub)
  */
 
-import type { AgentMessage, AssistantMessage } from "./agent-types";
-import type { SessionEntry } from "../session/session-manager";
-import { complete } from "../llm";
-import type { Model } from "../llm";
+import type { AgentMessage, AssistantMessage } from "./agent-types.js";
+import type { SessionEntry } from "../session/session-manager.js";
+import { complete } from "../llm/index.js";
+import type { Model } from "../llm/index.js";
 
 type Usage = AssistantMessage['usage'];
 

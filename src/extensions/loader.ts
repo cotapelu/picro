@@ -5,9 +5,9 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import type { Extension, ExtensionFactory, ExtensionContext, ExtensionRuntime } from "./types";
-import type { LoadExtensionsResult } from "./types";
-import { createExtensionRuntime } from "./runner";
+import type { Extension, ExtensionFactory, ExtensionContext, ExtensionRuntime } from "./types.js";
+import type { LoadExtensionsResult } from "./types.js";
+import { createExtensionRuntime } from "./runner.js";
 
 /**
  * Load extensions from paths

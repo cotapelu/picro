@@ -10,7 +10,7 @@
  * - CustomMessage -> user message with content
  */
 
-import type { Message, TextContent } from '../llm';
+import type { Message, TextContent } from '../llm/index.js';
 
 // Session message types (import from session-manager would cause circular deps, so re-declare minimal shapes)
 export interface BashExecutionMessage {

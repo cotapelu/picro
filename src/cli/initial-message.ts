@@ -3,8 +3,8 @@
  * Build the initial message for the agent from stdin, file contents, and CLI arguments.
  */
 
-import type { ImageContent } from "../llm";
-import type { Args } from "../runtime/cli-args";
+import type { ImageContent } from "../llm/index.js";
+import type { Args } from "../runtime/cli-args.js";
 
 export interface InitialMessageInput {
   parsed: Args;

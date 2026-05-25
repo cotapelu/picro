@@ -4,7 +4,7 @@
  * Moved from agent/ to runtime/ as it's not core agent logic.
  */
 
-import type { LLMStreamEvent, AssistantTurn } from './types';
+import type { LLMStreamEvent, AssistantTurn } from './types.js';
 
 export interface ProxyOptions {
   authToken: string;

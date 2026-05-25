@@ -4,8 +4,8 @@
  * Called from main.ts when args start with these commands.
  */
 
-import { getAgentDir } from "./config";
-import { SettingsManager } from "./runtime/settings-manager";
+import { getAgentDir } from "./config.js";
+import { SettingsManager } from "./runtime/settings-manager.js";
 
 export type PackageCommand = "install" | "remove" | "uninstall" | "update" | "list";
 

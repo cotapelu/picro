@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { DefaultResourceLoader } from './resource-loader';
+import { DefaultResourceLoader } from './resource-loader.js';
 import { join } from 'path';
 import { tmpdir } from 'os';
 

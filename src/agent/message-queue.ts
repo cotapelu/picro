@@ -4,7 +4,7 @@
  * Different implementation: uses array with head index for efficient dequeue.
  */
 
-import type { ConversationTurn } from './types';
+import type { ConversationTurn } from './types.js';
 
 export type QueueMode = 'drain-all' | 'dequeue-one';
 

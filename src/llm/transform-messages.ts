@@ -1,4 +1,4 @@
-import type { Message, AssistantMessage, ToolCall, ToolResultMessage } from './types';
+import type { Message, AssistantMessage, ToolCall, ToolResultMessage } from './types.js';
 
 /**
  * Chuẩn hóa tool call ID để tương thích với provider yêu cầu định dạng ID đặc biệt.

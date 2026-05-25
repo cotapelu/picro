@@ -7,10 +7,10 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { existsSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { createReadToolDefinition } from './read';
-import { createWriteToolDefinition } from './write';
-import { createEditToolDefinition } from './edit';
-import { createLsToolDefinition, type LsEntry } from './ls';
+import { createReadToolDefinition } from './read.js';
+import { createWriteToolDefinition } from './write.js';
+import { createEditToolDefinition } from './edit.js';
+import { createLsToolDefinition, type LsEntry } from './ls.js';
 
 // Helper to create a temporary test directory structure
 function setupTestEnv() {

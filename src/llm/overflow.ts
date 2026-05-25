@@ -5,7 +5,7 @@
  * Preserves system prompt and most recent messages.
  */
 
-import type { Message, Tool } from './types';
+import type { Message, Tool } from './types.js';
 
 /**
  * Rough token estimation: 1 token ≈ 4 characters (English)

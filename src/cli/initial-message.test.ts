@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { buildInitialMessage } from "./initial-message";
-import type { Args } from "../runtime/cli-args";
+import { buildInitialMessage } from "./initial-message.js";
+import type { Args } from "../runtime/cli-args.js";
 
 function createArgs(overrides: Partial<Args> = {}): Args {
   return {

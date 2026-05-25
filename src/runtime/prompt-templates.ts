@@ -12,7 +12,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { homedir } from "node:os";
 
-import { createSyntheticSourceInfo, type SourceInfo } from "./source-info";
+import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.js";
 
 // ============================================================================
 // Constants

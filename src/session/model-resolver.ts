@@ -6,9 +6,9 @@
  * Uses @picro/llm functions
  */
 
-import { getModel, getModels, getProviders, type Model } from "../llm";
+import { getModel, getModels, getProviders, type Model } from "../llm/index.js";
 
-import type { ModelEntry, ModelRegistry } from "./model-registry";
+import type { ModelEntry, ModelRegistry } from "./model-registry.js";
 
 // ============================================================================
 // Constants

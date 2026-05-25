@@ -24,7 +24,7 @@ import {
 } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { getAgentDir } from "../config";
+import { getAgentDir } from "../config.js";
 
 // ============================================================================
 // Constants
@@ -376,7 +376,7 @@ export async function buildSessionInfo(filePath: string): Promise<SessionInfo | 
 // Session Context Building
 // ============================================================================
 
-import { convertSessionMessagesToLlm } from './convert-to-llm';
+import { convertSessionMessagesToLlm } from './convert-to-llm.js';
 
 export function buildSessionContext(
   entries: SessionEntry[],

@@ -5,10 +5,10 @@
  * - AgentMemoryApp, MemoryStore, AgentAction, MemoryEngine, etc.
  */
 
-export * from './types';
-export * from './storage';
-export * from './engine';
-export * from './engine-dedup';
-export * from './retrieval';
-export * from './events';
-export * from './agent-app';
+export * from './types.js';
+export * from './storage.js';
+export * from './engine.js';
+export * from './engine-dedup.js';
+export * from './retrieval.js';
+export * from './events.js';
+export * from './agent-app.js';

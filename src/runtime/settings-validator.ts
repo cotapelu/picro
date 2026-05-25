@@ -3,7 +3,7 @@
  * Settings Validator - Validate settings values to prevent invalid configurations
  */
 
-import type { Settings } from './settings-manager';
+import type { Settings } from './settings-manager.js';
 
 /**
  * Validation error

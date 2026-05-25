@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeAndTruncate } from './output-guards';
+import { sanitizeAndTruncate } from './output-guards.js';
 
 describe('sanitizeAndTruncate', () => {
   it('removes ANSI escape sequences', () => {

@@ -9,26 +9,26 @@ import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { homedir } from "node:os";
 import * as readline from "node:readline";
-import { parseArgs, type Args } from "./runtime/cli-args";
-import { processFileArguments, type ProcessedFiles } from "./cli/file-processor";
-import { buildInitialMessage, type InitialMessageResult } from "./cli/initial-message";
-import { listModels } from "./cli/list-models";
-import { selectSession, type SessionsLoader } from "./cli/session-picker";
-import { getMissingSessionCwdIssue, MissingSessionCwdError } from "./session/session-cwd";
-import { createAgentSessionServices, type AgentSessionServices } from "./session/agent-session-services";
-import { createAgentSessionFromServices, type SessionStartEvent } from "./session/agent-session-services";
-import { SessionManager } from "./session/session-manager";
-import { AgentSessionRuntime } from "./runtime/agent-session-runtime";
-import { getAgentDir, VERSION, getSettingsPath } from "./config";
-import { resetTimings, time, printTimings } from "./utils/timings";
-import { handleConfigCommand } from "./package-manager-cli";
-import { isLocalPath } from "./utils/paths";
-import { runMigrations, showDeprecationWarnings } from "./migrations";
-import type { Model } from "./llm";
+import { parseArgs, type Args } from "./runtime/cli-args.js";
+import { processFileArguments, type ProcessedFiles } from "./cli/file-processor.js";
+import { buildInitialMessage, type InitialMessageResult } from "./cli/initial-message.js";
+import { listModels } from "./cli/list-models.js";
+import { selectSession, type SessionsLoader } from "./cli/session-picker.js";
+import { getMissingSessionCwdIssue, MissingSessionCwdError } from "./session/session-cwd.js";
+import { createAgentSessionServices, type AgentSessionServices } from "./session/agent-session-services.js";
+import { createAgentSessionFromServices, type SessionStartEvent } from "./session/agent-session-services.js";
+import { SessionManager } from "./session/session-manager.js";
+import { AgentSessionRuntime } from "./runtime/agent-session-runtime.js";
+import { getAgentDir, VERSION, getSettingsPath } from "./config.js";
+import { resetTimings, time, printTimings } from "./utils/timings.js";
+import { handleConfigCommand } from "./package-manager-cli.js";
+import { isLocalPath } from "./utils/paths.js";
+import { runMigrations, showDeprecationWarnings } from "./migrations.js";
+import type { Model } from "./llm/index.js";
 // Ink TUI will be dynamically imported to avoid ESM/CJS conflicts
-import { runPrintMode } from "./modes/print-mode";
-import { runRpcMode } from "./modes/rpc-mode";
-import type { AgentSessionRuntimeDiagnostic } from "./session/agent-session-services";
+import { runPrintMode } from "./modes/print-mode.js";
+import { runRpcMode } from "./modes/rpc-mode.js";
+import type { AgentSessionRuntimeDiagnostic } from "./session/agent-session-services.js";
 
 // Load environment variables from .env
 function loadEnvFile(): void {
@@ -389,6 +389,7 @@ async function main(): Promise<void> {
 
     try {
       // Dynamically import the bundled Ink TUI (ESM)
+      // @ts-ignore - ink-bundle is generated at build time
       const { runInkApp } = await import("./tui/ink-bundle.js");
       await runInkApp(runtime);
     } catch (err: any) {

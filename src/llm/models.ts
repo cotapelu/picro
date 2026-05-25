@@ -5,8 +5,8 @@
  * Matches pi-ai's pattern where models.ts is the central model access point.
  */
 
-import { MODELS as GENERATED_MODELS } from './models.generated';
-import type { Model, Usage } from './types';
+import { MODELS as GENERATED_MODELS } from './models.generated.js';
+import type { Model, Usage } from './types.js';
 
 // Export the MODELS constant
 export { GENERATED_MODELS as MODELS };

@@ -4,7 +4,7 @@
  * Different naming and structure, same conceptual strategies.
  */
 
-import type { LLMResponse, AgentRuntimeState, ToolResult } from './types';
+import type { LLMResponse, AgentRuntimeState, ToolResult } from './types.js';
 
 /**
  * Base strategy interface.

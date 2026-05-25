@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { prepareCompaction } from './compaction';
-import type { SessionEntry } from '../session/session-manager';
+import { prepareCompaction } from './compaction.js';
+import type { SessionEntry } from '../session/session-manager.js';
 
 function createMessageEntry(id: string, role: 'user' | 'assistant', text: string): SessionEntry {
   return {

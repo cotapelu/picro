@@ -2,7 +2,7 @@
  * Simple event stream implementation
  */
 
-import type { AssistantMessageEvent, AssistantMessage } from './types';
+import type { AssistantMessageEvent, AssistantMessage } from './types.js';
 
 export class AssistantMessageEventStream implements AsyncIterable<AssistantMessageEvent> {
   private queue: AssistantMessageEvent[] = [];

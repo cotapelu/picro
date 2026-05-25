@@ -4,7 +4,7 @@
  * Uses typed event handlers with async emission.
  */
 
-import type { AgentEvent } from './events';
+import type { AgentEvent } from './events.js';
 
 type EventHandler = (event: AgentEvent) => Promise<void> | void;
 

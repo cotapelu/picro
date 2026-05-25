@@ -5,7 +5,7 @@
 
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
-import { resolveToCwd, validatePathWithinBase } from './path-utils';
+import { resolveToCwd, validatePathWithinBase } from './path-utils.js';
 
 /**
  * Write tool input

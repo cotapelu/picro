@@ -10,7 +10,7 @@
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync, openSync, closeSync, unlinkSync } from "node:fs";
-import { validateOrThrow } from "../runtime/settings-validator";
+import { validateOrThrow } from "../runtime/settings-validator.js";
 import { dirname, join } from "node:path";
 import { homedir } from "node:os";
 

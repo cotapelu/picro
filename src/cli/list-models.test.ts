@@ -4,9 +4,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { listModels } from "./list-models";
-import type { ModelRegistry } from "../session/model-registry";
-import type { Model } from "../llm";
+import { listModels } from "./list-models.js";
+import type { ModelRegistry } from "../session/model-registry.js";
+import type { Model } from "../llm/index.js";
 
 function createModel(overrides: Partial<Model> = {}): Model {
   return {

@@ -4,8 +4,8 @@
  * Designed independently with a different structure from pi-agent-legacy.
  */
 
-import type { EventEmitter } from '../events/event-emitter';
-import type { Model } from '../llm';
+import type { EventEmitter } from '../events/event-emitter.js';
+import type { Model } from '../llm/index.js';
 
 // ============================================================================
 // Basic Types

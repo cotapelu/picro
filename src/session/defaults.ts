@@ -4,7 +4,7 @@
  * Moved from agent/ to session/ because it's used by session services.
  */
 
-import type { ThinkingLevel } from '../agent/types';
+import type { ThinkingLevel } from '../agent/types.js';
 
 /**
  * Default thinking level

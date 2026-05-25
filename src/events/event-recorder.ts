@@ -3,7 +3,7 @@
  * Event Recorder - Record and replay events for debugging
  */
 
-import type { AgentEvent } from './events';
+import type { AgentEvent } from './events.js';
 
 /**
  * Event recorder options

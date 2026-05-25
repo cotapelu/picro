@@ -4,10 +4,10 @@
  * Uses: storage.ts, retrieval.ts, types.ts
  */
 
-import { MemoryStore, MemoryStorage, memoryHash } from './storage';
-import type { AgentAction, AgentMemoryMetadata, MemoryEntry, RetrievalResult } from './types';
-import { MemoryRetriever } from './retrieval';
-import { MemoryEventLog } from './events';
+import { MemoryStore, MemoryStorage, memoryHash } from './storage.js';
+import type { AgentAction, AgentMemoryMetadata, MemoryEntry, RetrievalResult } from './types.js';
+import { MemoryRetriever } from './retrieval.js';
+import { MemoryEventLog } from './events.js';
 import { performance } from 'perf_hooks';
 
 // ---------------------------------------------------------------------------

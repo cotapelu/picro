@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { getSlashCommand, listSlashCommands, BUILTIN_SLASH_COMMANDS } from './slash-commands';
+import { getSlashCommand, listSlashCommands, BUILTIN_SLASH_COMMANDS } from './slash-commands.js';
 
 describe('Slash Commands', () => {
   describe('BUILTIN_SLASH_COMMANDS', () => {

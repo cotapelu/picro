@@ -13,17 +13,17 @@ import type {
   LoopStrategy,
   MemoryStore,
   LLMResponse,
-} from './types';
-import { EventEmitter } from '../events/event-emitter';
-import { ToolExecutor } from './tool-executor';
-import { ContextBuilder } from './context-manager';
-import { AgentLoop } from './agent-loop';
-import { LoopStrategyFactory } from './loop-strategy';
-import { MessageQueue } from './message-queue';
+} from './types.js';
+import { EventEmitter } from '../events/event-emitter.js';
+import { ToolExecutor } from './tool-executor.js';
+import { ContextBuilder } from './context-manager.js';
+import { AgentLoop } from './agent-loop.js';
+import { LoopStrategyFactory } from './loop-strategy.js';
+import { MessageQueue } from './message-queue.js';
 
 // Import from llm
-import { complete, stream } from "../llm";
-import type { Model, Context, Message, Tool, StreamOptions } from "../llm";
+import { complete, stream } from "../llm/index.js";
+import type { Model, Context, Message, Tool, StreamOptions } from "../llm/index.js";
 
 /**
  * Agent orchestrates AI interactions with tools.

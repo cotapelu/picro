@@ -9,7 +9,7 @@
  */
 
 import OpenAI from 'openai';
-import type { Model } from './types';
+import type { Model } from './types.js';
 
 interface ClientKey {
   modelId: string;

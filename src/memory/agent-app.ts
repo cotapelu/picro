@@ -2,11 +2,11 @@
  * AgentMemoryApp - High-level wrapper for agents
  */
 
-import { MemoryStore, MemoryStorage, memoryHash, generateId } from './storage';
-import type { AgentAction, AgentMemoryMetadata, RetrievalResult } from './types';
-import { MemoryEngine } from './engine';
-import { MemoryRetriever } from './retrieval';
-import { MemoryEventLog } from './events';
+import { MemoryStore, MemoryStorage, memoryHash, generateId } from './storage.js';
+import type { AgentAction, AgentMemoryMetadata, RetrievalResult } from './types.js';
+import { MemoryEngine } from './engine.js';
+import { MemoryRetriever } from './retrieval.js';
+import { MemoryEventLog } from './events.js';
 
 export class AgentMemoryApp {
   private engine: MemoryEngine;

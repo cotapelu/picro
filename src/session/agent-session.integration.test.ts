@@ -16,19 +16,19 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { existsSync, mkdirSync, rmSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { AgentSession } from './agent-session';
-import { SessionManager } from './session-manager';
-import { SettingsManager } from '../runtime/settings-manager';
-import { DefaultModelRegistry } from './model-registry';
-import { DefaultResourceLoader } from '../runtime/resource-loader';
-import { AuthStorage } from './auth-storage';
-import { ExtensionRunner } from '../extensions/runner';
-import { createExtensionRuntime } from '../extensions/runner';
-import { Agent } from '../agent/agent';
-import { ToolExecutor } from '../agent/tool-executor';
-import { ContextBuilder } from '../agent/context-manager';
-import { EventEmitter } from '../events/event-emitter';
-import type { Model } from '../llm';
+import { AgentSession } from './agent-session.js';
+import { SessionManager } from './session-manager.js';
+import { SettingsManager } from '../runtime/settings-manager.js';
+import { DefaultModelRegistry } from './model-registry.js';
+import { DefaultResourceLoader } from '../runtime/resource-loader.js';
+import { AuthStorage } from './auth-storage.js';
+import { ExtensionRunner } from '../extensions/runner.js';
+import { createExtensionRuntime } from '../extensions/runner.js';
+import { Agent } from '../agent/agent.js';
+import { ToolExecutor } from '../agent/tool-executor.js';
+import { ContextBuilder } from '../agent/context-manager.js';
+import { EventEmitter } from '../events/event-emitter.js';
+import type { Model } from '../llm/index.js';
 
 // Mock LLM that returns a simple response without tool calls
 function createMockLLM(response: string, toolCalls: any[] = []) {
