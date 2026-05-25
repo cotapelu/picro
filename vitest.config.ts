@@ -10,6 +10,6 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
     },
-    setupFiles: ['./src/tui/ink/test-setup.ts'],
+    setupFiles: ['./tui/ink/test-setup.ts'],
   },
 });

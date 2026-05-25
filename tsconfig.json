@@ -15,6 +15,6 @@
     "sourceMap": true,
 
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/tui-imports.d.ts"],
-  "exclude": ["node_modules", "dist", "src/tui/**/*.ts", "src/tui/**/*.tsx", "**/*.test.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }
