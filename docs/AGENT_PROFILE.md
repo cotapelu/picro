@@ -14,9 +14,10 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - ✅ Comprehensive slash commands (export, import, share, name, tree, reload, compact, session, etc.)
 - ✅ Startup experience (resource counts, version check, auth warnings, graceful shutdown)
 - ✅ Git integration (branch, dirty, ahead/behind)
-- ✅ Testing infrastructure (ink-testing-library, 152 passing tests, FooterDataProvider 92.5% coverage)
+- ✅ Testing infrastructure (ink-testing-library, 165 passing tests, continuous coverage improvements)
 - ✅ Command handlers extraction analysis (command-handlers.ts, modal-renderers.tsx prepared)
 - ✅ Proactive bug detection and rapid fix (MessageItem undefined variable)
+- ✅ Expanding component test coverage (MessageItem suite with 13 tests)
 
 ## Weaknesses / Areas for Improvement
 - ⚠️ InkApp.tsx still large (~1500 lines) - extraction artifacts created but not yet integrated

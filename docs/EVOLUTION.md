@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 10: Test Coverage Expansion
+- **Direction**: Testing & Reliability
+- **Change**: Added comprehensive unit tests for MessageItem component (13 tests) covering all message roles, thinking blocks, errors, tool calls, streaming indicator
+- **Rationale**: Increase overall coverage from ~29% towards 80% target, lock down UI behavior
+- **Impact**: Coverage increased to 29.46% statements, MessageItem component coverage 74.32%
+
 ### Iteration 9: Critical Bug Fix
 - **Direction**: Stability & Correctness
 - **Change**: Fixed undefined variable `shouldShowRole` in `MessageItem.tsx` (line 84) - should be `showRoleLabel`
@@ -76,7 +82,8 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - ✅ Command handlers extraction analysis and partial implementation (`command-handlers.ts`)
 - ✅ Modal renderers extraction analysis and partial implementation (`modal-renderers.tsx`)
 - ✅ Bug fix: undefined variable `shouldShowRole` → `showRoleLabel` in MessageItem.tsx
-- **61 tasks completed** across 9 iterations - **TUI implementation is feature-complete and stable**
+- ✅ New test suite: MessageItem.test.tsx (13 tests) increasing coverage and validating UI behavior
+- **62 tasks completed** across 10 iterations - **TUI implementation is feature-complete and stable**
 
 ## Planned Refactors (Future)
 

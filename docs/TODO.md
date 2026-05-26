@@ -3,6 +3,17 @@
 ## Mục tiêu
 Xây dựng thư mục `src/tui` đầy đủ và chuẩn, làm việc tốt với `AgentSessionRuntime`. Tham khảo code từ `llm-context/coding-agent/modes/interactive/` và `llm-context/agent/` nhưng KHÔNG copy, chỉ đối chiếu và implement theo cách phù hợp với kiến trúc hiện tại (React + Ink).
 
+## Cập nhật gần đây (2025-05-26)
+- ✅ **Iteration 9**: Bug Fix in `MessageItem.tsx` (shouldShowRole → showRoleLabel)
+- ✅ **Iteration 10**: Added `MessageItem.test.tsx` (13 tests) - coverage increased to ~29.5%
+- 📊 **Tests**: 165 passing (up from 152)
+- 🎯 **Coverage Goal**: 80%
+- 🔄 **Next Priorities**:
+  1. Tiếp tục mở rộng test coverage: AssistantMessage, ToolExecution, BashExecution, modals
+  2. Tích hợp `command-handlers.ts` & `modal-renderers.tsx` vào InkApp (decomposition)
+  3. Implement theme watcher (dynamic light/dark switching)
+  4. So sánh chi tiết với reference code (llm-context/coding-agent/modes/interactive/)
+
 ---
 
 ## 📊 Tình hình hiện tại
