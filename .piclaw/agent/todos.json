@@ -159,9 +159,45 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Startup Experience & Visibility",
+      "tasks": [
+        {
+          "id": "task-28",
+          "content": "Implement showLoadedResources function in InkApp",
+          "status": "in_progress"
+        },
+        {
+          "id": "task-29",
+          "content": "Display resource counts in Header (extensions, skills, prompts, themes)",
+          "status": "pending"
+        },
+        {
+          "id": "task-30",
+          "content": "Implement showStartupNoticesIfNeeded (version check, updates)",
+          "status": "pending"
+        },
+        {
+          "id": "task-31",
+          "content": "Register extension shortcuts properly",
+          "status": "pending"
+        },
+        {
+          "id": "task-32",
+          "content": "Add signal handlers for graceful shutdown (SIGTERM, SIGHUP)",
+          "status": "pending"
+        },
+        {
+          "id": "task-33",
+          "content": "Test startup flow end-to-end",
+          "status": "pending"
+        }
+      ]
     }
   ],
-  "nextTaskId": 28,
-  "nextPhaseId": 5,
-  "updatedAt": "2026-05-26T07:04:46.066Z"
+  "nextTaskId": 34,
+  "nextPhaseId": 6,
+  "updatedAt": "2026-05-26T07:07:09.956Z"
 }

@@ -66,6 +66,31 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt, steeringMessages, followUpMessages, toolOutputExpanded, setToolOutputExpanded, hideThinkingBlock, setHideThinkingBlock, hiddenThinkingLabel, setHiddenThinkingLabel, currentModel } = useRuntime(runtime as any);
   const [retryCountdown, setRetryCountdown] = React.useState(0);
 
+  // Extension shortcuts registry
+  const extensionShortcutsRef = React.useRef<Map<string, (input: string, key: any) => boolean | void>>(new Map());
+
+  // Helper to match keyId string like "ctrl+p"
+  const matchesKey = (input: string, key: any, keyId: string): boolean => {
+    const parts = keyId.toLowerCase().split('+');
+    const modifiers = parts.slice(0, -1);
+    const expectedChar = parts[parts.length - 1];
+    if (input !== expectedChar) return false;
+    if (modifiers.includes('ctrl') !== !!key.ctrl) return false;
+    if (modifiers.includes('shift') !== !!key.shift) return false;
+    if (modifiers.includes('alt') !== !!key.alt) return false;
+    return true;
+  };
+
+  // Setup extension shortcuts from runner
+  const setupExtensionShortcuts = React.useCallback((runner: any) => {
+    const shortcuts = runner.getShortcuts?.() ?? new Map<string, any>();
+    const newMap = new Map<string, (input: string, key: any) => boolean | void>();
+    for (const [keyId, shortcut] of shortcuts.entries()) {
+      newMap.set(keyId, shortcut.handler as any);
+    }
+    extensionShortcutsRef.current = newMap;
+  }, []);
+
   // Retry countdown timer
   React.useEffect(() => {
     if (retryAttempt > 0) {
@@ -176,6 +201,16 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   // Global keybindings
   useInput((input, key) => {
     if (activeModal) return;
+
+    // Check extension shortcuts first
+    for (const [keyId, handler] of extensionShortcutsRef.current.entries()) {
+      if (matchesKey(input, key, keyId)) {
+        const result = handler(input, key);
+        if (result !== false) {
+          return;
+        }
+      }
+    }
 
     if (key.ctrl && input === 'p') {
       setActiveModal({ type: 'command-palette' });
@@ -999,25 +1034,43 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const modelId = currentModel?.id || (runtime.session as any)?.model?.id || 'No model';
   const themeLabel = isDark ? 'dark' : 'light';
 
-  // Compute resource counts for display
-  const session = runtime.session as any;
-  const resourceLoader = session._resourceLoader;
-  let extCount = 0, skillCount = 0, promptCount = 0, themeCount = 0;
-  if (resourceLoader) {
+  // Resource counts state (populated on startup)
+  const [resourceCounts, setResourceCounts] = React.useState<{ extensions: number; skills: number; prompts: number; themes: number }>({ extensions: 0, skills: 0, prompts: 0, themes: 0 });
+
+  // showLoadedResources: compute counts and optionally show toast
+  const showLoadedResources = React.useCallback((opts?: { force?: boolean; showDiagnosticsWhenQuiet?: boolean }) => {
     try {
-      const extResult = resourceLoader.getExtensions?.();
-      if (extResult?.extensions?.length) extCount = extResult.extensions.length;
-      const skillsResult = resourceLoader.getSkills?.();
-      if (skillsResult?.skills?.length) skillCount = skillsResult.skills.length;
-      const promptsResult = resourceLoader.getPromptTemplates?.();
-      if (promptsResult?.length) promptCount = promptsResult.length;
-      const themesResult = resourceLoader.getThemes?.();
-      if (themesResult?.themes?.length) themeCount = themesResult.themes.length;
-    } catch (e) {
-      // ignore errors
+      const ses = runtime.session as any;
+      const loader = ses._resourceLoader;
+      let ext = 0, skill = 0, prompt = 0, theme = 0;
+      if (loader) {
+        try {
+          const extRes = loader.getExtensions?.();
+          if (extRes?.extensions?.length) ext = extRes.extensions.length;
+          const skillsRes = loader.getSkills?.();
+          if (skillsRes?.skills?.length) skill = skillsRes.skills.length;
+          const promptsRes = loader.getPromptTemplates?.();
+          if (promptsRes?.length) prompt = promptsRes.length;
+          const themesRes = loader.getThemes?.();
+          if (themesRes?.themes?.length) theme = themesRes.themes.length;
+        } catch {}
+      }
+      setResourceCounts({ extensions: ext, skills: skill, prompts: prompt, themes: theme });
+
+      const settings = runtime.settings as any;
+      const quiet = settings?.get?.('quietStartup') ?? false;
+      if (opts?.force || !quiet) {
+        addToast(`Loaded: ${ext} extensions, ${skill} skills, ${prompt} prompts, ${theme} themes`, 'info');
+      }
+    } catch (err) {
+      console.error('Error loading resources:', err);
     }
-  }
-  const resourceCounts = { extensions: extCount, skills: skillCount, prompts: promptCount, themes: themeCount };
+  }, [runtime, addToast]);
+
+  // Show loaded resources on startup
+  React.useEffect(() => {
+    showLoadedResources({ force: false });
+  }, [showLoadedResources]);
 
   // Extension widget management (above editor)
   const [extensionWidgetsAbove, setExtensionWidgetsAbove] = React.useState<Map<string, string>>(new Map<string, string>());
@@ -1260,6 +1313,10 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         }
       });
       session.__picroBound = true;
+      // Register extension shortcuts
+      if (session._extensionRunner?.getShortcuts) {
+        setupExtensionShortcuts(session._extensionRunner);
+      }
     }
   }, [runtime]);
 
@@ -1324,6 +1381,25 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     });
     return () => unsubscribe?.();
   }, [runtime, footerProvider]);
+
+  // Signal handlers for graceful shutdown
+  React.useEffect(() => {
+    const handleSignal = async (signal: string) => {
+      console.log(`Received ${signal}, shutting down gracefully...`);
+      try {
+        await runtime.dispose?.();
+      } catch (err) {
+        console.error('Error during shutdown:', err);
+      }
+      process.exit(0);
+    };
+    process.on('SIGTERM', () => handleSignal('SIGTERM'));
+    process.on('SIGHUP', () => handleSignal('SIGHUP'));
+    return () => {
+      process.off('SIGTERM', handleSignal);
+      process.off('SIGHUP', handleSignal);
+    };
+  }, [runtime]);
 
   // Helper function for /export command
   const generateSessionHtml = (messages: any[], options: { title: string; includeStyles: boolean; includeImages: boolean; cwd: string }) => {
