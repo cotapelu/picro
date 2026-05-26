@@ -79,6 +79,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Change**: Missing UI components and modals from reference
 - **Rationale**: Feature parity with interactive-mode.ts
 
+### Iteration 15: HelpModal Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added 2 tests for HelpModal component to verify rendering and command listings
+- **Rationale**: Continue expanding test coverage for modals
+- **Impact**: Total tests increased to 196; coverage improved slightly
+
 ## Completed Tasks (61 total)
 
 - ✅ Fixed bug: undefined variable in MessageItem component
