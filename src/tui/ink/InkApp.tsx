@@ -335,31 +335,26 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         setActiveModal({ type: 'scoped-models' });
         break;
       case 'export':
-        // Export current session to HTML file
+        // Export current session to HTML file with proper formatting
         try {
           const messages = runtime.session.messages as any[];
           if (messages.length === 0) {
             addToast('No messages to export', 'info');
             break;
           }
-          // Generate simple HTML
           const cwd = runtime.cwd;
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
           const filename = `session-${timestamp}.html`;
           const filepath = `${cwd}/${filename}`;
-          
-          let html = `<!DOCTYPE html><html><head><title>Session Export</title>`;
-          html += `<style>body{font-family:sans-serif;max-width:800px;margin:auto;padding:20px} .user{color:#0066cc} .assistant{color:#2e7d32} .tool{color:#d32f2f}</style>`;
-          html += `</head><body><h1>Session Export</h1>`;
-          for (const msg of messages) {
-            const role = msg.role;
-            const content = (msg.content as any[])?.map((c: any) => c.text || '').join('') || String(msg.content || '');
-            const escaped = content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-            html += `<div class="${role}"><strong>${role}:</strong> ${escaped}</div>`;
-          }
-          html += `</body></html>`;
-          
-          // Write file (using node fs)
+
+          // Build HTML with proper structure and styling
+          const html = generateSessionHtml(messages, {
+            title: 'Session Export',
+            includeStyles: true,
+            includeImages: true,
+            cwd,
+          });
+
           const fs = await import('node:fs');
           fs.writeFileSync(filepath, html, 'utf-8');
           addToast(`Exported to ${filename}`, 'success');
@@ -1321,6 +1316,91 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     });
     return () => unsubscribe?.();
   }, [runtime, footerProvider]);
+
+  // Helper function for /export command
+  const generateSessionHtml = (messages: any[], options: { title: string; includeStyles: boolean; includeImages: boolean; cwd: string }) => {
+    const { title, includeStyles, includeImages, cwd } = options;
+    const escapedTitle = escapeHtml(title);
+    let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapedTitle}</title>`;
+    if (includeStyles) {
+      html += `<style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #333; }
+        .header { background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .message { margin-bottom: 24px; padding: 16px; border-radius: 8px; }
+        .user { background: #e3f2fd; border-left: 4px solid #2196f3; }
+        .assistant { background: #e8f5e9; border-left: 4px solid #4caf50; }
+        .tool { background: #fff3e0; border-left: 4px solid #ff9800; }
+        .bash-execution { background: #fce4ec; border-left: 4px solid #e91e63; }
+        .role { font-weight: bold; margin-bottom: 8px; }
+        .content { white-space: pre-wrap; word-wrap: break-word; }
+        .tool-call { background: #f3e5f5; padding: 12px; border-radius: 4px; margin: 8px 0; font-family: monospace; }
+        .thinking { color: #666; font-style: italic; border-left: 2px solid #ccc; padding-left: 12px; margin: 8px 0; }
+        img { max-width: 100%; height: auto; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
+      </style>`;
+    }
+    html += `</head><body>`;
+    html += `<div class="header"><h1>${escapedTitle}</h1>`;
+    html += `<p><strong>Exported:</strong> ${new Date().toLocaleString()}</p>`;
+    html += `<p><strong>CWD:</strong> ${escapeHtml(cwd)}</p>`;
+    html += `<p><strong>Messages:</strong> ${messages.length}</p>`;
+    html += `</div>`;
+
+    for (const msg of messages) {
+      let roleClass = 'user';
+      let roleName = 'User';
+      if (msg.role === 'assistant') { roleClass = 'assistant'; roleName = 'Assistant'; }
+      else if (msg.role === 'tool') { roleClass = 'tool'; roleName = 'Tool'; }
+      else if (msg.role === 'bashExecution') { roleClass = 'bash-execution'; roleName = 'Bash'; }
+      else if (msg.role === 'compactionSummary') { roleClass = 'tool'; roleName = 'Compaction'; }
+      else if (msg.role === 'branchSummary') { roleClass = 'tool'; roleName = 'Branch'; }
+      else if (msg.role === 'custom') { roleClass = 'tool'; roleName = msg.customType || 'Custom'; }
+
+      html += `<div class="message ${roleClass}">`;
+      html += `<div class="role">${escapeHtml(roleName)}</div>`;
+      html += `<div class="content">`;
+
+      // Handle content blocks
+      if (Array.isArray(msg.content)) {
+        for (const block of msg.content) {
+          if (block.type === 'text') {
+            html += `<p>${escapeHtml(block.text)}</p>`;
+          } else if (block.type === 'thinking' && includeStyles) {
+            html += `<div class="thinking">${escapeHtml(block.thinking)}</div>`;
+          }
+        }
+      } else {
+        html += `<p>${escapeHtml(String(msg.content || ''))}</p>`;
+      }
+
+      // Tool calls
+      if (msg.toolCalls && msg.toolCalls.length > 0) {
+        for (const tool of msg.toolCalls) {
+          html += `<div class="tool-call">`;
+          html += `<strong>Tool:</strong> ${escapeHtml(tool.name)}<br>`;
+          html += `<strong>Arguments:</strong> <pre>${escapeHtml(JSON.stringify(tool.arguments, null, 2))}</pre>`;
+          html += `</div>`;
+        }
+      }
+
+      html += `</div></div>`;
+    }
+
+    html += `<div class="footer">`;
+    html += `<p>Generated by Picro Agent</p>`;
+    html += `</div></body></html>`;
+
+    return html;
+  };
+
+  const escapeHtml = (text: string): string => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
 
   return (
     <Box flexDirection="column" width="100%" position="relative">
