@@ -16,6 +16,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Increase coverage for molecule components used in message rendering
 - **Impact**: Total tests increased to 187; coverage modestly improved
 
+### Iteration 13: BashExecution Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added 5 unit tests for BashExecution component covering command/output, exitCode handling, cancellation, truncation
+- **Rationale**: Complete coverage for message molecule components
+- **Impact**: Total tests increased to 192; overall coverage ~30%
+
 ### Iteration 10: Test Coverage Expansion
 - **Direction**: Testing & Reliability
 - **Change**: Added comprehensive unit tests for MessageItem component (13 tests) covering all message roles, thinking blocks, errors, tool calls, streaming indicator
