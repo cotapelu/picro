@@ -46,9 +46,40 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Extension System Integration",
+      "tasks": [
+        {
+          "id": "task-9",
+          "content": "Implement full bindExtensions in InkApp with working commandContextActions",
+          "status": "in_progress"
+        },
+        {
+          "id": "task-10",
+          "content": "Implement createExtensionUIContext with all required methods (select, confirm, input, notify, setStatus, setWidget, setHeader, setFooter, etc.)",
+          "status": "pending"
+        },
+        {
+          "id": "task-11",
+          "content": "Add extension shortcut registration (setupExtensionShortcuts)",
+          "status": "pending"
+        },
+        {
+          "id": "task-12",
+          "content": "Implement showLoadedResources and startup notices",
+          "status": "pending"
+        },
+        {
+          "id": "task-13",
+          "content": "Test extension loading and commands",
+          "status": "pending"
+        }
+      ]
     }
   ],
-  "nextTaskId": 9,
-  "nextPhaseId": 2,
-  "updatedAt": "2026-05-26T06:42:09.347Z"
+  "nextTaskId": 14,
+  "nextPhaseId": 3,
+  "updatedAt": "2026-05-26T06:45:53.260Z"
 }
