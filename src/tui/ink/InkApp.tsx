@@ -5,12 +5,15 @@ import type { AgentSessionRuntimeInterface } from '../../runtime.js';
 import type { Message } from './types.js';
 import { ThemeProvider, useTheme } from './hooks/useTheme.js';
 import { useRuntime } from './hooks/useRuntime.js';
+import { useModal } from './hooks/useModal.js';
 import { Header } from './components/Header/Header.js';
 import { MessageList } from './components/MessageList/MessageList.js';
 import { InputBox } from './components/InputBox/InputBox.js';
 import { Footer } from './components/Footer/Footer.js';
 import { createFooterDataProvider, type FooterDataProvider } from './components/Footer/FooterDataProvider.js';
 import { ErrorBoundary, useGlobalErrorHandler } from './ErrorBoundary.js';
+import { ModalRenderers } from './modal-renderers.js';
+import { handleCommand } from './command-handlers.js';
 import { CommandPalette } from './modals/CommandPalette.js';
 import { ThinkingModal } from './modals/ThinkingModal.js';
 import { LoginModal } from './modals/LoginModal.js';
@@ -120,7 +123,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const { toggleTheme, isDark, theme } = useTheme();
   const [inputValue, setInputValue] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [activeModal, setActiveModal] = React.useState<ModalState>(null);
+  const { activeModal, setActiveModal } = useModal();
   const [showDebug, setShowDebug] = React.useState(false);
   const messageListRef = React.useRef<{ scrollToBottom: () => void } | null>(null);
   const [toasts, setToasts] = React.useState<Array<{ id: number; message: string; type: 'info' | 'success' | 'error' }>>([]);
@@ -1605,7 +1608,15 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         'Ctrl+D: Debug',
         'Ctrl+C: Quit'
       ]} />}
-      {activeModal && renderModal()}
+      {activeModal && (
+        <ModalRenderers
+          activeModal={activeModal}
+          runtime={runtime}
+          onSelectCommand={handleCommandSelect}
+          onTreeSelect={handleTreeSelect}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
       {/* Toast notifications */}
       <Box flexDirection="column" position="absolute" top={0} right={0}>
         {toasts.map(toast => (

@@ -85,6 +85,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Continue expanding test coverage for modals
 - **Impact**: Total tests increased to 196; coverage improved slightly
 
+### Iteration 16: Partial InkApp Decomposition (Modal)
+- **Direction**: Code Quality & Maintainability
+- **Change**: Integrated `useModal` hook and `ModalRenderers` component for modal state and rendering. `renderModal` function now unused (to be removed).
+- **Rationale**: Reduce InkApp complexity, improve separation of concerns, enable easier testing
+- **Impact**: Build passes, all 196 tests pass, InkApp slightly smaller
+
 ## Completed Tasks (61 total)
 
 - ✅ Fixed bug: undefined variable in MessageItem component
