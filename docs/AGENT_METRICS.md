@@ -6,8 +6,8 @@ Track agent performance and reliability across iterations.
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 4 |
-| Tasks Completed | 27 |
+| Total Iterations | 5 |
+| Tasks Completed | 33 |
 | Test Failure Rate | N/A (no tests run yet) |
 | Rollback Count | 0 |
 | Regressions | 0 |
@@ -18,7 +18,8 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
-| 2025-05-26 | 4 | 5 | ✅ | Completed all slash commands: /export, /import, /share, /name (persist), /tree (navigation), /reload (full), /compact (custom), /session (enhanced) |
-| 2025-05-26 | 3 | 9 | ✅ | Command Handlers Implementation: groundwork and initial handlers |
-| 2025-05-26 | 2 | 5 | ✅ | Extension System Integration: proper bindExtensions, full ExtensionUIContext, extension shortcuts support |
+| 2025-05-26 | 5 | 6 | ✅ | Startup Experience: showLoadedResources, extension shortcuts, signal handlers, Anthropic auth warning |
+| 2025-05-26 | 4 | 5 | ✅ | Slash commands: /export, /import, /share, /name, /tree (navigation), /reload (full), /compact (custom), /session (enhanced) |
+| 2025-05-26 | 3 | 9 | ✅ | Command Handlers groundwork and implementations |
+| 2025-05-26 | 2 | 5 | ✅ | Extension System Integration: bindExtensions, ExtensionUIContext |
 | 2025-05-26 | 1 | 8 | ✅ | TUI Enhancement Sprint: ScopedModelsSelector, UserMessageSelector, special message components, FooterDataProvider |

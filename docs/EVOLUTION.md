@@ -4,9 +4,19 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### 2025-05-26 (Iteration 5)
+- **Direction**: Startup Experience & Visibility
+- **Change**: Implemented showLoadedResources (toast + Header counts), extension shortcuts registration, graceful shutdown (SIGTERM/SIGHUP), Anthropic auth warning
+- **Rationale**: Improve startup feedback, extension usability, and process management
+
+### 2025-05-26 (Iteration 4)
+- **Direction**: Remaining Slash Commands
+- **Change**: Completed all slash commands: /export (HTML), /import (JSONL), /share (GitHub gist), /name (persist + UI), /tree (navigation), /reload (full), /compact (custom instructions), /session (enhanced)
+- **Rationale**: Bring all core user commands to full functionality
+
 ### 2025-05-26 (Iteration 3)
 - **Direction**: Command Handlers Implementation
-- **Change**: Implemented `/session` (enhanced modal), `/reload` (full resource reload), `/compact` (custom instructions), plus stubs for /export, /import, /share, /name, /tree
+- **Change**: Implemented groundwork and initial handlers
 - **Rationale**: Complete slash command functionality to match reference
 
 ### 2025-05-26 (Iteration 2)
@@ -33,6 +43,10 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - [x] /session command: enhanced SessionInfoModal with full stats (tokens, cost, performance)
 - [x] /reload command: reload settings + resourceLoader
 - [x] /compact command: support custom instructions
+- [x] showLoadedResources: display resource counts via toast and Header
+- [x] Extension shortcuts registration from runner
+- [x] Graceful shutdown handlers (SIGTERM, SIGHUP)
+- [x] Anthropic subscription auth warning on startup
 - [x] Build successful (TypeScript + esbuild)
 - [x] Git commits with proper evolution tracking
 
