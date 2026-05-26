@@ -436,7 +436,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         }
         break;
       case 'name':
-        // Set session display name via settings (persisted per session?)
+        // Set session display name via settings (persisted per session)
         const currentName = runtime.settings?.get?.('sessionDisplayName') || '';
         setActiveModal({ type: 'editor', initialValue: currentName, onSave: async (val) => {
           const name = val.trim();
@@ -444,12 +444,19 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
             if (runtime.settings) {
               runtime.settings.set('sessionDisplayName', name);
               await runtime.settings.save?.();
+              // Also update session name immediately if possible
+              const session = runtime.session as any;
+              if (session?.sessionManager?.setSessionName) {
+                session.sessionManager.setSessionName(name);
+              }
               addToast(`Session name set to: ${name || '(default)'}`, 'success');
+              // Invalidate footer to update display
+              footerProvider.updateFromRuntime(runtime);
             } else {
               addToast('Settings unavailable', 'error');
             }
           } catch (err) {
-            addToast('Failed to set session name', 'error');
+            addToast('Failed to set session name: ' + (err as Error).message, 'error');
           }
         }});
         break;
@@ -485,7 +492,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         }
         break;
       case 'tree':
-        setActiveModal({ type: 'tree-selector' }); // Note: using 'tree' as type for modal mapping
+        // Open tree selector for navigation with summarization options
+        setActiveModal({ type: 'tree-selector' });
         break;
       case 'compact':
         // Trigger manual compaction with optional custom instructions

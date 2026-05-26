@@ -128,9 +128,40 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Remaining Slash Commands",
+      "tasks": [
+        {
+          "id": "task-23",
+          "content": "Implement /export command (HTML export with proper formatting and images)",
+          "status": "completed"
+        },
+        {
+          "id": "task-24",
+          "content": "Implement /import command (JSONL import with session switching and UI)",
+          "status": "completed"
+        },
+        {
+          "id": "task-25",
+          "content": "Implement /share command (GitHub gist with auth and feedback)",
+          "status": "completed"
+        },
+        {
+          "id": "task-26",
+          "content": "Implement /tree command (tree navigation with summarization UI)",
+          "status": "completed"
+        },
+        {
+          "id": "task-27",
+          "content": "Improve /name command (persist session name and show in UI)",
+          "status": "completed"
+        }
+      ]
     }
   ],
-  "nextTaskId": 23,
-  "nextPhaseId": 4,
-  "updatedAt": "2026-05-26T06:55:57.522Z"
+  "nextTaskId": 28,
+  "nextPhaseId": 5,
+  "updatedAt": "2026-05-26T07:04:46.066Z"
 }

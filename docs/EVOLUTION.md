@@ -4,6 +4,11 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### 2025-05-26 (Iteration 3)
+- **Direction**: Command Handlers Implementation
+- **Change**: Implemented `/session` (enhanced modal), `/reload` (full resource reload), `/compact` (custom instructions), plus stubs for /export, /import, /share, /name, /tree
+- **Rationale**: Complete slash command functionality to match reference
+
 ### 2025-05-26 (Iteration 2)
 - **Direction**: Extension System Integration
 - **Change**: Implemented full `bindExtensions` with working `commandContextActions` and complete `ExtensionUIContext`
@@ -25,7 +30,11 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - [x] Full extension system integration (bindExtensions, commandContextActions, ExtensionUIContext)
 - [x] Extension autocomplete provider registration
 - [x] Custom editor component support
+- [x] /session command: enhanced SessionInfoModal with full stats (tokens, cost, performance)
+- [x] /reload command: reload settings + resourceLoader
+- [x] /compact command: support custom instructions
 - [x] Build successful (TypeScript + esbuild)
+- [x] Git commits with proper evolution tracking
 
 ## Planned Refactors
 
