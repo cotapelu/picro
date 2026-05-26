@@ -203,37 +203,37 @@
         {
           "id": "task-34",
           "content": "Set up ink-testing-library for component tests",
-          "status": "in_progress"
+          "status": "completed"
         },
         {
           "id": "task-35",
           "content": "Write tests for ScopedModelsSelectorModal",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-36",
           "content": "Write tests for UserMessageSelectorModal",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-37",
           "content": "Write tests for SessionInfoModal",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-38",
           "content": "Write tests for FooterDataProvider",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-39",
           "content": "Write tests for useRuntime hook",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-40",
           "content": "Run tests and verify coverage",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     },
@@ -267,9 +267,50 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-8",
+      "name": "Testing Infrastructure & Coverage",
+      "tasks": [
+        {
+          "id": "task-46",
+          "content": "Set up testing environment: install @inkjs/testing-library, configure vitest for TUI components",
+          "status": "completed"
+        },
+        {
+          "id": "task-47",
+          "content": "Write comprehensive tests for FooterDataProvider (state updates, git info, tokens, performance)",
+          "status": "completed"
+        },
+        {
+          "id": "task-48",
+          "content": "Write tests for ScopedModelsSelectorModal (toggle, reorder, enable/clear all, search)",
+          "status": "completed"
+        },
+        {
+          "id": "task-49",
+          "content": "Write tests for UserMessageSelectorModal (navigation, fork selection)",
+          "status": "completed"
+        },
+        {
+          "id": "task-50",
+          "content": "Write tests for SessionInfoModal (stats display)",
+          "status": "completed"
+        },
+        {
+          "id": "task-51",
+          "content": "Achieve ≥80% coverage on critical TUI components",
+          "status": "completed"
+        },
+        {
+          "id": "task-52",
+          "content": "Run full test suite, verify no regressions",
+          "status": "completed"
+        }
+      ]
     }
   ],
-  "nextTaskId": 46,
-  "nextPhaseId": 8,
-  "updatedAt": "2026-05-26T07:58:15.982Z"
+  "nextTaskId": 53,
+  "nextPhaseId": 9,
+  "updatedAt": "2026-05-26T08:32:37.070Z"
 }
