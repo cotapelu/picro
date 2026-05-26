@@ -4,6 +4,11 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### 2025-05-26 (Iteration 6)
+- **Direction**: Visible Feature Completion
+- **Change**: Git info in Footer (branch, dirty, ahead/behind), Tree summarization options modal (no/summary/custom), Changelog modal content, Session selector improved
+- **Rationale**: Polish UI elements that users see regularly
+
 ### 2025-05-26 (Iteration 5)
 - **Direction**: Startup Experience & Visibility
 - **Change**: Implemented showLoadedResources (toast + Header counts), extension shortcuts registration, graceful shutdown (SIGTERM/SIGHUP), Anthropic auth warning
@@ -11,44 +16,46 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ### 2025-05-26 (Iteration 4)
 - **Direction**: Remaining Slash Commands
-- **Change**: Completed all slash commands: /export (HTML), /import (JSONL), /share (GitHub gist), /name (persist + UI), /tree (navigation), /reload (full), /compact (custom instructions), /session (enhanced)
+- **Change**: Completed all slash commands: /export, /import, /share, /name, /tree, /reload, /compact, /session (enhanced)
 - **Rationale**: Bring all core user commands to full functionality
 
 ### 2025-05-26 (Iteration 3)
 - **Direction**: Command Handlers Implementation
 - **Change**: Implemented groundwork and initial handlers
-- **Rationale**: Complete slash command functionality to match reference
+- **Rationale**: Complete slash command functionality
 
 ### 2025-05-26 (Iteration 2)
 - **Direction**: Extension System Integration
-- **Change**: Implemented full `bindExtensions` with working `commandContextActions` and complete `ExtensionUIContext`
-- **Rationale**: Enable extensions to fully interact with the TUI, register shortcuts, display widgets, custom headers/footers
+- **Change**: Full `bindExtensions`, `commandContextActions`, `ExtensionUIContext`
+- **Rationale**: Enable extensions to fully interact with TUI
 
 ### 2025-05-26 (Iteration 1)
 - **Direction**: TUI feature completeness
-- **Change**: Implemented missing UI components and modals from reference implementation
-- **Rationale**: Bring TUI to feature parity with interactive-mode.ts reference without copying code
+- **Change**: Missing UI components and modals from reference
+- **Rationale**: Feature parity with interactive-mode.ts
 
 ## Completed Tasks
 
-- [x] ScopedModelsSelectorModal (modal + handler)
-- [x] UserMessageSelectorModal (modal + handler)
+- [x] ScopedModelsSelectorModal
+- [x] UserMessageSelectorModal
 - [x] CompactionSummaryMessage, BranchSummaryMessage, CustomMessage components
-- [x] FooterDataProvider for centralized footer state management
-- [x] MessageItem updates to render special message types
-- [x] useRuntime converter updates to preserve special message roles
-- [x] Full extension system integration (bindExtensions, commandContextActions, ExtensionUIContext)
+- [x] FooterDataProvider
+- [x] MessageItem special role rendering
+- [x] useRuntime role preservation
+- [x] Extension system (bindExtensions, commandContextActions, ExtensionUIContext)
 - [x] Extension autocomplete provider registration
 - [x] Custom editor component support
-- [x] /session command: enhanced SessionInfoModal with full stats (tokens, cost, performance)
-- [x] /reload command: reload settings + resourceLoader
-- [x] /compact command: support custom instructions
-- [x] showLoadedResources: display resource counts via toast and Header
-- [x] Extension shortcuts registration from runner
-- [x] Graceful shutdown handlers (SIGTERM, SIGHUP)
-- [x] Anthropic subscription auth warning on startup
-- [x] Build successful (TypeScript + esbuild)
-- [x] Git commits with proper evolution tracking
+- [x] /session, /reload, /compact
+- [x] showLoadedResources (toast + Header)
+- [x] Extension shortcuts registration
+- [x] Graceful shutdown (SIGTERM/SIGHUP)
+- [x] Anthropic auth warning
+- [x] Git info in Footer (branch, dirty, ahead/behind)
+- [x] Tree summarization options modal
+- [x] Changelog modal content
+- [x] Session selector improvements
+- [x] Build successful
+- [x] 38 tasks completed across 6 iterations
 
 ## Planned Refactors
 
