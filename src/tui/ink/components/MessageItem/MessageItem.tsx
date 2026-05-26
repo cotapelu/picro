@@ -81,7 +81,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           {getRoleDisplay(message.role)}:
         </Text>
       )}
-      <Box flexDirection="column" marginLeft={shouldShowRole ? 2 : 0}>
+      <Box flexDirection="column" marginLeft={showRoleLabel ? 2 : 0}>
         {message.role === 'user' && (
           <UserMessage text={message.content} />
         )}

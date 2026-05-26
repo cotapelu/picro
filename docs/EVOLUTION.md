@@ -4,6 +4,11 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 9: Critical Bug Fix
+- **Direction**: Stability & Correctness
+- **Change**: Fixed undefined variable `shouldShowRole` in `MessageItem.tsx` (line 84) - should be `showRoleLabel`
+- **Rationale**: Prevent runtime ReferenceError when rendering messages without role label
+
 ### Iteration 8: InkApp Refactoring Analysis
 - **Direction**: Code Quality & Maintainability
 - **Change**: Analyzed InkApp.tsx (1653 lines), designed decomposition plan, extracted command handlers to `command-handlers.ts` and modal renderers to `modal-renderers.tsx` (integration deferred)
@@ -44,7 +49,9 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Change**: Missing UI components and modals from reference
 - **Rationale**: Feature parity with interactive-mode.ts
 
-## Completed Tasks (60 total)
+## Completed Tasks (61 total)
+
+- ✅ Fixed bug: undefined variable in MessageItem component
 
 - ✅ ScopedModelsSelectorModal (modal + handler)
 - ✅ UserMessageSelectorModal (modal + handler)
@@ -68,7 +75,8 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - ✅ Testing infrastructure set up, 152 tests passing, FooterDataProvider 92.5% coverage
 - ✅ Command handlers extraction analysis and partial implementation (`command-handlers.ts`)
 - ✅ Modal renderers extraction analysis and partial implementation (`modal-renderers.tsx`)
-- **60 tasks completed** across 8 iterations - **TUI implementation is feature-complete and stable**
+- ✅ Bug fix: undefined variable `shouldShowRole` → `showRoleLabel` in MessageItem.tsx
+- **61 tasks completed** across 9 iterations - **TUI implementation is feature-complete and stable**
 
 ## Planned Refactors (Future)
 
