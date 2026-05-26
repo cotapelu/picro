@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 11: Incremental Test Expansion
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for UserMessage (4 tests), AssistantMessage (8 tests), CommandPalette (4 tests)
+- **Rationale**: Continue building test coverage for TUI components and modals
+- **Impact**: Total tests increased to 181, overall coverage ~29.5%
+
 ### Iteration 10: Test Coverage Expansion
 - **Direction**: Testing & Reliability
 - **Change**: Added comprehensive unit tests for MessageItem component (13 tests) covering all message roles, thinking blocks, errors, tool calls, streaming indicator
