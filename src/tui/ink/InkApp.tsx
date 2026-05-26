@@ -664,6 +664,22 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     setInputValue('');
   }, [runtime, messages, addToast, setActiveModal, setInputValue, BUILTIN_SLASH_COMMANDS]);
 
+  const handleSelectCommand = useCallback(async (commandId: string, slashArgs?: string) => {
+    setActiveModal(null);
+    const result = await handleCommand({
+      runtime,
+      addToast,
+      setActiveModal,
+      messages,
+      footerProvider,
+      inputValue,
+      setInputValue,
+    }, commandId, slashArgs);
+    if (result === 'insert') {
+      setInputValue(commandId);
+    }
+  }, [runtime, addToast, setActiveModal, messages, footerProvider, inputValue, setInputValue]);
+
   const handleThinkingChange = useCallback((level: string) => {
     setActiveModal(null);
     runtime.setThinkingLevel(level as any);
@@ -1612,7 +1628,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         <ModalRenderers
           activeModal={activeModal}
           runtime={runtime}
-          onSelectCommand={handleCommandSelect}
+          onSelectCommand={handleSelectCommand}
           onTreeSelect={handleTreeSelect}
           onClose={() => setActiveModal(null)}
         />

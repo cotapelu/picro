@@ -85,6 +85,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Continue expanding test coverage for modals
 - **Impact**: Total tests increased to 196; coverage improved slightly
 
+### Iteration 17: Command Handler Integration
+- **Direction**: Code Quality & Maintainability
+- **Change**: Delegated command handling to `handleCommand` from command-handlers via new `handleSelectCommand` wrapper; old `handleCommandSelect` now unused.
+- **Rationale**: Eliminate duplication, single source of truth, further reduce InkApp size
+- **Impact**: Behavior unchanged, tests pass; legacy code remains for cleanup later
+
 ### Iteration 16: Partial InkApp Decomposition (Modal)
 - **Direction**: Code Quality & Maintainability
 - **Change**: Integrated `useModal` hook and `ModalRenderers` component for modal state and rendering. `renderModal` function now unused (to be removed).
