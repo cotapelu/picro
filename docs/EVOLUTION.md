@@ -10,6 +10,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Continue building test coverage for TUI components and modals
 - **Impact**: Total tests increased to 181, overall coverage ~29.5%
 
+### Iteration 12: ToolExecution Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added 6 unit tests for ToolExecution component covering collapsed/expanded states, status display, result formatting, truncation
+- **Rationale**: Increase coverage for molecule components used in message rendering
+- **Impact**: Total tests increased to 187; coverage modestly improved
+
 ### Iteration 10: Test Coverage Expansion
 - **Direction**: Testing & Reliability
 - **Change**: Added comprehensive unit tests for MessageItem component (13 tests) covering all message roles, thinking blocks, errors, tool calls, streaming indicator
