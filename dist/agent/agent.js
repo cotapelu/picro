@@ -1,20 +1,23 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Agent: main public API.
  * Different design: separates concerns with AgentLoop.
  */
-import { EventEmitter } from '../events/event-emitter.js';
-import { ToolExecutor } from './tool-executor.js';
-import { ContextBuilder } from './context-manager.js';
-import { AgentLoop } from './agent-loop.js';
-import { LoopStrategyFactory } from './loop-strategy.js';
-import { MessageQueue } from './message-queue.js';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Agent = void 0;
+const event_emitter_js_1 = require("../events/event-emitter.js");
+const tool_executor_js_1 = require("./tool-executor.js");
+const context_manager_js_1 = require("./context-manager.js");
+const agent_loop_js_1 = require("./agent-loop.js");
+const loop_strategy_js_1 = require("./loop-strategy.js");
+const message_queue_js_1 = require("./message-queue.js");
 // Import from llm
-import { complete, stream } from "../llm/index.js";
+const index_js_1 = require("../llm/index.js");
 /**
  * Agent orchestrates AI interactions with tools.
  */
-export class Agent {
+class Agent {
     // ============================================================================
     // Properties (all declared before methods)
     // ============================================================================
@@ -42,8 +45,8 @@ export class Agent {
         this.config = this.resolveConfig(config);
         this.emitter = this.config.enableLogging
             ? this.createLogger(this.config.verbose)
-            : new EventEmitter();
-        this.toolExecutor = new ToolExecutor({
+            : new event_emitter_js_1.EventEmitter();
+        this.toolExecutor = new tool_executor_js_1.ToolExecutor({
             timeout: this.config.toolTimeout,
             cacheEnabled: this.config.cacheResults,
             toolExecutionStrategy: this.config.toolExecutionStrategy,
@@ -52,7 +55,7 @@ export class Agent {
             afterToolCall: this.config.executor.afterToolCall,
             emitProgressUpdates: this.config.debug, // Emit progress updates in debug mode
         });
-        this.contextBuilder = new ContextBuilder({
+        this.contextBuilder = new context_manager_js_1.ContextBuilder({
             maxTokens: this.config.contextBuilder.maxTokens,
             reservedTokens: this.config.contextBuilder.reservedTokens,
             minMessages: this.config.contextBuilder.minMessages,
@@ -66,13 +69,13 @@ export class Agent {
         else {
             strategyName = config?.toolExecutionStrategy === 'sequential' ? 'simple' : 'react';
         }
-        this.strategy = LoopStrategyFactory.create(strategyName);
-        this.steeringQueue = new MessageQueue(this.config.steeringMode === 'drain-all' ? 'drain-all' : 'dequeue-one');
-        this.followUpQueue = new MessageQueue(this.config.followUpMode === 'drain-all' ? 'drain-all' : 'dequeue-one');
+        this.strategy = loop_strategy_js_1.LoopStrategyFactory.create(strategyName);
+        this.steeringQueue = new message_queue_js_1.MessageQueue(this.config.steeringMode === 'drain-all' ? 'drain-all' : 'dequeue-one');
+        this.followUpQueue = new message_queue_js_1.MessageQueue(this.config.followUpMode === 'drain-all' ? 'drain-all' : 'dequeue-one');
         if (config?.memoryStore) {
             this.memoryStore = config.memoryStore;
         }
-        this.runner = new AgentLoop(this.config, this.emitter, this.toolExecutor, this.contextBuilder, this.strategy, this.memoryStore);
+        this.runner = new agent_loop_js_1.AgentLoop(this.config, this.emitter, this.toolExecutor, this.contextBuilder, this.strategy, this.memoryStore);
         this.toolExecutor.registerAll(tools);
         // Auto-set LLM provider using llm if model provided
         if (model) {
@@ -123,7 +126,7 @@ export class Agent {
                 maxTokens: options?.maxTokens,
                 signal: options?.signal,
             };
-            const result = await complete(llmModel, context, llmOptions);
+            const result = await (0, index_js_1.complete)(llmModel, context, llmOptions);
             // Convert llm result to LLMResponse format
             const content = Array.isArray(result.content)
                 ? result.content.map((c) => c.text || c.thinking || '').join('')
@@ -155,7 +158,7 @@ export class Agent {
                 maxTokens: options?.maxTokens,
                 signal: options?.signal,
             };
-            const eventStream = await stream(llmModel, context, llmOptions);
+            const eventStream = await (0, index_js_1.stream)(llmModel, context, llmOptions);
             for await (const event of eventStream) {
                 yield event;
             }
@@ -440,7 +443,7 @@ export class Agent {
         };
     }
     createLogger(verbose) {
-        const emitter = new EventEmitter();
+        const emitter = new event_emitter_js_1.EventEmitter();
         if (verbose) {
             emitter.onAny((event) => {
                 const time = new Date(event.timestamp).toISOString();
@@ -469,4 +472,5 @@ export class Agent {
         return emitter;
     }
 }
+exports.Agent = Agent;
 //# sourceMappingURL=agent.js.map

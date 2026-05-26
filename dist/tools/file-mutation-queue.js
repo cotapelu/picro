@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * FileMutationQueue - Queue file edits, apply atomically, rollback on failure
@@ -7,12 +8,48 @@
  * - Apply all mutations atomically (all-or-nothing)
  * - Rollback on failure (restore original state)
  */
-import { readFile, writeFile, stat } from "node:fs/promises";
-import { resolve, relative } from "node:path";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FileMutationQueue = void 0;
+exports.applyMutations = applyMutations;
+const promises_1 = require("node:fs/promises");
+const node_path_1 = require("node:path");
 /**
  * FileMutationQueue - queues edits and applies them atomically
  */
-export class FileMutationQueue {
+class FileMutationQueue {
     mutations = [];
     snapshots = [];
     cwd;
@@ -23,11 +60,11 @@ export class FileMutationQueue {
      * Add a mutation to the queue
      */
     async queueEdit(mutation) {
-        const absolutePath = resolve(this.cwd, mutation.path);
+        const absolutePath = (0, node_path_1.resolve)(this.cwd, mutation.path);
         // Read current file content
         let oldContent;
         try {
-            oldContent = await readFile(absolutePath, "utf-8");
+            oldContent = await (0, promises_1.readFile)(absolutePath, "utf-8");
         }
         catch {
             // File doesn't exist, create empty content
@@ -61,7 +98,7 @@ export class FileMutationQueue {
         this.snapshots = [];
         for (const mutation of this.mutations) {
             try {
-                const stats = await stat(mutation.path);
+                const stats = await (0, promises_1.stat)(mutation.path);
                 this.snapshots.push({
                     path: mutation.path,
                     content: mutation.oldContent,
@@ -81,9 +118,9 @@ export class FileMutationQueue {
         const files = [];
         for (const mutation of this.mutations) {
             try {
-                await writeFile(mutation.path, mutation.newContent, "utf-8");
+                await (0, promises_1.writeFile)(mutation.path, mutation.newContent, "utf-8");
                 mutation.applied = true;
-                files.push(relative(this.cwd, mutation.path));
+                files.push((0, node_path_1.relative)(this.cwd, mutation.path));
             }
             catch (error) {
                 // Rollback on failure
@@ -104,12 +141,12 @@ export class FileMutationQueue {
             try {
                 if (snapshot.mtimeMs === 0) {
                     // File was created, delete it
-                    const { unlink } = await import("node:fs/promises");
+                    const { unlink } = await Promise.resolve().then(() => __importStar(require("node:fs/promises")));
                     await unlink(snapshot.path);
                 }
                 else {
                     // Restore original content
-                    await writeFile(snapshot.path, snapshot.content, "utf-8");
+                    await (0, promises_1.writeFile)(snapshot.path, snapshot.content, "utf-8");
                 }
                 rolledBack++;
             }
@@ -138,16 +175,17 @@ export class FileMutationQueue {
      */
     preview() {
         return this.mutations.map(m => ({
-            path: relative(this.cwd, m.path),
+            path: (0, node_path_1.relative)(this.cwd, m.path),
             oldContent: m.oldContent,
             newContent: m.newContent,
         }));
     }
 }
+exports.FileMutationQueue = FileMutationQueue;
 /**
  * Helper to create mutation queue and apply edits
  */
-export async function applyMutations(mutations, cwd = process.cwd()) {
+async function applyMutations(mutations, cwd = process.cwd()) {
     const queue = new FileMutationQueue(cwd);
     for (const mutation of mutations) {
         await queue.queueEdit(mutation);

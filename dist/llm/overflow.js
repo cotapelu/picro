@@ -1,9 +1,14 @@
+"use strict";
 /**
  * Context Window Overflow Handler
  *
  * Automatically truncates conversation history to fit within model's context window.
  * Preserves system prompt and most recent messages.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.estimateContextTokens = estimateContextTokens;
+exports.truncateContext = truncateContext;
+exports.smartTruncate = smartTruncate;
 /**
  * Rough token estimation: 1 token ≈ 4 characters (English)
  * For more accurate estimation, use tiktoken or similar (but that's heavy)
@@ -14,7 +19,7 @@ function estimateTokens(text) {
 /**
  * Estimate total tokens in context
  */
-export function estimateContextTokens(context) {
+function estimateContextTokens(context) {
     let total = 0;
     if (context.systemPrompt) {
         total += estimateTokens(context.systemPrompt);
@@ -51,7 +56,7 @@ export function estimateContextTokens(context) {
  *
  * @returns Truncated context (or original if already fits)
  */
-export function truncateContext(context, maxTokens, reservedOutputTokens = 4096) {
+function truncateContext(context, maxTokens, reservedOutputTokens = 4096) {
     const availableTokens = maxTokens - reservedOutputTokens;
     let currentTokens = estimateContextTokens(context);
     if (currentTokens <= availableTokens) {
@@ -111,7 +116,7 @@ export function truncateContext(context, maxTokens, reservedOutputTokens = 4096)
 /**
  * Smart truncation that tries to preserve conversation structure
  */
-export function smartTruncate(context, maxTokens, reservedOutputTokens = 4096) {
+function smartTruncate(context, maxTokens, reservedOutputTokens = 4096) {
     const result = truncateContext(context, maxTokens, reservedOutputTokens);
     // Additional logic could:
     // - Preserve tool call/result pairs

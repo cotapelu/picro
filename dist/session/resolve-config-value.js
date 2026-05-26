@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Resolve configuration values that may be shell commands, environment variables, or literals.
@@ -8,8 +9,15 @@
  * - "ENV_VAR" - check environment variable, fallback to literal
  * - "literal" - use as-is
  */
-import { execSync, spawnSync } from 'child_process';
-import { getShellConfig } from '../utils/shell.js';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.resolveConfigValue = resolveConfigValue;
+exports.resolveConfigValueUncached = resolveConfigValueUncached;
+exports.resolveConfigValueOrThrow = resolveConfigValueOrThrow;
+exports.resolveConfigValueToNumber = resolveConfigValueToNumber;
+exports.resolveConfigValueToBoolean = resolveConfigValueToBoolean;
+exports.resolveConfigValueToList = resolveConfigValueToList;
+const child_process_1 = require("child_process");
+const shell_js_1 = require("../utils/shell.js");
 // Cache for shell command results (process lifetime)
 const commandResultCache = new Map();
 /**
@@ -17,7 +25,7 @@ const commandResultCache = new Map();
  * - If starts with "!", executes as shell command (cached)
  * - Otherwise checks env var, then uses literal
  */
-export function resolveConfigValue(config) {
+function resolveConfigValue(config) {
     if (config.startsWith('!')) {
         return executeCommand(config);
     }
@@ -26,8 +34,8 @@ export function resolveConfigValue(config) {
 }
 function executeWithConfiguredShell(command) {
     try {
-        const { shell, args } = getShellConfig();
-        const result = spawnSync(shell, [...args, command], {
+        const { shell, args } = (0, shell_js_1.getShellConfig)();
+        const result = (0, child_process_1.spawnSync)(shell, [...args, command], {
             encoding: 'utf-8',
             timeout: 10000,
             stdio: ['ignore', 'pipe', 'ignore'],
@@ -51,7 +59,7 @@ function executeWithConfiguredShell(command) {
 }
 function executeWithDefaultShell(command) {
     try {
-        const output = execSync(command, {
+        const output = (0, child_process_1.execSync)(command, {
             encoding: 'utf-8',
             timeout: 10000,
             stdio: ['ignore', 'pipe', 'ignore'],
@@ -82,7 +90,7 @@ function executeCommand(commandConfig) {
 /**
  * Resolve without cache (for validation at startup)
  */
-export function resolveConfigValueUncached(config) {
+function resolveConfigValueUncached(config) {
     if (config.startsWith('!')) {
         return executeCommandUncached(config);
     }
@@ -92,7 +100,7 @@ export function resolveConfigValueUncached(config) {
 /**
  * Resolve or throw if not found
  */
-export function resolveConfigValueOrThrow(config, description) {
+function resolveConfigValueOrThrow(config, description) {
     const value = resolveConfigValueUncached(config);
     if (!value) {
         throw new Error(`Missing required ${description}: ${config}`);
@@ -102,7 +110,7 @@ export function resolveConfigValueOrThrow(config, description) {
 /**
  * Resolve to number
  */
-export function resolveConfigValueToNumber(config, description, fallback) {
+function resolveConfigValueToNumber(config, description, fallback) {
     const resolved = resolveConfigValue(config);
     if (resolved === undefined)
         return fallback;
@@ -112,7 +120,7 @@ export function resolveConfigValueToNumber(config, description, fallback) {
 /**
  * Resolve to boolean
  */
-export function resolveConfigValueToBoolean(config, description, fallback) {
+function resolveConfigValueToBoolean(config, description, fallback) {
     const resolved = resolveConfigValue(config);
     if (resolved === undefined)
         return fallback;
@@ -126,7 +134,7 @@ export function resolveConfigValueToBoolean(config, description, fallback) {
 /**
  * Resolve to list (comma-separated)
  */
-export function resolveConfigValueToList(config, description, delimiter = ',') {
+function resolveConfigValueToList(config, description, delimiter = ',') {
     const resolved = resolveConfigValue(config);
     if (!resolved)
         return [];

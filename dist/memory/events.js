@@ -1,8 +1,11 @@
+"use strict";
 /**
  * Event Logging
  * Audit trail for memory operations
  */
-export class MemoryEventLog {
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MemoryEventLog = void 0;
+class MemoryEventLog {
     events = [];
     log(action, memoryId, content, query, beforeHash, afterHash) {
         this.events.push({
@@ -42,4 +45,5 @@ export class MemoryEventLog {
         return this.events.slice(-limit);
     }
 }
+exports.MemoryEventLog = MemoryEventLog;
 //# sourceMappingURL=events.js.map

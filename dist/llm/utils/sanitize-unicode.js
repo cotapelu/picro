@@ -1,9 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sanitizeSurrogates = sanitizeSurrogates;
 /**
  * Làm sạch chuỗi bằng cách thay thế các mã surrogate UTF-16 không cặp
  * bằng ký tự thay thế Unicode (U+FFFD).
  * Các ký tự BMP (như emoji) có cặp surrogate hợp lệ sẽ được giữ lại.
  */
-export function sanitizeSurrogates(input) {
+function sanitizeSurrogates(input) {
     if (typeof input !== 'string')
         return '';
     const output = [];

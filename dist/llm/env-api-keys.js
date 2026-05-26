@@ -1,3 +1,4 @@
+"use strict";
 /**
  * Environment API Key Management
  *
@@ -9,9 +10,13 @@
  * 4. Legacy auth.json file (pi-ai format)
  * 5. Fallback to common env var names
  */
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
-import { homedir } from 'os';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getApiKey = getApiKey;
+exports.hasApiKey = hasApiKey;
+exports.getRequiredEnvVars = getRequiredEnvVars;
+const fs_1 = require("fs");
+const path_1 = require("path");
+const os_1 = require("os");
 const ENV_VAR_MAP = {
     // NVIDIA
     'nvidia-nim': 'NVIDIA_NIM_API_KEY',
@@ -71,14 +76,14 @@ function loadSecrets() {
     try {
         const secrets = {};
         // 1. Load secrets.json (simple key-value)
-        const secretsPath = join(process.cwd(), 'secrets.json');
-        if (existsSync(secretsPath)) {
-            Object.assign(secrets, JSON.parse(readFileSync(secretsPath, 'utf-8')));
+        const secretsPath = (0, path_1.join)(process.cwd(), 'secrets.json');
+        if ((0, fs_1.existsSync)(secretsPath)) {
+            Object.assign(secrets, JSON.parse((0, fs_1.readFileSync)(secretsPath, 'utf-8')));
         }
         // 2. Load models.json (legacy format: { providers: { "provider-name": { apiKey: "..." } } })
-        const modelsPath = join(process.cwd(), 'models.json');
-        if (existsSync(modelsPath)) {
-            const data = JSON.parse(readFileSync(modelsPath, 'utf-8'));
+        const modelsPath = (0, path_1.join)(process.cwd(), 'models.json');
+        if ((0, fs_1.existsSync)(modelsPath)) {
+            const data = JSON.parse((0, fs_1.readFileSync)(modelsPath, 'utf-8'));
             if (data.providers) {
                 for (const [provider, config] of Object.entries(data.providers)) {
                     const cfg = config;
@@ -103,15 +108,15 @@ function loadAuth() {
         return authCache;
     try {
         // 1. Try ~/.picro/agent/auth.json first (new unified location)
-        const homePath = join(homedir(), '.picro', 'agent', 'auth.json');
-        if (existsSync(homePath)) {
-            authCache = JSON.parse(readFileSync(homePath, 'utf-8'));
+        const homePath = (0, path_1.join)((0, os_1.homedir)(), '.picro', 'agent', 'auth.json');
+        if ((0, fs_1.existsSync)(homePath)) {
+            authCache = JSON.parse((0, fs_1.readFileSync)(homePath, 'utf-8'));
             return authCache;
         }
         // 2. Fallback to process.cwd()/auth.json (legacy location)
-        const cwdPath = join(process.cwd(), 'auth.json');
-        if (existsSync(cwdPath)) {
-            authCache = JSON.parse(readFileSync(cwdPath, 'utf-8'));
+        const cwdPath = (0, path_1.join)(process.cwd(), 'auth.json');
+        if ((0, fs_1.existsSync)(cwdPath)) {
+            authCache = JSON.parse((0, fs_1.readFileSync)(cwdPath, 'utf-8'));
             return authCache;
         }
     }
@@ -130,7 +135,7 @@ function loadAuth() {
  * 4. Legacy auth.json file (pi-ai format: { "provider": { "type": "api_key", "key": "..." } })
  * 5. Fallback to common env var names
  */
-export function getApiKey(provider, explicitKey) {
+function getApiKey(provider, explicitKey) {
     if (explicitKey)
         return explicitKey;
     // 1. Provider-specific env var
@@ -169,13 +174,13 @@ export function getApiKey(provider, explicitKey) {
 /**
  * Check if provider has API key configured
  */
-export function hasApiKey(provider) {
+function hasApiKey(provider) {
     return !!getApiKey(provider);
 }
 /**
  * Get all required env vars for a provider (for validation)
  */
-export function getRequiredEnvVars(provider) {
+function getRequiredEnvVars(provider) {
     const required = {
         'amazon-bedrock': ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_REGION'],
         'google-vertex': ['GOOGLE_VERTEX_CREDENTIALS'],

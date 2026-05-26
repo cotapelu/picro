@@ -1,3 +1,4 @@
+"use strict";
 /**
  * API Client Registry
  *
@@ -7,7 +8,12 @@
  * - Graceful shutdown
  * - Client tracking for debugging
  */
-import OpenAI from 'openai';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.apiRegistry = void 0;
+const openai_1 = __importDefault(require("openai"));
 /**
  * Global registry for OpenAI clients
  */
@@ -25,7 +31,7 @@ class ApiRegistry {
         }
         // Create new client
         const finalKey = apiKey || this.inferApiKey(model) || '';
-        const client = new OpenAI({
+        const client = new openai_1.default({
             apiKey: finalKey,
             baseURL: model.baseUrl,
             dangerouslyAllowBrowser: true,
@@ -87,5 +93,5 @@ class ApiRegistry {
     }
 }
 // Global singleton
-export const apiRegistry = new ApiRegistry();
+exports.apiRegistry = new ApiRegistry();
 //# sourceMappingURL=api-registry.js.map

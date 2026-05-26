@@ -1,12 +1,15 @@
+"use strict";
 /**
  * Retrieval Layer
  * Search and filter memories
  */
-import { performance } from 'perf_hooks';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MemoryRetriever = exports.MemoryScorer = void 0;
+const perf_hooks_1 = require("perf_hooks");
 // ---------------------------------------------------------------------------
 // Scorer
 // ---------------------------------------------------------------------------
-export class MemoryScorer {
+class MemoryScorer {
     /**
      * Score a memory against a query
      */
@@ -164,6 +167,7 @@ export class MemoryScorer {
         return score;
     }
 }
+exports.MemoryScorer = MemoryScorer;
 function computeBM25(query, memories, k1 = 1.2, b = 0.75) {
     const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
     const N = memories.length;
@@ -221,7 +225,7 @@ function computeBM25(query, memories, k1 = 1.2, b = 0.75) {
     }
     return results;
 }
-export class MemoryRetriever {
+class MemoryRetriever {
     scorer = new MemoryScorer();
     defaultLimit = 5;
     cache = new Map();
@@ -277,7 +281,7 @@ export class MemoryRetriever {
             return cached.memories;
         }
         this.cacheMisses++;
-        const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const startTime = typeof perf_hooks_1.performance !== 'undefined' ? perf_hooks_1.performance.now() : Date.now();
         // Normalize query
         const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9\s./\-]/g, '');
         const queryWords = normalizedQuery.split(/\s+/).filter(w => w.length > 1);
@@ -309,7 +313,7 @@ export class MemoryRetriever {
         // Cache the result (full objects with scores)
         this.cache.set(cacheKey, { memories: topScored, timestamp: Date.now() });
         // Record latency
-        const elapsed = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startTime;
+        const elapsed = (typeof perf_hooks_1.performance !== 'undefined' ? perf_hooks_1.performance.now() : Date.now()) - startTime;
         this.retrievalTimes.push(elapsed);
         if (this.retrievalTimes.length > this.maxRetention) {
             this.retrievalTimes.shift();
@@ -426,4 +430,5 @@ export class MemoryRetriever {
         return scored.filter(s => s.score > 0).slice(0, limit);
     }
 }
+exports.MemoryRetriever = MemoryRetriever;
 //# sourceMappingURL=retrieval.js.map

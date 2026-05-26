@@ -1,12 +1,18 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Auth Guidance - Messages for auth guidance
  * Moved from agent/ to runtime/ because it's UI/runtime specific.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.formatNoApiKeyFoundMessage = formatNoApiKeyFoundMessage;
+exports.formatNoModelSelectedMessage = formatNoModelSelectedMessage;
+exports.formatNoModelsAvailableMessage = formatNoModelsAvailableMessage;
+exports.formatLoginInstructions = formatLoginInstructions;
 /**
  * Format "no API key found" message
  */
-export function formatNoApiKeyFoundMessage(provider) {
+function formatNoApiKeyFoundMessage(provider) {
     return `No API key found for ${provider}.
     
 To set up authentication:
@@ -18,7 +24,7 @@ For more help, visit: https://pi.dev/docs/auth`;
 /**
  * Format "no model selected" message
  */
-export function formatNoModelSelectedMessage() {
+function formatNoModelSelectedMessage() {
     return `No model selected.
     
 To select a model:
@@ -31,7 +37,7 @@ List available models: pi --list-models`;
 /**
  * Format "no models available" message
  */
-export function formatNoModelsAvailableMessage() {
+function formatNoModelsAvailableMessage() {
     return `No models available.
     
 To use pi, you need to:
@@ -43,7 +49,7 @@ List available providers: pi --list-models`;
 /**
  * Format login instructions
  */
-export function formatLoginInstructions(provider) {
+function formatLoginInstructions(provider) {
     const providerInstructions = {
         anthropic: "Set ANTHROPIC_API_KEY environment variable or run 'pi login anthropic'",
         openai: "Set OPENAI_API_KEY environment variable or run 'pi login openai'",

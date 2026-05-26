@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Settings Manager - Quản lý settings với file locking
@@ -8,10 +9,12 @@
  * - Deep merge settings
  * - Async flush queue
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync, openSync, closeSync, unlinkSync } from "node:fs";
-import { validateOrThrow } from "../runtime/settings-validator.js";
-import { dirname, join } from "node:path";
-import { homedir } from "node:os";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SettingsManager = void 0;
+const node_fs_1 = require("node:fs");
+const settings_validator_js_1 = require("../runtime/settings-validator.js");
+const node_path_1 = require("node:path");
+const node_os_1 = require("node:os");
 // ============================================================================
 // Deep Merge
 // ============================================================================
@@ -41,19 +44,19 @@ class FileSettingsStorage {
     globalSettingsPath;
     projectSettingsPath;
     constructor(cwd, agentDir) {
-        this.globalSettingsPath = join(agentDir, "settings.json");
-        this.projectSettingsPath = join(cwd, ".pi", "settings.json");
+        this.globalSettingsPath = (0, node_path_1.join)(agentDir, "settings.json");
+        this.projectSettingsPath = (0, node_path_1.join)(cwd, ".pi", "settings.json");
     }
     withLock(scope, fn) {
         const path = scope === "global" ? this.globalSettingsPath : this.projectSettingsPath;
         const lockPath = path + ".lock";
-        const dir = dirname(path);
+        const dir = (0, node_path_1.dirname)(path);
         const acquireLock = () => {
             try {
-                const fd = openSync(lockPath, "wx");
+                const fd = (0, node_fs_1.openSync)(lockPath, "wx");
                 // Write PID
                 try {
-                    writeFileSync(lockPath, `${process.pid}\n`);
+                    (0, node_fs_1.writeFileSync)(lockPath, `${process.pid}\n`);
                 }
                 catch { }
                 return fd;
@@ -62,7 +65,7 @@ class FileSettingsStorage {
                 if (err.code === "EEXIST") {
                     // Check for stale lock
                     try {
-                        const pidStr = readFileSync(lockPath, "utf8").trim();
+                        const pidStr = (0, node_fs_1.readFileSync)(lockPath, "utf8").trim();
                         const pid = parseInt(pidStr, 10);
                         if (!isNaN(pid)) {
                             try {
@@ -70,7 +73,7 @@ class FileSettingsStorage {
                             }
                             catch {
                                 // Stale lock, remove it
-                                unlinkSync(lockPath);
+                                (0, node_fs_1.unlinkSync)(lockPath);
                                 return acquireLock();
                             }
                         }
@@ -97,21 +100,21 @@ class FileSettingsStorage {
             throw new Error(`Failed to acquire lock for settings: ${path}`);
         }
         try {
-            const fileExists = existsSync(path);
-            const current = fileExists ? readFileSync(path, "utf-8") : undefined;
+            const fileExists = (0, node_fs_1.existsSync)(path);
+            const current = fileExists ? (0, node_fs_1.readFileSync)(path, "utf-8") : undefined;
             const next = fn(current);
             if (next !== undefined) {
-                if (!existsSync(dir)) {
-                    mkdirSync(dir, { recursive: true });
+                if (!(0, node_fs_1.existsSync)(dir)) {
+                    (0, node_fs_1.mkdirSync)(dir, { recursive: true });
                 }
-                writeFileSync(path, next, "utf-8");
+                (0, node_fs_1.writeFileSync)(path, next, "utf-8");
             }
         }
         finally {
-            closeSync(lockFd);
-            if (existsSync(lockPath)) {
+            (0, node_fs_1.closeSync)(lockFd);
+            if ((0, node_fs_1.existsSync)(lockPath)) {
                 try {
-                    unlinkSync(lockPath);
+                    (0, node_fs_1.unlinkSync)(lockPath);
                 }
                 catch { }
             }
@@ -137,7 +140,7 @@ class InMemorySettingsStorage {
 // ============================================================================
 // SettingsManager Class
 // ============================================================================
-export class SettingsManager {
+class SettingsManager {
     storage;
     globalSettings;
     projectSettings;
@@ -160,7 +163,7 @@ export class SettingsManager {
         this.errors = [...initialErrors];
         this.settings = deepMergeSettings(this.globalSettings, this.projectSettings);
     }
-    static create(cwd, agentDir = join(homedir(), ".pi", "agent")) {
+    static create(cwd, agentDir = (0, node_path_1.join)((0, node_os_1.homedir)(), ".pi", "agent")) {
         const storage = new FileSettingsStorage(cwd, agentDir);
         return SettingsManager.fromStorage(storage);
     }
@@ -192,7 +195,7 @@ export class SettingsManager {
         }
         try {
             const parsed = JSON.parse(content);
-            validateOrThrow(parsed);
+            (0, settings_validator_js_1.validateOrThrow)(parsed);
             return parsed;
         }
         catch {
@@ -385,9 +388,9 @@ export class SettingsManager {
         if (!sessionDir)
             return sessionDir;
         if (sessionDir === "~")
-            return homedir();
+            return (0, node_os_1.homedir)();
         if (sessionDir.startsWith("~/"))
-            return join(homedir(), sessionDir.slice(2));
+            return (0, node_path_1.join)((0, node_os_1.homedir)(), sessionDir.slice(2));
         return sessionDir;
     }
     getDefaultProvider() {
@@ -622,4 +625,5 @@ export class SettingsManager {
         };
     }
 }
+exports.SettingsManager = SettingsManager;
 //# sourceMappingURL=settings-manager.js.map

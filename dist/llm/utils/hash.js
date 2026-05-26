@@ -1,3 +1,4 @@
+"use strict";
 /**
  * Content Hashing for Caching & Deduplication
  *
@@ -6,11 +7,17 @@
  * - Request deduplication
  * - Content-based identification
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.simpleHash = simpleHash;
+exports.sha256 = sha256;
+exports.cacheKey = cacheKey;
+exports.hashMessages = hashMessages;
+exports.requestFingerprint = requestFingerprint;
 /**
  * Simple string hash (djb2 variant)
  * Fast, good enough for caching
  */
-export function simpleHash(content) {
+function simpleHash(content) {
     let hash = 5381;
     for (let i = 0; i < content.length; i++) {
         hash = ((hash << 5) + hash) + content.charCodeAt(i); // hash * 33 + c
@@ -21,7 +28,7 @@ export function simpleHash(content) {
  * SHA-256 hash (async, uses Web Crypto API)
  * More robust for distributed caching
  */
-export async function sha256(content) {
+async function sha256(content) {
     const encoder = new TextEncoder();
     const data = encoder.encode(content);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -31,7 +38,7 @@ export async function sha256(content) {
 /**
  * Generate cache key from multiple components
  */
-export function cacheKey(...parts) {
+function cacheKey(...parts) {
     const normalized = parts.map(p => String(p ?? '')).join(':');
     return simpleHash(normalized);
 }
@@ -39,7 +46,7 @@ export function cacheKey(...parts) {
  * Hash messages array for deduplication
  * Groups consecutive messages by role into canonical string
  */
-export function hashMessages(messages) {
+function hashMessages(messages) {
     const canonical = messages.map(msg => {
         const role = msg.role;
         const content = typeof msg.content === 'string'
@@ -52,7 +59,7 @@ export function hashMessages(messages) {
 /**
  * Generate request fingerprint (model + messages + options)
  */
-export function requestFingerprint(modelId, messages, options) {
+function requestFingerprint(modelId, messages, options) {
     const msgsHash = hashMessages(messages);
     const opts = options ? JSON.stringify(Object.keys(options).sort()) : '';
     return simpleHash(`${modelId}:${msgsHash}:${opts}`);

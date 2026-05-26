@@ -1,15 +1,18 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Edit tool - Replace text in file
  */
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { resolveToCwd, validatePathWithinBase } from './path-utils.js';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createEditToolDefinition = createEditToolDefinition;
+const fs_1 = require("fs");
+const path_utils_js_1 = require("./path-utils.js");
 /**
  * Create edit tool definition
  *
  * @param cwd - Working directory to resolve relative paths against
  */
-export function createEditToolDefinition(cwd) {
+function createEditToolDefinition(cwd) {
     return {
         name: 'edit',
         description: 'Replace text in a file',
@@ -17,15 +20,15 @@ export function createEditToolDefinition(cwd) {
         async execute(input) {
             const { path: filePath, oldString, newString, dryRun = false } = input;
             // Resolve path safely within cwd
-            const resolvedPath = resolveToCwd(filePath, cwd);
+            const resolvedPath = (0, path_utils_js_1.resolveToCwd)(filePath, cwd);
             // Validate the resolved path is within cwd (security)
-            if (!validatePathWithinBase(resolvedPath, cwd)) {
+            if (!(0, path_utils_js_1.validatePathWithinBase)(resolvedPath, cwd)) {
                 throw new Error(`Access denied: Path outside working directory`);
             }
-            if (!existsSync(resolvedPath)) {
+            if (!(0, fs_1.existsSync)(resolvedPath)) {
                 throw new Error(`File not found: ${filePath}`);
             }
-            const original = readFileSync(resolvedPath, 'utf8');
+            const original = (0, fs_1.readFileSync)(resolvedPath, 'utf8');
             const index = original.indexOf(oldString);
             if (index === -1) {
                 return {
@@ -42,7 +45,7 @@ export function createEditToolDefinition(cwd) {
                     dryRun: true,
                 };
             }
-            writeFileSync(resolvedPath, modified, 'utf8');
+            (0, fs_1.writeFileSync)(resolvedPath, modified, 'utf8');
             return {
                 success: true,
                 changed: true,

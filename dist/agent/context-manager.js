@@ -1,13 +1,16 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Context builder for preparing LLM prompts.
  * Different design: functional approach, no stateful memory injection.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ContextBuilder = void 0;
 /**
  * Builds LLM prompt from conversation history.
  * Handles token limiting and memory injection.
  */
-export class ContextBuilder {
+class ContextBuilder {
     config;
     constructor(config) {
         this.config = {
@@ -151,4 +154,5 @@ export class ContextBuilder {
         return tokens >= limit * threshold;
     }
 }
+exports.ContextBuilder = ContextBuilder;
 //# sourceMappingURL=context-manager.js.map

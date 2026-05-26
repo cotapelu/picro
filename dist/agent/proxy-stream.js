@@ -1,13 +1,16 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Proxy stream function for routing LLM calls through a server.
  * Moved from agent/ to runtime/ as it's not core agent logic.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createProxyStream = createProxyStream;
 /**
  * Stream function that proxies requests through a server.
  * Reconstructs assistant message from delta events.
  */
-export function createProxyStream(options) {
+function createProxyStream(options) {
     return async function* (model, context, streamOptions) {
         const partial = {
             role: 'assistant',

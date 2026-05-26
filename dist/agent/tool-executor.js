@@ -1,14 +1,17 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Tool executor with timeout, caching, and hooks.
  * Different architecture: single entry point, internal timeout handling.
  */
-import { validateToolArguments } from '../llm/validation.js';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ToolExecutor = void 0;
+const validation_js_1 = require("../llm/validation.js");
 /**
  * Manages tool registration and execution.
  * Handles timeouts, caching, before/after hooks.
  */
-export class ToolExecutor {
+class ToolExecutor {
     tools = new Map();
     config;
     cache = new Map();
@@ -111,7 +114,7 @@ export class ToolExecutor {
         };
         // Validate tool arguments against schema if available
         if (tool.parameters) {
-            const validation = validateToolArguments(tool.parameters, toolCall.arguments);
+            const validation = (0, validation_js_1.validateToolArguments)(tool.parameters, toolCall.arguments);
             if (!validation.valid) {
                 const errorMsg = `Invalid arguments for tool '${toolCall.name}': ${validation.errors?.join('; ') || 'validation failed'}`;
                 return this.createErrorResult(toolCall, errorMsg, startTime);
@@ -387,4 +390,5 @@ export class ToolExecutor {
         });
     }
 }
+exports.ToolExecutor = ToolExecutor;
 //# sourceMappingURL=tool-executor.js.map

@@ -1,23 +1,30 @@
+"use strict";
 /**
  * Model definitions & lookup functions
  *
  * Re-exports MODELS from generated file and provides discovery APIs.
  * Matches pi-ai's pattern where models.ts is the central model access point.
  */
-import { MODELS as GENERATED_MODELS } from './models.generated.js';
-// Export the MODELS constant
-export { GENERATED_MODELS as MODELS };
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MODELS = void 0;
+exports.getModel = getModel;
+exports.getProviders = getProviders;
+exports.getModels = getModels;
+exports.calculateCost = calculateCost;
+exports.supportsXhigh = supportsXhigh;
+const models_generated_js_1 = require("./models.generated.js");
+Object.defineProperty(exports, "MODELS", { enumerable: true, get: function () { return models_generated_js_1.MODELS; } });
 // Lookup functions
-export function getModel(provider, modelId) {
-    const all = GENERATED_MODELS;
+function getModel(provider, modelId) {
+    const all = models_generated_js_1.MODELS;
     const providerModels = all[provider];
     return providerModels?.[modelId];
 }
-export function getProviders() {
-    return Object.keys(GENERATED_MODELS);
+function getProviders() {
+    return Object.keys(models_generated_js_1.MODELS);
 }
-export function getModels(provider) {
-    const all = GENERATED_MODELS;
+function getModels(provider) {
+    const all = models_generated_js_1.MODELS;
     const providerModels = all[provider];
     return providerModels ? Object.values(providerModels) : [];
 }
@@ -36,7 +43,7 @@ export function getModels(provider) {
  * console.log(usage.cost.total); // e.g., 0.0125
  * ```
  */
-export function calculateCost(model, usage) {
+function calculateCost(model, usage) {
     const inputCost = (model.cost.input / 1_000_000) * usage.input;
     const outputCost = (model.cost.output / 1_000_000) * usage.output;
     const cacheReadCost = (model.cost.cacheRead / 1_000_000) * usage.cacheRead;
@@ -53,7 +60,7 @@ export function calculateCost(model, usage) {
  * Check if model supports xhigh reasoning effort
  * Some providers (Grok, ZAI) don't support xhigh
  */
-export function supportsXhigh(model) {
+function supportsXhigh(model) {
     const provider = model.provider.toLowerCase();
     const baseUrl = model.baseUrl.toLowerCase();
     // Known providers without xhigh support

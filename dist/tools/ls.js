@@ -1,16 +1,19 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Ls tool - List directory contents
  */
-import { readdirSync, statSync } from 'fs';
-import { join } from 'path';
-import { resolveToCwd, validatePathWithinBase } from './path-utils.js';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createLsToolDefinition = createLsToolDefinition;
+const fs_1 = require("fs");
+const path_1 = require("path");
+const path_utils_js_1 = require("./path-utils.js");
 /**
  * Create ls tool definition
  *
  * @param cwd - Working directory to resolve relative paths against
  */
-export function createLsToolDefinition(cwd) {
+function createLsToolDefinition(cwd) {
     return {
         name: 'ls',
         description: 'List directory contents',
@@ -18,9 +21,9 @@ export function createLsToolDefinition(cwd) {
         async execute(input) {
             const { path: dirPath = '.', recursive = false, includeHidden = false } = input;
             // Resolve directory path safely within cwd
-            const resolvedDir = resolveToCwd(dirPath, cwd);
+            const resolvedDir = (0, path_utils_js_1.resolveToCwd)(dirPath, cwd);
             // Validate the resolved directory is within cwd (security)
-            if (!validatePathWithinBase(resolvedDir, cwd)) {
+            if (!(0, path_utils_js_1.validatePathWithinBase)(resolvedDir, cwd)) {
                 throw new Error(`Access denied: Path outside working directory`);
             }
             const entries = [];
@@ -28,13 +31,13 @@ export function createLsToolDefinition(cwd) {
                 if (depth > 5)
                     return;
                 try {
-                    const files = readdirSync(dir, { withFileTypes: true });
+                    const files = (0, fs_1.readdirSync)(dir, { withFileTypes: true });
                     for (const file of files) {
                         if (!includeHidden && file.name.startsWith('.'))
                             continue;
-                        const fullPath = join(dir, file.name);
+                        const fullPath = (0, path_1.join)(dir, file.name);
                         try {
-                            const stats = statSync(fullPath);
+                            const stats = (0, fs_1.statSync)(fullPath);
                             entries.push({
                                 name: file.name,
                                 path: fullPath,

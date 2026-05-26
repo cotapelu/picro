@@ -1,11 +1,16 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Extensions Runner - Run extensions and emit events
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ExtensionRunner = void 0;
+exports.createExtensionRuntime = createExtensionRuntime;
+exports.emitSessionShutdownEvent = emitSessionShutdownEvent;
 /**
  * Create extension runtime
  */
-export function createExtensionRuntime() {
+function createExtensionRuntime() {
     return {
         flagValues: new Map(),
         pendingProviderRegistrations: [],
@@ -14,7 +19,7 @@ export function createExtensionRuntime() {
 /**
  * ExtensionRunner - manages extension execution
  */
-export class ExtensionRunner {
+class ExtensionRunner {
     extensions = [];
     runtime;
     handlers = new Map();
@@ -225,10 +230,11 @@ export class ExtensionRunner {
         return undefined;
     }
 }
+exports.ExtensionRunner = ExtensionRunner;
 /**
  * Emit session shutdown event
  */
-export async function emitSessionShutdownEvent(runner, event) {
+async function emitSessionShutdownEvent(runner, event) {
     await runner.emit(event);
 }
 //# sourceMappingURL=runner.js.map

@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * EventBus - Channel-based pub/sub events
@@ -6,7 +7,9 @@
  * - Channel-based pub/sub
  * - Error handling trong handlers
  */
-export function createEventBus() {
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createEventBus = createEventBus;
+function createEventBus() {
     const handlers = new Map();
     return {
         emit(channel, data) {

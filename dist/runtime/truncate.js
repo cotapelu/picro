@@ -1,12 +1,19 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Truncation Strategies - Advanced output truncation utilities
  * Moved from agent/ to runtime/ as it's not core agent logic.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.truncateBytes = truncateBytes;
+exports.truncateLines = truncateLines;
+exports.truncateVisualLines = truncateVisualLines;
+exports.truncateMiddle = truncateMiddle;
+exports.truncatePreserveEnds = truncatePreserveEnds;
 /**
  * Simple truncate by bytes (append ellipsis)
  */
-export function truncateBytes(input, maxBytes, ellipsis = "...") {
+function truncateBytes(input, maxBytes, ellipsis = "...") {
     if (Buffer.byteLength(input, "utf8") <= maxBytes) {
         return { output: input, truncated: false, originalBytes: Buffer.byteLength(input, "utf8") };
     }
@@ -32,7 +39,7 @@ export function truncateBytes(input, maxBytes, ellipsis = "...") {
 /**
  * Truncate by number of lines
  */
-export function truncateLines(input, maxLines, ellipsis = "...") {
+function truncateLines(input, maxLines, ellipsis = "...") {
     const lines = input.split("\n");
     if (lines.length <= maxLines) {
         return { output: input, truncated: false, originalBytes: Buffer.byteLength(input, "utf8") };
@@ -50,7 +57,7 @@ export function truncateLines(input, maxLines, ellipsis = "...") {
  * Truncate for visual display (considering wide chars, etc).
  * This is a simple implementation that approximates visual width.
  */
-export function truncateVisualLines(input, maxVisualLines, maxCols = 80, ellipsis = "...") {
+function truncateVisualLines(input, maxVisualLines, maxCols = 80, ellipsis = "...") {
     // For simplicity, treat each line as a visual line; can be enhanced with wide char handling
     const lines = input.split("\n");
     if (lines.length <= maxVisualLines) {
@@ -76,7 +83,7 @@ export function truncateVisualLines(input, maxVisualLines, maxCols = 80, ellipsi
 /**
  * Truncate a single line (middle truncation with head/tail)
  */
-export function truncateMiddle(input, maxLength, headLen = 30, tailLen = 30, ellipsis = "...") {
+function truncateMiddle(input, maxLength, headLen = 30, tailLen = 30, ellipsis = "...") {
     if (input.length <= maxLength) {
         return { output: input, truncated: false, originalBytes: Buffer.byteLength(input, "utf8") };
     }
@@ -98,7 +105,7 @@ export function truncateMiddle(input, maxLength, headLen = 30, tailLen = 30, ell
 /**
  * Truncate preserving start and end (suitable for code snippets)
  */
-export function truncatePreserveEnds(input, maxLines, tailLines = 5, ellipsis = "...") {
+function truncatePreserveEnds(input, maxLines, tailLines = 5, ellipsis = "...") {
     const lines = input.split("\n");
     if (lines.length <= maxLines) {
         return { output: input, truncated: false, originalBytes: Buffer.byteLength(input, "utf8") };

@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Output Guard - Sanitize and validate tool output
@@ -9,16 +10,25 @@
  * - ANSI escape code injection
  * - Potential XSS in HTML contexts
  */
-import stripAnsi from 'strip-ansi';
-import { existsSync, readFileSync, unlinkSync } from 'fs';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DEFAULT_MAX_LINE_LENGTH = exports.DEFAULT_MAX_OUTPUT_SIZE = void 0;
+exports.sanitizeOutput = sanitizeOutput;
+exports.validateOutput = validateOutput;
+exports.safeReadFile = safeReadFile;
+exports.cleanupTempFile = cleanupTempFile;
+const strip_ansi_1 = __importDefault(require("strip-ansi"));
+const fs_1 = require("fs");
 /**
  * Default maximum output size (5MB)
  */
-export const DEFAULT_MAX_OUTPUT_SIZE = 5 * 1024 * 1024;
+exports.DEFAULT_MAX_OUTPUT_SIZE = 5 * 1024 * 1024;
 /**
  * Default maximum line length
  */
-export const DEFAULT_MAX_LINE_LENGTH = 10000;
+exports.DEFAULT_MAX_LINE_LENGTH = 10000;
 /**
  * Enhanced binary detection using multiple heuristics
  */
@@ -88,14 +98,14 @@ function sanitizeControlChars(str) {
 /**
  * Sanitize output string
  */
-export function sanitizeOutput(output, options = {}) {
-    const { maxSize = DEFAULT_MAX_OUTPUT_SIZE, maxLineLength = DEFAULT_MAX_LINE_LENGTH, stripAnsi: shouldStripAnsi = true, truncateIndicator = '... [TRUNCATED]', } = options;
+function sanitizeOutput(output, options = {}) {
+    const { maxSize = exports.DEFAULT_MAX_OUTPUT_SIZE, maxLineLength = exports.DEFAULT_MAX_LINE_LENGTH, stripAnsi: shouldStripAnsi = true, truncateIndicator = '... [TRUNCATED]', } = options;
     if (!output)
         return '';
     let result = output;
     // Strip ANSI codes if requested
     if (shouldStripAnsi) {
-        result = stripAnsi(result);
+        result = (0, strip_ansi_1.default)(result);
     }
     // Check if binary
     if (isBinaryString(result)) {
@@ -121,7 +131,7 @@ export function sanitizeOutput(output, options = {}) {
 /**
  * Validate and sanitize tool output
  */
-export function validateOutput(output, options = {}) {
+function validateOutput(output, options = {}) {
     const originalLength = output.length;
     const warnings = [];
     let sanitized = output;
@@ -131,7 +141,7 @@ export function validateOutput(output, options = {}) {
         warnings.push('Output contains binary data');
     }
     // Check size
-    const maxSize = options.maxSize ?? DEFAULT_MAX_OUTPUT_SIZE;
+    const maxSize = options.maxSize ?? exports.DEFAULT_MAX_OUTPUT_SIZE;
     let truncated = false;
     if (output.length > maxSize) {
         warnings.push(`Output exceeds maximum size (${output.length} > ${maxSize})`);
@@ -151,10 +161,10 @@ export function validateOutput(output, options = {}) {
 /**
  * Safe read file with output guard
  */
-export function safeReadFile(filePath, options = {}) {
-    const { maxSize = DEFAULT_MAX_OUTPUT_SIZE, encoding = 'utf8' } = options;
+function safeReadFile(filePath, options = {}) {
+    const { maxSize = exports.DEFAULT_MAX_OUTPUT_SIZE, encoding = 'utf8' } = options;
     try {
-        if (!existsSync(filePath)) {
+        if (!(0, fs_1.existsSync)(filePath)) {
             return { content: '', valid: false, warnings: ['File not found'] };
         }
         const stats = statsSync(filePath);
@@ -165,7 +175,7 @@ export function safeReadFile(filePath, options = {}) {
                 warnings: [`File too large: ${stats.size} bytes (max ${maxSize})`],
             };
         }
-        const content = readFileSync(filePath, encoding);
+        const content = (0, fs_1.readFileSync)(filePath, encoding);
         const validation = validateOutput(content, { maxSize });
         return {
             content: validation.sanitized,
@@ -181,18 +191,18 @@ export function safeReadFile(filePath, options = {}) {
         };
     }
 }
-import { statSync } from 'fs';
+const fs_2 = require("fs");
 // Helper to avoid circular require
 function statsSync(path) {
-    return statSync(path);
+    return (0, fs_2.statSync)(path);
 }
 /**
  * Cleanup temp file if exists
  */
-export function cleanupTempFile(filePath) {
+function cleanupTempFile(filePath) {
     try {
-        if (existsSync(filePath)) {
-            unlinkSync(filePath);
+        if ((0, fs_1.existsSync)(filePath)) {
+            (0, fs_1.unlinkSync)(filePath);
         }
     }
     catch {

@@ -1,12 +1,15 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Performance Tracker - Collect CPU and memory metrics over time
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PerformanceTracker = void 0;
 /**
  * PerformanceTracker collects and stores performance metrics over time.
  * Can be used for profiling and diagnostics.
  */
-export class PerformanceTracker {
+class PerformanceTracker {
     samples = [];
     intervalId = null;
     _options;
@@ -108,4 +111,5 @@ export class PerformanceTracker {
         this.clear();
     }
 }
+exports.PerformanceTracker = PerformanceTracker;
 //# sourceMappingURL=performance-tracker.js.map

@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * WriteTool - Write files with auto-create directories
@@ -6,25 +7,28 @@
  * - Auto-create parent directories
  * - Write content to file
  */
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.writeToolDefinition = void 0;
+exports.writeFileTool = writeFileTool;
+const promises_1 = require("node:fs/promises");
+const node_path_1 = require("node:path");
 function resolvePath(path, cwd) {
-    return resolve(cwd, path);
+    return (0, node_path_1.resolve)(cwd, path);
 }
-export async function writeFileTool(input, cwd) {
+async function writeFileTool(input, cwd) {
     const { path, content } = input;
     const absolutePath = resolvePath(path, cwd);
-    const dir = dirname(absolutePath);
+    const dir = (0, node_path_1.dirname)(absolutePath);
     // Create parent directories if needed
-    await mkdir(dir, { recursive: true });
+    await (0, promises_1.mkdir)(dir, { recursive: true });
     // Write the file
-    await writeFile(absolutePath, content, "utf-8");
+    await (0, promises_1.writeFile)(absolutePath, content, "utf-8");
     return {
         content: [{ type: "text", text: `Successfully wrote ${content.length} bytes to ${path}` }],
         details: undefined,
     };
 }
-export const writeToolDefinition = {
+exports.writeToolDefinition = {
     name: "write",
     description: "Write content to a file. Creates the file if it doesn't exist, overwrites if it does. Automatically creates parent directories.",
     parameters: {

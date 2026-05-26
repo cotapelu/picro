@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * EditTool - Edit files with multiple edits, diff
@@ -7,15 +8,18 @@
  * - Diff computation
  * - File mutation queue
  */
-import { readFile, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.editToolDefinition = void 0;
+exports.editTool = editTool;
+const promises_1 = require("node:fs/promises");
+const node_path_1 = require("node:path");
 function resolvePath(path, cwd) {
-    return resolve(cwd, path);
+    return (0, node_path_1.resolve)(cwd, path);
 }
 function normalizeNewlines(text) {
     return text.replace(/\r\n/g, "\n");
 }
-export async function editTool(input, cwd) {
+async function editTool(input, cwd) {
     const { path, edits } = input;
     const absolutePath = resolvePath(path, cwd);
     if (!edits || edits.length === 0) {
@@ -24,7 +28,7 @@ export async function editTool(input, cwd) {
     // Read the file
     let content;
     try {
-        content = await readFile(absolutePath, "utf-8");
+        content = await (0, promises_1.readFile)(absolutePath, "utf-8");
     }
     catch {
         throw new Error(`File not found: ${path}`);
@@ -42,13 +46,13 @@ export async function editTool(input, cwd) {
         normalizedContent = normalizedContent.slice(0, index) + edit.newText + normalizedContent.slice(index + normalizedOldText.length);
     }
     // Write the file
-    await writeFile(absolutePath, normalizedContent, "utf-8");
+    await (0, promises_1.writeFile)(absolutePath, normalizedContent, "utf-8");
     return {
         content: [{ type: "text", text: `Successfully edited ${edits.length} location(s) in ${path}` }],
         details: { edited: edits.length },
     };
 }
-export const editToolDefinition = {
+exports.editToolDefinition = {
     name: "edit",
     description: "Edit a file using exact text replacement. Each edit specifies oldText to find and newText to replace it with.",
     parameters: {

@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Slash Commands - Built-in commands list
@@ -5,7 +6,11 @@
  * Học từ legacy mà KHÔNG copy code:
  * - Built-in commands: settings, model, export, import, share, etc.
  */
-export const BUILTIN_SLASH_COMMANDS = [
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.BUILTIN_SLASH_COMMANDS = void 0;
+exports.getSlashCommand = getSlashCommand;
+exports.listSlashCommands = listSlashCommands;
+exports.BUILTIN_SLASH_COMMANDS = [
     { name: "settings", description: "Open settings menu" },
     { name: "model", description: "Select model (opens selector UI)" },
     { name: "scoped-models", description: "Enable/disable models for cycling" },
@@ -32,10 +37,10 @@ export const BUILTIN_SLASH_COMMANDS = [
     { name: "stats", description: "Show performance metrics" },
     { name: "paste", description: "Paste image from clipboard" },
 ];
-export function getSlashCommand(name) {
-    return BUILTIN_SLASH_COMMANDS.find(cmd => cmd.name === name);
+function getSlashCommand(name) {
+    return exports.BUILTIN_SLASH_COMMANDS.find(cmd => cmd.name === name);
 }
-export function listSlashCommands() {
-    return BUILTIN_SLASH_COMMANDS;
+function listSlashCommands() {
+    return exports.BUILTIN_SLASH_COMMANDS;
 }
 //# sourceMappingURL=slash-commands.js.map

@@ -1,20 +1,24 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Resource Loader - Load extensions, skills, prompts, themes, context files
  *
  * This is a stub implementation - full implementation coming in Phase B
  */
-import { loadSkills } from "./skills.js";
-import { loadPromptTemplates } from "./prompt-templates.js";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { discoverAndLoadExtensions } from "../extensions/loader.js";
-import { createExtensionRuntime } from "../extensions/runner.js";
-import { ExtensionRunner } from "../extensions/runner.js";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DefaultResourceLoader = void 0;
+exports.loadProjectContextFiles = loadProjectContextFiles;
+const skills_js_1 = require("./skills.js");
+const prompt_templates_js_1 = require("./prompt-templates.js");
+const node_fs_1 = require("node:fs");
+const node_path_1 = require("node:path");
+const loader_js_1 = require("../extensions/loader.js");
+const runner_js_1 = require("../extensions/runner.js");
+const runner_js_2 = require("../extensions/runner.js");
 /**
  * Default resource loader implementation
  */
-export class DefaultResourceLoader {
+class DefaultResourceLoader {
     _cwd;
     _agentDir;
     _skillsCache;
@@ -37,11 +41,11 @@ export class DefaultResourceLoader {
         // Load extensions
         let extensionsResult;
         if (this._options.noExtensions) {
-            extensionsResult = { extensions: [], errors: [], runtime: createExtensionRuntime() };
+            extensionsResult = { extensions: [], errors: [], runtime: (0, runner_js_1.createExtensionRuntime)() };
         }
         else {
             try {
-                extensionsResult = await discoverAndLoadExtensions({
+                extensionsResult = await (0, loader_js_1.discoverAndLoadExtensions)({
                     cwd: this._cwd,
                     agentDir: this._agentDir,
                     additionalPaths: this._options.additionalExtensionPaths,
@@ -51,7 +55,7 @@ export class DefaultResourceLoader {
                 extensionsResult = { extensions: [], errors: [{
                             path: 'discoverAndLoadExtensions',
                             error: error instanceof Error ? error.message : String(error)
-                        }], runtime: createExtensionRuntime() };
+                        }], runtime: (0, runner_js_1.createExtensionRuntime)() };
             }
         }
         // Apply override if provided
@@ -59,14 +63,14 @@ export class DefaultResourceLoader {
             extensionsResult = this._options.extensionsOverride(extensionsResult);
         }
         this._extensionsResult = extensionsResult;
-        this._extensionRunner = new ExtensionRunner(extensionsResult.runtime);
+        this._extensionRunner = new runner_js_2.ExtensionRunner(extensionsResult.runtime);
         this._extensionRunner.loadExtensions(extensionsResult);
         // Load skills
         if (this._options.noSkills) {
             this._skillsCache = [];
         }
         else {
-            let skills = loadSkills({
+            let skills = (0, skills_js_1.loadSkills)({
                 cwd: this._cwd,
                 agentDir: this._agentDir,
                 skillPaths: this._options.additionalSkillPaths ?? [],
@@ -83,7 +87,7 @@ export class DefaultResourceLoader {
             this._promptsCache = [];
         }
         else {
-            let prompts = loadPromptTemplates({
+            let prompts = (0, prompt_templates_js_1.loadPromptTemplates)({
                 cwd: this._cwd,
                 agentDir: this._agentDir,
                 promptPaths: this._options.additionalPromptTemplatePaths ?? [],
@@ -172,21 +176,22 @@ export class DefaultResourceLoader {
         return this._appendSystemPrompt;
     }
 }
+exports.DefaultResourceLoader = DefaultResourceLoader;
 /**
  * Load project context files (AGENTS.md, CLAUDE.md)
  */
-export function loadProjectContextFiles(options) {
+function loadProjectContextFiles(options) {
     const files = [];
     const pathsToCheck = [
-        join(options.agentDir, "AGENTS.md"),
-        join(options.agentDir, "CLAUDE.md"),
-        join(options.cwd, ".pi", "AGENTS.md"),
-        join(options.cwd, ".pi", "CLAUDE.md"),
+        (0, node_path_1.join)(options.agentDir, "AGENTS.md"),
+        (0, node_path_1.join)(options.agentDir, "CLAUDE.md"),
+        (0, node_path_1.join)(options.cwd, ".pi", "AGENTS.md"),
+        (0, node_path_1.join)(options.cwd, ".pi", "CLAUDE.md"),
     ];
     for (const path of pathsToCheck) {
-        if (existsSync(path)) {
+        if ((0, node_fs_1.existsSync)(path)) {
             try {
-                const content = readFileSync(path, "utf8");
+                const content = (0, node_fs_1.readFileSync)(path, "utf8");
                 files.push({ path, content });
             }
             catch {

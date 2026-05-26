@@ -1,13 +1,20 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Stream utilities for handling async iterables.
  * Moved from agent/ to runtime/ as it's not core agent logic.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.collectStream = collectStream;
+exports.pipeStream = pipeStream;
+exports.createStream = createStream;
+exports.mergeToolCalls = mergeToolCalls;
+exports.supportsStreaming = supportsStreaming;
 // No specific type import needed; generic functions work with any stream
 /**
  * Collect all chunks from a stream into an array.
  */
-export async function collectStream(stream) {
+async function collectStream(stream) {
     const items = [];
     for await (const item of stream) {
         items.push(item);
@@ -17,7 +24,7 @@ export async function collectStream(stream) {
 /**
  * Pipe one stream into another (transform each chunk).
  */
-export async function* pipeStream(source, transformer) {
+async function* pipeStream(source, transformer) {
     for await (const item of source) {
         yield await transformer(item);
     }
@@ -25,7 +32,7 @@ export async function* pipeStream(source, transformer) {
 /**
  * Create a stream from an array.
  */
-export async function* createStream(items) {
+async function* createStream(items) {
     for (const item of items) {
         yield item;
     }
@@ -34,7 +41,7 @@ export async function* createStream(items) {
  * Merge multiple tool call objects into one.
  * For streaming partial tool call data.
  */
-export function mergeToolCalls(...toolCalls) {
+function mergeToolCalls(...toolCalls) {
     const map = new Map();
     for (const tc of toolCalls) {
         if (!tc.id)
@@ -52,7 +59,7 @@ export function mergeToolCalls(...toolCalls) {
  * Check if an LLM response supports streaming.
  * Simple check: does it have a streamWithTools method?
  */
-export function supportsStreaming(llm) {
+function supportsStreaming(llm) {
     return typeof llm?.streamWithTools === 'function';
 }
 //# sourceMappingURL=stream-utils.js.map

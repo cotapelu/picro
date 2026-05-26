@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Bash Command Executor with Streaming, Cancellation, and Output Guard
@@ -9,10 +10,13 @@
  * - Full output backup to temp file when truncated
  * - Binary output sanitization
  */
-import { spawn } from 'child_process';
-import { existsSync, writeFileSync, unlinkSync } from 'fs';
-import { tmpdir } from 'os';
-import { join } from 'path';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.executeBash = executeBash;
+exports.executeBashLocal = executeBashLocal;
+const child_process_1 = require("child_process");
+const fs_1 = require("fs");
+const os_1 = require("os");
+const path_1 = require("path");
 const DEFAULT_MAX_BYTES = 1024 * 1024; // 1MB
 const DEFAULT_MAX_LINES = 10000;
 /**
@@ -41,7 +45,7 @@ function sanitizeOutput(data) {
  * @param options - Execution options
  * @returns Promise<BashResult> with execution result
  */
-export async function executeBash(command, options = {}) {
+async function executeBash(command, options = {}) {
     const { onChunk, signal, cwd = process.cwd(), timeout = 0, env = process.env, maxBytes = DEFAULT_MAX_BYTES, maxLines = DEFAULT_MAX_LINES, } = options;
     const outputChunks = [];
     let totalBytes = 0;
@@ -54,11 +58,11 @@ export async function executeBash(command, options = {}) {
         if (tempFilePath)
             return;
         const id = Math.random().toString(36).slice(2, 10);
-        tempFilePath = join(tmpdir(), `pi-bash-${id}-${Date.now()}.log`);
+        tempFilePath = (0, path_1.join)((0, os_1.tmpdir)(), `pi-bash-${id}-${Date.now()}.log`);
         tempFileStream = {
             write: (data) => {
                 try {
-                    writeFileSync(tempFilePath, data, { flag: 'a' });
+                    (0, fs_1.writeFileSync)(tempFilePath, data, { flag: 'a' });
                 }
                 catch { }
             },
@@ -73,7 +77,7 @@ export async function executeBash(command, options = {}) {
         const [shell, ...args] = process.platform === 'win32'
             ? ['cmd.exe', '/c', command]
             : ['bash', '-c', command];
-        const child = spawn(shell, args, {
+        const child = (0, child_process_1.spawn)(shell, args, {
             cwd,
             env,
             stdio: ['ignore', 'pipe', 'pipe'],
@@ -175,13 +179,13 @@ export async function executeBash(command, options = {}) {
             exitCode,
             cancelled: false,
             truncated: true,
-            fullOutputPath: existsSync(tempFilePath) ? tempFilePath : undefined,
+            fullOutputPath: (0, fs_1.existsSync)(tempFilePath) ? tempFilePath : undefined,
         };
     }
     // Cleanup temp file if not needed
-    if (tempFilePath && existsSync(tempFilePath)) {
+    if (tempFilePath && (0, fs_1.existsSync)(tempFilePath)) {
         try {
-            unlinkSync(tempFilePath);
+            (0, fs_1.unlinkSync)(tempFilePath);
         }
         catch { }
     }
@@ -197,7 +201,7 @@ export async function executeBash(command, options = {}) {
  * Convenience wrapper using local system bash.
  * Similar signature to tui-agent's executeBashWithOperations but simpler.
  */
-export async function executeBashLocal(command, cwd, options = {}) {
+async function executeBashLocal(command, cwd, options = {}) {
     return executeBash(command, { ...options, cwd });
 }
 //# sourceMappingURL=bash-executor.js.map

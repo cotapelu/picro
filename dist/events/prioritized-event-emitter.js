@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * PrioritizedEventEmitter - Event emitter with priority queues and buffering
@@ -7,6 +8,8 @@
  * - Buffering to handle high-throughput scenarios
  * - Optional dropping of low-priority events when buffer full
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PrioritizedEventEmitter = void 0;
 // Priority levels
 const PRIORITY = {
     CRITICAL: 3,
@@ -42,7 +45,7 @@ const DEFAULT_PRIORITIES = {
 /**
  * PrioritizedEventEmitter
  */
-export class PrioritizedEventEmitter {
+class PrioritizedEventEmitter {
     typedListeners = new Map();
     globalListeners = new Set();
     eventMetrics = new Map();
@@ -210,4 +213,5 @@ export class PrioritizedEventEmitter {
         this.droppedCount = 0;
     }
 }
+exports.PrioritizedEventEmitter = PrioritizedEventEmitter;
 //# sourceMappingURL=prioritized-event-emitter.js.map

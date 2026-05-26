@@ -1,19 +1,28 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Shell utilities for cross-platform command execution
  */
-import { spawn, spawnSync } from 'child_process';
-import { existsSync } from 'fs';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getShellConfig = getShellConfig;
+exports.getShellEnv = getShellEnv;
+exports.sanitizeBinaryOutput = sanitizeBinaryOutput;
+exports.trackDetachedChildPid = trackDetachedChildPid;
+exports.untrackDetachedChildPid = untrackDetachedChildPid;
+exports.killProcessTree = killProcessTree;
+exports.killTrackedDetachedChildren = killTrackedDetachedChildren;
+const child_process_1 = require("child_process");
+const fs_1 = require("fs");
 /**
  * Find bash executable on PATH (cross-platform)
  */
 function findBashOnPath() {
     if (process.platform === 'win32') {
         try {
-            const result = spawnSync('where', ['bash.exe'], { encoding: 'utf-8', timeout: 5000 });
+            const result = (0, child_process_1.spawnSync)('where', ['bash.exe'], { encoding: 'utf-8', timeout: 5000 });
             if (result.status === 0 && result.stdout) {
                 const firstMatch = result.stdout.trim().split(/\r?\n/)[0];
-                if (firstMatch && existsSync(firstMatch)) {
+                if (firstMatch && (0, fs_1.existsSync)(firstMatch)) {
                     return firstMatch;
                 }
             }
@@ -23,7 +32,7 @@ function findBashOnPath() {
     }
     // Unix: Use 'which' and trust its output
     try {
-        const result = spawnSync('which', ['bash'], { encoding: 'utf-8', timeout: 5000 });
+        const result = (0, child_process_1.spawnSync)('which', ['bash'], { encoding: 'utf-8', timeout: 5000 });
         if (result.status === 0 && result.stdout) {
             const firstMatch = result.stdout.trim().split(/\r?\n/)[0];
             if (firstMatch) {
@@ -37,10 +46,10 @@ function findBashOnPath() {
 /**
  * Resolve shell configuration based on platform and optional custom shell path.
  */
-export function getShellConfig(customShellPath) {
+function getShellConfig(customShellPath) {
     // 1. Check user-specified shell path
     if (customShellPath) {
-        if (existsSync(customShellPath)) {
+        if ((0, fs_1.existsSync)(customShellPath)) {
             return { shell: customShellPath, args: ['-c'] };
         }
         throw new Error(`Custom shell path not found: ${customShellPath}`);
@@ -57,7 +66,7 @@ export function getShellConfig(customShellPath) {
             paths.push(`${programFilesX86}\\Git\\bin\\bash.exe`);
         }
         for (const path of paths) {
-            if (existsSync(path)) {
+            if ((0, fs_1.existsSync)(path)) {
                 return { shell: path, args: ['-c'] };
             }
         }
@@ -69,7 +78,7 @@ export function getShellConfig(customShellPath) {
         throw new Error(`No bash shell found. Install Git for Windows or add bash to PATH.`);
     }
     // Unix: try /bin/bash, then bash on PATH, then fallback to sh
-    if (existsSync('/bin/bash')) {
+    if ((0, fs_1.existsSync)('/bin/bash')) {
         return { shell: '/bin/bash', args: ['-c'] };
     }
     const bashOnPath = findBashOnPath();
@@ -81,7 +90,7 @@ export function getShellConfig(customShellPath) {
 /**
  * Get shell environment with updated PATH
  */
-export function getShellEnv() {
+function getShellEnv() {
     // For now, just return current env
     // Could add bin directory to PATH if needed
     return { ...process.env };
@@ -90,7 +99,7 @@ export function getShellEnv() {
  * Sanitize binary output for display/storage.
  * Removes characters that could crash string-width or cause display issues.
  */
-export function sanitizeBinaryOutput(str) {
+function sanitizeBinaryOutput(str) {
     return Array.from(str)
         .filter((char) => {
         const code = char.codePointAt(0);
@@ -113,19 +122,19 @@ export function sanitizeBinaryOutput(str) {
  * Detached child processes must be tracked so they can be killed on shutdown.
  */
 const trackedDetachedChildPids = new Set();
-export function trackDetachedChildPid(pid) {
+function trackDetachedChildPid(pid) {
     trackedDetachedChildPids.add(pid);
 }
-export function untrackDetachedChildPid(pid) {
+function untrackDetachedChildPid(pid) {
     trackedDetachedChildPids.delete(pid);
 }
 /**
  * Kill a process and all its children (cross-platform)
  */
-export function killProcessTree(pid) {
+function killProcessTree(pid) {
     if (process.platform === 'win32') {
         try {
-            spawn('taskkill', ['/F', '/T', '/PID', String(pid)], {
+            (0, child_process_1.spawn)('taskkill', ['/F', '/T', '/PID', String(pid)], {
                 stdio: 'ignore',
                 detached: true,
             });
@@ -148,7 +157,7 @@ export function killProcessTree(pid) {
         }
     }
 }
-export function killTrackedDetachedChildren() {
+function killTrackedDetachedChildren() {
     for (const pid of trackedDetachedChildPids) {
         killProcessTree(pid);
     }

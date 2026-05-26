@@ -1,48 +1,52 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * AgentSessionServices - Cwd-bound runtime services
  *
  * Provides all cwd-bound services needed by AgentSession
  */
-import { existsSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
-import { homedir } from "node:os";
-import { AuthStorage } from "./auth-storage.js";
-import { SettingsManager } from "../runtime/settings-manager.js";
-import { DefaultModelRegistry } from "./model-registry.js";
-import { DefaultResourceLoader } from "../runtime/resource-loader.js";
-import { Agent } from "../agent/agent.js";
-import { AgentSession } from "../session/agent-session.js";
-import { DEFAULT_TOOL_TIMEOUT } from "./defaults.js";
-import { ExtensionRunner, createExtensionRuntime } from "../extensions/runner.js";
-import { createBashToolDefinition, } from "../tools/bash-tool.js";
-import { createReadToolDefinition } from "../tools/read.js";
-import { createWriteToolDefinition } from "../tools/write.js";
-import { createEditToolDefinition } from "../tools/edit.js";
-import { createLsToolDefinition } from "../tools/ls.js";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createAgentSessionServices = createAgentSessionServices;
+exports.createAgentSessionFromServices = createAgentSessionFromServices;
+const node_fs_1 = require("node:fs");
+const node_path_1 = require("node:path");
+const node_os_1 = require("node:os");
+const auth_storage_js_1 = require("./auth-storage.js");
+const settings_manager_js_1 = require("../runtime/settings-manager.js");
+const model_registry_js_1 = require("./model-registry.js");
+const resource_loader_js_1 = require("../runtime/resource-loader.js");
+const agent_js_1 = require("../agent/agent.js");
+const agent_session_js_1 = require("../session/agent-session.js");
+const defaults_js_1 = require("./defaults.js");
+const runner_js_1 = require("../extensions/runner.js");
+const bash_tool_js_1 = require("../tools/bash-tool.js");
+const read_js_1 = require("../tools/read.js");
+const write_js_1 = require("../tools/write.js");
+const edit_js_1 = require("../tools/edit.js");
+const ls_js_1 = require("../tools/ls.js");
 /**
  * Create cwd-bound runtime services
  */
-export async function createAgentSessionServices(options) {
+async function createAgentSessionServices(options) {
     const cwd = options.cwd;
-    const agentDir = options.agentDir ?? join(homedir(), ".pi", "agent");
+    const agentDir = options.agentDir ?? (0, node_path_1.join)((0, node_os_1.homedir)(), ".pi", "agent");
     // Ensure directories exist
-    if (!existsSync(agentDir)) {
-        mkdirSync(agentDir, { recursive: true });
+    if (!(0, node_fs_1.existsSync)(agentDir)) {
+        (0, node_fs_1.mkdirSync)(agentDir, { recursive: true });
     }
     // Create auth storage
-    const authStorage = options.authStorage ?? AuthStorage.create(join(agentDir, "auth.json"));
+    const authStorage = options.authStorage ?? auth_storage_js_1.AuthStorage.create((0, node_path_1.join)(agentDir, "auth.json"));
     // Create settings manager
-    const settingsManager = options.settingsManager ?? SettingsManager.create(cwd, agentDir);
+    const settingsManager = options.settingsManager ?? settings_manager_js_1.SettingsManager.create(cwd, agentDir);
     // Determine session directory
-    const sessionDir = settingsManager.getSessionDir() ?? join(agentDir, "sessions");
-    if (!existsSync(sessionDir)) {
-        mkdirSync(sessionDir, { recursive: true });
+    const sessionDir = settingsManager.getSessionDir() ?? (0, node_path_1.join)(agentDir, "sessions");
+    if (!(0, node_fs_1.existsSync)(sessionDir)) {
+        (0, node_fs_1.mkdirSync)(sessionDir, { recursive: true });
     }
     // Create model registry
-    const modelRegistry = options.modelRegistry ?? new DefaultModelRegistry();
+    const modelRegistry = options.modelRegistry ?? new model_registry_js_1.DefaultModelRegistry();
     // Create resource loader
-    const resourceLoader = options.resourceLoader ?? new DefaultResourceLoader({
+    const resourceLoader = options.resourceLoader ?? new resource_loader_js_1.DefaultResourceLoader({
         cwd,
         agentDir,
         settingsManager,
@@ -54,7 +58,7 @@ export async function createAgentSessionServices(options) {
     try {
         await resourceLoader.reload();
         const extensionsResult = resourceLoader.getExtensions();
-        extensionRunner = new ExtensionRunner(extensionsResult.runtime);
+        extensionRunner = new runner_js_1.ExtensionRunner(extensionsResult.runtime);
         extensionRunner.loadExtensions(extensionsResult);
         // Register any providers from extensions
         for (const { name, config, extensionPath } of extensionsResult.runtime.pendingProviderRegistrations) {
@@ -100,7 +104,7 @@ export async function createAgentSessionServices(options) {
     }
     catch (error) {
         // Extensions are optional, so ignore errors
-        extensionRunner = new ExtensionRunner(createExtensionRuntime());
+        extensionRunner = new runner_js_1.ExtensionRunner((0, runner_js_1.createExtensionRuntime)());
     }
     return {
         cwd,
@@ -130,7 +134,7 @@ function wrapBuiltinTool(tool) {
 /**
  * Create an AgentSession from previously created services
  */
-export async function createAgentSessionFromServices(options) {
+async function createAgentSessionFromServices(options) {
     const { services, sessionManager, sessionStartEvent, model, thinkingLevel, scopedModels, tools, noTools, customTools } = options;
     const cwd = sessionManager.getCwd();
     // Determine model to use (can be undefined for interactive mode)
@@ -153,18 +157,18 @@ export async function createAgentSessionFromServices(options) {
     const builtInTools = noTools === "all"
         ? []
         : [
-            wrapBuiltinTool(createBashToolDefinition(cwd)),
-            wrapBuiltinTool(createReadToolDefinition(cwd)),
-            wrapBuiltinTool(createWriteToolDefinition(cwd)),
-            wrapBuiltinTool(createEditToolDefinition(cwd)),
-            wrapBuiltinTool(createLsToolDefinition(cwd)),
+            wrapBuiltinTool((0, bash_tool_js_1.createBashToolDefinition)(cwd)),
+            wrapBuiltinTool((0, read_js_1.createReadToolDefinition)(cwd)),
+            wrapBuiltinTool((0, write_js_1.createWriteToolDefinition)(cwd)),
+            wrapBuiltinTool((0, edit_js_1.createEditToolDefinition)(cwd)),
+            wrapBuiltinTool((0, ls_js_1.createLsToolDefinition)(cwd)),
         ];
     // Create Agent with built-in tools only (model can be undefined)
     // AgentSession will register customTools separately
-    const agent = new Agent(undefined, builtInTools, {
+    const agent = new agent_js_1.Agent(undefined, builtInTools, {
         maxRounds: 10,
         verbose: false,
-        toolTimeout: DEFAULT_TOOL_TIMEOUT,
+        toolTimeout: defaults_js_1.DEFAULT_TOOL_TIMEOUT,
         cacheResults: true,
         toolExecutionStrategy: "parallel",
         contextBuilder: {
@@ -174,14 +178,14 @@ export async function createAgentSessionFromServices(options) {
             enableMemoryInjection: true,
         },
         executor: {
-            timeout: DEFAULT_TOOL_TIMEOUT,
+            timeout: defaults_js_1.DEFAULT_TOOL_TIMEOUT,
             cacheEnabled: true,
             toolExecutionStrategy: "parallel",
         },
         debug: false,
     });
     // Create AgentSession - it will add customTools to agent via _registerTools
-    const session = new AgentSession({
+    const session = new agent_session_js_1.AgentSession({
         agent,
         sessionManager,
         settingsManager: services.settingsManager,

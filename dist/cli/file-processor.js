@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Process @file CLI arguments into text content and image attachments.
@@ -6,8 +7,10 @@
  *
  * Throws errors on failure; callers should handle/report and exit appropriately.
  */
-import { readFile, stat } from "node:fs/promises";
-import { resolveReadPath } from "../tools/path-utils.js";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.processFileArguments = processFileArguments;
+const promises_1 = require("node:fs/promises");
+const path_utils_js_1 = require("../tools/path-utils.js");
 /** Magic number signatures for common image formats */
 const IMAGE_SIGNATURES = [
     { mime: "image/jpeg", signature: [0xff, 0xd8, 0xff], minLength: 3 },
@@ -31,7 +34,7 @@ function detectByExtension(filePath) {
 /** Detect image mime type by reading file magic numbers */
 async function detectByMagic(filePath) {
     try {
-        const data = await readFile(filePath);
+        const data = await (0, promises_1.readFile)(filePath);
         for (const img of IMAGE_SIGNATURES) {
             if (data.length >= img.minLength) {
                 let match = true;
@@ -60,9 +63,9 @@ async function detectByMagic(filePath) {
 }
 /** Process a single file */
 async function processFile(filePath, cwd, options) {
-    const absolutePath = resolveReadPath(filePath, cwd);
+    const absolutePath = (0, path_utils_js_1.resolveReadPath)(filePath, cwd);
     // Check if exists and get stats (stat will throw if missing)
-    const stats = await stat(absolutePath);
+    const stats = await (0, promises_1.stat)(absolutePath);
     if (stats.size === 0) {
         return { textPart: "" };
     }
@@ -73,7 +76,7 @@ async function processFile(filePath, cwd, options) {
     }
     if (mimeType) {
         // Image file
-        const content = await readFile(absolutePath);
+        const content = await (0, promises_1.readFile)(absolutePath);
         const base64 = content.toString("base64");
         // Simple size check: if autoResizeImages is true and base64 size > ~4.5MB, issue warning and still include.
         // Actual resizing not implemented yet.
@@ -94,7 +97,7 @@ async function processFile(filePath, cwd, options) {
     else {
         // Text file
         try {
-            const content = await readFile(absolutePath, "utf-8");
+            const content = await (0, promises_1.readFile)(absolutePath, "utf-8");
             return {
                 textPart: `<file name="${absolutePath}">\n${content}\n</file>\n`,
             };
@@ -105,7 +108,7 @@ async function processFile(filePath, cwd, options) {
     }
 }
 /** Process multiple @file arguments */
-export async function processFileArguments(fileArgs, options) {
+async function processFileArguments(fileArgs, options) {
     const opts = { autoResizeImages: true, ...options };
     let text = "";
     const images = [];

@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Package Manager - Load and manage extensions/packages
@@ -8,9 +9,46 @@
  * - Load package entry points
  * - Resolve package resources
  */
-import { existsSync, mkdirSync, readdirSync, readFileSync } from 'fs';
-import { join } from 'path';
-export async function fetchJson(url) {
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DefaultPackageManager = void 0;
+exports.fetchJson = fetchJson;
+exports.createPackageManager = createPackageManager;
+const fs_1 = require("fs");
+const path_1 = require("path");
+async function fetchJson(url) {
     try {
         const res = await fetch(url);
         if (!res.ok)
@@ -25,12 +63,12 @@ export async function fetchJson(url) {
  * Default package manager implementation
  * Simple wrapper around npm for package management
  */
-export class DefaultPackageManager {
+class DefaultPackageManager {
     packagesDir;
     registry;
     npmPath;
     constructor(options = {}) {
-        this.packagesDir = options.packagesDir ?? join(process.cwd(), '.pi', 'packages');
+        this.packagesDir = options.packagesDir ?? (0, path_1.join)(process.cwd(), '.pi', 'packages');
         this.registry = options.registry ?? 'https://registry.npmjs.org';
         this.npmPath = options.npmPath ?? 'npm';
     }
@@ -38,19 +76,19 @@ export class DefaultPackageManager {
      * Check if a package is installed
      */
     isInstalled(packageName) {
-        const pkgPath = join(this.packagesDir, packageName);
-        return existsSync(pkgPath);
+        const pkgPath = (0, path_1.join)(this.packagesDir, packageName);
+        return (0, fs_1.existsSync)(pkgPath);
     }
     /**
      * Get installed package info
      */
     getInstalledPackage(packageName) {
-        const pkgPath = join(this.packagesDir, packageName);
-        if (!existsSync(pkgPath))
+        const pkgPath = (0, path_1.join)(this.packagesDir, packageName);
+        if (!(0, fs_1.existsSync)(pkgPath))
             return null;
         try {
-            const pkgJsonPath = join(pkgPath, 'package.json');
-            if (!existsSync(pkgJsonPath))
+            const pkgJsonPath = (0, path_1.join)(pkgPath, 'package.json');
+            if (!(0, fs_1.existsSync)(pkgJsonPath))
                 return null;
             const pkg = JSON.parse(require('fs').readFileSync(pkgJsonPath, 'utf8'));
             return {
@@ -69,10 +107,10 @@ export class DefaultPackageManager {
      */
     listInstalled() {
         const result = [];
-        if (!existsSync(this.packagesDir))
+        if (!(0, fs_1.existsSync)(this.packagesDir))
             return result;
         try {
-            const entries = readdirSync(this.packagesDir, { withFileTypes: true });
+            const entries = (0, fs_1.readdirSync)(this.packagesDir, { withFileTypes: true });
             for (const entry of entries) {
                 if (entry.isDirectory()) {
                     const pkg = this.getInstalledPackage(entry.name);
@@ -91,12 +129,12 @@ export class DefaultPackageManager {
     async installPackage(source) {
         const { name, version = 'latest' } = source;
         // Ensure packages directory exists
-        mkdirSync(this.packagesDir, { recursive: true });
+        (0, fs_1.mkdirSync)(this.packagesDir, { recursive: true });
         // Build npm install command
         const pkgSpec = version ? `${name}@${version}` : name;
         const args = ['install', '--prefix', this.packagesDir, '--no-save', pkgSpec];
         // Spawn npm install
-        const { spawnSync } = await import('child_process');
+        const { spawnSync } = await Promise.resolve().then(() => __importStar(require('child_process')));
         const result = spawnSync(this.npmPath, args, {
             encoding: 'utf-8',
             timeout: 120000, // 2 minute timeout
@@ -114,7 +152,7 @@ export class DefaultPackageManager {
     async uninstallPackage(packageName) {
         if (!this.isInstalled(packageName))
             return true;
-        const { spawnSync } = await import('child_process');
+        const { spawnSync } = await Promise.resolve().then(() => __importStar(require('child_process')));
         const result = spawnSync(this.npmPath, ['uninstall', '--prefix', this.packagesDir, packageName], {
             encoding: 'utf-8',
         });
@@ -127,7 +165,7 @@ export class DefaultPackageManager {
         if (!this.isInstalled(packageName)) {
             throw new Error(`Package ${packageName} is not installed`);
         }
-        const { spawnSync } = await import('child_process');
+        const { spawnSync } = await Promise.resolve().then(() => __importStar(require('child_process')));
         const result = spawnSync(this.npmPath, ['update', '--prefix', this.packagesDir, packageName], {
             encoding: 'utf-8',
             timeout: 120000,
@@ -145,7 +183,7 @@ export class DefaultPackageManager {
         const args = ['ls', '--all', '--json'];
         if (packageName)
             args.push(packageName);
-        const { spawnSync } = await import('child_process');
+        const { spawnSync } = await Promise.resolve().then(() => __importStar(require('child_process')));
         const result = spawnSync(this.npmPath, args, {
             cwd: this.packagesDir,
             encoding: 'utf-8',
@@ -182,8 +220,8 @@ export class DefaultPackageManager {
         }
         const issues = [];
         try {
-            const pkgJsonPath = join(pkg.path, 'package.json');
-            const raw = readFileSync(pkgJsonPath, 'utf8');
+            const pkgJsonPath = (0, path_1.join)(pkg.path, 'package.json');
+            const raw = (0, fs_1.readFileSync)(pkgJsonPath, 'utf8');
             const pkgData = JSON.parse(raw);
             if (!pkgData.name)
                 issues.push('Missing name in package.json');
@@ -194,8 +232,8 @@ export class DefaultPackageManager {
                 issues.push('No extension entry point defined (pi.extension, main, or exports)');
             }
             else if (typeof entry === 'string') {
-                const entryPath = join(pkg.path, entry);
-                if (!existsSync(entryPath))
+                const entryPath = (0, path_1.join)(pkg.path, entry);
+                if (!(0, fs_1.existsSync)(entryPath))
                     issues.push(`Entry point file not found: ${entry}`);
             }
         }
@@ -243,10 +281,11 @@ export class DefaultPackageManager {
         return this.packagesDir;
     }
 }
+exports.DefaultPackageManager = DefaultPackageManager;
 /**
  * Create a default package manager instance
  */
-export function createPackageManager(options) {
+function createPackageManager(options) {
     return new DefaultPackageManager(options);
 }
 //# sourceMappingURL=package-manager.js.map

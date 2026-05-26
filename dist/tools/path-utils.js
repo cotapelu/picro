@@ -1,3 +1,4 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Path utilities for securing file tool access.
@@ -8,9 +9,47 @@
  *
  * Reference: llm-context/coding-agent/core/tools/path-utils.ts
  */
-import { accessSync, constants } from 'node:fs';
-import * as os from 'node:os';
-import { isAbsolute, resolve as resolvePath } from 'node:path';
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.expandPath = expandPath;
+exports.resolveToCwd = resolveToCwd;
+exports.resolveReadPath = resolveReadPath;
+exports.validatePathWithinBase = validatePathWithinBase;
+const node_fs_1 = require("node:fs");
+const os = __importStar(require("node:os"));
+const node_path_1 = require("node:path");
 // Unicode normalization for macOS screenshot paths
 const UNICODE_SPACES = /[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g;
 const NARROW_NO_BREAK_SPACE = "\u202F";
@@ -23,7 +62,7 @@ function normalizeAtPrefix(filePath) {
 /**
  * Expand user home directory (~) and normalize path.
  */
-export function expandPath(filePath) {
+function expandPath(filePath) {
     const normalized = normalizeUnicodeSpaces(normalizeAtPrefix(filePath));
     if (normalized === "~") {
         return os.homedir();
@@ -38,7 +77,7 @@ export function expandPath(filePath) {
  */
 function fileExists(filePath) {
     try {
-        accessSync(filePath, constants.F_OK);
+        (0, node_fs_1.accessSync)(filePath, node_fs_1.constants.F_OK);
         return true;
     }
     catch {
@@ -50,12 +89,12 @@ function fileExists(filePath) {
  * This is the base function; for read operations use resolveReadPath
  * which includes macOS/corner-case handling.
  */
-export function resolveToCwd(filePath, cwd) {
+function resolveToCwd(filePath, cwd) {
     const expanded = expandPath(filePath);
-    if (isAbsolute(expanded)) {
+    if ((0, node_path_1.isAbsolute)(expanded)) {
         return expanded;
     }
-    return resolvePath(cwd, expanded);
+    return (0, node_path_1.resolve)(cwd, expanded);
 }
 /**
  * Try alternative path variants for common macOS file naming issues.
@@ -80,7 +119,7 @@ function tryCurlyQuoteVariant(filePath) {
  *
  * Returns the first path that exists, or the resolved path if none exist.
  */
-export function resolveReadPath(filePath, cwd) {
+function resolveReadPath(filePath, cwd) {
     const resolved = resolveToCwd(filePath, cwd);
     if (fileExists(resolved)) {
         return resolved;
@@ -111,9 +150,9 @@ export function resolveReadPath(filePath, cwd) {
  * Validate that a resolved path is within the allowed base directory.
  * Prevents directory traversal attacks.
  */
-export function validatePathWithinBase(resolvedPath, baseDir) {
-    const normalizedResolved = resolvePath(resolvedPath);
-    const normalizedBase = resolvePath(baseDir);
+function validatePathWithinBase(resolvedPath, baseDir) {
+    const normalizedResolved = (0, node_path_1.resolve)(resolvedPath);
+    const normalizedBase = (0, node_path_1.resolve)(baseDir);
     // Ensure the resolved path starts with the base directory
     return normalizedResolved === normalizedBase || normalizedResolved.startsWith(normalizedBase + '/');
 }

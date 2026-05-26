@@ -1,7 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.detectCompat = detectCompat;
+exports.mergeCompat = mergeCompat;
 /**
  * Tự động nhận diện cấu hình tương thích dựa trên provider và base URL.
  */
-export function detectCompat(provider, apiBaseUrl, modelId) {
+function detectCompat(provider, apiBaseUrl, modelId) {
     const normalizedUrl = apiBaseUrl.toLowerCase();
     const normalizedProvider = provider.toLowerCase();
     // Nhận diện các provider đặc biệt
@@ -37,7 +41,7 @@ export function detectCompat(provider, apiBaseUrl, modelId) {
 /**
  * Gộp cấu hình người dùng với cấu hình tự động nhận diện.
  */
-export function mergeCompat(detected, userProvided) {
+function mergeCompat(detected, userProvided) {
     if (!userProvided)
         return detected;
     return {

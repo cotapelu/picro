@@ -1,11 +1,14 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Event Recorder - Record and replay events for debugging
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EventRecorder = void 0;
 /**
  * EventRecorder - records events to memory and optionally to disk
  */
-export class EventRecorder {
+class EventRecorder {
     events = [];
     maxEvents;
     filterTypes;
@@ -105,4 +108,5 @@ export class EventRecorder {
         }
     }
 }
+exports.EventRecorder = EventRecorder;
 //# sourceMappingURL=event-recorder.js.map

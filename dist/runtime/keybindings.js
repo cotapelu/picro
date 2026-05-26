@@ -1,9 +1,14 @@
+"use strict";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Keybindings Manager - Manage keybindings for the application
  */
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.KeybindingsManager = exports.KEYBINDINGS = void 0;
+exports.createKeybindingsManager = createKeybindingsManager;
+exports.loadCustomKeybindings = loadCustomKeybindings;
+const node_fs_1 = require("node:fs");
+const node_path_1 = require("node:path");
 // ============================================================================
 // Default Keybindings
 // ============================================================================
@@ -11,7 +16,7 @@ function isWin() {
     return process.platform === "win32";
 }
 /** Default app keybindings */
-export const KEYBINDINGS = {
+exports.KEYBINDINGS = {
     "app.interrupt": { defaultKeys: "escape", description: "Cancel or abort" },
     "app.clear": { defaultKeys: "ctrl+c", description: "Clear editor" },
     "app.exit": { defaultKeys: "ctrl+d", description: "Exit when editor is empty" },
@@ -56,11 +61,11 @@ export const KEYBINDINGS = {
 /**
  * Keybindings manager class
  */
-export class KeybindingsManager {
+class KeybindingsManager {
     bindings = new Map();
     custom = new Map();
     constructor(defaultBindings) {
-        this.bindings = new Map(Object.entries(defaultBindings ?? KEYBINDINGS));
+        this.bindings = new Map(Object.entries(defaultBindings ?? exports.KEYBINDINGS));
     }
     /** Get a keybinding */
     get(name) {
@@ -79,22 +84,23 @@ export class KeybindingsManager {
         return new Map([...this.bindings, ...this.custom]);
     }
 }
+exports.KeybindingsManager = KeybindingsManager;
 /**
  * Create a keybindings manager
  */
-export function createKeybindingsManager() {
-    return new KeybindingsManager(KEYBINDINGS);
+function createKeybindingsManager() {
+    return new KeybindingsManager(exports.KEYBINDINGS);
 }
 /**
  * Load custom keybindings from config file
  */
-export function loadCustomKeybindings(agentDir, keybindingsManager) {
-    const configPath = join(agentDir, "keybindings.json");
-    if (!existsSync(configPath)) {
+function loadCustomKeybindings(agentDir, keybindingsManager) {
+    const configPath = (0, node_path_1.join)(agentDir, "keybindings.json");
+    if (!(0, node_fs_1.existsSync)(configPath)) {
         return;
     }
     try {
-        const content = readFileSync(configPath, "utf-8");
+        const content = (0, node_fs_1.readFileSync)(configPath, "utf-8");
         const custom = JSON.parse(content);
         for (const [key, value] of Object.entries(custom)) {
             keybindingsManager.setCustom(key, value);
