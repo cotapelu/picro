@@ -167,37 +167,37 @@
         {
           "id": "task-28",
           "content": "Implement showLoadedResources function in InkApp",
-          "status": "in_progress"
+          "status": "completed"
         },
         {
           "id": "task-29",
           "content": "Display resource counts in Header (extensions, skills, prompts, themes)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-30",
           "content": "Implement showStartupNoticesIfNeeded (version check, updates)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-31",
           "content": "Register extension shortcuts properly",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-32",
           "content": "Add signal handlers for graceful shutdown (SIGTERM, SIGHUP)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-33",
           "content": "Test startup flow end-to-end",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     }
   ],
   "nextTaskId": 34,
   "nextPhaseId": 6,
-  "updatedAt": "2026-05-26T07:07:09.956Z"
+  "updatedAt": "2026-05-26T07:34:25.401Z"
 }

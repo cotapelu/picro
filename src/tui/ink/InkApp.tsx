@@ -1338,6 +1338,17 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     checkVersion();
   }, [addToast]);
 
+  // Check for Anthropic subscription auth warning
+  React.useEffect(() => {
+    try {
+      const authStorage = (runtime as any).authStorage;
+      const apiKey = authStorage?.getApiKey?.('anthropic');
+      if (apiKey && typeof apiKey === 'string' && apiKey.startsWith('sk-ant-oat')) {
+        addToast('Anthropic subscription auth active - extra usage applies', 'warning');
+      }
+    } catch {}
+  }, [runtime, addToast]);
+
   // Input editor (default or custom) props
   const inputProps = {
     value: inputValue,
