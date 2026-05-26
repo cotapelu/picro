@@ -308,9 +308,55 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-9",
+      "name": "InkApp Refactoring Sprint",
+      "tasks": [
+        {
+          "id": "task-53",
+          "content": "Analyze InkApp.tsx structure and design decomposition plan (modal context, command registry, shortcuts manager)",
+          "status": "completed"
+        },
+        {
+          "id": "task-54",
+          "content": "Extract modal management into useModal hook (modal state, rendering, cleanup)",
+          "status": "completed"
+        },
+        {
+          "id": "task-55",
+          "content": "Extract command handling into command registry (slash commands + extensions)",
+          "status": "completed"
+        },
+        {
+          "id": "task-56",
+          "content": "Extract shortcuts management into useExtensionShortcuts hook",
+          "status": "in_progress"
+        },
+        {
+          "id": "task-57",
+          "content": "Extract footer data provider integration into dedicated context/wrapper",
+          "status": "pending"
+        },
+        {
+          "id": "task-58",
+          "content": "Update InkApp to use new hooks/contexts (reduce to ~300-500 lines)",
+          "status": "pending"
+        },
+        {
+          "id": "task-59",
+          "content": "Verify all functionality still works (manual testing + existing tests)",
+          "status": "pending"
+        },
+        {
+          "id": "task-60",
+          "content": "Commit with 'refactor: decompose InkApp into focused hooks'",
+          "status": "pending"
+        }
+      ]
     }
   ],
-  "nextTaskId": 53,
-  "nextPhaseId": 9,
-  "updatedAt": "2026-05-26T08:32:37.070Z"
+  "nextTaskId": 61,
+  "nextPhaseId": 10,
+  "updatedAt": "2026-05-26T08:59:45.105Z"
 }

@@ -1,4 +1,0 @@
-/**
- * Minimal types
- */
-export {};
