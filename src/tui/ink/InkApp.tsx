@@ -53,6 +53,7 @@ type ModalState =
   | { type: 'changelog' }
   | { type: 'hotkeys' }
   | { type: 'tree-selector' }
+  | { type: 'tree-summarization'; branchId: string }
   | { type: 'bash-output'; command: string; output: string; error?: boolean }
   | { type: 'stats'; stats: { sampleCount: number; timeSpanMS: number; avgCpuUserMS: number; avgCpuSystemMS: number; avgRSSMB: number; avgHeapUsedMB: number; peakRSSMB: number; peakHeapUsedMB: number } }
   | { type: 'armin' }
@@ -706,23 +707,31 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   }, [runtime, addToast]);
 
-  const handleTreeSelect = useCallback(async (branchId: string) => {
+  const navigateTree = useCallback(async (branchId: string, options?: { summarize?: boolean; customInstructions?: string }) => {
     try {
       const session = runtime.session as any;
-      if (session.navigateTree) {
-        const result = await session.navigateTree(branchId);
+      if (typeof session.navigateTree === 'function') {
+        const result = await session.navigateTree(branchId, options);
         if (result.cancelled) {
           addToast('Branch navigation cancelled', 'info');
         } else {
-          addToast(`Switched to branch: ${branchId}`, 'success');
+          addToast(`Switched to branch: ${branchId}` + (options?.summarize ? ' (summarized)' : ''), 'success');
         }
+        return result;
       } else {
         addToast('Tree navigation not supported', 'error');
+        return { cancelled: true };
       }
     } catch (err: any) {
-      addToast(`Tree navigation failed: ${err.message}`, 'error');
+      addToast(`Tree navigation failed: ${(err as Error).message}`, 'error');
+      return { cancelled: true };
     }
   }, [runtime, addToast]);
+
+  const handleTreeSelect = useCallback((branchId: string) => {
+    // Open summarization options modal
+    setActiveModal({ type: 'tree-summarization', branchId });
+  }, []);
 
   // Path autocomplete using fd
   const handlePathComplete = useCallback(async (partial: string): Promise<string[]> => {
@@ -908,6 +917,38 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
               runtime={runtime}
               onClose={() => setActiveModal(null)}
               onSelect={handleTreeSelect}
+            />
+          </Modal>
+        );
+      case 'tree-summarization':
+        const branchId = activeModal.branchId;
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <SelectModal
+              title="Summarization Options"
+              options={['No summary', 'Summarize with default', 'Summarize with custom prompt...']}
+              onSelect={async (option) => {
+                setActiveModal(null);
+                if (!branchId) return;
+                if (option === 'No summary') {
+                  await navigateTree(branchId, { summarize: false });
+                } else if (option === 'Summarize with default') {
+                  await navigateTree(branchId, { summarize: true });
+                } else if (option === 'Summarize with custom prompt...') {
+                  // Open editor for custom instructions
+                  setActiveModal({
+                    type: 'editor',
+                    initialValue: '',
+                    onSave: async (customInstructions) => {
+                      await navigateTree(branchId, { summarize: true, customInstructions });
+                      setActiveModal(null);
+                    },
+                  });
+                  // Don't return yet; we want to show editor
+                  return;
+                }
+              }}
+              onCancel={() => setActiveModal(null)}
             />
           </Modal>
         );

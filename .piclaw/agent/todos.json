@@ -195,9 +195,81 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-6",
+      "name": "Testing & Quality Assurance",
+      "tasks": [
+        {
+          "id": "task-34",
+          "content": "Set up ink-testing-library for component tests",
+          "status": "in_progress"
+        },
+        {
+          "id": "task-35",
+          "content": "Write tests for ScopedModelsSelectorModal",
+          "status": "pending"
+        },
+        {
+          "id": "task-36",
+          "content": "Write tests for UserMessageSelectorModal",
+          "status": "pending"
+        },
+        {
+          "id": "task-37",
+          "content": "Write tests for SessionInfoModal",
+          "status": "pending"
+        },
+        {
+          "id": "task-38",
+          "content": "Write tests for FooterDataProvider",
+          "status": "pending"
+        },
+        {
+          "id": "task-39",
+          "content": "Write tests for useRuntime hook",
+          "status": "pending"
+        },
+        {
+          "id": "task-40",
+          "content": "Run tests and verify coverage",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-7",
+      "name": "Visible Feature Completion",
+      "tasks": [
+        {
+          "id": "task-41",
+          "content": "Implement git info display in Footer (branch, dirty, ahead/behind)",
+          "status": "completed"
+        },
+        {
+          "id": "task-42",
+          "content": "Enhance TreeSelectorModal with summarization options (No summary, Summarize, Custom)",
+          "status": "completed"
+        },
+        {
+          "id": "task-43",
+          "content": "Show changelog modal with proper content (read from CHANGELOG.md or package.json)",
+          "status": "completed"
+        },
+        {
+          "id": "task-44",
+          "content": "Improve SessionSelectorModal: add rename (Ctrl+R) and delete (Ctrl+D) functionality",
+          "status": "completed"
+        },
+        {
+          "id": "task-45",
+          "content": "Verify all modal navigation and keybindings work correctly",
+          "status": "completed"
+        }
+      ]
     }
   ],
-  "nextTaskId": 34,
-  "nextPhaseId": 6,
-  "updatedAt": "2026-05-26T07:34:25.401Z"
+  "nextTaskId": 46,
+  "nextPhaseId": 8,
+  "updatedAt": "2026-05-26T07:58:15.982Z"
 }

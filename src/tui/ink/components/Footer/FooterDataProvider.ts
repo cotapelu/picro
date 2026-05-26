@@ -26,6 +26,12 @@ export interface FooterData {
     avgCpuUserMS: number;
     avgRSSMB: number;
   };
+  git?: {
+    branch: string;
+    dirty: boolean;
+    ahead?: number;
+    behind?: number;
+  };
 }
 
 export interface FooterDataProvider {
@@ -132,6 +138,28 @@ export class DefaultFooterDataProvider implements FooterDataProvider {
         }
       } catch {}
 
+      // git info (best-effort, non-blocking)
+      let gitInfo: { branch: string; dirty: boolean; ahead?: number; behind?: number } | undefined;
+      try {
+        const { execFileSync } = require('child_process');
+        // Get branch
+        const branch = execFileSync('git', ['branch', '--show-current'], { cwd, encoding: 'utf-8' }).trim();
+        // Check if dirty
+        const status = execFileSync('git', ['status', '--porcelain'], { cwd, encoding: 'utf-8' }).trim();
+        const dirty = status.length > 0;
+        // Get ahead/behind
+        let ahead = 0, behind = 0;
+        try {
+          const revList = execFileSync('git', ['rev-list', '--count', '--left-right', '@{upstream}...HEAD'], { cwd, encoding: 'utf-8' }).trim();
+          const parts = revList.split('\t');
+          if (parts.length === 2) {
+            ahead = parseInt(parts[0], 10) || 0;
+            behind = parseInt(parts[1], 10) || 0;
+          }
+        } catch {}
+        gitInfo = { branch: branch || 'unknown', dirty, ahead: ahead > 0 ? ahead : undefined, behind: behind > 0 ? behind : undefined };
+      } catch { /* ignore git errors */ }
+
       this.data = {
         cwdBasename,
         sessionName,
@@ -142,6 +170,7 @@ export class DefaultFooterDataProvider implements FooterDataProvider {
         autoCompactEnabled,
         extensionStatuses: this.data.extensionStatuses,
         performance,
+        git: gitInfo,
       };
       this.notify();
     } catch (err) {
@@ -156,6 +185,15 @@ export class DefaultFooterDataProvider implements FooterDataProvider {
 
   updateAutoCompactEnabled(enabled: boolean): void {
     this.data.autoCompactEnabled = enabled;
+    this.notify();
+  }
+
+  updateGitInfo(gitInfo?: { branch: string; dirty: boolean; ahead?: number; behind?: number }): void {
+    if (gitInfo) {
+      this.data.git = gitInfo;
+    } else {
+      delete this.data.git;
+    }
     this.notify();
   }
 

@@ -45,6 +45,7 @@ export const Footer: React.FC<FooterProps> = ({ provider, hints = [] }) => {
     autoCompactEnabled,
     extensionStatuses,
     performance,
+    git,
   } = data;
 
   const leftParts: string[] = [cwdBasename];
@@ -62,10 +63,18 @@ export const Footer: React.FC<FooterProps> = ({ provider, hints = [] }) => {
     }
     rightParts.push(`in:${formatNumber(tokens.input)} out:${formatNumber(tokens.output)}`);
     if (cost > 0) rightParts.push(`$${cost.toFixed(4)}`);
+    if (hints.length > 0 || git) rightParts.push('·');
+  }
+  // Git info
+  if (git) {
+    const branch = git.branch.length > 12 ? git.branch.slice(0, 12) + '~' : git.branch;
+    const dirty = git.dirty ? '*' : '';
+    const ahead = git.ahead ? `+${git.ahead}` : '';
+    const behind = git.behind ? `-${git.behind}` : '';
+    rightParts.push(`git:${branch}${dirty}${ahead}${behind}`.trim());
     if (hints.length > 0) rightParts.push('·');
   }
   if (performance) {
-    if (tokens.input > 0 || tokens.output > 0) rightParts.push('·');
     rightParts.push(`CPU:${performance.avgCpuUserMS.toFixed(1)}ms`);
     rightParts.push(`RSS:${performance.avgRSSMB.toFixed(1)}MB`);
   }
