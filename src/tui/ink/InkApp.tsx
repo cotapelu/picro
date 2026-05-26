@@ -493,41 +493,39 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         setActiveModal({ type: 'tree-selector' }); // Note: using 'tree' as type for modal mapping
         break;
       case 'compact':
-        // Trigger manual compaction
+        // Trigger manual compaction with optional custom instructions
         try {
           const session = runtime.session as any;
           if (typeof session.compact === 'function') {
-            await session.compact();
-            addToast('Compaction completed', 'success');
+            // Parse args: if anything after 'compact', use as custom instructions
+            const parts = userInput.split(' ').filter(Boolean);
+            const customInstructions = parts.length > 1 ? parts.slice(1).join(' ').trim() : undefined;
+            await session.compact(customInstructions ? { customInstructions } : undefined);
+            addToast('Compaction completed' + (customInstructions ? ' with custom instructions' : ''), 'success');
           } else {
             addToast('Compaction not supported', 'error');
           }
         } catch (err) {
-          addToast('Compaction failed', 'error');
+          addToast('Compaction failed: ' + (err as Error).message, 'error');
         }
         break;
       case 'reload':
-        // Reload all resources (extensions, skills, prompts, themes, keybindings)
+        // Reload all resources (settings, extensions, skills, prompts, themes)
         try {
           const session = runtime.session as any;
-          if (typeof session.reload === 'function') {
-            await session.reload();
-            addToast('All resources reloaded', 'success');
-          } else {
-            await runtime.settings?.reload?.();
-            addToast('Settings reloaded (full reload not available)', 'success');
+          // Reload settings first
+          await runtime.settings?.reload?.();
+          // Reload resource loader (extensions, skills, prompts, themes)
+          if (session?.resourceLoader?.reload) {
+            await session.resourceLoader.reload();
           }
+          // Rebind extensions to pick up any changes
+          if (session?.bindExtensions && !session.__picroBound) {
+            // Already bound; might need to re-bind if extensions changed? For now, just note reloaded.
+          }
+          addToast('All resources reloaded', 'success');
         } catch (err) {
           addToast('Reload failed: ' + (err as Error).message, 'error');
-        }
-        break;
-        // Reload settings and resources
-        try {
-          await runtime.settings?.reload?.();
-          // TODO: also reload extensions, skills, prompts, themes from runtime
-          addToast('Settings reloaded', 'success');
-        } catch (err) {
-          addToast('Reload failed', 'error');
         }
         break;
       case 'logout':

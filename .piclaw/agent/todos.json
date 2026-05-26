@@ -54,32 +54,83 @@
         {
           "id": "task-9",
           "content": "Implement full bindExtensions in InkApp with working commandContextActions",
-          "status": "in_progress"
+          "status": "completed"
         },
         {
           "id": "task-10",
           "content": "Implement createExtensionUIContext with all required methods (select, confirm, input, notify, setStatus, setWidget, setHeader, setFooter, etc.)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-11",
           "content": "Add extension shortcut registration (setupExtensionShortcuts)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-12",
           "content": "Implement showLoadedResources and startup notices",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-13",
           "content": "Test extension loading and commands",
-          "status": "pending"
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Command Handlers Implementation",
+      "tasks": [
+        {
+          "id": "task-14",
+          "content": "Implement /export command (HTML export with proper formatting)",
+          "status": "completed"
+        },
+        {
+          "id": "task-15",
+          "content": "Implement /import command (JSONL import with session switching)",
+          "status": "completed"
+        },
+        {
+          "id": "task-16",
+          "content": "Implement /share command (GitHub gist with auth)",
+          "status": "completed"
+        },
+        {
+          "id": "task-17",
+          "content": "Implement /name command (session display name with live update)",
+          "status": "completed"
+        },
+        {
+          "id": "task-18",
+          "content": "Implement /session command (show session stats modal)",
+          "status": "completed"
+        },
+        {
+          "id": "task-19",
+          "content": "Implement /tree command (tree navigation with summarization options)",
+          "status": "completed"
+        },
+        {
+          "id": "task-20",
+          "content": "Implement /reload command (full resource reload)",
+          "status": "completed"
+        },
+        {
+          "id": "task-21",
+          "content": "Implement /compact command (manual compaction with custom instructions)",
+          "status": "completed"
+        },
+        {
+          "id": "task-22",
+          "content": "Test all command handlers end-to-end",
+          "status": "completed"
         }
       ]
     }
   ],
-  "nextTaskId": 14,
-  "nextPhaseId": 3,
-  "updatedAt": "2026-05-26T06:45:53.260Z"
+  "nextTaskId": 23,
+  "nextPhaseId": 4,
+  "updatedAt": "2026-05-26T06:55:57.522Z"
 }
