@@ -83,12 +83,30 @@ function agentMessageToUiMessage(msg: any): Message | null {
       bashTruncated: msg.truncated,
     };
     return { ...bashMsg, id: msg.id || `msg-${Date.now()}`, role, timestamp: msg.timestamp || Date.now(), content: '', streaming: false } as Message;
-  } else if (msg.role === 'compactionSummary' || msg.role === 'branchSummary') {
-    role = 'assistant';
-    content = msg.content?.toString() || `[${msg.role}]`;
+  } else if (msg.role === 'compactionSummary') {
+    role = 'compactionSummary';
+    content = (msg as any).summary?.toString() || msg.content?.toString() || '[Compaction Summary]';
+    const result: Message = { ...base, role: 'compactionSummary' as const, content };
+    if (typeof (msg as any).tokensBefore === 'number') {
+      (result as any).tokensBefore = (msg as any).tokensBefore;
+    }
+    return result;
+  } else if (msg.role === 'branchSummary') {
+    role = 'branchSummary';
+    content = (msg as any).summary?.toString() || msg.content?.toString() || '[Branch Summary]';
+    const result: Message = { ...base, role: 'branchSummary' as const, content };
+    if (typeof (msg as any).fromId === 'string') {
+      (result as any).fromId = (msg as any).fromId;
+    }
+    return result;
   } else if (msg.role === 'custom') {
-    role = 'assistant';
-    content = `[Custom: ${msg.customType}]`;
+    role = 'custom';
+    const customType = msg.customType;
+    const contentStr = (msg.content && typeof msg.content === 'object')
+      ? JSON.stringify(msg.content)
+      : msg.content?.toString() || '[Custom]';
+    const result: Message = { ...base, role: 'custom' as const, content: contentStr, customType };
+    return result;
   }
 
   return {

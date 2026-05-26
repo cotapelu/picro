@@ -1,8 +1,8 @@
 /** @jsxImportSource react */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
 import { useTheme } from '../../hooks/useTheme.js';
-import type { AgentSessionRuntimeInterface } from '../../../../runtime.js';
+import type { FooterDataProvider, FooterData } from './FooterDataProvider.js';
 
 function formatNumber(num: number): string {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -23,75 +23,29 @@ function getThinkingLevelDisplay(level: string): string {
 }
 
 interface FooterProps {
-  runtime: AgentSessionRuntimeInterface;
+  provider: FooterDataProvider;
   hints?: string[];
-  autoCompactEnabled?: boolean;
 }
 
-export const Footer: React.FC<FooterProps> = ({ runtime, hints = [], autoCompactEnabled = false }) => {
+export const Footer: React.FC<FooterProps> = ({ provider, hints = [] }) => {
   const { theme } = useTheme();
+  const [data, setData] = useState<FooterData>(provider.getData());
 
-  const cwdBasename = (() => {
-    try {
-      const cwd = runtime.cwd;
-      return cwd ? cwd.split(/[/\\]/).filter(Boolean).pop() || '' : '';
-    } catch {
-      return '';
-    }
-  })();
+  useEffect(() => {
+    return provider.onChange((newData) => setData(newData));
+  }, [provider]);
 
-  const sessionName = (() => {
-    try {
-      const session = runtime.session as any;
-      const sessionManager = session?.sessionManager;
-      if (sessionManager?.getSessionName) {
-        return sessionManager.getSessionName();
-      }
-    } catch {}
-    return '';
-  })();
-
-  const model = (() => {
-    try {
-      const session = runtime.session as any;
-      const m = session?.model;
-      if (!m) return 'No model';
-      return m.id || m.name || 'Unknown';
-    } catch {
-      return 'No model';
-    }
-  })();
-
-  const thinkingLevel = (() => {
-    try {
-      return runtime.thinkingLevel || 'off';
-    } catch {
-      return 'off';
-    }
-  })();
-
-  const tokenStats = (() => {
-    try {
-      const session = runtime.session as any;
-      const sessionManager = session?.sessionManager;
-      if (!sessionManager?.getEntries) return null;
-      const entries = sessionManager.getEntries();
-      let input = 0, output = 0, cacheRead = 0, cacheWrite = 0, cost = 0;
-      for (const entry of entries) {
-        if (entry.type === 'message' && entry.message?.role === 'assistant') {
-          const usage = entry.message.usage || {};
-          input += usage.input || 0;
-          output += usage.output || 0;
-          cacheRead += usage.cacheRead || 0;
-          cacheWrite += usage.cacheWrite || 0;
-          if (usage.cost?.total) cost += usage.cost.total;
-        }
-      }
-      return { input, output, cacheRead, cacheWrite, cost };
-    } catch {
-      return null;
-    }
-  })();
+  const {
+    cwdBasename,
+    sessionName,
+    model,
+    thinkingLevel,
+    tokens,
+    cost,
+    autoCompactEnabled,
+    extensionStatuses,
+    performance,
+  } = data;
 
   const leftParts: string[] = [cwdBasename];
   if (sessionName) leftParts.push(sessionName);
@@ -102,32 +56,26 @@ export const Footer: React.FC<FooterProps> = ({ runtime, hints = [], autoCompact
   if (thinkingDisplay) centerParts.push(`(${thinkingDisplay})`);
 
   const rightParts: string[] = [];
-  if (tokenStats) {
-    if (tokenStats.cacheRead > 0 || tokenStats.cacheWrite > 0) {
-      rightParts.push(`cache: +${formatNumber(tokenStats.cacheWrite)} -${formatNumber(tokenStats.cacheRead)}`);
+  if (tokens.input > 0 || tokens.output > 0 || tokens.cacheRead > 0 || tokens.cacheWrite > 0) {
+    if (tokens.cacheRead > 0 || tokens.cacheWrite > 0) {
+      rightParts.push(`cache: +${formatNumber(tokens.cacheWrite)} -${formatNumber(tokens.cacheRead)}`);
     }
-    rightParts.push(`in:${formatNumber(tokenStats.input)} out:${formatNumber(tokenStats.output)}`);
-    if (tokenStats.cost > 0) {
-      rightParts.push(`$${tokenStats.cost.toFixed(4)}`);
-    }
+    rightParts.push(`in:${formatNumber(tokens.input)} out:${formatNumber(tokens.output)}`);
+    if (cost > 0) rightParts.push(`$${cost.toFixed(4)}`);
     if (hints.length > 0) rightParts.push('·');
   }
-  // Performance metrics if tracking enabled
-  const perfStats = (() => {
-    try {
-      const session = runtime.session as any;
-      return session?.getPerformanceStats?.() ?? null;
-    } catch {
-      return null;
-    }
-  })();
-  if (perfStats && perfStats.sampleCount > 0) {
-    if (tokenStats) rightParts.push('·'); // separator
-    rightParts.push(`CPU:${perfStats.avgCpuUserMS.toFixed(1)}ms`);
-    rightParts.push(`RSS:${perfStats.avgRSSMB.toFixed(1)}MB`);
+  if (performance) {
+    if (tokens.input > 0 || tokens.output > 0) rightParts.push('·');
+    rightParts.push(`CPU:${performance.avgCpuUserMS.toFixed(1)}ms`);
+    rightParts.push(`RSS:${performance.avgRSSMB.toFixed(1)}MB`);
   }
   if (hints.length > 0) {
     rightParts.push(hints.join(' | '));
+  }
+  // Extension statuses (show if any)
+  if (extensionStatuses.length > 0) {
+    const extText = extensionStatuses.map(ext => ext.status || ext.name).join(', ');
+    rightParts.push(`· ${extText}`);
   }
 
   return (

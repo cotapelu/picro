@@ -7,6 +7,9 @@ import { AssistantMessage } from './AssistantMessage.js';
 import { UserMessage } from './UserMessage.js';
 import { ToolExecution } from './ToolExecution.js';
 import { BashExecution } from './BashExecution.js';
+import { CompactionSummaryMessage } from './CompactionSummaryMessage.js';
+import { BranchSummaryMessage } from './BranchSummaryMessage.js';
+import { CustomMessage } from './CustomMessage.js';
 
 interface MessageItemProps {
   message: Message;
@@ -59,14 +62,23 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     });
   };
 
-  const shouldShowRole = message.role !== 'user'; // user messages don't need role label in chat
+  // Don't show role label for user and self-labeling message types
+  const hideRoleLabel = message.role === 'user' || message.role === 'bashExecution' || message.role === 'compactionSummary' || message.role === 'branchSummary' || message.role === 'custom';
+  const showRoleLabel = !hideRoleLabel;
   const roleColor = message.role === 'assistant' ? theme.success : message.role === 'tool' ? theme.accent : theme.primary;
+  const getRoleDisplay = (role: string) => {
+    switch (role) {
+      case 'assistant': return 'Assistant';
+      case 'tool': return 'Tool';
+      default: return role.charAt(0).toUpperCase() + role.slice(1);
+    }
+  };
 
   return (
     <Box flexDirection="column" marginBottom={1}>
-      {shouldShowRole && (
+      {showRoleLabel && (
         <Text bold color={roleColor}>
-          {message.role === 'assistant' ? 'Assistant' : message.role === 'tool' ? 'Tool' : 'User'}:
+          {getRoleDisplay(message.role)}:
         </Text>
       )}
       <Box flexDirection="column" marginLeft={shouldShowRole ? 2 : 0}>
@@ -89,7 +101,16 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             truncated={message.bashTruncated}
           />
         )}
-        {(message.role === 'tool' || message.role === 'compactionSummary' || message.role === 'branchSummary' || message.role === 'custom') && (
+        {message.role === 'compactionSummary' && (
+          <CompactionSummaryMessage content={message.content} tokensBefore={message.tokensBefore} />
+        )}
+        {message.role === 'branchSummary' && (
+          <BranchSummaryMessage content={message.content} />
+        )}
+        {message.role === 'custom' && (
+          <CustomMessage content={message.content} customType={message.customType} />
+        )}
+        {message.role === 'tool' && (
           <Text>{message.content}</Text>
         )}
         {message.toolCalls && message.toolCalls.length > 0 && (

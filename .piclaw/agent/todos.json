@@ -3,172 +3,52 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Fix picro launcher",
+      "name": "TUI Enhancement Sprint",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Create cli.ts launcher file (ESM)",
+          "content": "Implement ScopedModelsSelectorModal (React + Ink)",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Update package.json to type module",
+          "content": "Implement UserMessageSelectorModal (React + Ink)",
           "status": "completed"
         },
         {
           "id": "task-3",
-          "content": "Update tsconfig for ESM",
+          "content": "Add modal types to InkApp and integrate handlers",
           "status": "completed"
         },
         {
           "id": "task-4",
-          "content": "Fix main.ts imports to ESM",
+          "content": "Implement missing message components (BranchSummary, CompactionSummary, SkillInvocation, Custom)",
           "status": "completed"
         },
         {
           "id": "task-5",
-          "content": "Update build script",
+          "content": "Add message component renderers to MessageItem.tsx",
           "status": "completed"
         },
         {
           "id": "task-6",
-          "content": "Test build and run",
+          "content": "Create FooterDataProvider for centralized footer state",
           "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-2",
-      "name": "Code Reference Review & Alignment",
-      "tasks": [
+        },
         {
           "id": "task-7",
-          "content": "Read llm-context/agent and compare with src/agent - identify alignment issues",
+          "content": "Run build and tests to verify integration",
           "status": "completed"
         },
         {
           "id": "task-8",
-          "content": "Read llm-context/coding-agent and compare with src/main.ts, src/cli.ts, src/runtime, src/modes",
-          "status": "completed"
-        },
-        {
-          "id": "task-9",
-          "content": "Read llm-context/tui (if exists) and compare with src/tui",
-          "status": "completed"
-        },
-        {
-          "id": "task-10",
-          "content": "Fix any discrepancies found (architectural, patterns, features)",
-          "status": "completed"
-        },
-        {
-          "id": "task-11",
-          "content": "Run tests to ensure correctness",
-          "status": "completed"
-        },
-        {
-          "id": "task-12",
-          "content": "Build and verify final output",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-3",
-      "name": "Fix Interactive Mode",
-      "tasks": [
-        {
-          "id": "task-13",
-          "content": "Update main.ts to import TUI from src/tui/ink/index.js instead of bundled ink-bundle.js",
-          "status": "completed"
-        },
-        {
-          "id": "task-14",
-          "content": "Remove build:ink script and ink-bundle generation from package.json",
-          "status": "completed"
-        },
-        {
-          "id": "task-15",
-          "content": "Delete obsolete ink-bundle declaration file",
-          "status": "completed"
-        },
-        {
-          "id": "task-16",
-          "content": "Test interactive mode functionality",
-          "status": "completed"
-        },
-        {
-          "id": "task-17",
-          "content": "Commit changes",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-4",
-      "name": "Completed All Tasks",
-      "tasks": [
-        {
-          "id": "task-18",
-          "content": "All work finished - picro runs successfully",
-          "status": "completed"
-        },
-        {
-          "id": "task-19",
-          "content": "141 tests passing",
-          "status": "completed"
-        },
-        {
-          "id": "task-20",
-          "content": "Build system stable",
-          "status": "completed"
-        },
-        {
-          "id": "task-21",
-          "content": "Codebase clean and properly structured",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-5",
-      "name": "Production Readiness",
-      "tasks": [
-        {
-          "id": "task-22",
-          "content": "Analyze bundle size (dist/tui size, total dist size)",
-          "status": "completed"
-        },
-        {
-          "id": "task-23",
-          "content": "Verify all execution modes: --print, --json, --rpc, interactive",
-          "status": "completed"
-        },
-        {
-          "id": "task-24",
-          "content": "Test with a real API key (smoke test if possible)",
-          "status": "completed"
-        },
-        {
-          "id": "task-25",
-          "content": "Review .gitignore for completeness (no src/*.js, tui/*.js)",
-          "status": "completed"
-        },
-        {
-          "id": "task-26",
-          "content": "Final integration validation against reference implementations",
-          "status": "completed"
-        },
-        {
-          "id": "task-27",
-          "content": "Update README with build and run instructions if needed",
+          "content": "Update docs/TODO.md with progress",
           "status": "completed"
         }
       ]
     }
   ],
-  "nextTaskId": 28,
-  "nextPhaseId": 6,
-  "updatedAt": "2026-05-25T03:58:05.627Z"
-}
+  "nextTaskId": 9,
+  "nextPhaseId": 2,
+  "updatedAt": "2026-05-26T06:42:09.347Z"
 }

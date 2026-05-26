@@ -13,6 +13,11 @@ export interface Message {
   bashExitCode?: number;
   bashCancelled?: boolean;
   bashTruncated?: boolean;
+  // Compaction summary
+  tokensBefore?: number;
+  // Branch summary
+  fromId?: string;
+  // Custom message
   customType?: string;
 }
 

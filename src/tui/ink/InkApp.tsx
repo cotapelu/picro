@@ -9,6 +9,7 @@ import { Header } from './components/Header/Header.js';
 import { MessageList } from './components/MessageList/MessageList.js';
 import { InputBox } from './components/InputBox/InputBox.js';
 import { Footer } from './components/Footer/Footer.js';
+import { createFooterDataProvider, type FooterDataProvider } from './components/Footer/FooterDataProvider.js';
 import { ErrorBoundary, useGlobalErrorHandler } from './ErrorBoundary.js';
 import { CommandPalette } from './modals/CommandPalette.js';
 import { ThinkingModal } from './modals/ThinkingModal.js';
@@ -18,6 +19,8 @@ import { SessionSelectorModal } from './modals/SessionSelectorModal.js';
 import { ConfirmationModal } from './modals/ConfirmationModal.js';
 import { SettingsSelectorModal } from './modals/SettingsSelectorModal.js';
 import { ModelSelectorModal } from './modals/ModelSelectorModal.js';
+import { ScopedModelsSelectorModal } from './modals/ScopedModelsSelectorModal.js';
+import { UserMessageSelectorModal } from './modals/UserMessageSelectorModal.js';
 import { SessionInfoModal } from './modals/SessionInfoModal.js';
 import { ChangelogModal } from './modals/ChangelogModal.js';
 import { HotkeysModal } from './modals/HotkeysModal.js';
@@ -44,6 +47,8 @@ type ModalState =
   | { type: 'confirmation'; title: string; message: string; onConfirm: () => Promise<void> | void; onCancel?: () => void }
   | { type: 'settings' }
   | { type: 'model-selector' }
+  | { type: 'scoped-models' }
+  | { type: 'user-message-selector' }
   | { type: 'session-info' }
   | { type: 'changelog' }
   | { type: 'hotkeys' }
@@ -326,6 +331,9 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       case 'model':
         setActiveModal({ type: 'model-selector' });
         break;
+      case 'scoped-models':
+        setActiveModal({ type: 'scoped-models' });
+        break;
       case 'export':
         // Export current session to HTML file
         try {
@@ -555,30 +563,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         }
         break;
       case 'fork':
-        // Fork current session at a specific message
-        // For now, fork from the first user message if available
-        try {
-          const messages = runtime.session.messages as any[];
-          if (messages.length === 0) {
-            addToast('No messages to fork', 'info');
-            break;
-          }
-          // Find a user message to fork from - prefer the last user message
-          const userMessages = messages.filter(m => m.role === 'user');
-          const targetMsg = userMessages[userMessages.length - 1] || userMessages[0];
-          if (targetMsg?.id) {
-            const result = await runtime.fork(targetMsg.id);
-            if (result.cancelled) {
-              addToast('Fork cancelled', 'info');
-            } else {
-              addToast('Fork created successfully', 'success');
-            }
-          } else {
-            addToast('No suitable message to fork', 'error');
-          }
-        } catch (err) {
-          addToast('Fork failed: ' + (err as Error).message, 'error');
-        }
+        // Open user message selector to choose where to fork from
+        setActiveModal({ type: 'user-message-selector' });
         break;
       case 'stats':
         // Show performance metrics
@@ -840,6 +826,24 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
               runtime={runtime}
               onClose={() => setActiveModal(null)}
               onSelect={() => setModelRefresh(v => v + 1)}
+            />
+          </Modal>
+        );
+      case 'scoped-models':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <ScopedModelsSelectorModal
+              runtime={runtime}
+              onClose={() => setActiveModal(null)}
+            />
+          </Modal>
+        );
+      case 'user-message-selector':
+        return (
+          <Modal onClose={() => setActiveModal(null)}>
+            <UserMessageSelectorModal
+              runtime={runtime}
+              onClose={() => setActiveModal(null)}
             />
           </Modal>
         );
@@ -1199,6 +1203,31 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     onAutocomplete: handleAutocomplete,
   };
 
+  // Footer data provider for centralized state
+  const footerProvider = React.useMemo<FooterDataProvider>(() => createFooterDataProvider(), []);
+
+  // Subscribe to runtime events to update footer data
+  React.useEffect(() => {
+    const session = runtime.session as any;
+    const updateFooter = () => { footerProvider.updateFromRuntime(runtime); };
+    // Initial update
+    updateFooter();
+    // Subscribe to events that affect footer
+    const unsubscribe = session?.subscribe?.((event: any) => {
+      switch (event.type) {
+        case 'agent_end':
+        case 'compaction_end':
+        case 'model_change':
+        case 'session_tree':
+          updateFooter();
+          break;
+        default:
+          break;
+      }
+    });
+    return () => unsubscribe?.();
+  }, [runtime, footerProvider]);
+
   return (
     <Box flexDirection="column" width="100%" position="relative">
       {customHeader || (
@@ -1257,7 +1286,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           </Text>
         </Box>
       )}
-      {customFooter || <Footer runtime={runtime} hints={[
+      {customFooter || <Footer provider={footerProvider} hints={[
         'Ctrl+P: Commands',
         'Ctrl+T: Thinking',
         'Ctrl+Shift+T: Toggle Theme',
