@@ -103,6 +103,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Continue expanding coverage for UI components
 - **Impact**: Total tests increased to 207; coverage improved
 
+### Iteration 21: MessageList Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added 5 unit tests for MessageList component covering empty state, message rendering, tool calls, separators
+- **Rationale**: Continue expanding coverage for UI components
+- **Impact**: Total tests increased to 212; coverage improved
+
 ### Iteration 17: Command Handler Integration
 - **Direction**: Code Quality & Maintainability
 - **Change**: Delegated command handling to `handleCommand` from command-handlers via new `handleSelectCommand` wrapper; old `handleCommandSelect` now unused.
