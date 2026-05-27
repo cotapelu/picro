@@ -121,6 +121,18 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Continue modal coverage
 - **Impact**: Total tests increased to 214; coverage slightly improved
 
+### Iteration 24: Armin Component Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added 2 smoke tests for Armin component to ensure it renders without crashing
+- **Rationale**: Increase coverage for molecule components
+- **Impact**: Total tests increased to 216; coverage slightly improved
+
+### Iteration 25: SessionSelectorModal Smoke Test
+- **Direction**: Testing & Reliability
+- **Change**: Added 1 smoke test for SessionSelectorModal
+- **Rationale**: Continue modal coverage
+- **Impact**: Total tests increased to 217; coverage slightly improved
+
 ### Iteration 17: Command Handler Integration
 - **Direction**: Code Quality & Maintainability
 - **Change**: Delegated command handling to `handleCommand` from command-handlers via new `handleSelectCommand` wrapper; old `handleCommandSelect` now unused.
