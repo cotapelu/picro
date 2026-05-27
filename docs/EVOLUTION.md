@@ -109,6 +109,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Continue expanding coverage for UI components
 - **Impact**: Total tests increased to 212; coverage improved
 
+### Iteration 22: SettingsSelectorModal Smoke Test
+- **Direction**: Testing & Reliability
+- **Change**: Added 1 smoke test for SettingsSelectorModal to ensure it renders without crashing
+- **Rationale**: Modals are critical; need test coverage to prevent regressions
+- **Impact**: Total tests increased to 213; coverage slightly improved
+
 ### Iteration 17: Command Handler Integration
 - **Direction**: Code Quality & Maintainability
 - **Change**: Delegated command handling to `handleCommand` from command-handlers via new `handleSelectCommand` wrapper; old `handleCommandSelect` now unused.
