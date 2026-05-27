@@ -151,6 +151,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Continue modal coverage
 - **Impact**: Total tests increased to 219; coverage slightly improved
 
+### Iteration 29: ConfirmationModal Smoke Test
+- **Direction**: Testing & Reliability
+- **Change**: Added 1 smoke test for ConfirmationModal
+- **Rationale**: Continue modal coverage
+- **Impact**: Total tests increased to 220; coverage slightly improved
+
 ### Iteration 17: Command Handler Integration
 - **Direction**: Code Quality & Maintainability
 - **Change**: Delegated command handling to `handleCommand` from command-handlers via new `handleSelectCommand` wrapper; old `handleCommandSelect` now unused.
