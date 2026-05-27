@@ -97,6 +97,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Increase coverage for Footer molecule, verify data formatting
 - **Impact**: Total tests increased to 204; coverage improved
 
+### Iteration 20: Header Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added 3 unit tests for Header component covering title, model, status, resource counts
+- **Rationale**: Continue expanding coverage for UI components
+- **Impact**: Total tests increased to 207; coverage improved
+
 ### Iteration 17: Command Handler Integration
 - **Direction**: Code Quality & Maintainability
 - **Change**: Delegated command handling to `handleCommand` from command-handlers via new `handleSelectCommand` wrapper; old `handleCommandSelect` now unused.
