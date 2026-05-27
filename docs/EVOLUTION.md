@@ -139,6 +139,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Keep test suite green and avoid confusion
 - **Impact**: Test suite remains 217 passing; no regressions
 
+### Iteration 27: ChangelogModal Smoke Test
+- **Direction**: Testing & Reliability
+- **Change**: Added 1 smoke test for ChangelogModal
+- **Rationale**: Continue modal coverage
+- **Impact**: Total tests increased to 218; coverage slightly improved
+
 ### Iteration 17: Command Handler Integration
 - **Direction**: Code Quality & Maintainability
 - **Change**: Delegated command handling to `handleCommand` from command-handlers via new `handleSelectCommand` wrapper; old `handleCommandSelect` now unused.
