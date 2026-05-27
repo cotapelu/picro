@@ -85,6 +85,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Continue expanding test coverage for modals
 - **Impact**: Total tests increased to 196; coverage improved slightly
 
+### Iteration 18: InputBox Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added 3 unit tests for InputBox component covering value display and placeholder
+- **Rationale**: Continue expanding coverage for UI components
+- **Impact**: Total tests increased to 199
+
 ### Iteration 17: Command Handler Integration
 - **Direction**: Code Quality & Maintainability
 - **Change**: Delegated command handling to `handleCommand` from command-handlers via new `handleSelectCommand` wrapper; old `handleCommandSelect` now unused.
