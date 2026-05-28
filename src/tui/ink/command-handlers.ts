@@ -1,9 +1,9 @@
 // Command handler implementations for slash commands
 // This module extracts all command logic from InkApp.tsx to reduce complexity
 
-import type { AgentSessionRuntimeInterface } from '../runtime.js';
-import { BUILTIN_SLASH_COMMANDS } from '../runtime/slash-commands.js';
-import { VERSION } from '../config.js';
+import type { AgentSessionRuntimeInterface } from '../../runtime.js';
+import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands.js';
+import { VERSION } from '../../config.js';
 
 export interface CommandContext {
   runtime: AgentSessionRuntimeInterface;
