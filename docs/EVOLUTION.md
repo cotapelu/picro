@@ -27,6 +27,16 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: The previous import errors would have caused module resolution failures at runtime, breaking the newly integrated command system. Adding tests ensures reliability and increases test coverage for the command-handling module.
 - **Impact**: All 584 tests passing now (12 new tests). Import issues resolved, command-handlers module fully operational.
 
+### Iteration 53: Message Converter Extraction, Coverage Increase, and Bug Fix
+- **Direction**: Testing & Reliability
+- **Change**: 
+  - Extracted message conversion logic from `useRuntime` into a new pure utility `agentMessageToUiMessage` in `utils/message-converter.ts`.
+  - Added comprehensive unit tests (21 tests) covering all message role conversions, edge cases, and error paths.
+  - Refactored `useRuntime` to use the new utility, removing duplicate code and fixing an unreferenced `base` variable bug that would have caused runtime errors.
+  - Removed a previously added but brittle `useRuntime.test.ts` that relied on complex React testing; the converter tests provide solid coverage without the fragility.
+- **Rationale**: The internal conversion function in `useRuntime` had an undefined `base` variable bug for several message types. Extracting it to a pure function makes it easily testable, improves code clarity, and eliminates the bug.
+- **Impact**: All 605 tests passing now (+21 new). Test coverage increased significantly for core TUI message handling. Code quality improved with single-responsibility utility.
+
 ### Iteration 49: Paths Utils Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `paths.ts` (9 tests) covering `isLocalPath` with various prefixes (npm:, git:, http:, https:, ssh:), whitespace handling, empty strings, and case sensitivity.
