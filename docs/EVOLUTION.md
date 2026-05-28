@@ -37,6 +37,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: The internal conversion function in `useRuntime` had an undefined `base` variable bug for several message types. Extracting it to a pure function makes it easily testable, improves code clarity, and eliminates the bug.
 - **Impact**: All 605 tests passing now (+21 new). Test coverage increased significantly for core TUI message handling. Code quality improved with single-responsibility utility.
 
+### Iteration 54: Hash Utilities Test Coverage
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `src/llm/utils/hash.ts` (15 tests) covering `simpleHash`, `cacheKey`, `hashMessages`, `requestFingerprint`, and `sha256` functions. Verified deterministic hashing, edge cases, and async SHA-256 behavior.
+- **Rationale**: Hashing utilities are used for cache key generation, request deduplication, and message fingerprinting. Previously uncovered, these tests ensure correctness for core performance and correctness mechanisms.
+- **Impact**: All 620 tests passing now (+15 new). Coverage increased for LLM-related utilities, particularly around request fingerprinting and caching logic.
+
 ### Iteration 49: Paths Utils Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `paths.ts` (9 tests) covering `isLocalPath` with various prefixes (npm:, git:, http:, https:, ssh:), whitespace handling, empty strings, and case sensitivity.
