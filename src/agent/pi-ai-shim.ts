@@ -20,6 +20,7 @@ export interface Usage {
 }
 
 export function isContextOverflow(message: any, contextWindow: number): boolean {
+  if (!message) return false;
   if (message.stopReason === 'context_overflow') return true;
   if (message.usage && message.usage.total && message.usage.total > contextWindow) return true;
   return false;
