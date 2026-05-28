@@ -146,6 +146,55 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }, 4000); // auto-dismiss after 4s
   }, []);
 
+  // Footer data provider for centralized state
+  const footerProvider = React.useMemo<FooterDataProvider>(() => createFooterDataProvider(), []);
+
+  // Subscribe to runtime events to update footer data
+  React.useEffect(() => {
+    const session = runtime.session as any;
+    const updateFooter = () => { footerProvider.updateFromRuntime(runtime); };
+    // Initial update
+    updateFooter();
+    // Subscribe to events that affect footer
+    const unsubscribe = session?.subscribe?.((event: any) => {
+      switch (event.type) {
+        case 'agent_end':
+        case 'compaction_end':
+        case 'model_change':
+        case 'session_tree':
+          updateFooter();
+          break;
+        default:
+          break;
+      }
+    });
+    return () => unsubscribe?.();
+  }, [runtime, footerProvider]);
+
+  // Command handler for slash commands (both manual and from palette)
+  const handleSelectCommand = useCallback(async (commandId: string, slashArgs?: string) => {
+    try {
+      const result = await handleCommand({
+        runtime,
+        addToast,
+        setActiveModal,
+        messages,
+        footerProvider,
+        inputValue,
+        setInputValue,
+      }, commandId, slashArgs);
+
+      if (result === 'insert') {
+        const textToInsert = slashArgs ?? '/' + commandId;
+        setInputValue(prev => prev + textToInsert + ' ');
+      }
+      // 'paste' result is handled by command handler (toast shown)
+    } catch (err: any) {
+      console.error('Command error:', err.message || err);
+      addToast(`Command error: ${err.message || err}`, 'error');
+    }
+  }, [runtime, addToast, setActiveModal, messages, footerProvider, inputValue, setInputValue]);
+
   // Handle input submission
   const handleSubmit = useCallback(async () => {
     if (inputValue.trim() === '' || isSubmitting) return;
@@ -171,6 +220,19 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       return;
     }
 
+    // Slash command handling
+    if (userInput.startsWith('/')) {
+      const commandId = userInput.slice(1).split(' ')[0];
+      try {
+        await handleSelectCommand(commandId, userInput);
+      } catch (err: any) {
+        console.error('Slash command error:', err.message || err);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     try {
       await sendMessage(userInput);
     } catch (err: any) {
@@ -178,7 +240,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [inputValue, isSubmitting, sendMessage]);
+  }, [inputValue, isSubmitting, sendMessage, handleSelectCommand]);
 
   // Version check on mount
   React.useEffect(() => {
@@ -725,34 +787,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     onPathComplete: handlePathComplete,
     onExternalEdit: handleExternalEdit,
     onAutocomplete: handleAutocomplete,
-  };
-
-  // Footer data provider for centralized state
-  const footerProvider = React.useMemo<FooterDataProvider>(() => createFooterDataProvider(), []);
-
-  // Subscribe to runtime events to update footer data
-  React.useEffect(() => {
-    const session = runtime.session as any;
-    const updateFooter = () => { footerProvider.updateFromRuntime(runtime); };
-    // Initial update
-    updateFooter();
-    // Subscribe to events that affect footer
-    const unsubscribe = session?.subscribe?.((event: any) => {
-      switch (event.type) {
-        case 'agent_end':
-        case 'compaction_end':
-        case 'model_change':
-        case 'session_tree':
-          updateFooter();
-          break;
-        default:
-          break;
-      }
-    });
-    return () => unsubscribe?.();
-  }, [runtime, footerProvider]);
-
-  // Signal handlers for graceful shutdown
+  };  // Signal handlers for graceful shutdown
   React.useEffect(() => {
     const handleSignal = async (signal: string) => {
       console.log(`Received ${signal}, shutting down gracefully...`);

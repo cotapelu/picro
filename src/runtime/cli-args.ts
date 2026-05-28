@@ -102,7 +102,10 @@ export function parseArgs(args: string[]): Args {
     } else if (arg === "--session-dir" && i + 1 < args.length) {
       result.sessionDir = args[++i];
     } else if (arg === "--models" && i + 1 < args.length) {
-      result.models = args[++i].split(",").map((s) => s.trim());
+      const modelsValue = args[++i];
+      const modelsArray = modelsValue.split(",").map((s) => s.trim()).filter((s) => s.length > 0);
+      result.models = result.models ?? [];
+      result.models.push(...modelsArray);
     } else if (arg === "--no-tools" || arg === "-nt") {
       result.noTools = true;
     } else if (arg === "--no-builtin-tools" || arg === "-nbt") {
@@ -131,6 +134,9 @@ export function parseArgs(args: string[]): Args {
       result.extensions.push(args[++i]);
     } else if (arg === "--no-extensions" || arg === "-ne") {
       result.noExtensions = true;
+    } else if (arg === "--skills" && i + 1 < args.length) {
+      result.skills = result.skills ?? [];
+      result.skills.push(args[++i]);
     } else if (arg === "--skill" && i + 1 < args.length) {
       result.skills = result.skills ?? [];
       result.skills.push(args[++i]);
@@ -163,9 +169,10 @@ export function parseArgs(args: string[]): Args {
     } else if (arg.startsWith("--")) {
       const eqIndex = arg.indexOf("=");
       if (eqIndex !== -1) {
-        result.unknownFlags.set(arg.slice(2, eqIndex), arg.slice(eqIndex + 1));
+        // Use full flag up to '=' as key (including '--')
+        result.unknownFlags.set(arg.slice(0, eqIndex), arg.slice(eqIndex + 1));
       } else {
-        const flagName = arg.slice(2);
+        const flagName = arg; // include '--'
         const next = args[i + 1];
         if (next !== undefined && !next.startsWith("-") && !next.startsWith("@")) {
           result.unknownFlags.set(flagName, next);
@@ -177,7 +184,12 @@ export function parseArgs(args: string[]): Args {
     } else if (arg.startsWith("-") && !arg.startsWith("--")) {
       result.diagnostics.push({ type: "error", message: `Unknown option: ${arg}` });
     } else if (!arg.startsWith("-")) {
-      result.messages.push(arg);
+      // Heuristic: arguments containing a '.' are considered fileArgs
+      if (arg.includes('.')) {
+        result.fileArgs.push(arg);
+      } else {
+        result.messages.push(arg);
+      }
     }
   }
 

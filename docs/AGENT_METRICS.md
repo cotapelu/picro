@@ -6,14 +6,14 @@ Track agent performance and reliability across iterations.
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 50 |
+| Total Iterations | 51 |
 | Tasks Completed | 83 |
 | Test Failure Rate | 0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (558 tests) |
+| Test Pass Rate | 100% (572 tests) |
 | Coverage (overall) | ~44.5% |
 | Coverage (key modules): |
 | - loop-strategy.ts | 93.33% |
@@ -33,6 +33,7 @@ Track agent performance and reliability across iterations.
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
 | 2025-05-28 | 50 | 1 | ✅ | Compaction Utilities Tests: unit tests for compaction.ts (13 tests) covering estimateTokens, shouldCompact, file ops tracking, and formatting |
+| 2025-05-28 | 51 | 2 | ✅ | Integrated command-handlers (handleSelectCommand) and fixed manual slash command handling; fixed parseArgs bugs; all 572 tests passing |
 | 2025-05-28 | 49 | 1 | ✅ | Paths Utils Tests: unit tests for paths.ts (9 tests) covering isLocalPath prefixes, whitespace, and case sensitivity |
 | 2025-05-28 | 48 | 1 | ✅ | Skills Format Tests: unit tests for formatSkillsForPrompt (4 tests) covering empty array, disabled filtering, XML formatting, and ordering |
 | 2025-05-28 | 47 | 1 | ✅ | ConvertToLlm Test Coverage: comprehensive unit tests for convert-to-llm.ts (12 tests), covering all message conversion paths (bashExecution, branchSummary, compactionSummary, custom) to 100% coverage |

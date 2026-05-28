@@ -6,9 +6,18 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ### Iteration 50: Compaction Utilities Test Coverage
 - **Direction**: Testing & Reliability
-- **Change**: Added unit tests for `compaction.ts` (13 tests) covering `estimateTokens`, `shouldCompact`, `createFileOps`, `extractFileOpsFromMessage`, `computeFileLists`, `formatFileOperations`.
+- **Change**: Added unit tests for `compaction.ts` (13 tests) covering `estimateTokens`, `shouldCompact`, `createFileOps`, `extractFileOpsFromMessage`, `computeFileLists`, and `formatFileOperations`.
 - **Rationale**: Compaction utilities are core for context window management. Testing ensures correct token estimation, compaction decision logic, file operation tracking, and formatting.
 - **Impact**: Overall coverage increased to ~44.5%. Total tests increased to 558.
+
+### Iteration 51: Command Integration and CLI Args Fix
+- **Direction**: Integration & Reliability
+- **Change**: 
+  - Integrated command-handlers: Implemented `handleSelectCommand` to route slash commands through `handleCommand`, supporting both manual input and command palette selections.
+  - Updated `handleSubmit` to intercept slash commands, preventing them from being sent to the agent unnecessarily.
+  - Fixed `parseArgs` bugs: support for multiple `--models` occurrences, added `--skills` flag, corrected `unknownFlags` to preserve dashes, and implemented fileArgs heuristic (dot detection).
+- **Rationale**: The previous extraction of command-handlers was incomplete, leading to a runtime crash when selecting commands from the palette. Manual slash commands were also not handled locally. CLI args parsing had several failing tests due to incomplete implementation.
+- **Impact**: All 572 tests now pass (previously 4 failing). Test pass rate returned to 100%. Integration aligns TUI with reference architecture, improving stability and user experience.
 
 ### Iteration 49: Paths Utils Test Coverage
 - **Direction**: Testing & Reliability

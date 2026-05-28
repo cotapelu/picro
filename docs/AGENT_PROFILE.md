@@ -15,12 +15,12 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - ✅ Startup experience (resource counts, version check, auth warnings, graceful shutdown)
 - ✅ Git integration (branch, dirty, ahead/behind)
 - ✅ Testing infrastructure (ink-testing-library, 165 passing tests, continuous coverage improvements)
-- ✅ Command handlers extraction analysis (command-handlers.ts, modal-renderers.tsx prepared)
+- ✅ Command handlers extraction and full integration (handleSelectCommand, slash command handling)
 - ✅ Proactive bug detection and rapid fix (MessageItem undefined variable)
 - ✅ Expanding component test coverage (MessageItem suite with 13 tests)
 
 ## Weaknesses / Areas for Improvement
-- ⚠️ InkApp.tsx still large (~1500 lines) - extraction artifacts created but not yet integrated
+- ⚠️ InkApp.tsx still large (~1500 lines) - partial decomposition done (command-handlers integrated), further reduction possible
 - ⚠️ Overall test coverage ~30% - can expand beyond smoke tests
 - ⚠️ Theme watcher for dynamic theme switching not integrated
 
@@ -33,7 +33,7 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - `src/runtime/agent-session-runtime.ts` - high-level orchestration
 
 ## Technical Debt
-- **InkApp decomposition**: Extraction modules ready (`useModal`, `command-handlers.ts`, `modal-renderers.tsx`), integration deferred to maintain stability
+- **InkApp decomposition**: command-handlers integrated, modal-renderers used; further decomposition possible
 - **Testing**: Expand beyond smoke tests to full component interactions
 - **Theme**: Implement system preference detection and auto-switching
 
