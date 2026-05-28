@@ -6,15 +6,15 @@ Track agent performance and reliability across iterations.
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 46 |
-| Tasks Completed | 79 |
+| Total Iterations | 47 |
+| Tasks Completed | 80 |
 | Test Failure Rate | 0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (520 tests) |
-| Coverage (overall) | ~42.0% |
+| Test Pass Rate | 100% (532 tests) |
+| Coverage (overall) | ~43.0% |
 | Coverage (key modules): |
 | - loop-strategy.ts | 93.33% |
 | - message-queue.ts | ~98% |
@@ -24,11 +24,13 @@ Track agent performance and reliability across iterations.
 | - models.ts | 100% |
 | - agent-loop.ts | ~55% |
 | - session-manager.ts | ~75% |
+| - convert-to-llm.ts | 100% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-05-28 | 47 | 1 | ✅ | ConvertToLlm Test Coverage: comprehensive unit tests for convert-to-llm.ts (12 tests), covering all message conversion paths (bashExecution, branchSummary, compactionSummary, custom) to 100% coverage |
 | 2025-05-28 | 46 | 1 | ✅ | SessionManager Test Coverage: comprehensive unit tests for session-manager.ts (31 tests), covering CRUD, tree, export/import, and bug fix in importSession (~75% coverage) |
 | 2025-05-28 | 44 | 1 | ✅ | SourceInfo Tests: added unit tests for source-info.ts |
 | 2025-05-28 | 45 | 1 | ✅ | AgentLoop Tests: expanded coverage for agent-loop.ts with tool calls, errors, and abort scenarios (~55% coverage) |

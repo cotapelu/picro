@@ -10,6 +10,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Core agent loop had only 40% coverage. New tests exercise tool call continuation, error paths, and cancellation, raising coverage to ~55%.
 - **Impact**: Overall coverage increased to ~38.7%. Total tests increased to 489.
 
+### Iteration 47: ConvertToLlm Coverage
+- **Direction**: Testing & Reliability
+- **Change**: Added comprehensive unit tests for `convert-to-llm.ts` (12 tests) covering all conversion branches: standard pass-through (user/assistant/toolResult), bashExecution (including excludeFromContext), branchSummary, compactionSummary, custom messages (string and TextContent[]), unknown role filtering, and timestamp preservation. Achieved 100% coverage for this module.
+- **Rationale**: `convert-to-llm.ts` is a pure but critical utility in session message conversion. Previously uncovered, adding tests ensures correctness for all session message types.
+- **Impact**: Overall coverage increased to ~43%. Total tests increased to 532.
+
 ### Iteration 46: SessionManager Coverage & Bug Fix
 - **Direction**: Testing & Reliability
 - **Change**: Added comprehensive unit tests for `session-manager.ts` covering session lifecycle, querying, tree building, branch operations, context building, and import/export. Revised tests after fixing a bug in `importSession` (sessionId was not set from header). 31 new tests, raising coverage for this critical low‑coverage module from ~12% to ~75%.
