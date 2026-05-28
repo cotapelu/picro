@@ -19,6 +19,14 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: The previous extraction of command-handlers was incomplete, leading to a runtime crash when selecting commands from the palette. Manual slash commands were also not handled locally. CLI args parsing had several failing tests due to incomplete implementation.
 - **Impact**: All 572 tests now pass (previously 4 failing). Test pass rate returned to 100%. Integration aligns TUI with reference architecture, improving stability and user experience.
 
+### Iteration 52: Command-Handlers Import Fixes and Test Coverage
+- **Direction**: Reliability & Testing
+- **Change**: 
+  - Fixed incorrect import paths in `command-handlers.ts` (runtime, slash-commands, config) to use correct relative paths (`../../`).
+  - Added unit tests for `handleCommand` covering /quit, /thinking, /login, /help, /copy, /resume, /new, /settings, /model, and unknown command handling.
+- **Rationale**: The previous import errors would have caused module resolution failures at runtime, breaking the newly integrated command system. Adding tests ensures reliability and increases test coverage for the command-handling module.
+- **Impact**: All 584 tests passing now (12 new tests). Import issues resolved, command-handlers module fully operational.
+
 ### Iteration 49: Paths Utils Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `paths.ts` (9 tests) covering `isLocalPath` with various prefixes (npm:, git:, http:, https:, ssh:), whitespace handling, empty strings, and case sensitivity.
