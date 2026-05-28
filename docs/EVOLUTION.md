@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 50: Compaction Utilities Test Coverage
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `compaction.ts` (13 tests) covering `estimateTokens`, `shouldCompact`, `createFileOps`, `extractFileOpsFromMessage`, `computeFileLists`, `formatFileOperations`.
+- **Rationale**: Compaction utilities are core for context window management. Testing ensures correct token estimation, compaction decision logic, file operation tracking, and formatting.
+- **Impact**: Overall coverage increased to ~44.5%. Total tests increased to 558.
+
 ### Iteration 49: Paths Utils Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `paths.ts` (9 tests) covering `isLocalPath` with various prefixes (npm:, git:, http:, https:, ssh:), whitespace handling, empty strings, and case sensitivity.
