@@ -6,15 +6,15 @@ Track agent performance and reliability across iterations.
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 44 |
-| Tasks Completed | 77 |
+| Total Iterations | 46 |
+| Tasks Completed | 79 |
 | Test Failure Rate | 0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (485 tests) |
-| Coverage (overall) | ~38.2% |
+| Test Pass Rate | 100% (489 tests) |
+| Coverage (overall) | ~38.7% |
 | Coverage (key modules): |
 | - loop-strategy.ts | 93.33% |
 | - message-queue.ts | ~98% |
@@ -22,12 +22,15 @@ Track agent performance and reliability across iterations.
 | - overflow.ts | ~95% |
 | - event-emitter.ts | ~80% |
 | - models.ts | 100% |
+| - agent-loop.ts | ~55% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-05-28 | 46 | 1 | ✅ | AgentLoop Tests: expanded coverage for core agent loop with tool calls, error handling, and abort (~55% coverage) |
 | 2025-05-28 | 44 | 1 | ✅ | SourceInfo Tests: added unit tests for source-info.ts |
+| 2025-05-28 | 45 | 1 | ✅ | AgentLoop Tests: expanded coverage for agent-loop.ts with tool calls, errors, and abort scenarios (~55% coverage) |
 | 2025-05-28 | 43 | 1 | ✅ | Compat Detection Tests: added unit tests for compat-detection.ts |
 | 2025-05-28 | 42 | 1 | ✅ | JSON Parse Tests: added unit tests for json-parse.js |
 | 2025-05-28 | 41 | 1 | ✅ | Settings Validator Tests: added tests for settings-validator.ts |

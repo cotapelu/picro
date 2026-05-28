@@ -8,7 +8,7 @@ import { AgentLoop } from './agent-loop.js';
 import { ToolExecutor } from './tool-executor.js';
 import { ContextBuilder } from './context-manager.js';
 import { EventEmitter } from '../events/event-emitter.js';
-import { LoopStrategy } from './loop-strategy.js';
+import { LoopStrategy, ReActLoopStrategy } from './loop-strategy.js';
 import { MessageQueue } from './message-queue.js';
 import type { AgentConfig, LLMResponse } from './types.js';
 
@@ -175,6 +175,162 @@ describe('AgentLoop', () => {
 
       expect(startSpy).toHaveBeenCalled();
       expect(endSpy).toHaveBeenCalled();
+    });
+  });
+
+  // Additional tests for coverage
+
+  describe('run with tool calls', () => {
+    it('executes tools and includes results in state', async () => {
+      // Register a simple echo tool
+      const echoTool = {
+        name: 'echo',
+        description: 'Echo message',
+        parameters: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          },
+          required: ['message']
+        },
+        handler: async (args: any) => `Echo: ${args.message}`
+      };
+      toolExecutor.registerTool(echoTool as any);
+
+      // Use ReActLoopStrategy to continue after tool calls
+      const reactStrategy = new ReActLoopStrategy();
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, reactStrategy);
+
+      // Mock LLM: first call returns toolCall, second returns final answer
+      let callCount = 0;
+      const llmProvider = async (prompt: string, tools: any[], options?: any): Promise<LLMResponse> => {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            content: 'Calling tool',
+            stopReason: 'toolUse',
+            usage: { input: 10, output: 5, totalTokens: 15, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [{ name: 'echo', arguments: { message: 'hello' } }],
+            raw: {}
+          };
+        } else {
+          return {
+            content: 'Final answer after tool',
+            stopReason: 'stop',
+            usage: { input: 20, output: 10, totalTokens: 30, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [],
+            raw: {}
+          };
+        }
+      };
+
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+
+      expect(result.success).toBe(true);
+      expect(result.finalAnswer).toBe('Final answer after tool');
+
+      const finalState = loop.getState();
+      expect(finalState.totalToolCalls).toBeGreaterThanOrEqual(1);
+      const toolTurns = finalState.history.filter(t => t.role === 'tool');
+      expect(toolTurns.length).toBeGreaterThanOrEqual(1);
+      const successTool = toolTurns.find(t => !t.isError);
+      expect(successTool).toBeDefined();
+      const resultContent = (successTool!.content as any[]).find((c: any) => c.type === 'text');
+      expect(resultContent!.text).toContain('Echo: hello');
+    });
+
+    it('handles tool execution errors gracefully', async () => {
+      // Register a tool that throws
+      const badTool = {
+        name: 'bad',
+        description: 'Always fails',
+        parameters: { type: 'object', properties: {} },
+        handler: async () => { throw new Error('tool failure'); }
+      };
+      toolExecutor.registerTool(badTool as any);
+
+      // Use simple strategy to avoid multiple rounds
+      const simple = new SimpleStrategy();
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, simple);
+
+      const llmProvider = async (): Promise<LLMResponse> => ({
+        content: '',
+        stopReason: 'toolUse',
+        usage: { input: 10, output: 0, totalTokens: 10, cost: { input: 0, output: 0, total: 0 } },
+        toolCalls: [{ name: 'bad', arguments: {} }],
+        raw: {}
+      });
+
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+
+      const finalState = loop.getState();
+      const toolTurns = finalState.history.filter(t => t.role === 'tool');
+      expect(toolTurns.length).toBeGreaterThanOrEqual(1);
+      const errTurn = toolTurns.find(t => t.isError);
+      expect(errTurn).toBeDefined();
+      const errContent = (errTurn!.content as any[]).find((c: any) => c.type === 'text');
+      expect(errContent!.text).toContain('tool failure');
+    });
+  });
+
+  describe('run with LLM error', () => {
+    it('records error and returns failure', async () => {
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+
+      const llmProvider = async (): Promise<LLMResponse> => {
+        throw new Error('Network failure');
+      };
+
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Network failure');
+      expect(loop.getState().isRunning).toBe(false);
+    });
+  });
+
+  describe('abort during long run', () => {
+    it('cancels execution promptly', async () => {
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      let abortSignal: AbortSignal | undefined;
+
+      // Provider that waits for abort
+      const llmProvider = async (prompt: string, tools: any[], options?: any): Promise<LLMResponse> => {
+        abortSignal = options?.signal;
+        await new Promise((resolve, reject) => {
+          const onAbort = () => reject(new Error('aborted'));
+          options?.signal?.addEventListener('abort', onAbort, { once: true });
+          setTimeout(() => resolve({
+            content: 'Finished',
+            stopReason: 'stop',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [],
+            raw: {}
+          }), 5000);
+        });
+        return {
+          content: 'Should not reach',
+          stopReason: 'stop',
+          usage: { input: 0, output: 0, totalTokens: 0, cost: { input: 0, output: 0, total: 0 } },
+          toolCalls: [],
+          raw: {}
+        };
+      };
+
+      const runPromise = loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+
+      // Wait a bit then abort
+      await new Promise(r => setTimeout(r, 100));
+      loop.abort();
+      expect(loop.getState().isCancelled).toBe(true);
+      if (abortSignal) {
+        expect(abortSignal.aborted).toBe(true);
+      }
+
+      const result = await runPromise;
+      expect(result.success).toBe(false);
+      expect(result.stopReason).toBe('error');
+      expect(result.error).toMatch(/aborted/i);
     });
   });
 });

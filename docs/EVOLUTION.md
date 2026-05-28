@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 46: AgentLoop Coverage Expansion
+- **Direction**: Testing & Reliability
+- **Change**: Added comprehensive unit tests for `agent-loop.ts` covering tool execution (success and errors), LLM error handling, steering queue processing, and abort behavior.
+- **Rationale**: Core agent loop had only 40% coverage. New tests exercise tool call continuation, error paths, and cancellation, raising coverage to ~55%.
+- **Impact**: Overall coverage increased to ~38.7%. Total tests increased to 489.
+
 ### Iteration 45: Compat Detection Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `compat-detection.ts` (detectCompat, mergeCompat).
