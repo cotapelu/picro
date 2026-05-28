@@ -4,11 +4,73 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
-### Iteration 34: Overflow Test Coverage
+### Iteration 45: Compat Detection Test Coverage
 - **Direction**: Testing & Reliability
-- **Change**: Added comprehensive unit tests for `overflow.ts` (12 test cases) covering token estimation for various content types (text, images, thinking), truncation behavior (message removal, content truncation, system prompt handling), and edge cases.
-- **Rationale**: The overflow handler is critical for context window management. Previously 0% coverage; new tests bring to ~95%. Also uncovered and fixed a bug: system prompt-only overflow handling now handles empty system correctly, and truncation of legacy string-content messages is correctly tested.
-- **Impact**: Overall coverage increased to ~33.3%. Total tests increased to 324.
+- **Change**: Added unit tests for `compat-detection.ts` (detectCompat, mergeCompat).
+- **Rationale**: Ensure correct compatibility configuration for LLM providers.
+- **Impact**: Overall coverage increased to ~38.1%.
+
+### Iteration 44: SourceInfo Test Coverage
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `source-info.ts` covering factory functions.
+- **Rationale**: Increase coverage for runtime utility that tracks source metadata.
+- **Impact**: Overall coverage increased to ~38.0%.
+
+### Iteration 43: Sanitize Unicode Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `sanitize-unicode.js` (sanitizeSurrogates) covering various surrogate pairs and edge cases.
+- **Rationale**: Unicode sanitization important for text handling; previously 0% coverage.
+- **Impact**: Overall coverage increased to ~37.9%.
+
+### Iteration 42: JSON Parse Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `json-parse.js` (parseStreamingJson) with partial-json mock.
+- **Rationale**: Streaming JSON parser used in LLM response handling; increased coverage from 0%.
+- **Impact**: Overall coverage increased to ~37.7%.
+
+### Iteration 41: Settings Validator Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added comprehensive unit tests for `settings-validator.ts` covering all validation rules for settings.
+- **Rationale**: Ensure settings validation correctness; previously 0% coverage.
+- **Impact**: Overall coverage increased to ~37.5%.
+
+### Iteration 40: System Prompt Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added extensive unit tests for `system-prompt.ts` covering buildSystemPrompt options, guidelines, skills, context files, and path normalization.
+- **Rationale**: System prompt generation core to agent behavior; previously ~0% coverage.
+- **Impact**: Overall coverage increased to ~36.8%.
+
+### Iteration 39: Auth Guidance Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `auth-guidance.ts` covering all guidance messages.
+- **Rationale**: Increase coverage for auth-related UI messages; previously 0% coverage.
+- **Impact**: Overall coverage increased to ~36.5%.
+
+### Iteration 38: Validation Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `validation.ts` covering schema validation, tool argument validation, and type checks.
+- **Rationale**: Input validation essential for security; previously 29% coverage, now ~90%.
+- **Impact**: Overall coverage increased to ~36.2%.
+
+### Iteration 37: Event Stream Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `AssistantMessageEventStream` covering push, end, result, and async iteration.
+- **Rationale**: Streaming event handling core to LLM responses; previously 0% coverage.
+- **Impact**: Overall coverage increased to ~35.9%.
+
+### Iteration 36: Models Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `models.ts` covering model lookup, cost calculation, and xhigh support detection.
+- **Rationale**: Model configuration critical for LLM integration.
+- **Impact**: Overall coverage increased to ~35.6%.
+
+### Iteration 35: Event Emitter Tests & Error Handling
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `EventEmitter` (on, off, onAny, emit, metrics). Also improved emitter to swallow handler errors, preventing one misbehaving handler from breaking emission.
+- **Rationale**: Event system central; ensure robust async emission. Previously ~25% coverage; now ~80%.
+- **Impact**: Overall coverage increased to ~35.2%.
+
+### Iteration 34: Overflow Test Coverage
 
 ### Iteration 33: Diagnostics Test Coverage
 - **Direction**: Testing & Reliability
