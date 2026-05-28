@@ -735,6 +735,10 @@ class SessionManager {
         manager.labelsById = labelsById;
         manager.labelTimestampsById = labelTimestampsById;
         manager.leafId = leafId;
+        // Set the session ID from the imported header
+        const header = entries[0];
+        manager.sessionId = header.id;
+        // Optionally, if we wanted a session file, we could derive from header, but not needed
         // Write to file if persist
         if (manager.persist && manager.sessionFile) {
             const content = entries.map(e => JSON.stringify(e)).join('\n') + '\n';

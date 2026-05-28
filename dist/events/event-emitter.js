@@ -56,16 +56,25 @@ class EventEmitter {
     async emit(event) {
         const start = process.hrtime.bigint();
         const handlers = [];
+        // Wrap handler to catch errors and prevent rejection
+        const safe = (handler) => (async () => {
+            try {
+                await handler(event);
+            }
+            catch {
+                // Swallow errors from individual handlers to isolate them
+            }
+        })();
         // Type-specific listeners
         const typeSet = this.typedListeners.get(event.type);
         if (typeSet) {
             for (const handler of typeSet) {
-                handlers.push(Promise.resolve(handler(event)));
+                handlers.push(safe(handler));
             }
         }
         // Global listeners
         for (const handler of this.globalListeners) {
-            handlers.push(Promise.resolve(handler(event)));
+            handlers.push(safe(handler));
         }
         await Promise.all(handlers);
         const durationNs = process.hrtime.bigint() - start;

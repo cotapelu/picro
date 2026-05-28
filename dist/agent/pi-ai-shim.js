@@ -7,6 +7,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isContextOverflow = isContextOverflow;
 function isContextOverflow(message, contextWindow) {
+    if (!message)
+        return false;
     if (message.stopReason === 'context_overflow')
         return true;
     if (message.usage && message.usage.total && message.usage.total > contextWindow)

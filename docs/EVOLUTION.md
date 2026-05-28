@@ -4,11 +4,11 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
-### Iteration 46: AgentLoop Coverage Expansion
+### Iteration 49: Paths Utils Test Coverage
 - **Direction**: Testing & Reliability
-- **Change**: Added comprehensive unit tests for `agent-loop.ts` covering tool execution (success and errors), LLM error handling, steering queue processing, and abort behavior.
-- **Rationale**: Core agent loop had only 40% coverage. New tests exercise tool call continuation, error paths, and cancellation, raising coverage to ~55%.
-- **Impact**: Overall coverage increased to ~38.7%. Total tests increased to 489.
+- **Change**: Added unit tests for `paths.ts` (9 tests) covering `isLocalPath` with various prefixes (npm:, git:, http:, https:, ssh:), whitespace handling, empty strings, and case sensitivity.
+- **Rationale**: Small utility with multiple branches; testing ensures correct path classification throughout the app.
+- **Impact**: Overall coverage increased to ~44.0%. Total tests increased to 545.
 
 ### Iteration 48: Skills Format Test Coverage
 - **Direction**: Testing & Reliability
