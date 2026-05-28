@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 30: Loop Strategy Test Coverage
+- **Direction**: Testing & Reliability
+- **Change**: Added comprehensive unit tests for `loop-strategy.ts` covering all five strategies (ReAct, PlanSolve, Reflection, Simple, SelfRefine) and factory. Created 63 new test cases.
+- **Rationale**: Increase test coverage for core agent loop logic, which had only 2.85% coverage. Ensures correct behavior of continuation decisions, result formatting, and prompt transformations.
+- **Impact**: Overall coverage increased from ~29.4% to ~31.2%. loop-strategy.ts coverage reached 93.33% statements and 100% functions. Total tests increased from 220 to 265.
+
 ### Iteration 14: useTheme Hook Tests
 - **Direction**: Testing & Reliability
 - **Change**: Added 2 tests for useTheme hook verifying dark/light mode and provider behavior
