@@ -4,6 +4,18 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 32: PiAIShim Test Coverage & Defensive Fix
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `pi-ai-shim.ts` (8 test cases). Also added defensive null check to `isContextOverflow` to handle undefined/null gracefully.
+- **Rationale**: Increase coverage for utility function used in overflow detection. The guard improves robustness without changing semantics for valid inputs.
+- **Impact**: Overall coverage increased to ~31.7%. pi-ai-shim.ts reached 100% coverage. Total tests increased to 292.
+
+### Iteration 31: MessageQueue Test Coverage
+- **Direction**: Testing & Reliability
+- **Change**: Added comprehensive unit tests for `message-queue.ts` (31 test cases) covering enqueue, dequeue, drainAll, peek, clear, reset, mode handling, maxSize eviction, and storage compression edge cases.
+- **Rationale**: MessageQueue is core to agent's steering/follow-up queuing. Previously only 30% coverage; new tests bring to ~98%. Ensures correct FIFO behavior and eviction logic.
+- **Impact**: Overall coverage increased to ~31.56%. Total tests increased to 284.
+
 ### Iteration 30: Loop Strategy Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added comprehensive unit tests for `loop-strategy.ts` covering all five strategies (ReAct, PlanSolve, Reflection, Simple, SelfRefine) and factory. Created 63 new test cases.
