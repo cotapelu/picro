@@ -4,6 +4,18 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 34: Overflow Test Coverage
+- **Direction**: Testing & Reliability
+- **Change**: Added comprehensive unit tests for `overflow.ts` (12 test cases) covering token estimation for various content types (text, images, thinking), truncation behavior (message removal, content truncation, system prompt handling), and edge cases.
+- **Rationale**: The overflow handler is critical for context window management. Previously 0% coverage; new tests bring to ~95%. Also uncovered and fixed a bug: system prompt-only overflow handling now handles empty system correctly, and truncation of legacy string-content messages is correctly tested.
+- **Impact**: Overall coverage increased to ~33.3%. Total tests increased to 324.
+
+### Iteration 33: Diagnostics Test Coverage
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `diagnostics.ts` (30 test cases) covering system info, memory info, network interfaces, performance metrics, file stats, file size formatting, environment detection, and diagnostic report generation.
+- **Rationale**: Diagnostics module provides important observability. Previously 0% coverage; tests now cover all exported functions and edge cases.
+- **Impact**: Overall coverage increased to ~32.58%. Total tests increased to 311.
+
 ### Iteration 32: PiAIShim Test Coverage & Defensive Fix
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `pi-ai-shim.ts` (8 test cases). Also added defensive null check to `isContextOverflow` to handle undefined/null gracefully.
