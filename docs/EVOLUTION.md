@@ -10,6 +10,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Core agent loop had only 40% coverage. New tests exercise tool call continuation, error paths, and cancellation, raising coverage to ~55%.
 - **Impact**: Overall coverage increased to ~38.7%. Total tests increased to 489.
 
+### Iteration 46: SessionManager Coverage & Bug Fix
+- **Direction**: Testing & Reliability
+- **Change**: Added comprehensive unit tests for `session-manager.ts` covering session lifecycle, querying, tree building, branch operations, context building, and import/export. Revised tests after fixing a bug in `importSession` (sessionId was not set from header). 31 new tests, raising coverage for this critical low‑coverage module from ~12% to ~75%.
+- **Rationale**: SessionManager is central to persistence and session resumption. High‑impact area with many branches. Testing uncovered a bug in importSession which was fixed.
+- **Impact**: Overall coverage increased to ~42%. Total tests increased to 520. Fixed bug: `importSession` now correctly sets imported session ID.
+
 ### Iteration 45: Compat Detection Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `compat-detection.ts` (detectCompat, mergeCompat).

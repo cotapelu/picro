@@ -13,8 +13,8 @@ Track agent performance and reliability across iterations.
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (489 tests) |
-| Coverage (overall) | ~38.7% |
+| Test Pass Rate | 100% (520 tests) |
+| Coverage (overall) | ~42.0% |
 | Coverage (key modules): |
 | - loop-strategy.ts | 93.33% |
 | - message-queue.ts | ~98% |
@@ -23,12 +23,13 @@ Track agent performance and reliability across iterations.
 | - event-emitter.ts | ~80% |
 | - models.ts | 100% |
 | - agent-loop.ts | ~55% |
+| - session-manager.ts | ~75% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
-| 2025-05-28 | 46 | 1 | ✅ | AgentLoop Tests: expanded coverage for core agent loop with tool calls, error handling, and abort (~55% coverage) |
+| 2025-05-28 | 46 | 1 | ✅ | SessionManager Test Coverage: comprehensive unit tests for session-manager.ts (31 tests), covering CRUD, tree, export/import, and bug fix in importSession (~75% coverage) |
 | 2025-05-28 | 44 | 1 | ✅ | SourceInfo Tests: added unit tests for source-info.ts |
 | 2025-05-28 | 45 | 1 | ✅ | AgentLoop Tests: expanded coverage for agent-loop.ts with tool calls, errors, and abort scenarios (~55% coverage) |
 | 2025-05-28 | 43 | 1 | ✅ | Compat Detection Tests: added unit tests for compat-detection.ts |
