@@ -1,6 +1,7 @@
 /** @jsxImportSource react */
 import { useEffect, useState, useCallback } from 'react';
 import type { Message, ToolCall } from '../types.js';
+import { agentMessageToUiMessage as convertAgentMessage } from '../utils/message-converter.js';
 import type { AgentSessionRuntimeEvent } from '../../../runtime/index.js';
 
 // Extend runtime with session methods we need
@@ -26,99 +27,6 @@ type ExtendedRuntime = import('../../../runtime/index.js').AgentSessionRuntimeIn
   settings?: { get?(key: string): any; set?(key: string, value: any): void; save?(): Promise<void> };
 };
 
-function agentMessageToUiMessage(msg: any): Message | null {
-  if (!msg || typeof msg !== 'object') return null;
-  let role: any; // 'user' | 'assistant' | 'tool' | 'bashExecution' | 'compactionSummary' | 'branchSummary' | 'custom'
-  let content = '';
-  let toolCalls: ToolCall[] | undefined;
-  let thinkingBlocks: string[] | undefined;
-
-  if (msg.role === 'user') {
-    role = 'user';
-    if (typeof msg.content === 'string') {
-      content = msg.content;
-    } else if (Array.isArray(msg.content)) {
-      const textBlocks = msg.content.filter((c: any) => c.type === 'text');
-      content = textBlocks.map((c: any) => c.text).join('') || '';
-    }
-  } else if (msg.role === 'assistant') {
-    role = 'assistant';
-    if (Array.isArray(msg.content)) {
-      const textBlocks: string[] = [];
-      const thinking: string[] = [];
-      for (const c of msg.content) {
-        if (c.type === 'text') textBlocks.push(c.text);
-        else if (c.type === 'thinking') thinking.push(c.thinking);
-        else if (c.type === 'toolCall') {
-          // toolCalls handled below
-        }
-      }
-      content = textBlocks.join('');
-      if (thinking.length > 0) thinkingBlocks = thinking;
-      const toolCallBlocks = msg.content.filter((c: any) => c.type === 'toolCall');
-      toolCalls = toolCallBlocks.map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        arguments: c.arguments,
-        status: 'pending' as const,
-      }));
-    } else if (typeof msg.content === 'string') {
-      content = msg.content;
-    }
-  } else if (msg.role === 'tool') {
-    role = 'tool';
-    if (Array.isArray(msg.content)) {
-      content = msg.content.map((c: any) => c.text).join('') || '';
-    } else {
-      content = String(msg.content || '');
-    }
-  } else if (msg.role === 'bashExecution') {
-    role = 'bashExecution';
-    // Preserve bash fields in the returned Message
-    const bashMsg: any = {
-      bashCommand: msg.command,
-      bashOutput: msg.output,
-      bashExitCode: msg.exitCode,
-      bashCancelled: msg.cancelled,
-      bashTruncated: msg.truncated,
-    };
-    return { ...bashMsg, id: msg.id || `msg-${Date.now()}`, role, timestamp: msg.timestamp || Date.now(), content: '', streaming: false } as Message;
-  } else if (msg.role === 'compactionSummary') {
-    role = 'compactionSummary';
-    content = (msg as any).summary?.toString() || msg.content?.toString() || '[Compaction Summary]';
-    const result: Message = { ...base, role: 'compactionSummary' as const, content };
-    if (typeof (msg as any).tokensBefore === 'number') {
-      (result as any).tokensBefore = (msg as any).tokensBefore;
-    }
-    return result;
-  } else if (msg.role === 'branchSummary') {
-    role = 'branchSummary';
-    content = (msg as any).summary?.toString() || msg.content?.toString() || '[Branch Summary]';
-    const result: Message = { ...base, role: 'branchSummary' as const, content };
-    if (typeof (msg as any).fromId === 'string') {
-      (result as any).fromId = (msg as any).fromId;
-    }
-    return result;
-  } else if (msg.role === 'custom') {
-    role = 'custom';
-    const customType = msg.customType;
-    const contentStr = (msg.content && typeof msg.content === 'object')
-      ? JSON.stringify(msg.content)
-      : msg.content?.toString() || '[Custom]';
-    const result: Message = { ...base, role: 'custom' as const, content: contentStr, customType };
-    return result;
-  }
-
-  return {
-    id: msg.id || `msg-${Date.now()}`,
-    role,
-    content,
-    timestamp: msg.timestamp || Date.now(),
-    toolCalls,
-    thinkingBlocks,
-    streaming: false,
-  };
-}
 
 export function useRuntime(runtime: ExtendedRuntime) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -142,7 +50,7 @@ export function useRuntime(runtime: ExtendedRuntime) {
     const sessionMsgs = runtime.session.messages;
     if (Array.isArray(sessionMsgs)) {
       const initial = sessionMsgs
-        .map(agentMessageToUiMessage)
+        .map(convertAgentMessage)
         .filter((msg): msg is Message => msg !== null);
       setMessages(initial);
     }
@@ -189,7 +97,7 @@ export function useRuntime(runtime: ExtendedRuntime) {
           const sessionMsgs = (runtime.session as any).messages;
           if (Array.isArray(sessionMsgs)) {
             const allMessages = sessionMsgs
-              .map(agentMessageToUiMessage)
+              .map(convertAgentMessage)
               .filter((msg): msg is Message => msg !== null);
             setMessages(allMessages);
           }
