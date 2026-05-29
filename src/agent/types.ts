@@ -5,7 +5,7 @@
  */
 
 import type { EventEmitter } from '../events/event-emitter.js';
-import type { Model } from '../llm/index.js';
+import type { Model, Usage } from '../llm/index.js';
 
 // ============================================================================
 // Basic Types
@@ -464,21 +464,6 @@ export interface StreamOptions {
   thinkingBudget?: number;
   transport?: TransportType;
   onPayload?: (payload: unknown) => void;
-}
-
-export interface Usage {
-  input: number;
-  output: number;
-  cacheRead?: number;
-  cacheWrite?: number;
-  totalTokens: number;
-  cost: {
-    input: number;
-    output: number;
-    cacheRead?: number;
-    cacheWrite?: number;
-    total: number;
-  };
 }
 
 export interface LLMMessage {

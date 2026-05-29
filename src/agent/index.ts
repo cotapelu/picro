@@ -55,7 +55,7 @@ export * from '../events/event-guards.js';
 export { isContextOverflow } from './pi-ai-shim.js';
 export { ExtensionRunner, createExtensionRuntime } from '../extensions/runner.js';
 
-// Core Types
+// Core Types (from types.ts)
 export type {
   ConversationTurn,
   SystemTurn,
@@ -71,7 +71,6 @@ export type {
   ThinkingLevel,
   ToolExecutionStrategy,
   TransportType,
-  Usage,
   LLMMessage,
   LLMResponse,
   LLMStreamEvent,
@@ -79,6 +78,9 @@ export type {
   StreamFunction,
   QueueMode,
 } from './types.js';
+
+// LLM types
+ export type { Usage } from '../llm/index.js';
 
 // Components
 export { ContextBuilder } from './context-manager.js';
