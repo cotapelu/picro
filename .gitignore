@@ -2,8 +2,9 @@
 node_modules/
 .pnpm-store/
 
-# Build outputs (dist is tracked, but ignore intermediate build dirs)
-# dist/   <-- keep tracked
+# Build outputs
+# dist/ is now ignored - build artifacts
+dist/
 build/
 *.tsbuildinfo
 
@@ -68,5 +69,3 @@ temp/
 
 # TypeScript
 *.tsbuildinfo
-
-dist/
