@@ -71,6 +71,18 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: The proxy stream processor is critical for routing LLM requests through a proxy server. It was entirely untested, posing a risk for streaming errors. Testing ensures correct event handling, JSON accumulation for tool calls, and edge case behavior.
 - **Impact**: All 665 tests passing now (+10 new). Coverage increased for agent module, improving reliability of proxy streaming.
 
+### Iteration 59: AgentLoop Unit Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for `src/agent/agent-loop.ts` (5 tests) covering construction, initial state, abort, reset, and getState. These tests verify core state management behavior of the AgentLoop class.
+- **Rationale**: AgentLoop is central to agent execution. Previously untested, its state transitions and abort/reset behavior needed verification. These tests provide a safety net for future changes.
+- **Impact**: All 670 tests passing now (+5 new). Coverage increased for agent core.
+
+### Iteration 60: Validation Utilities Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests (5 tests) for `src/llm/utils/validation.ts`, covering `validateToolCall` with tool not found, valid arguments, type mismatch, missing required properties, and argument immutability (clone).
+- **Rationale**: Validation function is used in tool call handling to ensure arguments conform to schemas. It was entirely untested. Testing ensures correct error messages and validation behavior.
+- **Impact**: All 675 tests passing now (+5 new). Coverage increased for LLM utils.
+
 ### Iteration 49: Paths Utils Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `paths.ts` (9 tests) covering `isLocalPath` with various prefixes (npm:, git:, http:, https:, ssh:), whitespace handling, empty strings, and case sensitivity.
