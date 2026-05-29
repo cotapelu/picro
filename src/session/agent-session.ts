@@ -409,6 +409,9 @@ export class AgentSession {
     const previousModel = this._model;
     this._model = model;
 
+    // Update the agent's LLM providers
+    this.agent.setModel(model);
+
     this.sessionManager.appendModelChange(model.provider, model.id);
     this.settingsManager.setDefaultProvider(model.provider);
     this.settingsManager.setDefaultModel(model.id);
@@ -1141,6 +1144,8 @@ export class AgentSession {
     const thinkingLevel = this._getThinkingLevelForModelSwitch(next.thinkingLevel);
 
     this._model = next.model;
+    // Update the agent's LLM providers
+    this.agent.setModel(next.model);
     this.sessionManager.appendModelChange(next.model.provider, next.model.id);
     this.settingsManager.setDefaultProvider(next.model.provider);
     this.settingsManager.setDefaultModel(next.model.id);
@@ -1172,6 +1177,8 @@ export class AgentSession {
     const thinkingLevel = this._getThinkingLevelForModelSwitch();
 
     this._model = nextModel;
+    // Update the agent's LLM providers
+    this.agent.setModel(nextModel);
     this.sessionManager.appendModelChange(nextModel.provider, nextModel.id);
     this.settingsManager.setDefaultProvider(nextModel.provider);
     this.settingsManager.setDefaultModel(nextModel.id);

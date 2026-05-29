@@ -483,6 +483,22 @@ export class Agent {
     return this._currentRunIdlePromise ?? Promise.resolve();
   }
 
+  /**
+   * Set the model for the agent.
+   * Updates the LLM providers for both streaming and non-streaming calls.
+   * @param model - The model to use, or undefined to clear.
+   */
+  setModel(model: Model | undefined): void {
+    this.model = model;
+    if (model) {
+      this.llmProvider = this._createLlmProvider(model);
+      this.streamProvider = this._createStreamProvider(model);
+    } else {
+      this.llmProvider = undefined;
+      this.streamProvider = undefined;
+    }
+  }
+
   // ============================================================================
   // Private methods
   // ============================================================================

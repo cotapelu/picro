@@ -59,7 +59,7 @@ function loadSkillFromFile(filePath: string): Skill | null {
     const name = frontmatter.name || parentDirName;
     const description = frontmatter.description || "";
     const rawFlag = frontmatter["disable-model-invocation"];
-    const disableModelInvocation = rawFlag === true || rawFlag === 'true';
+    const disableModelInvocation = rawFlag === true || String(rawFlag).toLowerCase() === 'true';
 
     // Validate name
     if (!/^[a-z0-9-]+$/.test(name) || name.length > MAX_NAME_LENGTH) {

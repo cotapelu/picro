@@ -195,4 +195,53 @@ describe('Agent', () => {
       expect(resolved).toBe(true);
     });
   });
+
+  describe('setModel', () => {
+    it('should set model and create providers', async () => {
+      const config = createTestConfig();
+      const agent = new Agent(undefined as any, [], config);
+
+      // Check initial state
+      expect((agent as any).llmProvider).toBeUndefined();
+      expect((agent as any).model).toBeUndefined();
+
+      // Create a mock model
+      const mockModel = {
+        id: 'gpt-4',
+        name: 'GPT-4',
+        api: 'openai',
+        provider: 'openai',
+        baseUrl: 'https://api.openai.com/v1',
+        reasoning: false,
+        input: ['text'],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        contextWindow: 128000,
+        maxTokens: 8192,
+      } as any;
+
+      // Call setModel
+      agent.setModel(mockModel);
+
+      // Verify model is set
+      expect((agent as any).model).toBe(mockModel);
+      // Verify providers are created
+      expect((agent as any).llmProvider).toBeDefined();
+      expect((agent as any).streamProvider).toBeDefined();
+    });
+
+    it('should clear providers when setModel(undefined)', async () => {
+      const config = createTestConfig();
+      const agent = new Agent(undefined as any, [], config);
+      agent.setLLMProvider(mockLLMProvider);
+
+      expect((agent as any).llmProvider).toBeDefined();
+
+      // Set model to undefined
+      agent.setModel(undefined);
+
+      expect((agent as any).model).toBeUndefined();
+      expect((agent as any).llmProvider).toBeUndefined();
+      expect((agent as any).streamProvider).toBeUndefined();
+    });
+  });
 });
