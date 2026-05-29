@@ -143,7 +143,7 @@ type ProxyStreamEvent =
   | { type: 'done'; usage: any }
   | { type: 'error'; message: string };
 
-function processProxyEvent(
+export function processProxyEvent(
   event: ProxyStreamEvent,
   partial: AssistantTurn
 ): LLMStreamEvent | null {
