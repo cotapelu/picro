@@ -232,6 +232,15 @@ async function main(): Promise<void> {
   });
   time("createAgentSessionServices");
 
+  // Report diagnostics collected during service creation
+  if (services.diagnostics?.length > 0) {
+    for (const diag of services.diagnostics) {
+      const prefix = diag.type === 'error' ? 'Error' : diag.type === 'warning' ? 'Warning' : 'Info';
+      console.error(`[${prefix}] ${diag.message}`);
+    }
+    // If there were errors, maybe exit? For now just print.
+  }
+
   // Handle --list-models after services ready
   if (parsed.listModels) {
     const search = typeof parsed.listModels === "string" ? parsed.listModels : undefined;
