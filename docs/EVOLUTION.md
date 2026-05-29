@@ -65,6 +65,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Shell utilities are used throughout for safe output handling and environment configuration. Previously uncovered, these functions are now verified for correctness, especially important for display stability and security.
 - **Impact**: All 655 tests passing now (+9 new). Coverage increased for core utils.
 
+### Iteration 58: Proxy Stream Processor Tests
+- **Direction**: Testing & Reliability
+- **Change**: Exported `processProxyEvent` from `src/agent/proxy-stream.ts` and added comprehensive unit tests (10 tests) covering all event types: start, text_delta, thinking_delta, toolcall_delta (creation and accumulation), done, error, and unknown. Tests verify proper mutation of partial AssistantTurn and emitted event shapes.
+- **Rationale**: The proxy stream processor is critical for routing LLM requests through a proxy server. It was entirely untested, posing a risk for streaming errors. Testing ensures correct event handling, JSON accumulation for tool calls, and edge case behavior.
+- **Impact**: All 665 tests passing now (+10 new). Coverage increased for agent module, improving reliability of proxy streaming.
+
 ### Iteration 49: Paths Utils Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `paths.ts` (9 tests) covering `isLocalPath` with various prefixes (npm:, git:, http:, https:, ssh:), whitespace handling, empty strings, and case sensitivity.
