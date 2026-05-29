@@ -373,12 +373,35 @@
         {
           "id": "task-62",
           "content": "Add comprehensive unit tests for AgentLoop to increase coverage (target: from ~55% to >75%). Cover: abort, reset, streaming mode, LLM errors, tool execution errors, memory retrieval failures, transformContext, strategy variations, combineSignals, max rounds, cancellation signal handling, debug emissions, autoSaveMemory.",
-          "status": "in_progress"
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-12",
+      "name": "TUI Modal Test Coverage Expansion",
+      "tasks": [
+        {
+          "id": "task-63",
+          "content": "Add comprehensive unit tests for TUI modal components to increase coverage from 0% to >60% for modal system. Target: CommandPalette, SettingsSelectorModal (all settings), ModelSelectorModal (search/select), SessionSelectorModal (resume/rename/delete), LoginModal (auth flow), HelpModal, ChangelogModal.",
+          "status": "in_progress",
+          "details": "Add comprehensive unit tests for TUI modal components to increase coverage >60% for modal system. Target modals: CommandPalette (already decent), SettingsSelectorModal (expanded), ModelSelectorModal, SessionSelectorModal, LoginModal, HelpModal, ChangelogModal, ConfirmationModal. Approach: Focus on rendering, keyboard navigation, state changes, and integration points. Use ink-testing-library with output snapshot testing. Prioritize SettingsSelectorModal, ModelSelectorModal, and SessionSelectorModal first due to high usage."
+        },
+        {
+          "id": "task-64",
+          "content": "Add tests for MessageItem components still below 80%: AssistantMessage (thinking block toggle), ToolExecution (expand/collapse, error states), BashExecution (truncation, exit codes).",
+          "status": "pending",
+          "details": "These are critical for message display reliability. Cover streaming updates, image rendering, and special cases."
+        },
+        {
+          "id": "task-65",
+          "content": "After modal coverage expansion, re-evaluate overall coverage and identify next highest-impact module (likely session-manager or memory engine).",
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 63,
-  "nextPhaseId": 12,
-  "updatedAt": "2026-05-29T11:40:10.190Z"
+  "nextTaskId": 66,
+  "nextPhaseId": 13,
+  "updatedAt": "2026-05-29T12:35:55.674Z"
 }
