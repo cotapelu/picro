@@ -1,11 +1,11 @@
 # Project State
 
-Last updated: 2025-05-28 (Iteration 56)
+Last updated: 2025-05-28 (Iteration 57)
 
 ## Metrics
-- Total Iterations: 56
-- Test Pass Rate: 100% (646 tests)
-- Coverage: ~49%
+- Total Iterations: 57
+- Test Pass Rate: 100% (655 tests)
+- Coverage: ~50%
 - Build Success Rate: 100%
 - Zero regressions
 
@@ -16,6 +16,7 @@ Last updated: 2025-05-28 (Iteration 56)
 - Hash utility tests (15 tests)
 - Special message component tests (BranchSummary, CompactionSummary, Custom – 11 tests)
 - Extension context tests (15 tests)
+- Shell utilities tests (9 tests)
 - useRuntime refactoring and bug fix
 
 ## Current Priorities
@@ -26,7 +27,7 @@ Last updated: 2025-05-28 (Iteration 56)
 
 ## Known Issues
 - InkApp.tsx still large (~1500 lines) - partial decomposition done.
-- Coverage still below target (~49%).
+- Coverage still below target (~50%).
 - Theme watcher not implemented.
 
 ## Next Steps

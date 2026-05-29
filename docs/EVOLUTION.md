@@ -59,6 +59,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: The extension context is a crucial bridge between extensions and the TUI. It was entirely untested, risking misbehavior in extension interactions. Testing it ensures that extension UI calls are properly routed.
 - **Impact**: All 646 tests passing now (+15 new). Coverage increased for the extension system.
 
+### Iteration 57: Shell Utilities Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests (9 tests) for `src/utils/shell.ts`, covering `sanitizeBinaryOutput` and `getShellEnv`. Verified control character filtering, Unicode format removal, and environment copying.
+- **Rationale**: Shell utilities are used throughout for safe output handling and environment configuration. Previously uncovered, these functions are now verified for correctness, especially important for display stability and security.
+- **Impact**: All 655 tests passing now (+9 new). Coverage increased for core utils.
+
 ### Iteration 49: Paths Utils Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `paths.ts` (9 tests) covering `isLocalPath` with various prefixes (npm:, git:, http:, https:, ssh:), whitespace handling, empty strings, and case sensitivity.
