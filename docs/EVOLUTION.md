@@ -43,6 +43,16 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: Hashing utilities are used for cache key generation, request deduplication, and message fingerprinting. Previously uncovered, these tests ensure correctness for core performance and correctness mechanisms.
 - **Impact**: All 620 tests passing now (+15 new). Coverage increased for LLM-related utilities, particularly around request fingerprinting and caching logic.
 
+### Iteration 55: Special Message Component Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added unit tests for three special TUI message components:
+  - `BranchSummaryMessage` (3 tests)
+  - `CompactionSummaryMessage` (4 tests)
+  - `CustomMessage` (4 tests)
+  Tests cover rendering, edge cases (empty content, zero tokens, special characters), and ensure components integrate correctly with ThemeProvider.
+- **Rationale**: These components are core to displaying branch summaries, compaction results, and extension‑specific messages. They were previously untested, posing a risk for UI regressions. Testing them improves coverage and ensures consistent visual output.
+- **Impact**: All 631 tests passing now (+11 new). Increased coverage for TUI molecule components, reduced UI fragility.
+
 ### Iteration 49: Paths Utils Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `paths.ts` (9 tests) covering `isLocalPath` with various prefixes (npm:, git:, http:, https:, ssh:), whitespace handling, empty strings, and case sensitivity.
