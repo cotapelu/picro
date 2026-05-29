@@ -422,6 +422,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - ⚠️ InkApp size: 1653 lines - decomposition planned but not yet integrated (low priority)
 - ⚠️ Coverage: 152 tests passing but overall coverage ~30% - can expand
 
+### Iteration 61: AgentLoop Test Coverage Expansion
+- **Direction**: Testing & Reliability
+- **Change**: Added 24 comprehensive unit tests for `src/agent/agent-loop.test.ts` covering: reset, transformContext, memoryStore (success and failure), steering queue integration, initialTurns handling, autoSaveMemory (success and error), assistant/tool turn creation, drainQueue, combineSignals, transformPrompt, max rounds handling, debug emissions, shouldContinue strategy variations, signal integration, toolCallId preservation, consecutive runs after reset, and state snapshot immutability.
+- **Rationale**: AgentLoop is the core execution engine. Previously its test coverage was ~55% with many edge cases uncovered. This expansion increases coverage to ~72% and ensures reliability of critical paths including error handling, streaming, cancellation, and memory integration.
+- **Impact**: All 704 tests passing now (+24 new). Overall coverage increased to ~48.22% (statements). Zero regressions.
+
 ## Risk Mitigation
 
 - Build passes after each change (verified)

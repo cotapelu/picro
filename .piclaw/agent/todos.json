@@ -365,9 +365,20 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-11",
+      "name": "Increase AgentLoop Test Coverage",
+      "tasks": [
+        {
+          "id": "task-62",
+          "content": "Add comprehensive unit tests for AgentLoop to increase coverage (target: from ~55% to >75%). Cover: abort, reset, streaming mode, LLM errors, tool execution errors, memory retrieval failures, transformContext, strategy variations, combineSignals, max rounds, cancellation signal handling, debug emissions, autoSaveMemory.",
+          "status": "in_progress"
+        }
+      ]
     }
   ],
-  "nextTaskId": 62,
-  "nextPhaseId": 11,
-  "updatedAt": "2026-05-26T09:07:51.346Z"
+  "nextTaskId": 63,
+  "nextPhaseId": 12,
+  "updatedAt": "2026-05-29T11:40:10.190Z"
 }

@@ -2,19 +2,19 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-05-28)
+## Current Metrics (as of 2025-05-29)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 60 |
-| Tasks Completed | 83 |
+| Total Iterations | 61 |
+| Tasks Completed | 107 |
 | Test Failure Rate | 0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (675 tests) |
-| Coverage (overall) | ~44.5% |
+| Test Pass Rate | 100% (704 tests) |
+| Coverage (overall) | ~48.22% |
 | Coverage (key modules): |
 | - loop-strategy.ts | 93.33% |
 | - message-queue.ts | ~98% |
@@ -22,7 +22,7 @@ Track agent performance and reliability across iterations.
 | - overflow.ts | ~95% |
 | - event-emitter.ts | ~80% |
 | - models.ts | 100% |
-| - agent-loop.ts | ~55% |
+| - agent-loop.ts | ~72% |
 | - session-manager.ts | ~75% |
 | - convert-to-llm.ts | 100% |
 | - paths.ts | 100% |
@@ -32,6 +32,7 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-05-29 | 61 | 24 | ✅ | AgentLoop coverage boost: added 24 comprehensive unit tests covering reset, transformContext, memoryStore (success/failure), steering queue, initialTurns, autoSaveMemory, turn creation, drainQueue, combineSignals, transformPrompt, max rounds, debug emissions, shouldContinue, signal integration, toolCallId, consecutive runs, and snapshot integrity. Overall coverage ~48.22%, agent-loop.ts ~72%.
 | 2025-05-28 | 50 | 1 | ✅ | Compaction Utilities Tests: unit tests for compaction.ts (13 tests) covering estimateTokens, shouldCompact, file ops tracking, and formatting |
 | 2025-05-28 | 51 | 2 | ✅ | Integrated command-handlers (handleSelectCommand) and fixed manual slash command handling; fixed parseArgs bugs; all 572 tests passing |
 | 2025-05-28 | 49 | 1 | ✅ | Paths Utils Tests: unit tests for paths.ts (9 tests) covering isLocalPath prefixes, whitespace, and case sensitivity |
