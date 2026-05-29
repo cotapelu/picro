@@ -1,11 +1,11 @@
 # Project State
 
-Last updated: 2025-05-28 (Iteration 55)
+Last updated: 2025-05-28 (Iteration 56)
 
 ## Metrics
-- Total Iterations: 55
-- Test Pass Rate: 100% (631 tests)
-- Coverage: ~48%
+- Total Iterations: 56
+- Test Pass Rate: 100% (646 tests)
+- Coverage: ~49%
 - Build Success Rate: 100%
 - Zero regressions
 
@@ -15,6 +15,7 @@ Last updated: 2025-05-28 (Iteration 55)
 - Message converter extraction and comprehensive tests (21 tests)
 - Hash utility tests (15 tests)
 - Special message component tests (BranchSummary, CompactionSummary, Custom – 11 tests)
+- Extension context tests (15 tests)
 - useRuntime refactoring and bug fix
 
 ## Current Priorities
@@ -25,12 +26,12 @@ Last updated: 2025-05-28 (Iteration 55)
 
 ## Known Issues
 - InkApp.tsx still large (~1500 lines) - partial decomposition done.
-- Coverage still below target (~48%).
+- Coverage still below target (~49%).
 - Theme watcher not implemented.
 
 ## Next Steps
 - Add tests for remaining low-coverage modules (e.g., session manager, agent loop).
-- Continue component tests for missing message types.
+- Continue component tests for missing types.
 - Start systematic InkApp decomposition into smaller hooks.
 - Implement theme watcher based on system preference.
 - Maintain 100% test pass rate.

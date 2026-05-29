@@ -53,6 +53,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: These components are core to displaying branch summaries, compaction results, and extension‑specific messages. They were previously untested, posing a risk for UI regressions. Testing them improves coverage and ensures consistent visual output.
 - **Impact**: All 631 tests passing now (+11 new). Increased coverage for TUI molecule components, reduced UI fragility.
 
+### Iteration 56: Extension Context Tests
+- **Direction**: Testing & Reliability
+- **Change**: Added comprehensive unit tests (15 tests) for `createExtensionUIContext` factory in `src/tui/ink/extension-context.ts`. Tests cover all stub methods, forwarding logic to the underlying InkApp instance, and edge cases.
+- **Rationale**: The extension context is a crucial bridge between extensions and the TUI. It was entirely untested, risking misbehavior in extension interactions. Testing it ensures that extension UI calls are properly routed.
+- **Impact**: All 646 tests passing now (+15 new). Coverage increased for the extension system.
+
 ### Iteration 49: Paths Utils Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `paths.ts` (9 tests) covering `isLocalPath` with various prefixes (npm:, git:, http:, https:, ssh:), whitespace handling, empty strings, and case sensitivity.
