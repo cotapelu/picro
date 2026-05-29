@@ -105,6 +105,4 @@ describe('handleCommand', () => {
     const result = await handleCommand(ctx, 'unknown', '/unknown');
     expect(result).toBe('insert');
   });
-
-  // Additional tests can be added for other commands as needed
 });
