@@ -384,4 +384,87 @@ describe('ToolExecutor', () => {
       // No error means pass
     });
   });
+
+  describe('prepareArguments', () => {
+    it('should apply prepareArguments before execution', async () => {
+      executor = new ToolExecutor();
+      const tool: ToolDefinition = {
+        name: 'upper',
+        description: 'uppercase',
+        parameters: {
+          type: 'object',
+          properties: { str: { type: 'string' } },
+          required: ['str'],
+        } as any,
+        handler: async (args: any) => args.str,
+        prepareArguments: async (args: any) => ({ str: args.value?.toUpperCase() ?? '' }),
+      };
+      executor.register(tool);
+
+      const result = await executor.execute(buildToolCall('upper', { value: 'hello' }), buildContext());
+
+      expect(result.isError).toBe(false);
+      expect(result.result).toBe('HELLO');
+    });
+
+    it('should propagate prepareArguments errors', async () => {
+      executor = new ToolExecutor();
+      const tool: ToolDefinition = {
+        name: 'fail-prepare',
+        description: 'fail',
+        parameters: { type: 'object', properties: {} } as any,
+        handler: async () => 'unreachable',
+        prepareArguments: async () => { throw new Error('prepare failed'); },
+      };
+      executor.register(tool);
+
+      const result = await executor.execute(buildToolCall('fail-prepare', {}), buildContext());
+
+      expect(result.isError).toBe(true);
+      expect((result as any).error).toContain('prepareArguments failed');
+    });
+
+    it('should pass transformed args to before hook, handler, after hook, and cache', async () => {
+      const emitter = new EventEmitter();
+      executor = new ToolExecutor({ emitter, cacheEnabled: true });
+
+      const beforeArgs: any[] = [];
+      executor.config.beforeToolCall = async (ctx) => {
+        beforeArgs.push(ctx.args);
+      };
+      const afterArgs: any[] = [];
+      executor.config.afterToolCall = async (ctx) => {
+        afterArgs.push(ctx.args);
+      };
+
+      const tool: ToolDefinition = {
+        name: 'spy',
+        description: 'spy',
+        parameters: {
+          type: 'object',
+          properties: { a: { type: 'string' }, b: { type: 'string' } },
+          required: ['a'],
+        } as any,
+        handler: async (args: any) => JSON.stringify(args),
+        prepareArguments: async (args: any) => ({ ...args, b: 'prepared' }),
+      };
+      executor.register(tool);
+
+      // First call
+      const res1 = await executor.execute(buildToolCall('spy', { a: 'x' }), buildContext());
+      expect(res1.isError).toBe(false);
+      expect(JSON.parse(res1.result)).toEqual({ a: 'x', b: 'prepared' });
+
+      // Second call with same original args should hit cache (handler not called again)
+      let handlerCalls = 0;
+      tool.handler = async (args: any) => { handlerCalls++; return JSON.stringify(args); };
+      const res2 = await executor.execute(buildToolCall('spy', { a: 'x' }), buildContext());
+      expect(res2.isError).toBe(false);
+      expect(handlerCalls).toBe(0); // cached
+
+      // before/after should have captured transformed args
+      expect(beforeArgs[0]).toEqual({ a: 'x', b: 'prepared' });
+      expect(afterArgs[0]).toEqual({ a: 'x', b: 'prepared' });
+    });
+  });
 });

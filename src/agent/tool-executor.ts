@@ -139,28 +139,39 @@ export class ToolExecutor {
        return this.createErrorResult(toolCall, `Tool '${toolCall.name}' not found`, startTime);
      }
 
-     // Build metadata
+     // Build metadata (keep original arguments for logging)
      const metadata: ToolExecutionMetadata = {
        toolName: toolCall.name,
        toolCallId: toolCall.id,
        arguments: toolCall.arguments,
      };
 
-     // Validate tool arguments against schema if available
+     // Prepare arguments (if tool defines prepareArguments)
+     let actualArgs = toolCall.arguments;
+     if (tool.prepareArguments) {
+       try {
+         actualArgs = await tool.prepareArguments(toolCall.arguments, context);
+       } catch (error: any) {
+         const errorMsg = error?.message ?? String(error);
+         return this.createErrorResult(toolCall, `prepareArguments failed: ${errorMsg}`, startTime);
+       }
+     }
+
+     // Validate tool arguments against schema if available (use prepared args)
      if (tool.parameters) {
-       const validation = validateToolArguments(tool.parameters, toolCall.arguments);
+       const validation = validateToolArguments(tool.parameters, actualArgs);
        if (!validation.valid) {
          const errorMsg = `Invalid arguments for tool '${toolCall.name}': ${validation.errors?.join('; ') || 'validation failed'}`;
          return this.createErrorResult(toolCall, errorMsg, startTime);
        }
      }
 
-     // Before hook
+     // Before hook (use prepared args)
      if (this.config.beforeToolCall) {
        const before = await this.config.beforeToolCall(
          {
            toolCall: toolCall,
-           args: toolCall.arguments,
+           args: actualArgs,
            round: context.round,
          },
          signal
@@ -174,9 +185,9 @@ export class ToolExecutor {
        }
      }
 
-     // Cache check
+     // Cache check (use prepared args for cache key)
      if (this.config.cacheEnabled) {
-       const cacheKey = this.buildCacheKey(toolCall);
+       const cacheKey = this.buildCacheKey(toolCall, actualArgs);
        const cached = this.cache.get(cacheKey);
        if (cached) {
          return cached;
@@ -187,7 +198,7 @@ export class ToolExecutor {
        // Emit tool call start
        await this.emitToolCallStart(metadata);
 
-       // Execute with timeout and signal
+       // Execute with timeout and signal (use prepared args)
        const rawResult = await this.executeWithTimeout(
          async () => {
            // Check if the tool handler accepts an onProgress callback
@@ -202,10 +213,10 @@ export class ToolExecutor {
                return;
              };
              
-             return await tool.handler(toolCall.arguments, context, onProgressWrapper);
+             return await tool.handler(actualArgs, context, onProgressWrapper);
            } else {
              // Tool handler doesn't accept onProgress, call it normally
-             return await tool.handler(toolCall.arguments, context);
+             return await tool.handler(actualArgs, context);
            }
          },
          this.config.timeout,
@@ -229,7 +240,7 @@ export class ToolExecutor {
          const after = await this.config.afterToolCall(
            {
              toolCall: toolCall,
-             args: toolCall.arguments,
+             args: actualArgs,
              result,
              isError: false,
              round: context.round,
@@ -249,9 +260,9 @@ export class ToolExecutor {
          }
        }
 
-       // Cache if enabled
+       // Cache if enabled (use the same key as cache check)
        if (this.config.cacheEnabled) {
-         const cacheKey = this.buildCacheKey(toolCall);
+         const cacheKey = this.buildCacheKey(toolCall, actualArgs);
          // LRU eviction: remove oldest entry if at capacity
          const maxSize = this.config.cacheSize ?? 1000;
          if (maxSize !== 0 && this.cache.size >= maxSize) {
@@ -281,7 +292,7 @@ export class ToolExecutor {
          const after = await this.config.afterToolCall(
            {
              toolCall: toolCall,
-             args: toolCall.arguments,
+             args: actualArgs,
              result,
              isError: true,
              round: context.round,
@@ -367,8 +378,8 @@ export class ToolExecutor {
     };
   }
 
-  private buildCacheKey(toolCall: ToolCallData): string {
-    return `${toolCall.name}:${JSON.stringify(toolCall.arguments)}`;
+  private buildCacheKey(toolCall: ToolCallData, actualArgs: Record<string, unknown>): string {
+    return `${toolCall.name}:${JSON.stringify(actualArgs)}`;
   }
 
   private normalizeResult(result: unknown): string {

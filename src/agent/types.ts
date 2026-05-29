@@ -110,6 +110,12 @@ export interface ToolDefinition {
     required?: string[];
   };
   handler: ToolHandler;
+  /**
+   * Optional hook to transform or validate arguments before they are passed to the handler.
+   * This runs AFTER schema validation (if parameters present) but BEFORE execution.
+   * Return the processed arguments object. Throw to reject the tool call.
+   */
+  prepareArguments?: (args: Record<string, unknown>, context: ToolContext) => Record<string, unknown> | Promise<Record<string, unknown>>;
 }
 
 export interface ToolContext {
