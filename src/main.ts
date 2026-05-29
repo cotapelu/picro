@@ -229,6 +229,13 @@ async function main(): Promise<void> {
   const services = await createAgentSessionServices({
     cwd,
     agentDir,
+    resourceLoaderOptions: {
+      noExtensions: parsed.noExtensions,
+      noSkills: parsed.noSkills,
+      noPromptTemplates: parsed.noPromptTemplates,
+      noThemes: parsed.noThemes,
+      noContextFiles: parsed.noContextFiles,
+    },
   });
   time("createAgentSessionServices");
 
