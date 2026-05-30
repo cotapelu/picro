@@ -1,12 +1,12 @@
 # Project State
 
-Last updated: 2025-05-30 (Iteration 70)
+Last updated: 2025-05-30 (Iteration 71)
 
 ## Metrics
-- Total Iterations: 70
-- Tasks Completed: 162
-- Test Pass Rate: 100% (949/949 tests)
-- Coverage: ~56.5% overall
+- Total Iterations: 71
+- Tasks Completed: 168
+- Test Pass Rate: 100% (955/955 tests)
+- Coverage: ~57.0% overall
   - command-handlers: 80%
   - useRuntime: 93%
   - session-manager: 81%
@@ -19,6 +19,9 @@ Last updated: 2025-05-30 (Iteration 70)
 - Build Success Rate: 100%
 - Zero regressions
 
+## Completed Features (Iteration 71)
+- **Modal interaction tests**: Expanded tests for ConfirmationModal (3 interaction tests for toggle, confirm, cancel) and HotkeysModal (3 interaction tests for Escape handling, ignore other keys). Improved modal reliability.
+
 ## Completed Features (Iteration 70)
 - **Path utilities tests**: Added 14 unit tests for src/tools/path-utils.ts covering expandPath, resolveToCwd, and validatePathWithinBase. Improved reliability of path handling.
 
@@ -29,7 +32,7 @@ Last updated: 2025-05-30 (Iteration 70)
 
 ## Known Issues
 - Some modals (SessionSelector, ModelSelector, SettingsSelector) have minimal test coverage
-- Overall coverage at ~56.5%, still need ~3.5% to reach >60%
+- Overall coverage at ~57.0%, still need ~3% to reach >60%
 
 ## Next Steps
 - Add tests for remaining modals (SessionSelector, ModelSelector, SettingsSelector, ScopedModelsSelector, Login)

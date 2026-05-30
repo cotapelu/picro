@@ -2,19 +2,19 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-05-30, Iteration 70)
+## Current Metrics (as of 2025-05-30, Iteration 71)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 70 |
-| Tasks Completed | 162 |
+| Total Iterations | 71 |
+| Tasks Completed | 168 |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (949/949 tests) |
-| Coverage (overall) | ~56.5% |
+| Test Pass Rate | 100% (955/955 tests) |
+| Coverage (overall) | ~57.0% |
 | Coverage (key modules): |
 | - command-handlers.ts | 80.34% |
 | - useRuntime.ts | 93.05% |
@@ -30,6 +30,7 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-05-30 | 71 | 6 | ✅ | **Modal interaction tests:** Added 3 interaction tests for ConfirmationModal (toggle, confirm, cancel) and 3 for HotkeysModal (Escape handling, ignore other keys). Tests: 955 passing. Coverage increased to ~57.0%.
 | 2025-05-30 | 70 | 14 | ✅ | **Path utilities tests:** Added 14 unit tests for path-utils covering expandPath, resolveToCwd, and validatePathWithinBase. Tests: 949 passing. Coverage improved for core path handling.
 | 2025-05-30 | 69 | 13 | ✅ | **Truncate utility tests:** Added 13 unit tests covering truncateHead, truncateTail, truncateLines, and truncateOutput functions. Tests: 935 passing. Coverage increased to ~56.2%. |
 | 2025-05-30 | 68 | 6 | ✅ | **Shell kill tests:** Added killProcessTree (4 tests) and killTrackedDetachedChildren (2 tests) to utils/shell.test.ts; improved coverage of process management; total tests 922 passing. |
