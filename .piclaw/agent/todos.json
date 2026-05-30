@@ -496,9 +496,30 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-19",
+      "name": "InputBox Coverage Expansion",
+      "tasks": [
+        {
+          "id": "task-77",
+          "content": "Expand InputBox.test.tsx from ~14% to >70% coverage. Test all keyboard interactions (Enter, Backspace, Arrow keys, Ctrl+A/E, Tab completion, Ctrl+K/Y kill ring), slash command detection, autocomplete logic, error handling, and edge cases (empty, long input, unicode).",
+          "status": "completed"
+        },
+        {
+          "id": "task-78",
+          "content": "Add tests for remaining modals: SessionSelectorModal, SettingsSelectorModal, ModelSelectorModal, TreeSelectorModal, UserMessageSelectorModal, ChangelogModal, HotkeysModal, StatsModal, BashOutputModal, InputModal, SelectModal.",
+          "status": "in_progress"
+        },
+        {
+          "id": "task-79",
+          "content": "Start systematic InkApp decomposition: extract useModals hook (moderate risk, high impact).",
+          "status": "pending"
+        }
+      ]
     }
   ],
-  "nextTaskId": 77,
-  "nextPhaseId": 19,
-  "updatedAt": "2026-05-30T02:22:26.988Z"
+  "nextTaskId": 80,
+  "nextPhaseId": 20,
+  "updatedAt": "2026-05-30T02:37:34.742Z"
 }
