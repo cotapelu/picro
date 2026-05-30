@@ -572,17 +572,17 @@
         {
           "id": "task-87",
           "content": "Add tests for src/llm/overflow.ts: test truncateContext, smartTruncate, edge cases (empty, long messages, token boundaries). Target coverage from ~30% to >80%.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-88",
           "content": "Add tests for src/llm/utils/validation.ts: test validateToolCall, validateMessages, error cases. Increase from ~40% to >80%",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-89",
           "content": "Add tests for src/runtime/settings-validator.ts: test all validation rules, error messages. Increase from ~50% to >90%.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-90",
@@ -594,5 +594,5 @@
   ],
   "nextTaskId": 91,
   "nextPhaseId": 23,
-  "updatedAt": "2026-05-30T03:09:56.944Z"
+  "updatedAt": "2026-05-30T03:26:09.301Z"
 }

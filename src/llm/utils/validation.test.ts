@@ -35,4 +35,53 @@ describe('validateToolCall', () => {
     expect(result).not.toBe(originalArgs);
     expect(result).toEqual(originalArgs);
   });
+
+  it('should coerce numeric strings to numbers', () => {
+    const tools = [{ name: 'calc', parameters: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'number' } } } }];
+    const toolCall = { name: 'calc', arguments: { x: '10', y: '20' } };
+    const result = validateToolCall(tools, toolCall);
+    expect(result.x).toBe(10);
+    expect(result.y).toBe(20);
+  });
+
+  it('should handle optional properties', () => {
+    const tools = [{ name: 'search', parameters: { type: 'object', properties: { query: { type: 'string' }, limit: { type: 'number' } } } }];
+    const toolCall = { name: 'search', arguments: { query: 'test' } };
+    const result = validateToolCall(tools, toolCall);
+    expect(result.query).toBe('test');
+    expect(result.limit).toBeUndefined();
+  });
+
+  it('should validate array items', () => {
+    const tools = [{ name: 'bulk', parameters: { type: 'object', properties: { items: { type: 'array', items: { type: 'string' } } } } }];
+    const toolCall = { name: 'bulk', arguments: { items: ['a', 'b', 'c'] } };
+    const result = validateToolCall(tools, toolCall);
+    expect(result.items).toEqual(['a', 'b', 'c']);
+  });
+
+  it('should throw for invalid array item type', () => {
+    const tools = [{ name: 'bulk', parameters: { type: 'object', properties: { items: { type: 'array', items: { type: 'number' } } } } }];
+    const toolCall = { name: 'bulk', arguments: { items: [1, 'two'] } };
+    expect(() => validateToolCall(tools, toolCall)).toThrow(/lỗi validate/);
+  });
+
+  it('should handle nested objects', () => {
+    const tools = [{
+      name: 'complex',
+      parameters: {
+        type: 'object',
+        properties: {
+          config: {
+            type: 'object',
+            properties: {
+              timeout: { type: 'number' },
+            },
+          },
+        },
+      },
+    }];
+    const toolCall = { name: 'complex', arguments: { config: { timeout: 5000 } } };
+    const result = validateToolCall(tools, toolCall);
+    expect(result.config.timeout).toBe(5000);
+  });
 });
