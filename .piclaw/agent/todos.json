@@ -564,9 +564,35 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-22",
+      "name": "Final Push to 60%+ Coverage",
+      "tasks": [
+        {
+          "id": "task-87",
+          "content": "Add tests for src/llm/overflow.ts: test truncateContext, smartTruncate, edge cases (empty, long messages, token boundaries). Target coverage from ~30% to >80%.",
+          "status": "pending"
+        },
+        {
+          "id": "task-88",
+          "content": "Add tests for src/llm/utils/validation.ts: test validateToolCall, validateMessages, error cases. Increase from ~40% to >80%",
+          "status": "pending"
+        },
+        {
+          "id": "task-89",
+          "content": "Add tests for src/runtime/settings-validator.ts: test all validation rules, error messages. Increase from ~50% to >90%.",
+          "status": "pending"
+        },
+        {
+          "id": "task-90",
+          "content": "Expand tests for simple TUI components: Armin.tsx, ThemeProvider.tsx to increase UI coverage.",
+          "status": "in_progress"
+        }
+      ]
     }
   ],
-  "nextTaskId": 87,
-  "nextPhaseId": 22,
-  "updatedAt": "2026-05-30T03:08:41.794Z"
+  "nextTaskId": 91,
+  "nextPhaseId": 23,
+  "updatedAt": "2026-05-30T03:09:56.944Z"
 }
