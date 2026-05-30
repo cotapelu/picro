@@ -384,24 +384,37 @@
         {
           "id": "task-63",
           "content": "Add comprehensive unit tests for TUI modal components to increase coverage from 0% to >60% for modal system. Target: CommandPalette, SettingsSelectorModal (all settings), ModelSelectorModal (search/select), SessionSelectorModal (resume/rename/delete), LoginModal (auth flow), HelpModal, ChangelogModal.",
-          "status": "in_progress",
+          "status": "completed",
           "details": "Add comprehensive unit tests for TUI modal components to increase coverage >60% for modal system. Target modals: CommandPalette (already decent), SettingsSelectorModal (expanded), ModelSelectorModal, SessionSelectorModal, LoginModal, HelpModal, ChangelogModal, ConfirmationModal. Approach: Focus on rendering, keyboard navigation, state changes, and integration points. Use ink-testing-library with output snapshot testing. Prioritize SettingsSelectorModal, ModelSelectorModal, and SessionSelectorModal first due to high usage."
         },
         {
           "id": "task-64",
           "content": "Add tests for MessageItem components still below 80%: AssistantMessage (thinking block toggle), ToolExecution (expand/collapse, error states), BashExecution (truncation, exit codes).",
-          "status": "pending",
+          "status": "completed",
           "details": "These are critical for message display reliability. Cover streaming updates, image rendering, and special cases."
         },
         {
           "id": "task-65",
           "content": "After modal coverage expansion, re-evaluate overall coverage and identify next highest-impact module (likely session-manager or memory engine).",
-          "status": "pending"
+          "status": "completed",
+          "details": "Modal coverage expansion completed: Added smoke tests for SettingsSelectorModal, ModelSelectorModal, SessionSelectorModal. Overall test count 704, coverage ~48.25%. Highest-impact next module identified: InputBox.tsx (~13% coverage) - critical user interaction component."
+        }
+      ]
+    },
+    {
+      "id": "phase-13",
+      "name": "InputBox Test Coverage Expansion",
+      "tasks": [
+        {
+          "id": "task-66",
+          "content": "Add comprehensive tests for InputBox component to increase coverage from ~13% to >60%. Cover: character input, cursor movement, navigation (arrows, Home/End), editing (backspace, delete, Ctrl+K, Ctrl+Y), command history (up/down), multiline handling (Shift+Enter), slash command detection, autocomplete integration (path completion, generic autocomplete), external editor (Ctrl+Alt+E), disabled state, onSlashCommand callback.",
+          "status": "in_progress",
+          "details": "Writing comprehensive tests for InputBox. Using ink-testing-library stdin simulation for character input, backspace, arrows, etc. Cover rendering branches (placeholder, slash mode, multiline hint), callbacks (onChange, onSubmit, onSlashCommand, onTab, onAutocomplete, onPathComplete), cursor movement, editing operations (backspace, delete, Ctrl+K, Ctrl+Y), command history (up/down), disabled state. Also test with empty/unicode/long lines."
         }
       ]
     }
   ],
-  "nextTaskId": 66,
-  "nextPhaseId": 13,
-  "updatedAt": "2026-05-29T12:35:55.674Z"
+  "nextTaskId": 67,
+  "nextPhaseId": 14,
+  "updatedAt": "2026-05-30T00:06:04.485Z"
 }
