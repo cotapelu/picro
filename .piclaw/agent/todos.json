@@ -546,27 +546,27 @@
         {
           "id": "task-83",
           "content": "Add tests for src/extensions/loader.ts: test loadExtension, collision detection, error handling. Target coverage from ~14% to >50%.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-84",
           "content": "Add tests for src/extensions/runner.ts: test extension runtime, command/tool registration, event forwarding. Target coverage from ~10% to >50%",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-85",
           "content": "Add tests for remaining TUI utilities: src/tui/ink/utils/output-guard.ts (already 91% done, but ensure edge cases), src/utils/paths.ts (if still low).",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-86",
           "content": "Expand InputBox tests: add tests for onPathComplete, onAutocomplete integrations, and more edge cases to push from 4 tests to >15 tests.",
-          "status": "in_progress"
+          "status": "completed"
         }
       ]
     }
   ],
   "nextTaskId": 87,
   "nextPhaseId": 22,
-  "updatedAt": "2026-05-30T02:57:26.721Z"
+  "updatedAt": "2026-05-30T03:08:41.794Z"
 }
