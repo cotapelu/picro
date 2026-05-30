@@ -487,3 +487,12 @@ The Picro TUI is **production-ready** with comprehensive functionality:
 - Zero regressions across 60 tasks
 
 **Note**: Iteration 8 was an analysis/planning iteration that produced extraction artifacts (`command-handlers.ts`, `modal-renderers.tsx`, `useModal.ts`) but deferred integration to keep the system stable. Actual integration can be done in a future iteration when needed.
+
+### Iteration 66: Test Coverage Expansion (Utils, Runtime, Proxy, Modals)
+- **Direction**: Testing & Reliability
+- **Change**: 
+  - Added tests for `utils/timings` (8 tests) and `utils/child-process` (11 tests, ~94% coverage)
+  - Added tests for `runtime/resource-loader` (15 tests) and `agent/proxy-stream` (15 tests)
+  - Added tests for modal components: ThinkingModal (6 tests, 100% coverage), HotkeysModal (1), ChangelogModal (1), TreeSelectorModal (8)
+- **Rationale**: Increase overall test coverage, especially for low‑coverage utility and runtime modules. Provide basic modal test coverage to ensure UI stability.
+- **Impact**: Overall coverage ~53.5%, test count 874 with 100% pass rate. Zero regressions.
