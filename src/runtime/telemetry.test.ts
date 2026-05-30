@@ -1,46 +1,55 @@
 // SPDX-License-Identifier: Apache-2.0
-/**
- * Unit tests for Telemetry.
- */
-
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Telemetry, setTelemetry, getTelemetry } from './telemetry.js';
+import { describe, it, expect, vi } from 'vitest';
+import { Telemetry } from './telemetry.js';
 
 describe('Telemetry', () => {
+  let telemetry: Telemetry;
+
   beforeEach(() => {
-    // Reset global telemetry between tests
-    setTelemetry(new Telemetry({ enabled: false }));
+    telemetry = new Telemetry();
   });
 
-  it('should not emit when disabled', () => {
-    const telemetry = getTelemetry();
-    const listener = vi.fn();
-    telemetry.on(listener);
+  it('default disabled', () => {
+    expect(telemetry.isEnabled()).toBe(false);
+  });
+
+  it('setEnabled toggles', () => {
+    telemetry.setEnabled(true);
+    expect(telemetry.isEnabled()).toBe(true);
+    telemetry.setEnabled(false);
+    expect(telemetry.isEnabled()).toBe(false);
+  });
+
+  it('track does nothing when disabled', () => {
     telemetry.track('agent.start');
-    expect(listener).not.toHaveBeenCalled();
+    expect(telemetry['queue']).toHaveLength(0);
   });
 
-  it('should emit when enabled', () => {
-    const telemetry = new Telemetry({ enabled: true });
-    setTelemetry(telemetry);
+  it('track enqueues when rate limited', () => {
+    telemetry.setEnabled(true);
+    telemetry['lastSent'] = Date.now(); // now, rate limited
+    telemetry.track('event');
+    expect(telemetry['queue']).toHaveLength(1);
+  });
+
+  it('can subscribe and receive events', () => {
+    telemetry = new Telemetry({ enabled: true });
     const listener = vi.fn();
     telemetry.on(listener);
-    telemetry.track('agent.start', { foo: 'bar' });
+
+    telemetry.track('session.created');
+
     expect(listener).toHaveBeenCalledWith(
-      expect.objectContaining({ event: 'agent.start', properties: { foo: 'bar' } })
+      expect.objectContaining({ event: 'session.created' })
     );
   });
 
-  it('should queue events when rate limited', () => {
-    const telemetry = new Telemetry({ enabled: true, rateLimitMs: 1000 });
-    setTelemetry(telemetry);
+  it('unsubscribe works', () => {
+    telemetry = new Telemetry({ enabled: true });
     const listener = vi.fn();
-    telemetry.on(listener);
-
-    telemetry.track('agent.start', {}); // first sent immediately
-    telemetry.track('tool.executed', {}); // second within limit -> queued
-
-    expect(listener).toHaveBeenCalledTimes(1);
-    expect(telemetry.getQueueSize()).toBe(1);
+    const off = telemetry.on(listener);
+    off();
+    telemetry.track('agent.start');
+    expect(listener).not.toHaveBeenCalled();
   });
 });
