@@ -2,19 +2,19 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-05-30)
+## Current Metrics (as of 2025-05-30, Iteration 68)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 67 |
-| Tasks Completed | 129 |
+| Total Iterations | 68 |
+| Tasks Completed | 135 |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (916/916 tests) |
-| Coverage (overall) | ~55.4% |
+| Test Pass Rate | 100% (922/922 tests) |
+| Coverage (overall) | ~55.8% |
 | Coverage (key modules): |
 | - command-handlers.ts | 80.34% |
 | - useRuntime.ts | 93.05% |
@@ -30,6 +30,7 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-05-30 | 68 | 6 | ✅ | **Shell kill tests:** Added killProcessTree (4 tests) and killTrackedDetachedChildren (2 tests) to utils/shell.test.ts; improved coverage of process management; total tests 922 passing. |
 | 2025-05-30 | 67 | 1 | ✅ | **InputBox test expansion:** Added 42 comprehensive interaction tests; InputBox coverage increased from ~13% to 92.46%. Overall coverage ~55.4%, 916 tests passing. |
 | 2025-05-30 | 66 | 4 | ✅ | **Test Coverage Expansion:** Added tests for utils/timings (8), utils/child-process (11), runtime/resource-loader (15), agent/proxy-stream (15), and modals (ThinkingModal: 6, HotkeysModal: 1, ChangelogModal: 1, TreeSelectorModal: 8). Overall coverage ~53.5%, 874 tests passing. |
 | 2025-05-30 | 65 | 4 | ✅ | **InputBox & Shell Tests:** InputBox basic tests (4), shell.test.ts (8) covering sanitizeBinaryOutput, getShellEnv, child tracking. Overall coverage ~54-55%, 820/821 tests passing. |

@@ -1,15 +1,39 @@
 // SPDX-License-Identifier: Apache-2.0
-import { vi, describe, it, expect } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
-// Mock fs existsSync to avoid real filesystem access during module load
-vi.mock('fs', () => ({
-  __esModule: true,
-  default: {},
-  existsSync: vi.fn(),
-}));
+// Mock fs existsSync
+vi.mock('fs', () => {
+  const existsSyncMock = vi.fn();
+  return {
+    __esModule: true,
+    default: { existsSync: existsSyncMock },
+    existsSync: existsSyncMock,
+  };
+});
 
 import { existsSync } from 'fs';
-import { sanitizeBinaryOutput, getShellEnv, getShellConfig, trackDetachedChildPid, untrackDetachedChildPid } from './shell';
+
+// Mock child_process to prevent actual spawning
+vi.mock('child_process', () => {
+  const spawnMock = vi.fn(() => ({} as any));
+  const spawnSyncMock = vi.fn(() => ({} as any));
+  return {
+    __esModule: true,
+    default: { spawn: spawnMock, spawnSync: spawnSyncMock },
+    spawn: spawnMock,
+    spawnSync: spawnSyncMock,
+  };
+});
+import { spawn, spawnSync } from 'child_process';
+
+import {
+  sanitizeBinaryOutput,
+  getShellEnv,
+  trackDetachedChildPid,
+  untrackDetachedChildPid,
+  killProcessTree,
+  killTrackedDetachedChildren,
+} from './shell';
 
 describe('sanitizeBinaryOutput', () => {
   it('removes null bytes', () => {
@@ -66,4 +90,162 @@ describe('detached child tracking', () => {
   });
 });
 
-// getShellConfig tests require complex mocking; skipping for now.
+describe('killProcessTree', () => {
+  let platformSpy: any;
+  let killSpy: any;
+
+  beforeEach(() => {
+    process.env = {};
+    // Mock process.platform getter
+    platformSpy = vi.spyOn(process, 'platform', 'get').mockReturnValue('linux');
+    // Spy on process.kill and mock to avoid actual kills
+    killSpy = vi.spyOn(process, 'kill').mockImplementation(() => undefined as any);
+    // Clear spawn mock
+    (spawn as any).mockClear();
+    (spawnSync as any).mockClear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('Windows: calls taskkill with /F /T /PID', () => {
+    platformSpy.mockReturnValue('win32');
+    // Ensure spawn mock is a function
+    (spawn as any).mockImplementation(() => ({}) as any);
+
+    killProcessTree(12345);
+
+    expect(spawn).toHaveBeenCalledWith('taskkill', ['/F', '/T', '/PID', '12345'], {
+      stdio: 'ignore',
+      detached: true,
+    });
+  });
+
+  it('Unix: tries process.kill(-pid, SIGKILL) first', () => {
+    // Default platform is linux
+    killSpy.mockClear();
+    killSpy.mockImplementation((pid: number | string, signal: string) => {
+      if (pid === -12345) return undefined; // success
+      throw new Error('not found');
+    });
+
+    killProcessTree(12345);
+
+    expect(killSpy).toHaveBeenCalledWith(-12345, 'SIGKILL');
+    expect(killSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('Unix: falls back to process.kill(pid, SIGKILL) if negative kill throws', () => {
+    killSpy.mockClear();
+    killSpy.mockImplementation((pid: any, signal: string) => {
+      if (pid === -12345) throw new Error('no such process');
+      if (pid === 12345) return undefined;
+      throw new Error('unexpected');
+    });
+
+    killProcessTree(12345);
+
+    expect(killSpy).toHaveBeenCalledWith(-12345, 'SIGKILL');
+    expect(killSpy).toHaveBeenCalledWith(12345, 'SIGKILL');
+    expect(killSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('Unix: swallows errors if both kill attempts fail', () => {
+    killSpy.mockClear();
+    killSpy.mockImplementation(() => {
+      throw new Error('kill failed');
+    });
+
+    expect(() => killProcessTree(12345)).not.toThrow();
+    expect(killSpy).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('killTrackedDetachedChildren', () => {
+  let platformSpy: any;
+  let killSpy: any;
+
+  beforeEach(() => {
+    // Clear any tracked PIDs from previous tests
+    killTrackedDetachedChildren();
+    // Track some PIDs
+    trackDetachedChildPid(111);
+    trackDetachedChildPid(222);
+    trackDetachedChildPid(333);
+
+    // Default to Unix
+    platformSpy = vi.spyOn(process, 'platform', 'get').mockReturnValue('linux');
+    killSpy = vi.spyOn(process, 'kill').mockImplementation(() => undefined as any);
+    // spawn is already a mock function from vi.mock; clear it
+    (spawn as any).mockClear?.();
+  });
+
+  afterEach(() => {
+    // Clean up tracked set
+    killTrackedDetachedChildren();
+    vi.restoreAllMocks();
+  });
+
+  it('calls killProcessTree for each tracked PID (Unix: process.kill)', () => {
+    // On unix, killProcessTree uses process.kill(-pid)
+    killSpy.mockClear();
+
+    killTrackedDetachedChildren();
+
+    // Three PIDs
+    expect(killSpy).toHaveBeenCalledTimes(3);
+    expect(killSpy).toHaveBeenNthCalledWith(1, -111, 'SIGKILL');
+    expect(killSpy).toHaveBeenNthCalledWith(2, -222, 'SIGKILL');
+    expect(killSpy).toHaveBeenNthCalledWith(3, -333, 'SIGKILL');
+
+    // Verify set cleared: add new PID and call again
+    trackDetachedChildPid(444);
+    killSpy.mockClear();
+    killTrackedDetachedChildren();
+    expect(killSpy).toHaveBeenCalledTimes(1);
+    expect(killSpy).toHaveBeenCalledWith(-444, 'SIGKILL');
+  });
+
+  it('calls killProcessTree for each tracked PID (Windows: taskkill)', () => {
+    // Switch to Windows
+    platformSpy.mockReturnValue('win32');
+    // Clear spawn and killSpy
+    (spawn as any).mockClear?.();
+    killSpy.mockClear?.();
+
+    killTrackedDetachedChildren();
+
+    expect(spawn).toHaveBeenCalledTimes(3);
+    expect(spawn).toHaveBeenNthCalledWith(
+      1,
+      'taskkill',
+      ['/F', '/T', '/PID', '111'],
+      expect.anything()
+    );
+    expect(spawn).toHaveBeenNthCalledWith(
+      2,
+      'taskkill',
+      ['/F', '/T', '/PID', '222'],
+      expect.anything()
+    );
+    expect(spawn).toHaveBeenNthCalledWith(
+      3,
+      'taskkill',
+      ['/F', '/T', '/PID', '333'],
+      expect.anything()
+    );
+
+    // Verify set cleared: add new PID and call again
+    trackDetachedChildPid(444);
+    (spawn as any).mockClear?.();
+    killTrackedDetachedChildren();
+    expect(spawn).toHaveBeenCalledTimes(1);
+    expect(spawn).toHaveBeenNthCalledWith(
+      1,
+      'taskkill',
+      ['/F', '/T', '/PID', '444'],
+      expect.anything()
+    );
+  });
+});
