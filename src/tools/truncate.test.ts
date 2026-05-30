@@ -72,6 +72,11 @@ describe('truncateLines', () => {
   it('handles empty string', () => {
     expect(truncateLines('', 5)).toBe('');
   });
+
+  it('truncates to zero lines (maxLines=0)', () => {
+    const result = truncateLines('a\nb\nc', 0);
+    expect(result).toBe('\n... [MORE LINES]');
+  });
 });
 
 describe('truncateOutput', () => {

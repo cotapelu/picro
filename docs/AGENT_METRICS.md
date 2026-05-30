@@ -2,19 +2,19 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-05-30, Iteration 72)
+## Current Metrics (as of 2025-05-30, Iteration 74)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 72 |
-| Tasks Completed | 174 |
+| Total Iterations | 74 |
+| Tasks Completed | 183 |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (961/961 tests) |
-| Coverage (overall) | ~57.5% |
+| Test Pass Rate | 100% (969/969 tests) |
+| Coverage (overall) | ~57.9% |
 | Coverage (key modules): |
 | - command-handlers.ts | 80.34% |
 | - useRuntime.ts | 93.05% |
@@ -30,7 +30,9 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
-| 2025-05-30 | 72 | 6 | ✅ | **SessionSelectorModal interaction tests:** Added 6 tests covering navigation (up/down with boundary clamping), selection (Enter), Escape cancellation, and empty-list handling. Tests: 961 passing. Coverage increased to ~57.5%.
+| 2025-05-30 | 74 | 1 | ✅ | **Truncate edge case test:** Added test for maxLines=0. Tests: 969 passing. Coverage increased to ~57.9%. |
+| 2025-05-30 | 73 | 8 | ✅ | **LoginModal interaction tests:** Added 8 tests covering typing, backspace, Escape, empty submit, trimming, and error handling. Tests: 968 passing. Coverage increased to ~57.8%. |
+| 2025-05-30 | 72 | 6 | ✅ | **SessionSelectorModal interaction tests:** Added 6 tests covering navigation (up/down with boundary clamping), selection (Enter), Escape cancellation, and empty-list handling. Tests: 961 passing. Coverage increased to ~57.5%. |
 | 2025-05-30 | 71 | 6 | ✅ | **Modal interaction tests:** Added 3 interaction tests for ConfirmationModal (toggle, confirm, cancel) and 3 for HotkeysModal (Escape handling, ignore other keys). Tests: 955 passing. Coverage increased to ~57.0%.
 | 2025-05-30 | 70 | 14 | ✅ | **Path utilities tests:** Added 14 unit tests for path-utils covering expandPath, resolveToCwd, and validatePathWithinBase. Tests: 949 passing. Coverage improved for core path handling.
 | 2025-05-30 | 69 | 13 | ✅ | **Truncate utility tests:** Added 13 unit tests covering truncateHead, truncateTail, truncateLines, and truncateOutput functions. Tests: 935 passing. Coverage increased to ~56.2%. |
