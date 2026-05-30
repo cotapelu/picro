@@ -2,19 +2,19 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-05-30, Iteration 74)
+## Current Metrics (as of 2025-05-30, Iteration 75)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 74 |
-| Tasks Completed | 183 |
+| Total Iterations | 75 |
+| Tasks Completed | 184 |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (969/969 tests) |
-| Coverage (overall) | ~57.9% |
+| Test Pass Rate | 100% (971/971 tests) |
+| Coverage (overall) | ~58.0% |
 | Coverage (key modules): |
 | - command-handlers.ts | 80.34% |
 | - useRuntime.ts | 93.05% |
@@ -30,6 +30,7 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-05-30 | 75 | 1 | ✅ | **LoginModal backspace test:** Added test for backspace on empty input. Tests: 971 passing. Coverage ~58.0%.
 | 2025-05-30 | 74 | 1 | ✅ | **Truncate edge case test:** Added test for maxLines=0. Tests: 969 passing. Coverage increased to ~57.9%. |
 | 2025-05-30 | 73 | 8 | ✅ | **LoginModal interaction tests:** Added 8 tests covering typing, backspace, Escape, empty submit, trimming, and error handling. Tests: 968 passing. Coverage increased to ~57.8%. |
 | 2025-05-30 | 72 | 6 | ✅ | **SessionSelectorModal interaction tests:** Added 6 tests covering navigation (up/down with boundary clamping), selection (Enter), Escape cancellation, and empty-list handling. Tests: 961 passing. Coverage increased to ~57.5%. |

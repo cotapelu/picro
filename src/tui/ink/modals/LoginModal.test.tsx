@@ -87,6 +87,13 @@ describe('LoginModal', () => {
       expect(result.lastFrame()).toContain('ab');
     });
 
+    it('handles backspace when input is empty without error', async () => {
+      // Initially empty, pressing backspace should do nothing and not crash
+      await pressKey(undefined, { backspace: true });
+      const output = result.lastFrame();
+      expect(output).toContain('Enter API Key');
+    });
+
     it('calls onClose when Escape is pressed', async () => {
       await pressKey(undefined, { escape: true });
       expect(onClose).toHaveBeenCalledTimes(1);

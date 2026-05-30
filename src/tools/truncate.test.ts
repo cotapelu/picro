@@ -77,6 +77,12 @@ describe('truncateLines', () => {
     const result = truncateLines('a\nb\nc', 0);
     expect(result).toBe('\n... [MORE LINES]');
   });
+
+  it('does not truncate when line count equals maxLines', () => {
+    const text = 'a\nb\nc';
+    const result = truncateLines(text, 3);
+    expect(result).toBe(text);
+  });
 });
 
 describe('truncateOutput', () => {
