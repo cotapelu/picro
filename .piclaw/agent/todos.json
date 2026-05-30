@@ -624,7 +624,7 @@
         {
           "id": "task-95",
           "content": "Expand InputBox.test.tsx to cover: submit handling (Enter, Shift+Enter), disabled state, cursor movement (arrows, Home/End), backspace/delete, kill ring (Ctrl+K/Y), slash command detection (including dynamic onSlashCommand callback), autocomplete integration (Tab with path completion and generic providers), external editor (Ctrl+Alt+E), unicode and long input, multiline handling, and disabled state. Target coverage from 13% to >60%.",
-          "status": "in_progress"
+          "status": "completed"
         },
         {
           "id": "task-96",
@@ -644,12 +644,12 @@
         {
           "id": "task-99",
           "content": "Add comprehensive tests for TreeSelectorModal (tree navigation, summarization options, expansion) to reach >60% coverage.",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     }
   ],
   "nextTaskId": 100,
   "nextPhaseId": 25,
-  "updatedAt": "2026-05-30T06:03:58.267Z"
+  "updatedAt": "2026-05-30T07:14:05.924Z"
 }
