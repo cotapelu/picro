@@ -590,9 +590,35 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-23",
+      "name": "Coverage Stretch to 60%",
+      "tasks": [
+        {
+          "id": "task-91",
+          "content": "Add tests for src/utils/child-process.ts: test exec, spawn, error handling, output capture.",
+          "status": "completed"
+        },
+        {
+          "id": "task-92",
+          "content": "Add tests for src/utils/timings.ts: test duration formatting, time conversions.",
+          "status": "completed"
+        },
+        {
+          "id": "task-93",
+          "content": "Expand tests for src/runtime/resource-loader.ts (currently 1 test) to cover loadResource, error cases.",
+          "status": "completed"
+        },
+        {
+          "id": "task-94",
+          "content": "Add tests for src/agent/proxy-stream.ts (currently 1 basic test) to cover more streaming scenarios and error handling.",
+          "status": "completed"
+        }
+      ]
     }
   ],
-  "nextTaskId": 91,
-  "nextPhaseId": 23,
-  "updatedAt": "2026-05-30T03:43:06.961Z"
+  "nextTaskId": 95,
+  "nextPhaseId": 24,
+  "updatedAt": "2026-05-30T05:24:32.699Z"
 }

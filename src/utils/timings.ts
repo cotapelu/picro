@@ -4,7 +4,10 @@
  * Enable with PI_TIMING=1 environment variable.
  */
 
-const ENABLED = process.env.PI_TIMING === "1";
+function isEnabled(): boolean {
+  return process.env.PI_TIMING === "1";
+}
+
 const timings: Array<{ label: string; ms: number }> = [];
 let lastTime = Date.now();
 
@@ -12,7 +15,7 @@ let lastTime = Date.now();
  * Reset timing collection to start fresh
  */
 export function resetTimings(): void {
-  if (!ENABLED) return;
+  if (!isEnabled()) return;
   timings.length = 0;
   lastTime = Date.now();
 }
@@ -21,7 +24,7 @@ export function resetTimings(): void {
  * Record a timing checkpoint with label
  */
 export function time(label: string): void {
-  if (!ENABLED) return;
+  if (!isEnabled()) return;
   const now = Date.now();
   timings.push({ label, ms: now - lastTime });
   lastTime = now;
@@ -31,7 +34,7 @@ export function time(label: string): void {
  * Print all recorded timings to stderr
  */
 export function printTimings(): void {
-  if (!ENABLED || timings.length === 0) return;
+  if (!isEnabled() || timings.length === 0) return;
   console.error("\n--- Startup Timings ---");
   for (const t of timings) {
     console.error(`  ${t.label}: ${t.ms}ms`);
