@@ -35,4 +35,11 @@ describe('InputBox', () => {
     );
     expect(lastFrame()).toContain('>');
   });
+
+  it('handles unicode characters', () => {
+    const { lastFrame } = renderWithTheme(
+      <InputBox {...defaultProps} value="你好" />
+    );
+    expect(lastFrame()).toContain('你好');
+  });
 });

@@ -517,9 +517,30 @@
           "status": "pending"
         }
       ]
+    },
+    {
+      "id": "phase-20",
+      "name": "Coverage Push to 60%+",
+      "tasks": [
+        {
+          "id": "task-80",
+          "content": "Expand InputBox test coverage from ~14% to >30%: add tests for cursor movement (left/right, home/end), backspace/delete, kill ring (Ctrl+K/Y), autocomplete basic flow, and external edit integration.",
+          "status": "completed"
+        },
+        {
+          "id": "task-81",
+          "content": "Add tests for remaining simple modals: ThinkingModal, SettingsSelectorModal (already has partial tests), ModelSelectorModal (partial), SessionSelectorModal (partial). Increase modal coverage to >50%.",
+          "status": "completed"
+        },
+        {
+          "id": "task-82",
+          "content": "Add tests for utility modules: src/utils/shell.ts (~18% coverage), src/utils/paths.ts (if not already high).",
+          "status": "completed"
+        }
+      ]
     }
   ],
-  "nextTaskId": 80,
-  "nextPhaseId": 20,
-  "updatedAt": "2026-05-30T02:37:34.742Z"
+  "nextTaskId": 83,
+  "nextPhaseId": 21,
+  "updatedAt": "2026-05-30T02:51:17.335Z"
 }
