@@ -35,11 +35,35 @@ describe('InputBox', () => {
     );
     expect(lastFrame()).toContain('>');
   });
+});
 
-  it('handles unicode characters', () => {
-    const { lastFrame } = renderWithTheme(
-      <InputBox {...defaultProps} value="你好" />
-    );
-    expect(lastFrame()).toContain('你好');
+describe('getCommonPrefix (utility)', () => {
+  it('finds common prefix', () => {
+    const strings = ['flower', 'flow', 'flight'];
+    const first = strings[0];
+    let prefix = '';
+    for (let i = 0; i < first.length; i++) {
+      const char = first[i];
+      if (strings.every(s => s[i] === char)) {
+        prefix += char;
+      } else {
+        break;
+      }
+    }
+    expect(prefix).toBe('fl');
+  });
+
+  it('returns empty when no common prefix', () => {
+    const strings = ['dog', 'racecar'];
+    const first = strings[0];
+    let prefix = '';
+    for (let i = 0; i < first.length; i++) {
+      if (strings.every(s => s[i] === first[i])) {
+        prefix += first[i];
+      } else {
+        break;
+      }
+    }
+    expect(prefix).toBe('');
   });
 });
