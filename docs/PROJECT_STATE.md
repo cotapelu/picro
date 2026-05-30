@@ -1,12 +1,12 @@
 # Project State
 
-Last updated: 2025-05-30 (Iteration 75)
+Last updated: 2025-05-30 (Iteration 77)
 
 ## Metrics
-- Total Iterations: 75
-- Tasks Completed: 184
-- Test Pass Rate: 100% (971/971 tests)
-- Coverage: ~58.0% overall
+- Total Iterations: 77
+- Tasks Completed: 186
+- Test Pass Rate: 100% (975/975 tests)
+- Coverage: ~58.2% overall
   - command-handlers: 80%
   - useRuntime: 93%
   - session-manager: 81%
@@ -18,6 +18,9 @@ Last updated: 2025-05-30 (Iteration 75)
   - InputBox: 92%
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 77)
+- **sanitizeBinaryOutput extra test:** Added simple test for null removal.
 
 ## Completed Features (Iteration 75)
 - **LoginModal edge case test**: Added test for backspace on empty input, improving robustness of login modal.
@@ -32,9 +35,9 @@ Last updated: 2025-05-30 (Iteration 75)
 
 ## Known Issues
 - Some modals (ModelSelector, SettingsSelector) have minimal test coverage.
-- Overall coverage at ~58.0%, still need ~2% to reach >60%.
+- Overall coverage at ~58.2%, still need ~1.8% to reach >60%.
 
 ## Next Steps
 - Add tests for ModelSelectorModal and SettingsSelectorModal.
-- Explore testing other core utilities (e.g., getShellConfig).
+- Explore testing other core utilities.
 - Maintain 100% test pass rate

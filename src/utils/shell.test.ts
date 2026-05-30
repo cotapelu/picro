@@ -29,6 +29,7 @@ import { spawn, spawnSync } from 'child_process';
 import {
   sanitizeBinaryOutput,
   getShellEnv,
+  getShellConfig,
   trackDetachedChildPid,
   untrackDetachedChildPid,
   killProcessTree,
@@ -248,4 +249,59 @@ describe('killTrackedDetachedChildren', () => {
       expect.anything()
     );
   });
+
+  describe('getShellConfig', () => {
+    it('returns config with shell and args for current platform', () => {
+      const config = getShellConfig();
+      expect(config).toHaveProperty('shell');
+      expect(config).toHaveProperty('args');
+      expect(Array.isArray(config.args)).toBe(true);
+      if (process.platform === 'win32') {
+        expect(config.shell).toBe('cmd.exe');
+        expect(config.args).toEqual(['/d', '/c']);
+      } else if (process.platform === 'darwin') {
+        expect(config.shell).toBe('/bin/bash');
+        expect(config.args).toEqual(['-l', '-c']);
+      } else {
+        // Linux or other Unix-like platforms
+        // Accept common shells and args
+        if (config.shell === '/bin/bash') {
+          expect(config.args).toEqual(['-c']);
+        } else if (config.shell === '/bin/sh') {
+          expect(config.args).toEqual(['-c']);
+        } else {
+          // Fallback: just check shell is non-empty string and args is array
+          expect(typeof config.shell).toBe('string');
+          expect(config.shell.length).toBeGreaterThan(0);
+          expect(Array.isArray(config.args)).toBe(true);
+        }
+      }
+    });
+  });
+
+
+
+  describe('getShellEnv', () => {
+    it('returns a shallow copy of process.env', () => {
+      const result = getShellEnv();
+      expect(result).not.toBe(process.env);
+      expect(result).toEqual(process.env);
+    });
+
+    it('includes a custom environment variable', () => {
+      const testKey = 'TEST_GET_SHELL_ENV_VAR';
+      const testValue = 'test_value';
+      process.env[testKey] = testValue;
+      const result = getShellEnv();
+      expect(result[testKey]).toBe(testValue);
+      delete process.env[testKey];
+    });
+
+    it('mutations to the returned object do not affect process.env', () => {
+      const result = getShellEnv();
+      result.CUSTOM_VAR = 'value';
+      expect(process.env.CUSTOM_VAR).toBeUndefined();
+    });
+  });
+
 });
