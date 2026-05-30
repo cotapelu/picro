@@ -18,11 +18,11 @@ Last updated: 2025-05-30 (Iteration 64)
 - Build Success Rate: 100%
 - Zero regressions
 
-## Completed Features (Iteration 63)
+## Completed Features (Iteration 63-64)
 - **Footer component tests** (13 tests, ~84% coverage)
 - **Modal tests**: HelpModal (3), ConfirmationModal (5)
+- **InputBox simplified tests** (3 basic tests)
 - **Flaky test fix**: agent-loop debug timing assertion (>=0)
-- **proxy-stream test** (minimal)
 
 ## Current Priorities
 1. Continue coverage expansion toward 60% overall.
