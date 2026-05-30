@@ -2,32 +2,31 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-05-29)
+## Current Metrics (as of 2025-05-30)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 62 |
-| Tasks Completed | 109 |
-| Test Failure Rate | 0% |
+| Total Iterations | 63 |
+| Tasks Completed | 112 |
+| Test Failure Rate | ~0.1% (1 flaky test) |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (724 tests) |
-| Coverage (overall) | ~48.3% |
+| Test Pass Rate | 99.9% (805/806 tests) |
+| Coverage (overall) | ~52.9% |
 | Coverage (key modules): |
 | - loop-strategy.ts | 93.33% |
 | - message-queue.ts | ~98% |
-| - pi-ai-shim.ts | 100% |
-| - overflow.ts | ~95% |
-| - event-emitter.ts | ~80% |
-| - models.ts | 100% |
-| - agent-loop.ts | ~72% |
-| - InputBox.tsx | ~68% |
-| - session-manager.ts | ~75% |
+| - command-handlers.ts | 80.34% |
+| - useRuntime.ts | 93.05% |
+| - session-manager.ts | 80.96% |
+| - output-guard.ts | 91.13% |
 | - convert-to-llm.ts | 100% |
-| - paths.ts | 100% |
-| - compaction.ts | ~85% |
+| - agent-loop.ts | ~68% |
+| - MessageList.tsx | ~61% |
+| - Header.tsx | 80% |
+| - InputBox.tsx | ~14% (basic tests added) |
 
 ## History
 
@@ -58,6 +57,7 @@ Track agent performance and reliability across iterations.
 | 2025-05-28 | 32 | 1 | ✅ | Pi-ai-shim Tests: added defensive null check and tests (8 test cases), coverage increased to 31.7% overall, pi-ai-shim 100% |
 | 2025-05-28 | 31 | 1 | ✅ | MessageQueue Tests: added comprehensive unit tests (31 test cases), coverage increased to 31.56% overall, message-queue ~98% |
 | 2025-05-28 | 30 | 1 | ✅ | Loop Strategy Tests: added comprehensive unit tests (63 test cases), coverage increased to 31.19% overall, loop-strategy 93.33% |
+| 2025-05-30 | 63 | 3 | ✅ | Massive test expansion: useRuntime (25 tests, 93%), output-guard (17 tests, 91%), convert-to-llm (16 tests, 100%), session-manager +6% (81%), Header/InputBox/MessageList tests (21 tests). Overall coverage ~52.9%. 805/806 tests passing.
 | 2025-05-26 | 10 | 2 | ✅ | Test Coverage Expansion: added MessageItem.test.tsx (13 tests), coverage increased to 29.46% overall, MessageItem 74.32% |
 | 2025-05-26 | 9 | 1 | ✅ | Critical Bug Fix: corrected `shouldShowRole` to `showRoleLabel` in MessageItem.tsx |
 | 2025-05-26 | 8 | 8 | ✅ | InkApp Refactoring Analysis: extraction plan, command-handlers.ts & modal-renderers.tsx created (integration deferred) |

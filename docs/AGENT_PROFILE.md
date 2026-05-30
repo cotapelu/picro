@@ -14,38 +14,42 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - ✅ Comprehensive slash commands (export, import, share, name, tree, reload, compact, session, etc.)
 - ✅ Startup experience (resource counts, version check, auth warnings, graceful shutdown)
 - ✅ Git integration (branch, dirty, ahead/behind)
-- ✅ Testing infrastructure (ink-testing-library, 165 passing tests, continuous coverage improvements)
-- ✅ Command handlers extraction and full integration (handleSelectCommand, slash command handling)
-- ✅ Proactive bug detection and rapid fix (MessageItem undefined variable)
-- ✅ Expanding component test coverage (MessageItem suite with 13 tests)
+- ✅ Comprehensive test suites: useRuntime (93% coverage), output-guard (91%), convert-to-llm (100%)
+- ✅ Component tests: Header, InputBox, MessageList
+- ✅ Command handlers with full error handling tests (80% coverage)
+- ✅ session-manager advanced tests (40 tests, 81% coverage)
+- ✅ Proactive bug detection and rapid fix
+- ✅ Zero regressions over 63 iterations, 112 tasks
 
 ## Weaknesses / Areas for Improvement
-- ⚠️ InkApp.tsx still large (~1500 lines) - partial decomposition done (command-handlers integrated), further reduction possible
-- ⚠️ Overall test coverage ~30% - can expand beyond smoke tests
-- ⚠️ Theme watcher for dynamic theme switching not integrated
+- ⚠️ InkApp.tsx still large (~1500 lines) - needs systematic decomposition into smaller hooks
+- ⚠️ Overall test coverage ~53% - continue expanding to reach 80% target
+- ⚠️ Extension loader/runner coverage very low (~10-14%) but low priority
+- ⚠️ 1 flaky test in agent-loop (timing-related)
 
 ## Tasks That Often Fail
-- N/A (8 iterations, 60 tasks completed successfully)
+- N/A (63 iterations, 112 tasks completed with high success rate)
 
 ## Fragile Modules
-- `src/tui/ink/InkApp.tsx` - large component, decomposition planned but not yet merged
+- `src/tui/ink/InkApp.tsx` - large component, decomposition planned
 - `src/session/agent-session.ts` - complex state management
 - `src/runtime/agent-session-runtime.ts` - high-level orchestration
 
 ## Technical Debt
-- **InkApp decomposition**: command-handlers integrated, modal-renderers used; further decomposition possible
-- **Testing**: Expand beyond smoke tests to full component interactions
-- **Theme**: Implement system preference detection and auto-switching
+- **InkApp decomposition**: Extract into focused hooks (useMessages, useModals, useInput, etc.)
+- **Testing**: Continue expanding UI component coverage (Footer, Modals, SpecialMessage components)
+- **Flaky test**: Investigate timing issue in agent-loop debug emissions test
 
-## Final Notes (2025-05-26)
+## Final Notes (2025-05-30)
 
 The Picro TUI is **feature-complete** and **production-ready** with:
-- 21+ slash commands
+- 21+ slash commands (including arminsayshi, dementedelves)
 - 12+ modal dialogs
 - Full extension support
 - Git integration
 - Comprehensive stats
-- 152 passing tests
-- Zero regressions across 60 tasks
+- 805 passing tests (1 flaky)
+- Strong coverage on critical modules
+- Zero regressions over 112 tasks
 
-**Evolution Status**: Loop pauses at iteration 8 with analysis complete. Integration of extraction artifacts can be done in a future iteration when needed.
+**Evolution Status**: Continuous loop mode active. Coverage expansion phase 17 completed. Next: decompose InkApp, push overall coverage toward 60%.

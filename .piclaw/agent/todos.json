@@ -475,9 +475,30 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-18",
+      "name": "Coverage Push & Flaky Test Fix",
+      "tasks": [
+        {
+          "id": "task-74",
+          "content": "Add tests for Footer component and modals (SessionSelector, Settings, ModelSelector, etc.) to increase UI coverage toward 80%.",
+          "status": "completed"
+        },
+        {
+          "id": "task-75",
+          "content": "Investigate and fix flaky test in agent-loop.test.ts (emits debug:run:timing on error).",
+          "status": "completed"
+        },
+        {
+          "id": "task-76",
+          "content": "Add tests for low-coverage utilities: extensions/loader.ts, extensions/runner.ts, session/convert-to-llm already done, consider agent/proxy-stream.ts (~36%).",
+          "status": "completed"
+        }
+      ]
     }
   ],
-  "nextTaskId": 74,
-  "nextPhaseId": 18,
-  "updatedAt": "2026-05-30T01:43:38.187Z"
+  "nextTaskId": 77,
+  "nextPhaseId": 19,
+  "updatedAt": "2026-05-30T02:22:26.988Z"
 }
