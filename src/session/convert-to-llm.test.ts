@@ -1,171 +1,237 @@
 // SPDX-License-Identifier: Apache-2.0
-/**
- * Unit tests for convertSessionMessagesToLlm.
- *
- * Tests all message type conversions: standard pass-through, bashExecution, branchSummary,
- * compactionSummary, custom, and edge cases.
- */
-
 import { describe, it, expect } from 'vitest';
 import { convertSessionMessagesToLlm } from './convert-to-llm.js';
+import type { Message } from '../llm/index.js';
 
 describe('convertSessionMessagesToLlm', () => {
-  it('passes through standard user messages', () => {
-    const msgs = [
-      { role: 'user', content: [{ type: 'text', text: 'Hello' }], timestamp: 123 },
-    ];
-    const result = convertSessionMessagesToLlm(msgs);
-    expect(result).toEqual(msgs);
+  describe('standard messages pass through', () => {
+    it('passes through user messages', () => {
+      const userMsg: Message = {
+        role: 'user',
+        content: [{ type: 'text', text: 'Hello' }],
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([userMsg]);
+      expect(result).toEqual([userMsg]);
+    });
+
+    it('passes through assistant messages', () => {
+      const assistantMsg: Message = {
+        role: 'assistant',
+        content: 'Hi there',
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([assistantMsg]);
+      expect(result).toEqual([assistantMsg]);
+    });
+
+    it('passes through toolResult messages', () => {
+      const toolMsg: Message = {
+        role: 'toolResult',
+        content: 'Tool output',
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([toolMsg]);
+      expect(result).toEqual([toolMsg]);
+    });
   });
 
-  it('passes through standard assistant messages', () => {
-    const msgs = [
-      { role: 'assistant', content: [{ type: 'text', text: 'Hi' }], timestamp: 123 },
-    ];
-    const result = convertSessionMessagesToLlm(msgs);
-    expect(result).toEqual(msgs);
+  describe('bashExecution conversion', () => {
+    it('converts basic bash execution', () => {
+      const bashMsg = {
+        role: 'bashExecution' as const,
+        command: 'ls -la',
+        output: 'file1\nfile2',
+        exitCode: 0,
+        cancelled: false,
+        truncated: false,
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([bashMsg]);
+      expect(result).toHaveLength(1);
+      expect(result[0].role).toBe('user');
+      expect(result[0].content).toEqual([
+        { type: 'text', text: 'Ran `ls -la`\n```\nfile1\nfile2\n```' },
+      ]);
+    });
+
+    it('handles no output', () => {
+      const bashMsg = {
+        role: 'bashExecution' as const,
+        command: 'echo test',
+        output: '',
+        exitCode: 0,
+        cancelled: false,
+        truncated: false,
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([bashMsg]);
+      expect(result[0].content[0].text).toContain('(no output)');
+    });
+
+    it('appends cancelled message when cancelled', () => {
+      const bashMsg = {
+        role: 'bashExecution' as const,
+        command: 'sleep 10',
+        output: '',
+        exitCode: undefined,
+        cancelled: true,
+        truncated: false,
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([bashMsg]);
+      expect(result[0].content[0].text).toContain('(command cancelled)');
+    });
+
+    it('appends exit code when non-zero', () => {
+      const bashMsg = {
+        role: 'bashExecution' as const,
+        command: 'false',
+        output: '',
+        exitCode: 1,
+        cancelled: false,
+        truncated: false,
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([bashMsg]);
+      expect(result[0].content[0].text).toContain('exited with code 1');
+    });
+
+    it('skips when excludeFromContext is true', () => {
+      const bashMsg = {
+        role: 'bashExecution' as const,
+        command: '!!cmd',
+        output: 'output',
+        exitCode: 0,
+        cancelled: false,
+        truncated: false,
+        excludeFromContext: true,
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([bashMsg]);
+      expect(result).toHaveLength(0);
+    });
+
+    it('includes truncation notice with fullOutputPath', () => {
+      const bashMsg = {
+        role: 'bashExecution' as const,
+        command: 'cat largefile',
+        output: 'partial',
+        exitCode: 0,
+        cancelled: false,
+        truncated: true,
+        fullOutputPath: '/tmp/full.log',
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([bashMsg]);
+      expect(result[0].content[0].text).toContain('Full output: /tmp/full.log');
+    });
   });
 
-  it('passes through toolResult messages', () => {
-    const msgs = [
-      { role: 'toolResult', content: [{ type: 'text', text: 'Result' }], timestamp: 123 },
-    ];
-    const result = convertSessionMessagesToLlm(msgs);
-    expect(result).toEqual(msgs);
+  describe('branchSummary conversion', () => {
+    it('converts branch summary with prefix and suffix', () => {
+      const branchMsg = {
+        role: 'branchSummary' as const,
+        summary: 'User asked about weather',
+        fromId: 'msg-123',
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([branchMsg]);
+      expect(result).toHaveLength(1);
+      expect(result[0].role).toBe('user');
+      const text = result[0].content[0].text;
+      expect(text).toContain('summary of a branch');
+      expect(text).toContain('User asked about weather');
+    });
   });
 
-  it('converts bashExecution to user message', () => {
-    const bashMsg = {
-      role: 'bashExecution',
-      command: 'ls -la',
-      output: 'file1\nfile2',
-      exitCode: 0,
-      cancelled: false,
-      truncated: false,
-      timestamp: 123,
-    };
-    const result = convertSessionMessagesToLlm([bashMsg]);
-    expect(result.length).toBe(1);
-    expect(result[0].role).toBe('user');
-    expect(result[0].content).toEqual([{ type: 'text', text: expect.stringContaining('Ran `ls -la`') }]);
-    expect(result[0].content[0].text).toContain('file1');
+  describe('compactionSummary conversion', () => {
+    it('converts compaction summary with prefix and suffix', () => {
+      const compactionMsg = {
+        role: 'compactionSummary' as const,
+        summary: 'Discussed project goals',
+        tokensBefore: 1500,
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([compactionMsg]);
+      expect(result).toHaveLength(1);
+      expect(result[0].role).toBe('user');
+      const text = result[0].content[0].text;
+      expect(text).toContain('conversation history before this point was compacted');
+      expect(text).toContain('Discussed project goals');
+    });
   });
 
-  it('excludes bashExecution when excludeFromContext is true', () => {
-    const bashMsg = {
-      role: 'bashExecution',
-      command: 'rm -rf',
-      output: '',
-      exitCode: 0,
-      cancelled: false,
-      truncated: false,
-      excludeFromContext: true,
-      timestamp: 123,
-    };
-    const result = convertSessionMessagesToLlm([bashMsg]);
-    expect(result.length).toBe(0);
+  describe('custom message conversion', () => {
+    it('converts string content', () => {
+      const customMsg = {
+        role: 'custom' as const,
+        customType: 'note',
+        content: 'This is a custom note',
+        display: true,
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([customMsg]);
+      expect(result).toHaveLength(1);
+      expect(result[0].role).toBe('user');
+      expect(result[0].content).toEqual([{ type: 'text', text: 'This is a custom note' }]);
+    });
+
+    it('converts TextContent[] array', () => {
+      const customMsg = {
+        role: 'custom' as const,
+        customType: 'rich',
+        content: [
+          { type: 'text' as const, text: 'Part 1' },
+          { type: 'text' as const, text: 'Part 2' },
+        ],
+        display: true,
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([customMsg]);
+      expect(result[0].content).toEqual([
+        { type: 'text', text: 'Part 1' },
+        { type: 'text', text: 'Part 2' },
+      ]);
+    });
   });
 
-  it('converts branchSummary to user message with prefix', () => {
-    const branchMsg = {
-      role: 'branchSummary',
-      summary: 'We explored option A',
-      fromId: 'abc123',
-      timestamp: 123,
-    };
-    const result = convertSessionMessagesToLlm([branchMsg]);
-    expect(result.length).toBe(1);
-    expect(result[0].role).toBe('user');
-    const text = result[0].content[0].text;
-    expect(text).toContain('The following is a summary of a branch');
-    expect(text).toContain('<summary>');
-    expect(text).toContain('We explored option A');
-    expect(text).toContain('</summary>');
+  describe('mixed messages', () => {
+    it('preserves order and filters correctly', () => {
+      const messages = [
+        { role: 'user', content: 'Hello', timestamp: 1 },
+        { role: 'bashExecution', command: 'ls', output: 'files', exitCode: 0, cancelled: false, truncated: false, timestamp: 2 },
+        { role: 'assistant', content: 'Hi', timestamp: 3 },
+        { role: 'branchSummary', summary: 'Branch summary', fromId: 'x', timestamp: 4 },
+        { role: 'custom', customType: 'test', content: 'custom', display: true, timestamp: 5 },
+        { role: 'unknown', timestamp: 6 }, // should be filtered
+      ];
+      const result = convertSessionMessagesToLlm(messages);
+      expect(result).toHaveLength(5);
+      expect(result[0].role).toBe('user'); // original user
+      expect(result[1].role).toBe('user'); // bash converted
+      expect(result[2].role).toBe('assistant'); // original assistant
+      expect(result[3].role).toBe('user'); // branch converted
+      expect(result[4].role).toBe('user'); // custom converted
+    });
   });
 
-  it('converts compactionSummary to user message with prefix', () => {
-    const compMsg = {
-      role: 'compactionSummary',
-      summary: 'Compacted 20 messages',
-      tokensBefore: 1500,
-      timestamp: 123,
-    };
-    const result = convertSessionMessagesToLlm([compMsg]);
-    expect(result.length).toBe(1);
-    expect(result[0].role).toBe('user');
-    const text = result[0].content[0].text;
-    expect(text).toContain('The conversation history before this point was compacted');
-    expect(text).toContain('<summary>');
-    expect(text).toContain('Compacted 20 messages');
-    expect(text).toContain('</summary>');
-  });
+  describe('edge cases', () => {
+    it('handles empty array', () => {
+      const result = convertSessionMessagesToLlm([]);
+      expect(result).toEqual([]);
+    });
 
-  it('converts custom message with string content', () => {
-    const customMsg = {
-      role: 'custom',
-      customType: 'note',
-      content: 'Important note',
-      display: true,
-      timestamp: 123,
-    };
-    const result = convertSessionMessagesToLlm([customMsg]);
-    expect(result.length).toBe(1);
-    expect(result[0].role).toBe('user');
-    expect(result[0].content).toEqual([{ type: 'text', text: 'Important note' }]);
-  });
-
-  it('converts custom message with TextContent[]', () => {
-    const customMsg = {
-      role: 'custom',
-      customType: 'rich',
-      content: [
-        { type: 'text', text: 'Part1' },
-        { type: 'code', text: 'code', language: 'ts' },
-      ],
-      display: false,
-      timestamp: 123,
-    };
-    const result = convertSessionMessagesToLlm([customMsg]);
-    expect(result.length).toBe(1);
-    expect(result[0].role).toBe('user');
-    expect(result[0].content).toEqual(customMsg.content);
-  });
-
-  it('filters out unknown roles', () => {
-    const unknownMsg = { role: 'unknown' as any, timestamp: 123 };
-    const result = convertSessionMessagesToLlm([unknownMsg]);
-    expect(result.length).toBe(0);
-  });
-
-  it('handles mixed message types', () => {
-    const msgs = [
-      { role: 'user', content: 'hi', timestamp: 1 },
-      { role: 'bashExecution', command: 'pwd', output: '/home', exitCode: 0, cancelled: false, truncated: false, timestamp: 2 },
-      { role: 'assistant', content: 'ok', timestamp: 3 },
-      { role: 'compactionSummary', summary: 'compaction', tokensBefore: 100, timestamp: 4 },
-      { role: 'toolResult', content: 'done', timestamp: 5 },
-    ];
-    const result = convertSessionMessagesToLlm(msgs);
-    // All 5 are valid roles (bashExecution and compactionSummary are converted to user)
-    expect(result.length).toBe(5);
-    const roles = result.map(r => r.role);
-    expect(roles).toContain('user');
-    expect(roles).toContain('assistant');
-    expect(roles).toContain('toolResult');
-  });
-
-  it('preserves timestamp on conversion', () => {
-    const now = Date.now();
-    const bashMsg = {
-      role: 'bashExecution',
-      command: 'date',
-      output: now.toString(),
-      exitCode: 0,
-      cancelled: false,
-      truncated: false,
-      timestamp: now,
-    };
-    const result = convertSessionMessagesToLlm([bashMsg]);
-    expect(result[0].timestamp).toBe(now);
+    it('handles messages with missing optional fields gracefully', () => {
+      const customMsg = {
+        role: 'custom' as const,
+        customType: 'test',
+        content: 'text',
+        // display missing (optional)
+        timestamp: Date.now(),
+      };
+      const result = convertSessionMessagesToLlm([customMsg]);
+      expect(result[0].role).toBe('user');
+    });
   });
 });

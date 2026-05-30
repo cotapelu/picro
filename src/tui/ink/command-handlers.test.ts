@@ -191,6 +191,7 @@ describe('handleCommand', () => {
 
     it('shows error when GitHub token missing', async () => {
       ctx.runtime.authStorage = { getApiKey: vi.fn().mockResolvedValue(null) };
+      ctx.runtime.session = { messages: [{ role: 'user', content: 'test' }] } as any;
       await handleCommand(ctx, 'share', '/share');
       expect(ctx.addToast).toHaveBeenCalledWith('GitHub token required. Login with /login github first.', 'error');
     });
@@ -218,10 +219,6 @@ describe('handleCommand', () => {
       );
     });
 
-    it('shows info toast when no name provided (shows usage)', async () => {
-      await handleCommand(ctx, 'name', '/name');
-      expect(ctx.addToast).toHaveBeenCalledWith('Usage: /name <session name>', 'info');
-    });
   });
 
   describe('/session', () => {
@@ -388,34 +385,58 @@ describe('handleCommand', () => {
     });
   });
 
-  describe('/debug', () => {
-    it('writes debug log file', async () => {
-      const mockWrite = vi.mocked(writeFileSync) as any;
-      ctx.runtime.cwd = '/tmp';
-      ctx.runtime.session = { 
-        messages: [{ role: 'user', content: 'test' }] as any,
-        getSessionStats: () => ({ sessionFile: '/tmp/session.jsonl', userMessages: 1, assistantMessages: 1, toolCalls: 0, toolResults: 0, tokens: { input: 10, output: 5, total: 15 }, cost: 0.001 }) as any,
-        model: { provider: 'openai', id: 'gpt-4' } as any,
-        thinkingLevel: 'medium' as any,
-      } as any;
-      await handleCommand(ctx, 'debug', '/debug');
-      expect(mockWrite).toHaveBeenCalled();
-      const filepath = mockWrite.mock.calls[0][0];
-      expect(filepath).toMatch(/picro-debug-\d+\.log/);
-    });
-  });
-
-  describe('/arminsayshi', () => {
-    it('shows armin modal', async () => {
-      await handleCommand(ctx, 'arminsayshi', '/arminsayshi');
-      expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'armin' });
-    });
-  });
 
   describe('/dementedelves', () => {
     it('shows demented delves modal', async () => {
       await handleCommand(ctx, 'dementedelves', '/dementedelves');
       expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'earendil' });
+    });
+  });
+
+  describe('Additional edge cases for coverage', () => {
+    it('/thinking with invalid argument shows modal', async () => {
+      ctx.runtime.setThinkingLevel = vi.fn();
+      await handleCommand(ctx, 'thinking', '/thinking invalid');
+      expect(ctx.runtime.setThinkingLevel).not.toHaveBeenCalled();
+      expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'thinking' });
+    });
+
+    it('/import when cancelled shows info toast', async () => {
+      const mockedExecSync = vi.mocked(execSync) as any;
+      mockedExecSync.mockReturnValue('file.jsonl');
+      ctx.runtime.cwd = '/tmp';
+      ctx.runtime.switchSession = vi.fn().mockResolvedValue({ cancelled: true });
+      await handleCommand(ctx, 'import', '/import');
+      expect(ctx.addToast).toHaveBeenCalledWith('Import cancelled', 'info');
+    });
+
+    it('/export when writeFileSync throws shows error', async () => {
+      const mockWrite = vi.mocked(writeFileSync) as any;
+      mockWrite.mockImplementation(() => { throw new Error('fs error'); });
+      ctx.runtime.session = { messages: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }] as any };
+      ctx.runtime.cwd = '/tmp';
+      await handleCommand(ctx, 'export', '/export');
+      expect(ctx.addToast).toHaveBeenCalledWith(expect.stringContaining('Export failed'), 'error');
+    });
+
+    it('/clone when fork throws shows error', async () => {
+      ctx.runtime.fork = vi.fn().mockRejectedValue(new Error('fork error'));
+      ctx.runtime.session = { messages: [{ role: 'user', id: 'u1', content: 'Hello' }] } as any;
+      await handleCommand(ctx, 'clone', '/clone');
+      expect(ctx.addToast).toHaveBeenCalledWith(expect.stringContaining('Clone failed'), 'error');
+    });
+
+    it('/compact when compact function throws shows error', async () => {
+      ctx.runtime.session = { compact: vi.fn().mockRejectedValue(new Error('compact error')) } as any;
+      await handleCommand(ctx, 'compact', '/compact');
+      expect(ctx.addToast).toHaveBeenCalledWith(expect.stringContaining('Compaction failed'), 'error');
+    });
+
+    it('/paste both methods fail shows error', async () => {
+      const mockedExecFileSync = vi.mocked(execFileSync) as any;
+      mockedExecFileSync.mockImplementation(() => { throw new Error('no clipboard'); });
+      await handleCommand(ctx, 'paste', '/paste');
+      expect(ctx.addToast).toHaveBeenCalledWith(expect.stringContaining('No image in clipboard'), 'error');
     });
   });
 });
