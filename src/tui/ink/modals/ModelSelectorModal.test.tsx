@@ -1,29 +1,33 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render } from 'ink-testing-library';
 import { ModelSelectorModal } from './ModelSelectorModal';
+import { ThemeProvider } from '../hooks/useTheme.js';
 import type { AgentSessionRuntimeInterface } from '../../../runtime.js';
-
-vi.mock('../../hooks/useTheme', () => ({
-  useTheme: () => ({
-    theme: { accent: 'cyan', foreground: 'white', selectedForeground: 'white', dim: 'gray', success: 'green', warning: 'yellow' },
-    toggleTheme: vi.fn(),
-    isDark: true,
-  }),
-}));
 
 function createMockRuntime(): AgentSessionRuntimeInterface {
   return {
     cwd: '/tmp',
+    listSessions: async () => [],
+    switchSession: async () => ({ cancelled: false }),
     session: {} as any,
-    services: {} as any,
+    settings: {} as any,
+    services: {
+      modelRegistry: {
+        getAvailable: async () => [],
+        refresh: async () => {},
+      },
+    },
   } as any;
 }
 
 describe('ModelSelectorModal', () => {
   it('renders without crashing', () => {
     const runtime = createMockRuntime();
-    const onClose = vi.fn();
-    const instance = render(<ModelSelectorModal runtime={runtime} onClose={onClose} />);
-    expect(instance.stdin).toBeDefined();
+    const { stdin } = render(
+      <ThemeProvider initialMode="dark">
+        <ModelSelectorModal runtime={runtime} onClose={() => {}} />
+      </ThemeProvider>
+    );
+    expect(stdin).toBeDefined();
   });
 });

@@ -496,3 +496,21 @@ The Picro TUI is **production-ready** with comprehensive functionality:
   - Added tests for modal components: ThinkingModal (6 tests, 100% coverage), HotkeysModal (1), ChangelogModal (1), TreeSelectorModal (8)
 - **Rationale**: Increase overall test coverage, especially for low‑coverage utility and runtime modules. Provide basic modal test coverage to ensure UI stability.
 - **Impact**: Overall coverage ~53.5%, test count 874 with 100% pass rate. Zero regressions.
+
+### Iteration 67: InputBox Comprehensive Tests
+- **Direction**: Testing & Reliability
+- **Change**:
+  - Rewrote and expanded `InputBox.test.tsx` to include 42 comprehensive interaction tests covering:
+    - submission (Enter, Shift+Enter)
+    - disabled state
+    - backspace/delete
+    - cursor movement (arrows, Ctrl+A/E)
+    - kill ring (Ctrl+K/Y)
+    - slash command detection
+    - tab autocomplete (path completion and generic providers)
+    - history navigation (up/down)
+    - unicode handling
+    - Ctrl+C exit
+  - Increased InputBox coverage from ~13% to 92.46% (statements) and 93.61% (lines)
+- **Rationale**: InputBox is a critical user input component; ensure robust behavior across all keyboard interactions and edge cases.
+- **Impact**: Overall project coverage increased to ~55.4% (3519/6355 statements). Test count 916, all passing. Zero regressions.

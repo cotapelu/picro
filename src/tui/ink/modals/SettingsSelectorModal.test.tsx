@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from 'ink-testing-library';
 import { SettingsSelectorModal } from './SettingsSelectorModal';
+import { ThemeProvider } from '../hooks/useTheme.js';
 import type { AgentSessionRuntimeInterface } from '../../../runtime.js';
 
 vi.mock('../../hooks/useTheme', () => ({
@@ -22,7 +23,11 @@ describe('SettingsSelectorModal', () => {
   it('renders without crashing', () => {
     const runtime = createMockRuntime();
     const onClose = vi.fn();
-    const instance = render(<SettingsSelectorModal runtime={runtime} onClose={onClose} />);
+    const instance = render(
+      <ThemeProvider initialMode="dark">
+        <SettingsSelectorModal runtime={runtime} onClose={onClose} />
+      </ThemeProvider>
+    );
     expect(instance.stdin).toBeDefined();
   });
 });

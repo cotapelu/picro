@@ -6,18 +6,16 @@ Track agent performance and reliability across iterations.
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 66 |
-| Tasks Completed | 128 |
+| Total Iterations | 67 |
+| Tasks Completed | 129 |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (874/874 tests) |
-| Coverage (overall) | ~53.5% |
+| Test Pass Rate | 100% (916/916 tests) |
+| Coverage (overall) | ~55.4% |
 | Coverage (key modules): |
-| - loop-strategy.ts | 93.33% |
-| - message-queue.ts | ~98% |
 | - command-handlers.ts | 80.34% |
 | - useRuntime.ts | 93.05% |
 | - session-manager.ts | 81.96% |
@@ -26,12 +24,13 @@ Track agent performance and reliability across iterations.
 | - Footer.tsx | 83.92% |
 | - Header.tsx | 80% |
 | - MessageList.tsx | 65% |
-| - InputBox.tsx | ~13% |
+| - InputBox.tsx | 92.46% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-05-30 | 67 | 1 | ✅ | **InputBox test expansion:** Added 42 comprehensive interaction tests; InputBox coverage increased from ~13% to 92.46%. Overall coverage ~55.4%, 916 tests passing. |
 | 2025-05-30 | 66 | 4 | ✅ | **Test Coverage Expansion:** Added tests for utils/timings (8), utils/child-process (11), runtime/resource-loader (15), agent/proxy-stream (15), and modals (ThinkingModal: 6, HotkeysModal: 1, ChangelogModal: 1, TreeSelectorModal: 8). Overall coverage ~53.5%, 874 tests passing. |
 | 2025-05-30 | 65 | 4 | ✅ | **InputBox & Shell Tests:** InputBox basic tests (4), shell.test.ts (8) covering sanitizeBinaryOutput, getShellEnv, child tracking. Overall coverage ~54-55%, 820/821 tests passing. |
 | 2025-05-30 | 64 | 4 | ✅ | **Footer/Modal Tests & Flaky Fix:** Footer tests (13, ~84%), HelpModal (3), ConfirmationModal (5), agent-loop flaky fixed. Overall coverage ~54%+, 812/813 tests passing. |

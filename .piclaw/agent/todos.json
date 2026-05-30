@@ -647,9 +647,50 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-25",
+      "name": "Final Coverage Push to >60%",
+      "tasks": [
+        {
+          "id": "task-100",
+          "content": "Expand tests for utils/shell.ts (currently ~34% coverage) to >80%. Cover sanitizeBinaryOutput, getShellEnv, child tracking, error handling, edge cases.",
+          "status": "in_progress"
+        },
+        {
+          "id": "task-101",
+          "content": "Add comprehensive tests for SessionSelectorModal. Cover session list rendering, selection, rename (Ctrl+R), delete (Ctrl+D), error states, empty state, and keyboard navigation.",
+          "status": "completed"
+        },
+        {
+          "id": "task-102",
+          "content": "Add comprehensive tests for ModelSelectorModal. Cover model list rendering, search/filtering, reasoning indicator toggles, selection, error states, and async loading.",
+          "status": "completed"
+        },
+        {
+          "id": "task-103",
+          "content": "Add comprehensive tests for SettingsSelectorModal. Cover all settings types (boolean, enum, string, multiselect), toggle, save flow (with onSave), cancel, validation, and persistence.",
+          "status": "pending"
+        },
+        {
+          "id": "task-104",
+          "content": "Add comprehensive tests for LoginModal. Cover authentication flow, token input, error handling, success callback, and keyboard shortcuts.",
+          "status": "pending"
+        },
+        {
+          "id": "task-105",
+          "content": "Expand tests for other low‑coverage modals: ScopedModelsSelectorModal, StatsModal, BashOutputModal, InputModal, SelectModal. Ensure each modal renders correctly and handles basic interactions. Aim to increase modal system coverage >50%.",
+          "status": "pending"
+        },
+        {
+          "id": "task-106",
+          "content": "Run full test suite with coverage. Verify overall coverage >60%. If still below, add additional tests for remaining low‑coverage files. Update PROJECT_STATE.md, AGENT_METRICS.md, EVOLUTION.md and commit.",
+          "status": "pending"
+        }
+      ]
     }
   ],
-  "nextTaskId": 100,
-  "nextPhaseId": 25,
-  "updatedAt": "2026-05-30T07:14:05.924Z"
+  "nextTaskId": 107,
+  "nextPhaseId": 26,
+  "updatedAt": "2026-05-30T08:09:54.203Z"
 }
