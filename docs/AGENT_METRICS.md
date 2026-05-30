@@ -60,6 +60,9 @@ Track agent performance and reliability across iterations.
 | 2025-05-30 | 64 | 4 | ✅ | **Footer/Modal Tests & Flaky Fix:** Footer tests (13, ~84%), HelpModal (3), ConfirmationModal (5), agent-loop flaky fixed (debug timing >=0). Overall coverage ~54%+, 812/813 tests passing. |
 | 2025-05-30 | 63 | 3 | ✅ | Massive test expansion: useRuntime (25 tests, 93%), output-guard (17 tests, 91%), convert-to-llm (16 tests, 100%), session-manager +6% (81%), Header/InputBox/MessageList tests (21 tests). Overall coverage ~52.9%. 805/806 tests passing.
 | 2025-05-26 | 10 | 2 | ✅ | Test Coverage Expansion: added MessageItem.test.tsx (13 tests), coverage increased to 29.46% overall, MessageItem 74.32% |
+| 2025-05-30 | 65 | 4 | ✅ | **InputBox & Shell Tests:** InputBox basic tests (4), shell.test.ts (8) covering sanitizeBinaryOutput, getShellEnv, child tracking. shell.ts coverage ~34%. Overall coverage ~54-55%, 820/821 tests passing.
+| 2025-05-30 | 64 | 4 | ✅ | **Footer/Modal Tests & Flaky Fix:** Footer tests (13, ~84%), HelpModal (3), ConfirmationModal (5), agent-loop flaky fixed (debug timing >=0). Overall coverage ~54%+, 812/813 tests passing.
+| 2025-05-30 | 63 | 3 | ✅ | Massive test expansion: useRuntime (25 tests, 93%), output-guard (17 tests, 91%), convert-to-llm (16 tests, 100%), session-manager +6% (81%). Overall coverage ~52.9%, 805/806 tests passing.
 | 2025-05-26 | 9 | 1 | ✅ | Critical Bug Fix: corrected `shouldShowRole` to `showRoleLabel` in MessageItem.tsx |
 | 2025-05-26 | 8 | 8 | ✅ | InkApp Refactoring Analysis: extraction plan, command-handlers.ts & modal-renderers.tsx created (integration deferred) |
 | 2025-05-26 | 7 | 7 | ✅ | Testing Infrastructure: setup, FooterDataProvider tests, 152 passing |

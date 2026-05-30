@@ -509,12 +509,12 @@
         {
           "id": "task-78",
           "content": "Add tests for remaining modals: SessionSelectorModal, SettingsSelectorModal, ModelSelectorModal, TreeSelectorModal, UserMessageSelectorModal, ChangelogModal, HotkeysModal, StatsModal, BashOutputModal, InputModal, SelectModal.",
-          "status": "in_progress"
+          "status": "completed"
         },
         {
           "id": "task-79",
           "content": "Start systematic InkApp decomposition: extract useModals hook (moderate risk, high impact).",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     },
@@ -542,5 +542,5 @@
   ],
   "nextTaskId": 83,
   "nextPhaseId": 21,
-  "updatedAt": "2026-05-30T02:51:17.335Z"
+  "updatedAt": "2026-05-30T02:56:11.269Z"
 }

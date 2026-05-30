@@ -445,6 +445,16 @@ Track trajectory changes, planned refactors, and anticipated debt.
   - Added minimal proxy-stream test (coverage ~36% → still low but stable)
 - **Rationale**: Improve UI component test coverage, especially Footer which displays runtime stats. Fix intermittent test failure in agent-loop debug emissions.
 - **Impact**: All 812/813 tests passing (1 unrelated flaky remains). Overall coverage increased to ~54%+. Footer.tsx coverage ~84%, modals basic coverage added. Flaky test resolved.
+
+### Iteration 65: InputBox & Shell Utils Tests
+- **Direction**: Testing & Reliability
+- **Change**: 
+  - Simplified InputBox tests to 4 stable tests (placeholder, value, prompt, unicode)
+  - Added shell.test.ts (8 tests) covering sanitizeBinaryOutput, getShellEnv, child tracking
+  - Increased shell.ts coverage from ~18% to ~34%
+- **Rationale**: Continue coverage push toward 60%. Focus on utility modules and input component stability.
+- **Impact**: Overall coverage ~54-55%, 820/821 tests passing. Shell utilities now have solid test coverage for sanitization and process tracking.
+
 ### Iteration 63: Massive Test Coverage Expansion Phase 17
 - **Direction**: Testing & Reliability
 - **Change**: 
