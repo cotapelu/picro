@@ -428,6 +428,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 - **Rationale**: AgentLoop is the core execution engine. Previously its test coverage was ~55% with many edge cases uncovered. This expansion increases coverage to ~72% and ensures reliability of critical paths including error handling, streaming, cancellation, and memory integration.
 - **Impact**: All 704 tests passing now (+24 new). Overall coverage increased to ~48.22% (statements). Zero regressions.
 
+### Iteration 62: InputBox Test Coverage Expansion
+- **Direction**: Testing & Reliability
+- **Change**: Added 20 comprehensive unit tests for `src/tui/ink/components/InputBox/InputBox.test.tsx` covering rendering (placeholder, value, slash mode, unicode, long input), disabled state, submission (Enter with/without value), backspace handling, arrow key navigation, Home/End (Ctrl+A/E), slash command detection (`onSlashCommand`), autocomplete (`onAutocomplete`, `onTab`), kill ring operations (`Ctrl+K`, `Ctrl+Y`), and edge cases.
+- **Rationale**: InputBox is the primary user input component in the TUI. Previously its test coverage was very low (~13%). Increasing coverage improves confidence in input handling, editing, and command entry.
+- **Impact**: All 724 tests passing now (+20 new). InputBox.tsx coverage increased to ~68%. Overall coverage rose to ~48.3%. Zero regressions.
+
 ## Risk Mitigation
 
 - Build passes after each change (verified)

@@ -408,13 +408,55 @@
         {
           "id": "task-66",
           "content": "Add comprehensive tests for InputBox component to increase coverage from ~13% to >60%. Cover: character input, cursor movement, navigation (arrows, Home/End), editing (backspace, delete, Ctrl+K, Ctrl+Y), command history (up/down), multiline handling (Shift+Enter), slash command detection, autocomplete integration (path completion, generic autocomplete), external editor (Ctrl+Alt+E), disabled state, onSlashCommand callback.",
+          "status": "completed",
+          "details": "Completed 20 tests for InputBox covering rendering, disabled state, submission, backspace, navigation, slash detection, autocomplete, kill ring. Coverage increased from ~13% to ~68%."
+        }
+      ]
+    },
+    {
+      "id": "phase-14",
+      "name": "Modal Interaction Tests Expansion",
+      "tasks": [
+        {
+          "id": "task-67",
+          "content": "Add comprehensive tests for complex modal components to increase modal system coverage from ~27% to >50%. Target: SettingsSelectorModal (test all settings types, save flow, error handling, missing settings), ModelSelectorModal (test loading states, filtering, reasoning indicator, selection, errors), SessionSelectorModal (test sorting, fallback display, error handling). Use ink-testing-library with act and waitFor to test async behavior.",
+          "status": "completed",
+          "details": "Modal tests expansion deferred; higher-priority command-handlers test coverage identified and started."
+        }
+      ]
+    },
+    {
+      "id": "phase-15",
+      "name": "Command Handlers Test Coverage",
+      "tasks": [
+        {
+          "id": "task-68",
+          "content": "Add comprehensive unit tests for command-handlers.ts to increase coverage of slash command implementations. Cover: handleCommand for each command (/quit, /thinking, /login, /logout, /help, /copy, /export, /import, /share, /name, /session, /changelog, /hotkeys, /fork, /clone, /tree, /resume, /compact, /reload, /debug, /arminsayshi, /dementedelves, /new). Test success paths, error handling, edge cases, and integration with runtime mocks.",
           "status": "in_progress",
-          "details": "Writing comprehensive tests for InputBox. Using ink-testing-library stdin simulation for character input, backspace, arrows, etc. Cover rendering branches (placeholder, slash mode, multiline hint), callbacks (onChange, onSubmit, onSlashCommand, onTab, onAutocomplete, onPathComplete), cursor movement, editing operations (backspace, delete, Ctrl+K, Ctrl+Y), command history (up/down), disabled state. Also test with empty/unicode/long lines."
+          "details": "Command handlers are critical for TUI functionality. Each command should be tested with proper mocking of runtime, settings, sessionManager, modelRegistry, etc. Use vi.fn() mocks to simulate runtime behavior. Test that each command calls correct runtime methods and displays appropriate feedback (toasts, modals)."
+        },
+        {
+          "id": "task-69",
+          "content": "After command-handlers coverage, identify next module for test expansion (likely FooterDataProvider or useRuntime).",
+          "status": "pending",
+          "details": "Check coverage for FooterDataProvider (~92%) already good, but useRuntime might have gaps. Also consider session-manager.ts (~75%) as high-impact."
+        }
+      ]
+    },
+    {
+      "id": "phase-16",
+      "name": "Command Handlers Test Expansion",
+      "tasks": [
+        {
+          "id": "task-70",
+          "content": "Expand command-handlers.test.ts to increase statement coverage from ~19% to >50%. Add tests for: /export (HTML generation), /import (fd and session switching), /share (GitHub gist), /name (session naming), /session (stats display), /changelog (display), /hotkeys (list), /clone (fork), /tree (tree navigation), /compact (compaction), /reload (session reload), /debug (log writing), /arminsayshi, /dementedelves. Also test error handling and edge cases (no messages, missing tokens, failures).",
+          "status": "pending",
+          "details": "Command handlers are essential for TUI user commands. Use mocks for runtime, session, settings, modelRegistry, authStorage, and fs. Ensure each command's success and failure branches are covered. Update existing tests to use more specific assertions."
         }
       ]
     }
   ],
-  "nextTaskId": 67,
-  "nextPhaseId": 14,
-  "updatedAt": "2026-05-30T00:06:04.485Z"
+  "nextTaskId": 71,
+  "nextPhaseId": 17,
+  "updatedAt": "2026-05-30T00:27:25.422Z"
 }

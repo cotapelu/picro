@@ -6,15 +6,15 @@ Track agent performance and reliability across iterations.
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 61 |
-| Tasks Completed | 107 |
+| Total Iterations | 62 |
+| Tasks Completed | 109 |
 | Test Failure Rate | 0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (704 tests) |
-| Coverage (overall) | ~48.22% |
+| Test Pass Rate | 100% (724 tests) |
+| Coverage (overall) | ~48.3% |
 | Coverage (key modules): |
 | - loop-strategy.ts | 93.33% |
 | - message-queue.ts | ~98% |
@@ -23,6 +23,7 @@ Track agent performance and reliability across iterations.
 | - event-emitter.ts | ~80% |
 | - models.ts | 100% |
 | - agent-loop.ts | ~72% |
+| - InputBox.tsx | ~68% |
 | - session-manager.ts | ~75% |
 | - convert-to-llm.ts | 100% |
 | - paths.ts | 100% |
@@ -31,6 +32,8 @@ Track agent performance and reliability across iterations.
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
+|------|-----------|-------|--------------|-------|
+| 2025-05-29 | 62 | 20 | ✅ | **InputBox Test Coverage Expansion:** Added 20 comprehensive unit tests covering rendering (placeholder, value, slash mode, unicode, long input), disabled state, submission (Enter with/without value), backspace handling, arrow keys navigation, Home/End (Ctrl+A/E), slash command detection, autocomplete (Tab), kill ring (Ctrl+K/Y), and edge cases. InputBox.tsx coverage increased from ~13% to ~68%. Overall coverage ~48.3%, tests 724 passing.
 |------|-----------|-------|--------------|-------|
 | 2025-05-29 | 61 | 24 | ✅ | AgentLoop coverage boost: added 24 comprehensive unit tests covering reset, transformContext, memoryStore (success/failure), steering queue, initialTurns, autoSaveMemory, turn creation, drainQueue, combineSignals, transformPrompt, max rounds, debug emissions, shouldContinue, signal integration, toolCallId, consecutive runs, and snapshot integrity. Overall coverage ~48.22%, agent-loop.ts ~72%.
 | 2025-05-28 | 50 | 1 | ✅ | Compaction Utilities Tests: unit tests for compaction.ts (13 tests) covering estimateTokens, shouldCompact, file ops tracking, and formatting |
