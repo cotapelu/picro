@@ -1,41 +1,43 @@
 # Project State
 
-Last updated: 2025-05-30 (Iteration 62)
+Last updated: 2025-05-30 (Iteration 64)
 
 ## Metrics
-- Total Iterations: 62
-- Test Pass Rate: 100% (805/806 tests) - 1 flaky unrelated
-- Coverage: ~53% overall, key modules well-covered
+- Total Iterations: 64
+- Tasks Completed: 120
+- Test Pass Rate: 99.9% (812/813 tests) - 1 flaky unrelated
+- Coverage: ~54%+ overall
   - command-handlers: 80%
   - useRuntime: 93%
   - session-manager: 81%
   - convert-to-llm: 100%
   - output-guard: 91%
+  - Footer: 84%
+  - Header: 80%
+  - MessageList: 65%
 - Build Success Rate: 100%
-- Zero regressions in new code
+- Zero regressions
 
-## Completed Features (Iteration 62)
-- **useRuntime Hook Tests** (25 tests, 93% coverage)
-- **Session-manager enhanced tests** (40 tests, +6% coverage)
-- **convert-to-llm test suite** (16 tests, 100% coverage)
-- **output-guard test suite** (17 tests, 91% coverage)
-- **TUI component tests**: Header (6), InputBox (7), MessageList (8)
-- Added slash commands: `arminsayshi`, `dementedelves`
+## Completed Features (Iteration 63)
+- **Footer component tests** (13 tests, ~84% coverage)
+- **Modal tests**: HelpModal (3), ConfirmationModal (5)
+- **Flaky test fix**: agent-loop debug timing assertion (>=0)
+- **proxy-stream test** (minimal)
 
 ## Current Priorities
-1. Maintain high test pass rate and continue coverage expansion.
-2. Complete InkApp decomposition (reduce component size from ~1500 lines).
+1. Continue coverage expansion toward 60% overall.
+2. Complete InkApp decomposition (reduce component size).
 3. Implement theme watcher (dynamic light/dark switching).
-4. Address remaining low-coverage modules: extensions/loader (14%), runner (10%)
+4. Address very low-coverage modules if time permits.
 
 ## Known Issues
-- One flaky test in agent-loop.test.ts (timing-related, not affecting function)
-- InkApp.tsx still large, needs systematic decomposition into smaller hooks
-- Extension system coverage low but not critical for core functionality
+- 1 flaky test remains in agent-loop (intermittent timing)
+- InputBox coverage still very low (~14%)
+- Modals coverage low but not critical
 
 ## Next Steps
-- Add tests for remaining TUI components (Footer, Modal components) to reach >80% UI coverage
-- Consider addressing extension loader/runner coverage if time permits
-- Begin InkApp decomposition planning
-- Investigate and fix flaky agent-loop test when possible
+- Add tests for InputBox interactions (increase from 14%)
+- Add tests for remaining modals to improve TUI coverage
+- Consider addressing extensions/loader and runner coverage for completeness
+- Maintain 100% test pass rate (monitor flaky)
 

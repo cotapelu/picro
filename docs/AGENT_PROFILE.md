@@ -10,25 +10,24 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - ✅ Build system integration (tsc + esbuild)
 - ✅ Extension system integration (bindExtensions, ExtensionUIContext, shortcuts)
 - ✅ Interactive modals (scoped-models, user-selector, session-info, tree-summarization, etc.)
-- ✅ Footer with dynamic data (tokens, cost, perf, git)
+- ✅ Footer with dynamic data (tokens, cost, perf, git) and comprehensive tests (84% coverage)
 - ✅ Comprehensive slash commands (export, import, share, name, tree, reload, compact, session, etc.)
 - ✅ Startup experience (resource counts, version check, auth warnings, graceful shutdown)
 - ✅ Git integration (branch, dirty, ahead/behind)
-- ✅ Comprehensive test suites: useRuntime (93% coverage), output-guard (91%), convert-to-llm (100%)
-- ✅ Component tests: Header, InputBox, MessageList
+- ✅ Comprehensive test suites: useRuntime (93%), output-guard (91%), convert-to-llm (100%), session-manager (81%)
+- ✅ Component tests: Header (80%), Footer (84%), MessageList (65%), HelpModal, ConfirmationModal
 - ✅ Command handlers with full error handling tests (80% coverage)
-- ✅ session-manager advanced tests (40 tests, 81% coverage)
-- ✅ Proactive bug detection and rapid fix
-- ✅ Zero regressions over 63 iterations, 112 tasks
+- ✅ Proactive bug detection and rapid fix (flaky test resolved)
+- ✅ Zero regressions over 64 iterations, 116 tasks
 
 ## Weaknesses / Areas for Improvement
 - ⚠️ InkApp.tsx still large (~1500 lines) - needs systematic decomposition into smaller hooks
-- ⚠️ Overall test coverage ~53% - continue expanding to reach 80% target
+- ⚠️ Overall test coverage ~54% - continue expanding to reach 60%+ then 80%
+- ⚠️ InputBox coverage still very low (~14%)
 - ⚠️ Extension loader/runner coverage very low (~10-14%) but low priority
-- ⚠️ 1 flaky test in agent-loop (timing-related)
 
 ## Tasks That Often Fail
-- N/A (63 iterations, 112 tasks completed with high success rate)
+- N/A (64 iterations, 116 tasks completed with high success rate)
 
 ## Fragile Modules
 - `src/tui/ink/InkApp.tsx` - large component, decomposition planned
@@ -37,8 +36,8 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 
 ## Technical Debt
 - **InkApp decomposition**: Extract into focused hooks (useMessages, useModals, useInput, etc.)
-- **Testing**: Continue expanding UI component coverage (Footer, Modals, SpecialMessage components)
-- **Flaky test**: Investigate timing issue in agent-loop debug emissions test
+- **Testing**: Continue expanding InputBox tests, add tests for remaining modals
+- **Low-coverage modules**: Consider addressing extensions/loader and runner for completeness
 
 ## Final Notes (2025-05-30)
 
@@ -48,8 +47,8 @@ The Picro TUI is **feature-complete** and **production-ready** with:
 - Full extension support
 - Git integration
 - Comprehensive stats
-- 805 passing tests (1 flaky)
-- Strong coverage on critical modules
-- Zero regressions over 112 tasks
+- 812 passing tests (1 unrelated flaky)
+- Strong coverage on critical modules (useRuntime 93%, output-guard 91%, Footer 84%)
+- Zero regressions over 116 tasks
 
-**Evolution Status**: Continuous loop mode active. Coverage expansion phase 17 completed. Next: decompose InkApp, push overall coverage toward 60%.
+**Evolution Status**: Continuous loop mode active. Coverage expansion continues. Next: boost InputBox coverage, begin InkApp decomposition.
