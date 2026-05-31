@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import React, { useEffect, useState, useCallback } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useFocus } from 'ink';
 import type { AgentSessionRuntimeInterface } from '../../../runtime.js';
 import { useTheme } from '../hooks/useTheme.js';
 import { Modal } from './Modal.js';
@@ -18,6 +18,9 @@ interface UserMessageSelectorModalProps {
 
 export const UserMessageSelectorModal: React.FC<UserMessageSelectorModalProps> = ({ runtime, onClose }) => {
   const { theme } = useTheme();
+  // Auto-focus this modal
+  const { setFocus } = useFocus();
+  useEffect(() => { setFocus(); }, [setFocus]);
   const [messages, setMessages] = useState<UserMessageItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const maxVisible = 10;

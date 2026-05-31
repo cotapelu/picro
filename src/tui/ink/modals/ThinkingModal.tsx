@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useFocus } from 'ink';
 
 interface ThinkingModalProps {
   currentLevel: string;
@@ -16,6 +16,9 @@ export const ThinkingModal: React.FC<ThinkingModalProps> = ({
   const [selectedIndex, setSelectedIndex] = useState(
     THINKING_LEVELS.indexOf(currentLevel)
   );
+  // Auto-focus this modal
+  const { setFocus } = useFocus();
+  useEffect(() => { setFocus(); }, [setFocus]);
 
   useInput((input, key) => {
     if (key.escape) {

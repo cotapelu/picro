@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import React, { useEffect, useState, useCallback } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useFocus } from 'ink';
 import type { AgentSessionRuntimeInterface } from '../../../runtime.js';
 import { useTheme } from '../hooks/useTheme.js';
 import { Modal } from './Modal.js';
@@ -72,6 +72,9 @@ export const ScopedModelsSelectorModal: React.FC<ScopedModelsSelectorModalProps>
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [enabledIds, setEnabledIds] = useState<EnabledIds>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  // Auto-focus this modal
+  const { setFocus } = useFocus();
+  useEffect(() => { setFocus(); }, [setFocus]);
   const [search, setSearch] = useState('');
   const [isDirty, setIsDirty] = useState(false);
   const maxVisible = 8;

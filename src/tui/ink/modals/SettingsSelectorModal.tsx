@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import React, { useEffect, useState, useCallback } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useFocus } from 'ink';
 import type { AgentSessionRuntimeInterface } from '../../../runtime.js';
 import { useTheme } from '../hooks/useTheme.js';
 import { Modal } from './Modal.js';
@@ -22,6 +22,9 @@ interface SettingsSelectorModalProps {
 }
 
 export const SettingsSelectorModal: React.FC<SettingsSelectorModalProps> = ({ runtime, onClose }) => {
+  // Auto-focus this modal
+  const { setFocus } = useFocus();
+  useEffect(() => { setFocus(); }, [setFocus]);
   const { isDark } = useTheme();
   const [settings, setSettings] = useState<SettingDef[]>([]);
   const [values, setValues] = useState<Record<string, any>>({});

@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import React, { useState, useCallback } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useFocus } from 'ink';
 
 interface LoginModalProps {
   onLogin: (apiKey: string) => Promise<void>;
@@ -11,6 +11,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLogin, onClose }) => {
   const [apiKey, setApiKey] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  // Auto-focus this modal
+  const { setFocus } = useFocus();
+  useEffect(() => { setFocus(); }, [setFocus]);
 
   const handleLogin = useCallback(async () => {
     if (!apiKey.trim()) {

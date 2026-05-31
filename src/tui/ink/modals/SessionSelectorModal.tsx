@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import React, { useEffect, useState } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useFocus } from 'ink';
 
 interface Session {
   id: string;
@@ -18,6 +18,9 @@ interface SessionSelectorModalProps {
 
 export const SessionSelectorModal: React.FC<SessionSelectorModalProps> = ({ runtime, onClose }) => {
   const [sessions, setSessions] = useState<Session[]>([]);
+  // Auto-focus this modal
+  const { setFocus } = useFocus();
+  useEffect(() => { setFocus(); }, [setFocus]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
