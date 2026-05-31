@@ -688,9 +688,35 @@
           "status": "pending"
         }
       ]
+    },
+    {
+      "id": "phase-26",
+      "name": "Debug BUILTIN_SLASH_COMMANDS error",
+      "tasks": [
+        {
+          "id": "task-107",
+          "content": "Investigate project structure and locate source files",
+          "status": "completed"
+        },
+        {
+          "id": "task-108",
+          "content": "Find where BUILTIN_SLASH_COMMANDS should be defined/imported from",
+          "status": "completed"
+        },
+        {
+          "id": "task-109",
+          "content": "Fix the missing import/reference",
+          "status": "completed"
+        },
+        {
+          "id": "task-110",
+          "content": "Rebuild and test",
+          "status": "completed"
+        }
+      ]
     }
   ],
-  "nextTaskId": 107,
-  "nextPhaseId": 26,
-  "updatedAt": "2026-05-30T08:09:54.203Z"
+  "nextTaskId": 111,
+  "nextPhaseId": 27,
+  "updatedAt": "2026-05-31T01:16:06.457Z"
 }
