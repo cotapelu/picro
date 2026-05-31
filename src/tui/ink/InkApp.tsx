@@ -770,6 +770,19 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     } catch {}
   }, [runtime, addToast]);
 
+  // Memoized callbacks for input props to prevent infinite loops
+  const onSlashCommand = React.useCallback((prefix: string) => {
+    setActiveModal({ type: 'command-palette', filter: prefix, isSlash: true });
+  }, [setActiveModal]);
+
+  const onTab = React.useCallback(() => {
+    setActiveModal({ type: 'command-palette', filter: '', isSlash: false });
+  }, [setActiveModal]);
+
+  const onPathCompleteMemo = React.useCallback(handlePathComplete, [handlePathComplete]);
+  const onExternalEditMemo = React.useCallback(handleExternalEdit, [handleExternalEdit]);
+  const onAutocompleteMemo = React.useCallback(handleAutocomplete, [handleAutocomplete]);
+
   // Input editor (default or custom) props
   const inputProps = {
     value: inputValue,
@@ -777,16 +790,12 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     onSubmit: handleSubmit,
     placeholder: 'Type your message...',
     disabled: isSubmitting,
-    onSlashCommand: (prefix: string) => {
-      setActiveModal({ type: 'command-palette', filter: prefix, isSlash: true });
-    },
-    onTab: () => {
-      setActiveModal({ type: 'command-palette', filter: '', isSlash: false });
-    },
+    onSlashCommand,
+    onTab,
     cwd: runtime.cwd,
-    onPathComplete: handlePathComplete,
-    onExternalEdit: handleExternalEdit,
-    onAutocomplete: handleAutocomplete,
+    onPathComplete: onPathCompleteMemo,
+    onExternalEdit: onExternalEditMemo,
+    onAutocomplete: onAutocompleteMemo,
   };  // Signal handlers for graceful shutdown
   React.useEffect(() => {
     const handleSignal = async (signal: string) => {
