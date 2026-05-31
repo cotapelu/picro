@@ -2,19 +2,19 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-05-30, Iteration 82)
+## Current Metrics (as of 2025-05-30, Iteration 83)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 82 |
-| Tasks Completed | 191 |
+| Total Iterations | 83 |
+| Tasks Completed | 192 |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (996/996 tests) |
-| Coverage (overall) | ~58.7% |
+| Test Pass Rate | 100% (1000/1000 tests) |
+| Coverage (overall) | ~58.8% |
 | Coverage (key modules): |
 | - command-handlers.ts | 80.34% |
 | - useRuntime.ts | 93.05% |
@@ -30,6 +30,7 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-05-30 | 83 | 1 | ✅ | **session-picker extra tests:** Added tests for selectSession (empty, valid, cancel, invalid). Tests: 1000 passing. Coverage ~58.8%.
 | 2025-05-30 | 82 | 1 | ✅ | **timings extra tests:** Added tests for now() and measure() including error propagation. Tests: 996 passing. Coverage ~58.7%.
 | 2025-05-30 | 81 | 1 | ✅ | **Header extra tests:** Added 2 extra tests for Header component rendering stats. Tests: 993 passing. Coverage ~58.6%.
 | 2025-05-30 | 80 | 1 | ✅ | **paths.extra tests:** Added extra unit test for isLocalPath (current dir). Tests: 991 passing. Coverage ~58.5%.

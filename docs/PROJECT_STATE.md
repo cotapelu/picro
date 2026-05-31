@@ -1,12 +1,12 @@
 # Project State
 
-Last updated: 2025-05-30 (Iteration 82)
+Last updated: 2025-05-30 (Iteration 83)
 
 ## Metrics
-- Total Iterations: 82
-- Tasks Completed: 191
-- Test Pass Rate: 100% (996/996 tests)
-- Coverage: ~58.7% overall
+- Total Iterations: 83
+- Tasks Completed: 192
+- Test Pass Rate: 100% (1000/1000 tests)
+- Coverage: ~58.8% overall
   - command-handlers: 80%
   - useRuntime: 93%
   - session-manager: 81%
@@ -19,6 +19,9 @@ Last updated: 2025-05-30 (Iteration 82)
 - Build Success Rate: 100%
 - Zero regressions
 
+## Completed Features (Iteration 83)
+
+- **session-picker extra tests:** Added tests for selectSession (empty, valid, cancel, invalid).
 ## Completed Features (Iteration 82)
 
 - **timings extra tests:** Added tests for now(), measure() including error propagation.

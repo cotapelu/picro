@@ -618,3 +618,4 @@ Cần đảm bảo imports đầy đủ từ:
 - ✅ **Iteration 80**: paths.extra tests: added isLocalPath test for current directory. Tests: 991 passing. Coverage ~58.5%.
 - ✅ **Iteration 81**: Header extra tests: added 2 tests for Header stats rendering. Tests: 993 passing. Coverage ~58.6%.
 - ✅ **Iteration 82**: timings extra tests: added tests for now() and measure(). Tests: 996 passing. Coverage ~58.7%.
+- ✅ **Iteration 83**: session-picker extra tests: added 4 tests for selectSession. Tests: 1000 passing. Coverage ~58.8%.
