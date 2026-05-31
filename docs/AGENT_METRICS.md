@@ -2,19 +2,19 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-05-30, Iteration 79)
+## Current Metrics (as of 2025-05-30, Iteration 80)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 79 |
-| Tasks Completed | 188 |
+| Total Iterations | 80 |
+| Tasks Completed | 189 |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (990/990 tests) |
-| Coverage (overall) | ~58.4% |
+| Test Pass Rate | 100% (991/991 tests) |
+| Coverage (overall) | ~58.5% |
 | Coverage (key modules): |
 | - command-handlers.ts | 80.34% |
 | - useRuntime.ts | 93.05% |
@@ -30,6 +30,7 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-05-30 | 80 | 1 | ✅ | **paths.extra tests:** Added extra unit test for isLocalPath (current dir). Tests: 991 passing. Coverage ~58.5%.
 | 2025-05-30 | 79 | 1 | ✅ | **sanitizeBinaryOutput extra tests:** Added 6 tests for control char handling (backspace, form feed, vertical tab, tab, newline, CR). Tests: 990 passing. Coverage ~58.4%. |
 | 2025-05-30 | 78 | 1 | ✅ | **Paths edge‑case tests:** Added 10 tests for isLocalPath edge cases; removed ModelSelectorModal test to avoid flakiness. Overall tests 984 passing. Coverage ~58.3%.
 | 2025-05-30 | 75 | 1 | ✅ | **LoginModal backspace test:** Added test for backspace on empty input. Tests: 971 passing. Coverage ~58.0%.

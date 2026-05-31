@@ -615,3 +615,4 @@ Cần đảm bảo imports đầy đủ từ:
 ---
 
 **Lưu ý**: Không copy code từ reference. Đọc, hiểu kiến trúc, sau đó implement theo cách phù hợp với React/Ink pattern hiện tại. Sử dụng types từ AgentSessionRuntimeInterface và các interface phù hợp.
+- ✅ **Iteration 80**: paths.extra tests: added isLocalPath test for current directory. Tests: 991 passing. Coverage ~58.5%.

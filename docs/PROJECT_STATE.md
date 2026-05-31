@@ -1,12 +1,12 @@
 # Project State
 
-Last updated: 2025-05-30 (Iteration 79)
+Last updated: 2025-05-30 (Iteration 80)
 
 ## Metrics
-- Total Iterations: 79
-- Tasks Completed: 188
-- Test Pass Rate: 100% (990/990 tests)
-- Coverage: ~58.4% overall
+- Total Iterations: 80
+- Tasks Completed: 189
+- Test Pass Rate: 100% (991/991 tests)
+- Coverage: ~58.5% overall
   - command-handlers: 80%
   - useRuntime: 93%
   - session-manager: 81%
@@ -19,6 +19,9 @@ Last updated: 2025-05-30 (Iteration 79)
 - Build Success Rate: 100%
 - Zero regressions
 
+## Completed Features (Iteration 80)
+
+- **paths.extra tests:** Added extra unit test for isLocalPath (current directory).
 ## Completed Features (Iteration 79)
 - **sanitizeBinaryOutput extra tests:** Added 7 extra unit tests covering control characters and preserving tabs/newlines/carriage returns: backspace, form feed, vertical tab, tab, newline, carriage return. Tests: 990 passing. Coverage ~58.4%.
 
