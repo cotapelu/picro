@@ -17,8 +17,8 @@ export const ThinkingModal: React.FC<ThinkingModalProps> = ({
     THINKING_LEVELS.indexOf(currentLevel)
   );
   // Auto-focus this modal
-  const { setFocus } = useFocus();
-  useEffect(() => { setFocus(); }, [setFocus]);
+  const { focus } = useFocus();
+  useEffect(() => { focus(); }, [focus]);
 
   useInput((input, key) => {
     if (key.escape) {

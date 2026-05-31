@@ -12,8 +12,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLogin, onClose }) => {
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   // Auto-focus this modal
-  const { setFocus } = useFocus();
-  useEffect(() => { setFocus(); }, [setFocus]);
+  const { focus } = useFocus();
+  useEffect(() => { focus(); }, [focus]);
 
   const handleLogin = useCallback(async () => {
     if (!apiKey.trim()) {

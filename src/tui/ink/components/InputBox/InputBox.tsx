@@ -76,10 +76,10 @@ export const InputBox: React.FC<InputBoxProps> = ({
 }) => {
   const { theme } = useTheme();
   // Auto-focus this input on mount
-  const { setFocus } = useFocus();
+  const { focus } = useFocus();
   useEffect(() => {
-    setFocus();
-  }, [setFocus]);
+    focus();
+  }, [focus]);
   // Helper to match keyId (e.g., "ctrl+p")
   const matchesKey = (input: string, key: any, keyId: string): boolean => {
     const parts = keyId.toLowerCase().split('+');

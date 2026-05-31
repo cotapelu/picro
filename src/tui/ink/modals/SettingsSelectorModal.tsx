@@ -23,8 +23,8 @@ interface SettingsSelectorModalProps {
 
 export const SettingsSelectorModal: React.FC<SettingsSelectorModalProps> = ({ runtime, onClose }) => {
   // Auto-focus this modal
-  const { setFocus } = useFocus();
-  useEffect(() => { setFocus(); }, [setFocus]);
+  const { focus } = useFocus();
+  useEffect(() => { focus(); }, [focus]);
   const { isDark } = useTheme();
   const [settings, setSettings] = useState<SettingDef[]>([]);
   const [values, setValues] = useState<Record<string, any>>({});

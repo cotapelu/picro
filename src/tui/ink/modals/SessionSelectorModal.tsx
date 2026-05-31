@@ -19,8 +19,8 @@ interface SessionSelectorModalProps {
 export const SessionSelectorModal: React.FC<SessionSelectorModalProps> = ({ runtime, onClose }) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   // Auto-focus this modal
-  const { setFocus } = useFocus();
-  useEffect(() => { setFocus(); }, [setFocus]);
+  const { focus } = useFocus();
+  useEffect(() => { focus(); }, [focus]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

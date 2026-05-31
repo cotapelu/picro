@@ -25,10 +25,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 }) => {
   const { theme } = useTheme();
   // Auto-focus this modal
-  const { setFocus } = useFocus();
+  const { focus } = useFocus();
   useEffect(() => {
-    setFocus();
-  }, [setFocus]);
+    focus();
+  }, [focus]);
   const [filter, setFilter] = useState(initialFilter);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
