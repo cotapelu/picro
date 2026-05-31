@@ -13,7 +13,7 @@ import { ModelSelectorModal } from './modals/ModelSelectorModal.js';
 import { ScopedModelsSelectorModal } from './modals/ScopedModelsSelectorModal.js';
 import { UserMessageSelectorModal } from './modals/UserMessageSelectorModal.js';
 import { SessionInfoModal } from './modals/SessionInfoModal.js';
-import { ChangelogModal } from './modals/Changelog.js';
+import { ChangelogModal } from './modals/ChangelogModal.js';
 import { HotkeysModal } from './modals/HotkeysModal.js';
 import { TreeSelectorModal } from './modals/TreeSelectorModal.js';
 import { TreeSummarizationModal } from './modals/TreeSummarizationModal.js';
