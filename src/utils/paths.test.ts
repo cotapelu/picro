@@ -46,4 +46,45 @@ describe('isLocalPath', () => {
     expect(isLocalPath('NPM:lodash')).toBe(true); // uppercase not recognized as prefix, considered local
     expect(isLocalPath('GITHUB:user/repo')).toBe(true);
   });
+
+  // Additional edge‑case tests
+  it('recognizes Windows drive paths as local', () => {
+    expect(isLocalPath('C:\\path')).toBe(true);
+  });
+
+  it('recognizes paths with mid‑colon as local', () => {
+    expect(isLocalPath('folder:sub')).toBe(true);
+  });
+
+  it('handles spaces in paths', () => {
+    expect(isLocalPath('my docs/file.txt')).toBe(true);
+  });
+
+  it('handles parent directory references', () => {
+    expect(isLocalPath('..')).toBe(true);
+  });
+
+  it('handles tilde expansion path', () => {
+    expect(isLocalPath('~/file')).toBe(true);
+  });
+
+  it('handles numeric strings', () => {
+    expect(isLocalPath('12345')).toBe(true);
+  });
+
+  it('handles exclamation mark in path', () => {
+    expect(isLocalPath('path!')).toBe(true);
+  });
+
+  it('handles unicode characters', () => {
+    expect(isLocalPath('đocument')).toBe(true);
+  });
+
+  it('handles question mark in path', () => {
+    expect(isLocalPath('file?.txt')).toBe(true);
+  });
+
+  it('handles trailing spaces', () => {
+    expect(isLocalPath('path   ')).toBe(true);
+  });
 });

@@ -1,12 +1,12 @@
 # Project State
 
-Last updated: 2025-05-30 (Iteration 77)
+Last updated: 2025-05-30 (Iteration 78)
 
 ## Metrics
-- Total Iterations: 77
-- Tasks Completed: 186
-- Test Pass Rate: 100% (975/975 tests)
-- Coverage: ~58.2% overall
+- Total Iterations: 78
+- Tasks Completed: 187
+- Test Pass Rate: 100% (984/984 tests)
+- Coverage: ~58.3% overall
   - command-handlers: 80%
   - useRuntime: 93%
   - session-manager: 81%
@@ -27,6 +27,9 @@ Last updated: 2025-05-30 (Iteration 77)
 
 ## Completed Features (Iteration 74)
 - **Truncate edge case test**: Added test for maxLines=0 in truncateLines.
+
+## Completed Features (Iteration 78)
+- **Paths edge‑case tests:** Added 10 edge‑case tests for `isLocalPath` covering Windows drive paths, mid‑colon, spaces, tilde, unicode, etc.
 
 ## Current Priorities
 1. Continue coverage expansion toward 60% overall.
