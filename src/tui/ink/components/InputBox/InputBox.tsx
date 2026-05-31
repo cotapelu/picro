@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useFocus } from 'ink';
 import { useTheme } from '../../hooks/useTheme.js';
 
 function getCommonPrefix(strings: string[]): string {
@@ -31,6 +31,19 @@ interface InputBoxProps {
   onPathComplete?: (partial: string) => Promise<string[]>;
   onExternalEdit?: (text: string) => Promise<string> | string;
   onAutocomplete?: (filter: string) => Promise<string[]>;
+  // Global shortcuts & extension commands
+  extensionShortcuts?: React.MutableRefObject<Map<string, (input: string, key: any) => boolean | void>>;
+  onCommandPalette?: () => void;
+  onThinking?: () => void;
+  onThemeToggle?: () => void;
+  onToolOutputToggle?: () => void;
+  onThinkingBlockToggle?: () => void;
+  onLogin?: () => void;
+  onSessionSelector?: () => void;
+  onDebug?: () => void;
+  onEditor?: (value: string) => void;
+  onPaste?: () => void;
+  onInterrupt?: () => void;
 }
 
 export const InputBox: React.FC<InputBoxProps> = ({
@@ -47,8 +60,37 @@ export const InputBox: React.FC<InputBoxProps> = ({
   onPathComplete,
   onExternalEdit,
   onAutocomplete,
+  // new props
+  extensionShortcuts,
+  onCommandPalette,
+  onThinking,
+  onThemeToggle,
+  onToolOutputToggle,
+  onThinkingBlockToggle,
+  onLogin,
+  onSessionSelector,
+  onDebug,
+  onEditor,
+  onPaste,
+  onInterrupt,
 }) => {
   const { theme } = useTheme();
+  // Auto-focus this input on mount
+  const { setFocus } = useFocus();
+  useEffect(() => {
+    setFocus();
+  }, [setFocus]);
+  // Helper to match keyId (e.g., "ctrl+p")
+  const matchesKey = (input: string, key: any, keyId: string): boolean => {
+    const parts = keyId.toLowerCase().split('+');
+    const modifiers = parts.slice(0, -1);
+    const expectedChar = parts[parts.length - 1];
+    if (input !== expectedChar) return false;
+    if (modifiers.includes('ctrl') !== !!key.ctrl) return false;
+    if (modifiers.includes('shift') !== !!key.shift) return false;
+    if (modifiers.includes('alt') !== !!key.alt) return false;
+    return true;
+  };
   const [cursorPosition, setCursorPosition] = useState(value.length);
   const inputRef = useRef<string>(value);
   const historyRef = useRef<string[]>([]);
@@ -88,14 +130,36 @@ export const InputBox: React.FC<InputBoxProps> = ({
     }
   }, [onChange]);
 
-  // Handle input
+  // Shortcut handling & input
   useInput(async (input, key) => {
     if (disabled) return;
+
+    // Extension shortcuts
+    if (extensionShortcuts?.current) {
+      for (const [keyId, handler] of extensionShortcuts.current.entries()) {
+        if (matchesKey(input, key, keyId)) {
+          const result = handler(input, key);
+          if (result !== false) return;
+        }
+      }
+    }
+
+    // Global shortcuts
+    if (key.ctrl && input === 'p') { onCommandPalette?.(); return; }
+    if (key.ctrl && input === 't') { onThinking?.(); return; }
+    if (key.ctrl && key.shift && input === 't') { onThemeToggle?.(); return; }
+    if (key.ctrl && key.shift && input === 'x') { onToolOutputToggle?.(); return; }
+    if (key.ctrl && key.shift && input === 'h') { onThinkingBlockToggle?.(); return; }
+    if (key.ctrl && input === 'l') { onLogin?.(); return; }
+    if (key.ctrl && input === 'r') { onSessionSelector?.(); return; }
+    if (key.ctrl && input === 'd') { onDebug?.(); return; }
+    if (key.ctrl && input === 'e') { onEditor?.(value); return; }
+    if (key.ctrl && key.shift && input === 'v') { onPaste?.(); return; }
+    if (key.ctrl && input === 'c') { onInterrupt?.(); return; }
 
     // Submit with Enter
     if (key.return && (!multiline || !key.shift)) {
       if (value.trim()) {
-        // Add to history if not empty and different from last
         const history = historyRef.current;
         if (history.length === 0 || history[history.length - 1] !== value) {
           historyRef.current = [...history, value];
@@ -106,15 +170,9 @@ export const InputBox: React.FC<InputBoxProps> = ({
       return;
     }
 
-    // Newline with Shift+Enter in multiline mode
+    // Newline with Shift+Enter
     if (key.return && multiline && key.shift) {
       onChange(value + '\n');
-      return;
-    }
-
-    // Cancel with Ctrl+C
-    if (key.ctrl && input === 'c') {
-      process.exit(0);
       return;
     }
 
@@ -128,12 +186,10 @@ export const InputBox: React.FC<InputBoxProps> = ({
       return;
     }
 
-    // Kill ring: Ctrl+K (kill to end of line), Ctrl+Y (yank)
+    // Kill ring: Ctrl+K / Ctrl+Y
     if (key.ctrl && input === 'k') {
-      // Kill from cursor to end
       const before = value.slice(0, cursorPosition);
       const killed = value.slice(cursorPosition);
-      // Store in kill ring
       killRingRef.current = killed;
       onChange(before);
       setCursorPosition(before.length);
@@ -166,17 +222,13 @@ export const InputBox: React.FC<InputBoxProps> = ({
       return;
     }
 
-    // Move cursor left/right
+    // Cursor left/right
     if (key.leftArrow) {
-      if (cursorPosition > 0) {
-        setCursorPosition(cursorPosition - 1);
-      }
+      if (cursorPosition > 0) setCursorPosition(cursorPosition - 1);
       return;
     }
     if (key.rightArrow) {
-      if (cursorPosition < value.length) {
-        setCursorPosition(cursorPosition + 1);
-      }
+      if (cursorPosition < value.length) setCursorPosition(cursorPosition + 1);
       return;
     }
 
@@ -190,21 +242,19 @@ export const InputBox: React.FC<InputBoxProps> = ({
       return;
     }
 
-    // Tab - autocomplete (path completion + extension providers)
+    // Tab - autocomplete
     if (key.tab) {
       const before = value.slice(0, cursorPosition);
       const lastSpace = before.lastIndexOf(' ');
       const tokenStart = lastSpace === -1 ? 0 : lastSpace + 1;
       const partial = before.slice(tokenStart);
       const completions: string[] = [];
-      // Path completion (if token contains '/' and onPathComplete provided)
       if (onPathComplete && partial.includes('/')) {
         try {
           const pathCompletions = await onPathComplete(partial);
           completions.push(...pathCompletions);
         } catch {}
       }
-      // Generic autocomplete from extension providers
       if (!completions.length && onAutocomplete && partial.length > 0) {
         try {
           const autoCompletions = await onAutocomplete(partial);
@@ -243,11 +293,9 @@ export const InputBox: React.FC<InputBoxProps> = ({
       const newValue = value.slice(0, cursorPosition) + input + value.slice(cursorPosition);
       onChange(newValue);
       setCursorPosition(cursorPosition + 1);
-      // Detect slash command at start of input
       if (input === '/' && cursorPosition === 0) {
         onSlashCommand?.('/');
       } else if (onSlashCommand && value.slice(0, cursorPosition).startsWith('/')) {
-        // Update slash filter as user types
         const newPrefix = newValue.slice(0, cursorPosition + 1);
         if (newPrefix.startsWith('/')) {
           onSlashCommand(newPrefix);

@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useFocus } from 'ink';
 import { useTheme } from '../hooks/useTheme.js';
 
 interface Command {
@@ -24,6 +24,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   initialFilter = '',
 }) => {
   const { theme } = useTheme();
+  // Auto-focus this modal
+  const { setFocus } = useFocus();
+  useEffect(() => {
+    setFocus();
+  }, [setFocus]);
   const [filter, setFilter] = useState(initialFilter);
   const [selectedIndex, setSelectedIndex] = useState(0);
 

@@ -264,78 +264,6 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     checkVersion();
   }, [addToast]);
 
-  // Global keybindings
-  useInput((input, key) => {
-    if (activeModal) return;
-
-    // Check extension shortcuts first
-    for (const [keyId, handler] of extensionShortcutsRef.current.entries()) {
-      if (matchesKey(input, key, keyId)) {
-        const result = handler(input, key);
-        if (result !== false) {
-          return;
-        }
-      }
-    }
-
-    if (key.ctrl && input === 'p') {
-      setActiveModal({ type: 'command-palette' });
-    } else if (key.ctrl && input === 't') {
-      setActiveModal({ type: 'thinking' });
-    } else if (key.ctrl && key.shift && input === 't') {
-      // Toggle theme with Ctrl+Shift+T
-      toggleTheme();
-      // Persist
-      try {
-        runtime.settings?.set('theme', isDark ? 'light' : 'dark');
-        runtime.settings?.save?.();
-      } catch {
-        // ignore
-      }
-    } else if (key.ctrl && key.shift && input === 'x') {
-      // Toggle tool output expansion
-      setToolOutputExpanded(prev => !prev);
-      addToast('Tool output ' + (!toolOutputExpanded ? 'expanded' : 'collapsed'));
-    } else if (key.ctrl && key.shift && input === 'h') {
-      // Toggle thinking block visibility
-      setHideThinkingBlock(prev => !prev);
-      addToast('Thinking blocks: ' + (!hideThinkingBlock ? 'hidden' : 'visible'));
-    } else if (key.ctrl && input === 'l') {
-      setActiveModal({ type: 'login' });
-    } else if (key.ctrl && input === 'r') {
-      setActiveModal({ type: 'session-selector' });
-    } else if (key.ctrl && input === 'd') {
-      setShowDebug((prev) => !prev);
-    } else if (key.ctrl && input === 'e') {
-      setActiveModal({ type: 'editor', initialValue: inputValue, onSave: async (val) => setInputValue(val) });
-    } else if (key.ctrl && key.shift && input === 'v') {
-      // Paste from clipboard (async fire-and-forget)
-      (async () => {
-        try {
-          const clipboardy = await import('clipboardy');
-          const text = await clipboardy.default.read();
-          setInputValue(prev => prev + text);
-          addToast('Pasted from clipboard', 'info');
-        } catch (err: any) {
-          addToast('Paste failed: ' + (err.message || err), 'error');
-        }
-      })();
-      return;
-    } else if (key.ctrl && input === 'c') {
-      const now = Date.now();
-      if (now - lastCtrlCTimeRef.current < 1000) {
-        process.exit(0);
-      } else {
-        lastCtrlCTimeRef.current = now;
-        try {
-          (runtime.session as any)?.abort?.();
-          addToast('Interrupted', 'info');
-        } catch {
-          // ignore
-        }
-      }
-    }
-  });
 
 
   const handleThinkingChange = useCallback((level: string) => {
@@ -541,7 +469,106 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     return suggestions;
   }, [runtime.cwd, autocompleteProviderFactories]);
 
-  // Custom header/footer replacement
+  // Shortcut callbacks for InputBox
+  const onCommandPalette = React.useCallback(() => {
+    setActiveModal({ type: 'command-palette' });
+  }, [setActiveModal]);
+
+  const onThinking = React.useCallback(() => {
+    setActiveModal({ type: 'thinking' });
+  }, [setActiveModal]);
+
+  const onThemeToggle = React.useCallback(() => {
+    toggleTheme();
+    try {
+      runtime.settings?.set('theme', isDark ? 'light' : 'dark');
+      runtime.settings?.save?.();
+    } catch {}
+  }, [toggleTheme, isDark, runtime.settings]);
+
+  const onToolOutputToggle = React.useCallback(() => {
+    setToolOutputExpanded(prev => !prev);
+    addToast('Tool output ' + (!toolOutputExpanded ? 'expanded' : 'collapsed'));
+  }, [toolOutputExpanded, addToast]);
+
+  const onThinkingBlockToggle = React.useCallback(() => {
+    setHideThinkingBlock(prev => !prev);
+    addToast('Thinking blocks: ' + (!hideThinkingBlock ? 'hidden' : 'visible'));
+  }, [hideThinkingBlock, addToast]);
+
+  const onLogin = React.useCallback(() => {
+    setActiveModal({ type: 'login' });
+  }, [setActiveModal]);
+
+  const onSessionSelector = React.useCallback(() => {
+    setActiveModal({ type: 'session-selector' });
+  }, [setActiveModal]);
+
+  const onDebug = React.useCallback(() => {
+    try {
+      const rt = runtime as any;
+      const session = rt.session;
+      const { messages } = session;
+      const stats = session.getSessionStats?.();
+      const debugLogPath = require('node:path').join(require('node:os').tmpdir(), `picro-debug-${Date.now()}.log`);
+      const lines: string[] = [
+        `Picro Debug Log`,
+        `Generated: ${new Date().toISOString()}`,
+        `CWD: ${rt.cwd}`,
+        `Session: ${stats?.sessionFile || 'in-memory'}`,
+        `Model: ${session.model?.provider}/${session.model?.id}`,
+        `Thinking level: ${session.thinkingLevel}`,
+        `Messages: ${messages.length} total`,
+        `  User: ${stats?.userMessages || 0}`,
+        `  Assistant: ${stats?.assistantMessages || 0}`,
+        `  ToolCalls: ${stats?.toolCalls || 0}`,
+        `  ToolResults: ${stats?.toolResults || 0}`,
+        `Tokens: in=${stats?.tokens?.input || 0}, out=${stats?.tokens?.output || 0}, total=${stats?.tokens?.total || 0}`,
+        `Cost: $${stats?.cost?.toFixed(4) || 0}`,
+        '',
+        '=== Full Message History (JSONL) ===',
+      ];
+      for (const msg of messages) {
+        lines.push(JSON.stringify(msg));
+      }
+      require('node:fs').writeFileSync(debugLogPath, lines.join('\n'), 'utf-8');
+      addToast(`Debug log written to ${debugLogPath}`, 'success');
+    } catch (err: any) {
+      addToast(`Debug failed: ${err.message}`, 'error');
+    }
+  }, [runtime, addToast]);
+
+  const onEditor = React.useCallback((value: string) => {
+    setActiveModal({ type: 'editor', initialValue: value, onSave: async (val) => setInputValue(val) });
+  }, [setActiveModal]);
+
+  const onPaste = React.useCallback(async () => {
+    try {
+      const clipboardy = await import('clipboardy');
+      const text = await clipboardy.default.read();
+      setInputValue(prev => prev + text);
+      addToast('Pasted from clipboard', 'info');
+    } catch (err: any) {
+      addToast('Paste failed: ' + (err.message || err), 'error');
+    }
+  }, [addToast]);
+
+  const onInterrupt = React.useCallback(() => {
+    const now = Date.now();
+    if (now - lastCtrlCTimeRef.current < 1000) {
+      process.exit(0);
+    } else {
+      lastCtrlCTimeRef.current = now;
+      try {
+        (runtime.session as any)?.abort?.();
+        addToast('Interrupted', 'info');
+      } catch {
+        // ignore
+      }
+    }
+  }, [runtime, addToast]);
+
+  // Input editor (default or custom) props
   const [customHeader, setCustomHeader] = React.useState<React.ReactNode>(null);
   const [customFooter, setCustomFooter] = React.useState<React.ReactNode>(null);
 
@@ -796,6 +823,19 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     onPathComplete: onPathCompleteMemo,
     onExternalEdit: onExternalEditMemo,
     onAutocomplete: onAutocompleteMemo,
+    // pass shortcuts
+    extensionShortcuts: extensionShortcutsRef,
+    onCommandPalette,
+    onThinking,
+    onThemeToggle,
+    onToolOutputToggle,
+    onThinkingBlockToggle,
+    onLogin,
+    onSessionSelector,
+    onDebug,
+    onEditor,
+    onPaste,
+    onInterrupt,
   };  // Signal handlers for graceful shutdown
   React.useEffect(() => {
     const handleSignal = async (signal: string) => {
