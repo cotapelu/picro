@@ -1,12 +1,12 @@
 # Project State
 
-Last updated: 2025-05-30 (Iteration 80)
+Last updated: 2025-05-30 (Iteration 81)
 
 ## Metrics
-- Total Iterations: 80
-- Tasks Completed: 189
-- Test Pass Rate: 100% (991/991 tests)
-- Coverage: ~58.5% overall
+- Total Iterations: 81
+- Tasks Completed: 190
+- Test Pass Rate: 100% (993/993 tests)
+- Coverage: ~58.6% overall
   - command-handlers: 80%
   - useRuntime: 93%
   - session-manager: 81%
@@ -19,6 +19,9 @@ Last updated: 2025-05-30 (Iteration 80)
 - Build Success Rate: 100%
 - Zero regressions
 
+## Completed Features (Iteration 81)
+
+- **Header extra tests:** Added 2 extra tests for Header component stats rendering.
 ## Completed Features (Iteration 80)
 
 - **paths.extra tests:** Added extra unit test for isLocalPath (current directory).

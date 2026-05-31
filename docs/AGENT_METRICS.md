@@ -2,19 +2,19 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-05-30, Iteration 80)
+## Current Metrics (as of 2025-05-30, Iteration 81)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 80 |
-| Tasks Completed | 189 |
+| Total Iterations | 81 |
+| Tasks Completed | 190 |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (991/991 tests) |
-| Coverage (overall) | ~58.5% |
+| Test Pass Rate | 100% (993/993 tests) |
+| Coverage (overall) | ~58.6% |
 | Coverage (key modules): |
 | - command-handlers.ts | 80.34% |
 | - useRuntime.ts | 93.05% |
@@ -30,6 +30,7 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-05-30 | 81 | 1 | ✅ | **Header extra tests:** Added 2 extra tests for Header component rendering stats. Tests: 993 passing. Coverage ~58.6%.
 | 2025-05-30 | 80 | 1 | ✅ | **paths.extra tests:** Added extra unit test for isLocalPath (current dir). Tests: 991 passing. Coverage ~58.5%.
 | 2025-05-30 | 79 | 1 | ✅ | **sanitizeBinaryOutput extra tests:** Added 6 tests for control char handling (backspace, form feed, vertical tab, tab, newline, CR). Tests: 990 passing. Coverage ~58.4%. |
 | 2025-05-30 | 78 | 1 | ✅ | **Paths edge‑case tests:** Added 10 tests for isLocalPath edge cases; removed ModelSelectorModal test to avoid flakiness. Overall tests 984 passing. Coverage ~58.3%.
