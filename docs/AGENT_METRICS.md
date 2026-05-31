@@ -2,19 +2,19 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-05-30, Iteration 81)
+## Current Metrics (as of 2025-05-30, Iteration 82)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 81 |
-| Tasks Completed | 190 |
+| Total Iterations | 82 |
+| Tasks Completed | 191 |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (993/993 tests) |
-| Coverage (overall) | ~58.6% |
+| Test Pass Rate | 100% (996/996 tests) |
+| Coverage (overall) | ~58.7% |
 | Coverage (key modules): |
 | - command-handlers.ts | 80.34% |
 | - useRuntime.ts | 93.05% |
@@ -30,6 +30,7 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-05-30 | 82 | 1 | ✅ | **timings extra tests:** Added tests for now() and measure() including error propagation. Tests: 996 passing. Coverage ~58.7%.
 | 2025-05-30 | 81 | 1 | ✅ | **Header extra tests:** Added 2 extra tests for Header component rendering stats. Tests: 993 passing. Coverage ~58.6%.
 | 2025-05-30 | 80 | 1 | ✅ | **paths.extra tests:** Added extra unit test for isLocalPath (current dir). Tests: 991 passing. Coverage ~58.5%.
 | 2025-05-30 | 79 | 1 | ✅ | **sanitizeBinaryOutput extra tests:** Added 6 tests for control char handling (backspace, form feed, vertical tab, tab, newline, CR). Tests: 990 passing. Coverage ~58.4%. |

@@ -1,12 +1,12 @@
 # Project State
 
-Last updated: 2025-05-30 (Iteration 81)
+Last updated: 2025-05-30 (Iteration 82)
 
 ## Metrics
-- Total Iterations: 81
-- Tasks Completed: 190
-- Test Pass Rate: 100% (993/993 tests)
-- Coverage: ~58.6% overall
+- Total Iterations: 82
+- Tasks Completed: 191
+- Test Pass Rate: 100% (996/996 tests)
+- Coverage: ~58.7% overall
   - command-handlers: 80%
   - useRuntime: 93%
   - session-manager: 81%
@@ -19,6 +19,9 @@ Last updated: 2025-05-30 (Iteration 81)
 - Build Success Rate: 100%
 - Zero regressions
 
+## Completed Features (Iteration 82)
+
+- **timings extra tests:** Added tests for now(), measure() including error propagation.
 ## Completed Features (Iteration 81)
 
 - **Header extra tests:** Added 2 extra tests for Header component stats rendering.
