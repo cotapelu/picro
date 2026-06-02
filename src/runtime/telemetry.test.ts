@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, it, expect, vi } from 'vitest';
-import { Telemetry, getTelemetry, setTelemetry, track as globalTrack } from './telemetry.js';
+import { Telemetry, getTelemetry, setTelemetry, track as globalTrack, telemetryMethod } from './telemetry.js';
 
 describe('Telemetry', () => {
   let telemetry: Telemetry;
@@ -145,5 +145,60 @@ describe('Telemetry advanced', () => {
     // Check order
     expect(listener).toHaveBeenNthCalledWith(1, expect.objectContaining({ event: 'e1' }));
     expect(listener).toHaveBeenNthCalledWith(2, expect.objectContaining({ event: 'e2' }));
+  });
+});
+
+describe('telemetryMethod decorator', () => {
+  let originalTelemetry: Telemetry;
+
+  beforeEach(() => {
+    originalTelemetry = getTelemetry();
+    const t = new Telemetry({ enabled: true });
+    setTelemetry(t);
+  });
+
+  afterEach(() => {
+    setTelemetry(originalTelemetry);
+  });
+
+  it('tracks success with duration on successful call', async () => {
+    const trackSpy = vi.spyOn(getTelemetry(), 'track');
+    const original = async (x: number) => x * 2;
+    const descriptor = { value: original };
+    telemetryMethod('test.event')(null as any, 'method', descriptor);
+    const fn = descriptor.value as any;
+    const result = await fn(5);
+    expect(result).toBe(10);
+    expect(trackSpy).toHaveBeenCalledWith('test.event', expect.objectContaining({ success: true, duration: expect.any(Number) }));
+  });
+
+  it('tracks error when method throws', async () => {
+    const trackSpy = vi.spyOn(getTelemetry(), 'track');
+    const original = async () => { throw new Error('fail'); };
+    const descriptor = { value: original };
+    telemetryMethod('test.error')(null as any, 'method', descriptor);
+    const fn = descriptor.value as any;
+    await expect(fn()).rejects.toThrow('fail');
+    expect(trackSpy).toHaveBeenCalledWith('test.error', expect.objectContaining({ success: false, error: 'fail', errorType: 'Error' }));
+  });
+
+  it('respects options.trackSuccess = false to suppress success tracking', async () => {
+    const trackSpy = vi.spyOn(getTelemetry(), 'track');
+    const original = async () => 42;
+    const descriptor = { value: original };
+    telemetryMethod('test.suppress', { trackSuccess: false })(null as any, 'method', descriptor);
+    const fn = descriptor.value as any;
+    await fn();
+    expect(trackSpy).not.toHaveBeenCalled();
+  });
+
+  it('respects options.trackError = false to suppress error tracking', async () => {
+    const trackSpy = vi.spyOn(getTelemetry(), 'track');
+    const original = async () => { throw new Error('oops'); };
+    const descriptor = { value: original };
+    telemetryMethod('test.suppressErr', { trackError: false })(null as any, 'method', descriptor);
+    const fn = descriptor.value as any;
+    await expect(fn()).rejects.toThrow('oops');
+    expect(trackSpy).not.toHaveBeenCalled();
   });
 });

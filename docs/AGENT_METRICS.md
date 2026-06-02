@@ -2,27 +2,28 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-06-02, Iteration 84)
+## Current Metrics (as of 2025-06-02, Iteration 85)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 84 |
-| Tasks Completed | 200+ |
+| Total Iterations | 85 |
+| Tasks Completed | 205+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1085/1085 tests, 1 todo) |
-| Coverage (statements) | 60.29% (3954/6558) |
-| Coverage (branches) | 52.76% (2331/4418) |
-| Coverage (functions) | 61.7% (725/1175) |
-| Coverage (lines) | 61.35% (3697/6026) |
+| Test Pass Rate | 100% (1089/1089 tests, 1 todo) |
+| Coverage (statements) | 60.5% (3968/6558) |
+| Coverage (branches) | 52.87% (2336/4418) |
+| Coverage (functions) | 61.95% (728/1175) |
+| Coverage (lines) | 61.58% (3711/6026) |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-06-02 | 85 | 4 | ✅ | **Telemetry decorator tests:** Added 4 tests covering success, error, and suppression options. Increased telemetry module branch coverage. Tests: 1089 passing. Coverage ~60.5% statements, 52.87% branches, 61.95% functions, 61.58% lines. |
 | 2025-06-02 | 84 | Many | ✅ | **Coverage >60% achieved:** Added SettingsSelectorModal tests (11), ModelSelectorModal tests (5), telemetry module tests (8), auth-storage tests (28), performance-tracker tests (8). Fixed shell.test sequencing. Standardized modal testing patterns. 1085 tests passing, coverage 60.29% statements, 61.35% lines. |
 | 2025-05-30 | 83 | 1 | ✅ | **session-picker extra tests:** Added tests for selectSession (empty, valid, cancel, invalid). Tests: 1000 passing. Coverage ~58.8%.
 | 2025-05-30 | 82 | 1 | ✅ | **timings extra tests:** Added tests for now() and measure() including error propagation. Tests: 996 passing. Coverage ~58.7%.

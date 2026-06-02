@@ -1,17 +1,24 @@
 # Project State
 
-Last updated: 2025-06-02 (Iteration 84)
+Last updated: 2025-06-02 (Iteration 85)
 
 ## Metrics
-- Total Iterations: 84
-- Tasks Completed: 200+
-- Test Pass Rate: 100% (1085 passing, 1 todo)
-- Coverage: ~60.3% statements (3954/6558)
-  - Branches: 52.76%
+- Total Iterations: 85
+- Tasks Completed: 205+
+- Test Pass Rate: 100% (1089 passing, 1 todo)
+- Coverage: ~60.5% statements (3968/6558)
+  - Branches: 52.87%
+  - Functions: 61.95%
+  - Lines: 61.58%
   - Functions: 61.7%
   - Lines: 61.35%
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 85)
+
+- **Telemetry decorator tests:** Added 4 new tests for the `telemetryMethod` decorator covering success tracking, error tracking, and options to suppress success/error. Increased branch coverage for telemetry module.
+- Overall test suite: 1089 tests passing (1 todo). Coverage increased to ~60.5% statements, 52.87% branches, 61.95% functions, 61.58% lines.
 
 ## Completed Features (Iteration 84)
 

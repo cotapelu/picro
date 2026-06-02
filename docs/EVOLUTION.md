@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 85: Telemetry Decorator Test Coverage
+- **Direction**: Testing & Coverage
+- **Change**: Added 4 tests for `telemetryMethod` decorator covering success tracking, error tracking, and options to suppress success/error. Improved branch coverage for telemetry module.
+- **Rationale**: The decorator is used for automatic telemetry on methods; previously untested. Adding tests ensures correct behavior and improves overall coverage.
+- **Impact**: 1089 tests passing (+4 new), coverage increased to ~60.5% statements, 52.87% branches, 61.95% functions, 61.58% lines.
+
 ### Iteration 84: Coverage Milestone Achieved (>60%)
 - **Direction**: Testing & Coverage
 - **Change**: Added comprehensive tests for SettingsSelectorModal (11), ModelSelectorModal (5), telemetry module (8), auth-storage (28), performance-tracker (8). Fixed shell.test.ts Windows mocks. Standardized modal testing patterns (useInput capture, act async).
