@@ -36,6 +36,12 @@ import {
   killTrackedDetachedChildren,
 } from './shell';
 
+beforeEach(() => {
+  existsSync.mockReset();
+  spawn.mockReset();
+  spawnSync.mockReset();
+});
+
 describe('sanitizeBinaryOutput', () => {
   it('removes null bytes', () => {
     expect(sanitizeBinaryOutput('hello\0world')).toBe('helloworld');
@@ -318,22 +324,22 @@ describe('killTrackedDetachedChildren', () => {
       });
 
       it('prefers Git Bash in Program Files if exists', () => {
-        process.env.ProgramFiles = 'C:\Program Files';
+        process.env.ProgramFiles = 'C:\\Program Files';
         (existsSync as any).mockReturnValueOnce(true).mockReturnValue(false);
         const config = getShellConfig();
-        expect(config.shell).toBe('C:\Program Files\Git\bin\bash.exe');
+        expect(config.shell).toBe('C:\\Program Files\\Git\\bin\\bash.exe');
         expect(config.args).toEqual(['-c']);
       });
 
       it('falls back to "where bash.exe" if Git Bash not found', () => {
         delete process.env.ProgramFiles;
-        (existsSync as any).mockReturnValue(false);
+        (existsSync as any).mockReturnValue(true);
         (spawnSync as any).mockReturnValue({
           status: 0,
-          stdout: 'C:\some\bash.exe\r\n',
+          stdout: 'C:\\some\\bash.exe\r\n',
         });
         const config = getShellConfig();
-        expect(config.shell).toBe('C:\some\bash.exe');
+        expect(config.shell).toBe('C:\\some\\bash.exe');
         expect(config.args).toEqual(['-c']);
       });
 

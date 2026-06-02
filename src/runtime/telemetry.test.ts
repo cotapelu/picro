@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, it, expect, vi } from 'vitest';
-import { Telemetry } from './telemetry.js';
+import { Telemetry, getTelemetry, setTelemetry, track as globalTrack } from './telemetry.js';
 
 describe('Telemetry', () => {
   let telemetry: Telemetry;
@@ -51,5 +51,99 @@ describe('Telemetry', () => {
     off();
     telemetry.track('agent.start');
     expect(listener).not.toHaveBeenCalled();
+  });
+});
+
+describe('Telemetry global', () => {
+  let original: Telemetry;
+
+  beforeEach(() => {
+    original = getTelemetry();
+    const t = new Telemetry({ enabled: true });
+    setTelemetry(t);
+  });
+
+  afterEach(() => {
+    setTelemetry(original);
+  });
+
+  it('getTelemetry returns singleton', () => {
+    const t1 = getTelemetry();
+    const t2 = getTelemetry();
+    expect(t1).toBe(t2);
+  });
+
+  it('setTelemetry replaces singleton', () => {
+    const t1 = getTelemetry();
+    const t2 = new Telemetry({ enabled: true });
+    setTelemetry(t2);
+    expect(getTelemetry()).toBe(t2);
+    expect(getTelemetry()).not.toBe(t1);
+  });
+
+  it('track function uses global telemetry', () => {
+    const t = getTelemetry();
+    const listener = vi.fn();
+    t.on(listener);
+    globalTrack('agent.start', { foo: 'bar' });
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'agent.start', properties: { foo: 'bar' } })
+    );
+  });
+});
+
+describe('Telemetry advanced', () => {
+  let telemetry: Telemetry;
+
+  beforeEach(() => {
+    telemetry = new Telemetry({ enabled: true });
+  });
+
+  it('trackWithSession includes sessionId', () => {
+    const listener = vi.fn();
+    telemetry.on(listener);
+    telemetry.trackWithSession('session.created', 'sid-123');
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'session.created',
+        properties: expect.objectContaining({ sessionId: 'sid-123' }),
+      })
+    );
+  });
+
+  it('emit is alias for track', () => {
+    const listener = vi.fn();
+    telemetry.on(listener);
+    telemetry.emit({ event: 'agent.start', timestamp: Date.now(), properties: {} });
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'agent.start' })
+    );
+  });
+
+  it('getQueueSize returns queue length', () => {
+    expect(telemetry.getQueueSize()).toBe(0);
+    // Force rate limit to enqueue
+    telemetry['lastSent'] = Date.now();
+    telemetry.track('e1');
+    telemetry.track('e2');
+    expect(telemetry.getQueueSize()).toBe(2);
+  });
+
+  it('flush sends queued events', () => {
+    // Force enqueue some events
+    telemetry['lastSent'] = Date.now();
+    telemetry.track('e1');
+    telemetry.track('e2');
+    expect(telemetry.getQueueSize()).toBe(2);
+    // Use a listener to capture sent events
+    const listener = vi.fn();
+    telemetry.on(listener);
+    telemetry.flush();
+    expect(telemetry.getQueueSize()).toBe(0);
+    // listener should have been called twice (for e1 and e2)
+    expect(listener).toHaveBeenCalledTimes(2);
+    // Check order
+    expect(listener).toHaveBeenNthCalledWith(1, expect.objectContaining({ event: 'e1' }));
+    expect(listener).toHaveBeenNthCalledWith(2, expect.objectContaining({ event: 'e2' }));
   });
 });

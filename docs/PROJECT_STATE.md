@@ -1,23 +1,28 @@
 # Project State
 
-Last updated: 2025-05-30 (Iteration 83)
+Last updated: 2025-06-02 (Iteration 84)
 
 ## Metrics
-- Total Iterations: 83
-- Tasks Completed: 192
-- Test Pass Rate: 100% (1000/1000 tests)
-- Coverage: ~58.8% overall
-  - command-handlers: 80%
-  - useRuntime: 93%
-  - session-manager: 81%
-  - convert-to-llm: 100%
-  - output-guard: 91%
-  - Footer: 84%
-  - Header: 80%
-  - MessageList: 65%
-  - InputBox: 92%
+- Total Iterations: 84
+- Tasks Completed: 200+
+- Test Pass Rate: 100% (1085 passing, 1 todo)
+- Coverage: ~60.3% statements (3954/6558)
+  - Branches: 52.76%
+  - Functions: 61.7%
+  - Lines: 61.35%
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 84)
+
+- **SettingsSelectorModal comprehensive tests:** Added 11 tests covering rendering, navigation, toggling, numeric adjustments, option cycling, save confirmation, error handling, and edge cases.
+- **ModelSelectorModal interaction tests:** Added 5 tests for model selection, filtering, and keyboard interactions.
+- **Telemetry module expansions:** Added tests for global telemetry singleton, trackWithSession, emit, flush, queue size, and advanced scenarios (8 new tests).
+- **Auth-storage tests:** Added 28 comprehensive tests using an in-memory backend, covering storage encryption, retrieval, and edge cases.
+- **Performance-tracker tests:** Added 8 tests for recording, limits, intervals, and stats.
+- **Shell utility refactor & tests:** Fixed mock sequencing in `shell.test.ts`, improving Windows-specific test reliability.
+- **Modal testing pattern improvements:** Standardized `useInput` capture techniques and ensured all modal tests rely on behavior rather than visual output for absolute-positioned modals.
+- **Overall test suite:** 1085 tests passing, coverage increased to 60.29% statements, 52.76% branches, 61.7% functions, 61.35% lines. Achieved >60% coverage target.
 
 ## Completed Features (Iteration 83)
 
@@ -47,15 +52,14 @@ Last updated: 2025-05-30 (Iteration 83)
 - **Truncate edge case test**: Added test for maxLines=0 in truncateLines.
 
 ## Current Priorities
-1. Continue coverage expansion toward 60% overall.
-2. Expand tests for remaining low‑coverage modals (ModelSelectorModal, SettingsSelectorModal).
-3. Maintain 100% test pass rate.
+1. Maintain >60% coverage and 100% test pass rate.
+2. Expand tests for other low‑coverage modules (e.g., agent core, utilities).
+3. Continue refining modal interactions and edge‑case handling.
 
 ## Known Issues
-- Some modals (ModelSelector, SettingsSelector) have minimal test coverage.
-- Overall coverage at ~58.4%, still need ~1.6% to reach >60%.
+None critical; coverage target met.
 
 ## Next Steps
-- Add tests for ModelSelectorModal and SettingsSelectorModal.
-- Explore testing other core utilities.
-- Maintain 100% test pass rate
+- Add tests for remaining agent and runtime modules to further increase coverage.
+- Investigate branch coverage improvements.
+- Keep test suite robust and maintain 100% pass rate.
