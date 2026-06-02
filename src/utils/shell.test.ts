@@ -281,6 +281,92 @@ describe('killTrackedDetachedChildren', () => {
 
 
 
+
+
+  // Additional tests for getShellConfig to increase coverage
+  describe('getShellConfig (extended)', () => {
+    beforeEach(() => {
+      (existsSync as any).mockClear();
+      (spawnSync as any).mockClear();
+    });
+
+    it('throws when custom shell path does not exist', () => {
+      (existsSync as any).mockReturnValue(false);
+      expect(() => getShellConfig('/nonexistent')).toThrow('Custom shell path not found: /nonexistent');
+    });
+
+    it('returns custom shell path when it exists', () => {
+      const custom = '/custom/bash';
+      (existsSync as any).mockReturnValueOnce(true);
+      const config = getShellConfig(custom);
+      expect(config.shell).toBe(custom);
+      expect(config.args).toEqual(['-c']);
+    });
+
+    describe('on Windows', () => {
+      let platformSpy: any;
+      beforeEach(() => {
+        platformSpy = vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
+        delete process.env.ProgramFiles;
+        delete process.env['ProgramFiles(x86)'];
+        (existsSync as any).mockClear();
+        (spawnSync as any).mockClear();
+      });
+
+      afterEach(() => {
+        platformSpy.mockRestore();
+      });
+
+      it('prefers Git Bash in Program Files if exists', () => {
+        process.env.ProgramFiles = 'C:\Program Files';
+        (existsSync as any).mockReturnValueOnce(true).mockReturnValue(false);
+        const config = getShellConfig();
+        expect(config.shell).toBe('C:\Program Files\Git\bin\bash.exe');
+        expect(config.args).toEqual(['-c']);
+      });
+
+      it('falls back to "where bash.exe" if Git Bash not found', () => {
+        delete process.env.ProgramFiles;
+        (existsSync as any).mockReturnValue(false);
+        (spawnSync as any).mockReturnValue({
+          status: 0,
+          stdout: 'C:\some\bash.exe\r\n',
+        });
+        const config = getShellConfig();
+        expect(config.shell).toBe('C:\some\bash.exe');
+        expect(config.args).toEqual(['-c']);
+      });
+
+      it('throws when no bash found on Windows', () => {
+        delete process.env.ProgramFiles;
+        (existsSync as any).mockReturnValue(false);
+        (spawnSync as any).mockReturnValue({ status: 1, stdout: '' });
+        expect(() => getShellConfig()).toThrow('No bash shell found');
+      });
+    });
+
+    describe('on Unix when bash not found', () => {
+      let platformSpy: any;
+      beforeEach(() => {
+        platformSpy = vi.spyOn(process, 'platform', 'get').mockReturnValue('linux');
+        (existsSync as any).mockReturnValue(false);
+        (spawnSync as any).mockClear();
+      });
+
+      afterEach(() => {
+        platformSpy.mockRestore();
+      });
+
+      it('falls back to sh', () => {
+        (spawnSync as any).mockReturnValue({ status: 1, stdout: '' });
+        const config = getShellConfig();
+        expect(config.shell).toBe('sh');
+        expect(config.args).toEqual(['-c']);
+      });
+    });
+  });
+
+
   describe('getShellEnv', () => {
     it('returns a shallow copy of process.env', () => {
       const result = getShellEnv();

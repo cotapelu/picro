@@ -2,6 +2,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { resetTimings, time, printTimings } from './timings.js';
 
+let consoleErrorSpy: any;
+
 describe('timings', () => {
   let originalEnv: string | undefined;
 
@@ -13,12 +15,18 @@ describe('timings', () => {
     } else {
       delete process.env.PI_TIMING;
     }
+    // Setup console.error spy
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
+    // Restore console error spy
+    if (consoleErrorSpy) {
+      consoleErrorSpy.mockRestore();
+      consoleErrorSpy = null;
+    }
     // Clean up module state between tests: reset timings to avoid bleed
     try {
-      // Only reset if enabled, but safe to call always
       resetTimings();
     } catch {}
     // Restore env
@@ -41,17 +49,13 @@ describe('timings', () => {
     it('time should be a no-op (no error) and not record', () => {
       expect(() => time('test')).not.toThrow();
       // Should not have recorded any timings; printTimings should not output
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       printTimings();
       expect(consoleErrorSpy).not.toHaveBeenCalled();
-      consoleErrorSpy.mockRestore();
     });
 
     it('printTimings should be a no-op', () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       expect(() => printTimings()).not.toThrow();
       expect(consoleErrorSpy).not.toHaveBeenCalled();
-      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -76,7 +80,6 @@ describe('timings', () => {
     });
 
     it('printTimings prints header, entries, total, and footer', () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       time('init');
       time('load config');
       time('connect');
@@ -102,17 +105,13 @@ describe('timings', () => {
       expect(totalLine).toBeDefined();
       // Footer
       expect(calls[calls.length - 1]).toContain('------------------------');
-
-      consoleErrorSpy.mockRestore();
     });
 
     it('printTimings does nothing if no timings recorded', () => {
       // Ensure no timings: reset
       resetTimings();
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       printTimings();
       expect(consoleErrorSpy).not.toHaveBeenCalled();
-      consoleErrorSpy.mockRestore();
     });
 
     it('resetTimings clears previously recorded timings', () => {
@@ -120,14 +119,12 @@ describe('timings', () => {
       time('b');
       // After reset, these should be gone
       resetTimings();
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       printTimings();
       const calls = consoleErrorSpy.mock.calls.map(call => call[0].trim());
       // Should not contain 'a' or 'b' in any line
       const allText = calls.join(' ');
       expect(allText).not.toContain('a');
       expect(allText).not.toContain('b');
-      consoleErrorSpy.mockRestore();
     });
   });
 });

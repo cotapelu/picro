@@ -203,10 +203,11 @@ describe('InputBox interactions', () => {
   });
 
   describe('Ctrl+C', () => {
-    it('calls process.exit(0)', async () => {
-      renderInputBox();
+    it('calls onInterrupt when pressed', async () => {
+      const onInterrupt = vi.fn();
+      renderInputBox({ onInterrupt });
       await pressKey('c', { ctrl: true });
-      expect(exitSpy).toHaveBeenCalledWith(0);
+      expect(onInterrupt).toHaveBeenCalled();
     });
   });
 
@@ -277,13 +278,13 @@ describe('InputBox interactions', () => {
       expect(onChange).toHaveBeenCalledWith('abc');
     });
 
-    it('Ctrl+E moves to end', async () => {
+    it('Ctrl+E calls onEditor with current value', async () => {
       value = 'ab';
-      renderInputBox();
+      const onEditor = vi.fn();
+      renderInputBox({ onEditor });
       await pressKey(undefined, { leftArrow: true });
       await pressKey('e', { ctrl: true });
-      await pressKey('c', {});
-      expect(onChange).toHaveBeenCalledWith('abc');
+      expect(onEditor).toHaveBeenCalledWith('ab');
     });
   });
 

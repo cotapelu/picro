@@ -2,41 +2,41 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render } from 'ink-testing-library';
 import React from 'react';
-import Header from './Header';
-import { ThemeProvider } from '../hooks/useTheme.js';
-import { useRuntime } from '../hooks/useRuntime.js';
+import { Header } from './Header';
+import { ThemeProvider } from '../../hooks/useTheme.js';
+import type { HeaderProps } from './Header';
 
-vi.mock('../hooks/useRuntime', () => ({
-  useRuntime: vi.fn(() => ({ stats: { avgCpu: 0, avgMem: 0 } })),
-}));
-
-function renderHeader() {
+function renderHeader(overrides?: Partial<HeaderProps>) {
+  const props: HeaderProps = {
+    title: 'picro',
+    status: 'Ready',
+    thinkingLevel: 'medium',
+    model: 'gpt-4',
+    theme: 'dark',
+    showArmin: false,
+    ...overrides,
+  };
   return render(
-    <ThemeProvider>
-      <Header />
+    <ThemeProvider initialMode="dark">
+      <Header {...props} />
     </ThemeProvider>
   );
 }
 
 describe('Header (extra)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    (useRuntime as any).mockReturnValue({ stats: { avgCpu: 0, avgMem: 0 } });
-  });
-
   it('renders title picro', () => {
     const { lastFrame } = renderHeader();
     expect(lastFrame()).toContain('picro');
   });
 
-  it('displays stats when provided', () => {
-    (useRuntime as any).mockReturnValue({
-      stats: { avgCpu: 12.3, avgMem: 456 },
+  it('displays resource counts when provided', () => {
+    const { lastFrame } = renderHeader({
+      resourceCounts: { extensions: 2, skills: 3, prompts: 5, themes: 1 },
     });
-    const { lastFrame } = renderHeader();
     const frame = lastFrame() || '';
-    expect(frame).toContain('Avg CPU');
-    expect(frame).toContain('12.3%');
-    expect(frame).toContain('456 MB');
+    expect(frame).toContain('E:2');
+    expect(frame).toContain('S:3');
+    expect(frame).toContain('P:5');
+    expect(frame).toContain('T:1');
   });
 });

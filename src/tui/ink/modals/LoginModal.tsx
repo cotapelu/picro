@@ -1,5 +1,5 @@
 /** @jsxImportSource react */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Box, Text, useInput, useFocus } from 'ink';
 
 interface LoginModalProps {

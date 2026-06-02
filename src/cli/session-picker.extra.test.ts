@@ -6,6 +6,7 @@ vi.mock('node:readline', () => ({
 }));
 
 import { selectSession } from './session-picker.js';
+import { createInterface } from 'node:readline';
 
 function fakeInterfaceFactory(answer: string) {
   return {
@@ -21,7 +22,6 @@ describe('selectSession (extra)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const { createInterface } = require('node:readline');
     createInterfaceMock = createInterface as any;
   });
 
