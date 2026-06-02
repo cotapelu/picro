@@ -2,34 +2,28 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-05-30, Iteration 83)
+## Current Metrics (as of 2025-06-02, Iteration 84)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 83 |
-| Tasks Completed | 192 |
+| Total Iterations | 84 |
+| Tasks Completed | 200+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1000/1000 tests) |
-| Coverage (overall) | ~58.8% |
-| Coverage (key modules): |
-| - command-handlers.ts | 80.34% |
-| - useRuntime.ts | 93.05% |
-| - session-manager.ts | 81.96% |
-| - output-guard.ts | 91.13% |
-| - convert-to-llm.ts | 100% |
-| - Footer.tsx | 83.92% |
-| - Header.tsx | 80% |
-| - MessageList.tsx | 65% |
-| - InputBox.tsx | 92.46% |
+| Test Pass Rate | 100% (1085/1085 tests, 1 todo) |
+| Coverage (statements) | 60.29% (3954/6558) |
+| Coverage (branches) | 52.76% (2331/4418) |
+| Coverage (functions) | 61.7% (725/1175) |
+| Coverage (lines) | 61.35% (3697/6026) |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-06-02 | 84 | Many | ✅ | **Coverage >60% achieved:** Added SettingsSelectorModal tests (11), ModelSelectorModal tests (5), telemetry module tests (8), auth-storage tests (28), performance-tracker tests (8). Fixed shell.test sequencing. Standardized modal testing patterns. 1085 tests passing, coverage 60.29% statements, 61.35% lines. |
 | 2025-05-30 | 83 | 1 | ✅ | **session-picker extra tests:** Added tests for selectSession (empty, valid, cancel, invalid). Tests: 1000 passing. Coverage ~58.8%.
 | 2025-05-30 | 82 | 1 | ✅ | **timings extra tests:** Added tests for now() and measure() including error propagation. Tests: 996 passing. Coverage ~58.7%.
 | 2025-05-30 | 81 | 1 | ✅ | **Header extra tests:** Added 2 extra tests for Header component rendering stats. Tests: 993 passing. Coverage ~58.6%.

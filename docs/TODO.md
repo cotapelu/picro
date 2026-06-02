@@ -3,7 +3,8 @@
 ## Mục tiêu
 Xây dựng thư mục `src/tui` đầy đủ và chuẩn, làm việc tốt với `AgentSessionRuntime`. Tham khảo code từ `llm-context/coding-agent/modes/interactive/` và `llm-context/agent/` nhưng KHÔNG copy, chỉ đối chiếu và implement theo cách phù hợp với kiến trúc hiện tại (React + Ink).
 
-## Cập nhật gần đây (2025-05-26)
+## Cập nhật gần đây (2025-06-02)
+- ✅ **Iteration 84**: Coverage >60% milestone achieved: Added SettingsSelectorModal (11), ModelSelectorModal (5), telemetry (8), auth-storage (28), performance-tracker (8). Fixed shell mocks. 1085 tests passing (1 todo). Coverage: 60.29% statements, 61.35% lines.
 - ✅ **Iteration 9**: Bug Fix in `MessageItem.tsx` (shouldShowRole → showRoleLabel)
 - ✅ **Iteration 10**: Added `MessageItem.test.tsx` (13 tests) - coverage increased to ~29.5%
 - ✅ **Iteration 11**: Added tests for UserMessage, AssistantMessage, CommandPalette (29 tests total). Tests: 181 passing.

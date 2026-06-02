@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 84: Coverage Milestone Achieved (>60%)
+- **Direction**: Testing & Coverage
+- **Change**: Added comprehensive tests for SettingsSelectorModal (11), ModelSelectorModal (5), telemetry module (8), auth-storage (28), performance-tracker (8). Fixed shell.test.ts Windows mocks. Standardized modal testing patterns (useInput capture, act async).
+- **Rationale**: Achieve >60% overall coverage target while maintaining 100% test pass rate. Focus on high-impact modules with moderate size and good isolation. Improved test reliability for absolute‑positioned modals.
+- **Impact**: 1085 tests passing (+~60 new), coverage 60.29% statements, 61.35% lines, branches 52.76%, functions 61.7%. Achieved coverage milestone with zero regressions.
+
 ### Iteration 50: Compaction Utilities Test Coverage
 - **Direction**: Testing & Reliability
 - **Change**: Added unit tests for `compaction.ts` (13 tests) covering `estimateTokens`, `shouldCompact`, `createFileOps`, `extractFileOpsFromMessage`, `computeFileLists`, and `formatFileOperations`.
