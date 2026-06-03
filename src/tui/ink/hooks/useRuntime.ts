@@ -1,5 +1,5 @@
 /** @jsxImportSource react */
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import type { Message, ToolCall } from '../types.js';
 import { agentMessageToUiMessage as convertAgentMessage } from '../utils/message-converter.js';
 import type { AgentSessionRuntimeEvent } from '../../../runtime/index.js';
@@ -44,6 +44,7 @@ export function useRuntime(runtime: ExtendedRuntime) {
 
   const [steeringMessages, setSteeringMessages] = useState<string[]>([]);
   const [followUpMessages, setFollowUpMessages] = useState<string[]>([]);
+  const streamingMessageIdRef = useRef<string | null>(null);
 
   // Load initial messages
   useEffect(() => {
@@ -68,6 +69,10 @@ export function useRuntime(runtime: ExtendedRuntime) {
         case 'agent_end':
           setIsStreaming(false);
           setStatus('Ready');
+          // Safety: clear any lingering streaming message
+          if (streamingMessageIdRef.current) {
+            streamingMessageIdRef.current = null;
+          }
           break;
         case 'queue_update':
           setSteeringMessages(Array.isArray(event.steering) ? event.steering : []);
@@ -102,6 +107,80 @@ export function useRuntime(runtime: ExtendedRuntime) {
             setMessages(allMessages);
           }
           break;
+        // Streaming message handling
+        case 'message:start': {
+          const turn = event.turn;
+          if (!turn) break;
+          const role = turn.role as any;
+          if (role === 'user') {
+            const uiMsg = convertAgentMessage(turn);
+            if (uiMsg) {
+              setMessages(prev => [...prev, uiMsg]);
+            }
+          } else if (role === 'assistant') {
+            const id = turn.id || `assistant-${Date.now()}`;
+            const newMsg: Message = {
+              id,
+              role: 'assistant',
+              content: '',
+              timestamp: Date.now(),
+              streaming: true,
+              toolCalls: [],
+              thinkingBlocks: [],
+            };
+            setMessages(prev => [...prev, newMsg]);
+            streamingMessageIdRef.current = id;
+          }
+          break;
+        }
+        case 'message:update': {
+          const turn = event.turn;
+          if (!turn) break;
+          const id = streamingMessageIdRef.current;
+          if (!id) break;
+          const uiMsg = convertAgentMessage({ ...turn, id });
+          if (uiMsg) {
+            setMessages(prev => prev.map(msg => msg.id === id ? { ...uiMsg, streaming: true } : msg));
+          }
+          break;
+        }
+        case 'message:end': {
+          const turn = event.turn;
+          if (!turn) break;
+          const role = turn.role as any;
+          if (role === 'user') {
+            // already added at start
+            break;
+          }
+          const id = streamingMessageIdRef.current;
+          if (!id) break;
+          const uiMsg = convertAgentMessage(turn);
+          if (uiMsg) {
+            const stopReason = turn.stopReason;
+            const isError = stopReason === 'error' || stopReason === 'aborted';
+            setMessages(prev => prev.map(msg => msg.id === id ? { ...uiMsg, streaming: false, error: isError ? (stopReason || 'Error') : undefined } : msg));
+          }
+          streamingMessageIdRef.current = null;
+          break;
+        }
+        case 'tool:call:start': {
+          const { toolCallId, toolName, input } = event;
+          const id = streamingMessageIdRef.current;
+          if (!id) break;
+          const newTool: ToolCall = { id: toolCallId, name: toolName, arguments: input, status: 'running' };
+          setMessages(prev => prev.map(msg => msg.id === id ? { ...msg, toolCalls: [...(msg.toolCalls || []), newTool] } : msg));
+          break;
+        }
+        case 'tool:call:end': {
+          const { toolCallId, result, isError } = event;
+          const id = streamingMessageIdRef.current;
+          if (!id) break;
+          setMessages(prev => prev.map(msg => msg.id === id ? {
+            ...msg,
+            toolCalls: (msg.toolCalls || []).map(tc => tc.id === toolCallId ? { ...tc, status: isError ? 'error' : 'done', result } : tc),
+          } : msg));
+          break;
+        }
         default:
           break;
       }
