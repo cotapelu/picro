@@ -1,24 +1,22 @@
 # Project State
 
-Last updated: 2025-06-02 (Iteration 85)
+Last updated: 2025-06-02 (Iteration 86)
 
 ## Metrics
-- Total Iterations: 85
-- Tasks Completed: 205+
-- Test Pass Rate: 100% (1089 passing, 1 todo)
-- Coverage: ~60.5% statements (3968/6558)
-  - Branches: 52.87%
-  - Functions: 61.95%
-  - Lines: 61.58%
-  - Functions: 61.7%
-  - Lines: 61.35%
+- Total Iterations: 86
+- Tasks Completed: 210+
+- Test Pass Rate: 100% (1094 passing)
+- Coverage: ~60.5% statements
 - Build Success Rate: 100%
 - Zero regressions
 
-## Completed Features (Iteration 85)
+## Completed Features (Iteration 86)
 
-- **Telemetry decorator tests:** Added 4 new tests for the `telemetryMethod` decorator covering success tracking, error tracking, and options to suppress success/error. Increased branch coverage for telemetry module.
-- Overall test suite: 1089 tests passing (1 todo). Coverage increased to ~60.5% statements, 52.87% branches, 61.95% functions, 61.58% lines.
+- **Compaction & Retry UI:** Implemented status line with countdown for retry and compaction cancellation via Escape. Added `abortCompaction()` to AgentSession and wired escape handlers.
+- **Event handling:** Extended InkApp to handle `auto_retry_start`, `auto_retry_end`, `compaction_start`, `compaction_end` events. Injects `CompactionSummaryMessage` into chat on compaction completion.
+- **InputBox escape:** Added `onEscape` prop to InputBox; InkApp uses it to cancel retry/compaction, close active modal, or clear editor.
+- **useRuntime expansion:** Exposed `setMessages` to allow dynamic message injection.
+- Overall test suite: 1094 tests passing, 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 84)
 

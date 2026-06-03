@@ -90,6 +90,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             content={message.content}
             thinkingBlocks={message.thinkingBlocks}
             hideThinkingBlock={hideThinkingBlock}
+            streaming={message.streaming}
           />
         )}
         {message.role === 'bashExecution' && (

@@ -8,6 +8,7 @@ interface AssistantMessageProps {
   thinkingBlocks?: string[];
   hideThinkingBlock?: boolean;
   hiddenThinkingLabel?: string;
+  streaming?: boolean;
 }
 
 export const AssistantMessage: React.FC<AssistantMessageProps> = ({
@@ -15,6 +16,7 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
   thinkingBlocks,
   hideThinkingBlock = false,
   hiddenThinkingLabel = 'Thinking...',
+  streaming = false,
 }) => {
   const { theme } = useTheme();
 
@@ -43,7 +45,11 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
   return (
     <Box flexDirection="column">
       {renderThinking()}
-      <Text>{content}</Text>
+      {streaming && content === '' ? (
+        <Text dim>...</Text>
+      ) : (
+        <Text>{content}</Text>
+      )}
     </Box>
   );
 };

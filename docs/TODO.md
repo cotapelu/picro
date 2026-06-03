@@ -17,6 +17,87 @@
 
 | Module | Trạng thái | Cần làm |
 |--------|------------|---------|
+| **A. Core Architecture** | | |
+| State management | React useState | Thêm đầy đủ state: streamingComponent, streamingMessage, pendingTools, compactionQueuedMessages, autoCompactionLoader, retryLoader, retryCountdown, extension widgets, custom header/footer, etc. |
+| Event subscription | `useRuntime` + `useEffect` | Expand `useRuntime` để expose tất cả session methods và events cần thiết |
+| Signal handlers | Có sơ bản | Thêm SIGTERM, SIGHUP, SIGCONT, drainInput, emergencyTerminalExit |
+| Shutdown flow | Có | Thêm `checkShutdownRequested`, dispose, cleanup |
+| **B. Message Rendering** | | |
+| AssistantMessage (molecule) | Chưa có component riêng | Tạo `AssistantMessage` component với streaming updates, thinking blocks (collapsible), tool calls inline |
+| ToolExecution (molecule) | Đã có nhưng chưa expand/collapse, images | Thêm state expanded, showImages, imageWidthCells, markExecutionStarted, setArgsComplete |
+| BashExecution (molecule) | Đã có | OK |
+| CompactionSummaryMessage | Đã có component | OK |
+| BranchSummaryMessage | Đã có component | OK |
+| CustomMessage | Đã có component | OK |
+| Message conversion | `useRuntime` converter | Giữ nguyên để xử lý tất cả message roles |
+| **C. Modals/Selectors** | | |
+| CommandPalette | Có | OK (có thể enhance thêm) |
+| ThinkingModal | Có | OK |
+| SettingsSelectorModal | Có (70% hoàn) | Add remaining settings (nhiều) |
+| ModelSelectorModal | Có | OK |
+| ScopedModelsSelectorModal | Có | OK |
+| UserMessageSelectorModal | Có (test mới) | OK |
+| SessionSelectorModal | Có | Cần thêm rename, delete, session stats |
+| TreeSelectorModal | Có | Cần integrate summarization flow |
+| TreeSummarizationModal | Có | OK |
+| HelpModal | Có | OK |
+| HotkeysModal | Có | OK |
+| ChangelogModal | Có | OK |
+| LoginModal | Có | OK |
+| ConfirmationModal | Có | OK |
+| InputModal | Có | OK |
+| SelectModal | Có | OK |
+| ExternalEditorModal | Có | OK |
+| BashOutputModal | Có | OK |
+| SessionInfoModal | Có | OK |
+| Armin/Earendil easter eggs | Có modal | OK |
+| **D. Extension System** | | |
+| ExtensionUIContext | Stub (`extension-context.ts`) | Implement full API: select, confirm, input, editor, custom, setWidget, setFooter, setHeader, setStatus, setWorkingMessage, setWorkingIndicator, setHiddenThinkingLabel, setToolsExpanded, theme APIs, autocomplete providers, custom editor component |
+| bindExtensions() | Chưa có | Tạo function để inject ExtensionUIContext vào runtime session, register shortcuts, setup command context |
+| Extension shortcuts | partial (ref) | Implement full matching and handling in InputBox key handlers |
+| Widget management | state + setExtensionWidget | OK nhưng cần clear on reset |
+| Custom footer/header | customHeader state | OK nhưng cần integrate with extension setHeader/setFooter |
+| Custom editor component | customEditor state | OK nhưng cần wire events |
+| Autocomplete providers | factory array + register | OK nhưng cần slash commands, templates, extensions, skills integration |
+| **E. Commands** | | |
+| Slash commands (handlers) | Có `command-handlers.ts` | Hoàn thiện tất cả: `/export`, `/import`, `/share`, `/name`, `/session` (stats), `/clone` (fork), `/tree` (show selector), `/resume` (session selector), `/compact` (session.compact), `/reload` (settings reload), `/debug` (OK), `/arminsayshi` (OK), `/dementedelves` (OK) |
+| Bash commands (!, !!) | Có trong handleSubmit | OK |
+| Double-tap Escape | Chưa có | Implement: `/tree` hoặc `/fork` dựa vào setting `doubleEscapeAction` |
+| **F. UX Features** | | |
+| Compaction queue | Chưa có | Implement `compactionQueuedMessages`, `queueCompactionMessage`, `flushCompactionQueue`, `restoreQueuedMessagesToEditor` |
+| Retry countdown | Có nhưng hardcoded | Lấy delay từ session/retry config |
+| Pending messages indicator | Có | OK |
+| Tool output expansion | Có (toggle) | OK |
+| Thinking block visibility | Có (toggle) | OK |
+| External editor (Ctrl+E) | Có (stub) | Hoàn thiện: lấy current editor text, mở external editor, paste back |
+| Clipboard image paste | Có (stub) | Hoàn thiện: insert file path vào editor |
+| Theme switching | Có (toggle) | Add theme watcher, dynamic theme loading |
+| Status messages (spam dedup) | Cưc | OK |
+| Version check & auto-changelog | Có | OK |
+| Package updates check | Có | OK |
+| Anthropic auth warning | Có | OK |
+| Error boundary | Có | OK |
+| **G. Selector Components** | | |
+| SessionSelector | Có | Thêm rename, delete, create new, session info |
+| TreeSelector | Có | Thêm summarization UI flow (như interactive-mode) |
+| CommandPalette | Có | OK |
+| **H. Header/Footer** | | |
+| Header Expandable | Có ExpandableText | OK |
+| Header resource loading display | Có `showLoadedResources` | Enhance: scope groups, diagnostics, collision warnings (giống interactive-mode) |
+| Footer dynamic stats | Có FooterDataProvider | Expand: token stats, cost, performance metrics, provider count, session name, cwd |
+| **I. Performance & Utilities** | | |
+| Autocomplete (fd) | Có | OK |
+| Path completion | Có | OK |
+| Command autocomplete | Có | OK |
+| Template autocomplete | Có | OK |
+| Extension command autocomplete | Có | OK |
+| Skill command autocomplete | Có | OK |
+| Markdown rendering | Có (Markdown component) | OK |
+| Truncation utilities | Có | OK |
+| Output guards | Có | OK |
+| **J. Tests** | | |
+| Unit tests for hooks | Một số | Thêm测试 cho tất cả custom hooks |
+| Integration tests (Ink) | Đang có | Thêm tests cho các luồng phức tạp: compaction, retry, extension UI, modals |
 | **A. Core Architecture** |
 | State management | React useState | Thêm đầy đủ state: streamingComponent, streamingMessage, pendingTools, compactionQueuedMessages, autoCompactionLoader, retryLoader, retryCountdown, extension widgets, custom header/footer, etc. |
 | Event subscription | `useRuntime` + `useEffect` | Expand `useRuntime` để expose tất cả session methods và events cần thiết |
@@ -101,6 +182,15 @@
 | Component tests | Đang có | Hoàn thiện tin cho AssistantMessage, ToolExecution (expanded), etc. |
 
 ---
+
+## Iteration 86 Summary
+
+- Implemented compaction and retry UI with status line, countdown timer, and Escape cancellation.
+- Added `abortCompaction()` method to `AgentSession` (alongside existing `abortRetry`).
+- Extended `InkApp` event subscription to handle `auto_retry_start`, `auto_retry_end`, `compaction_start`, `compaction_end`. On compaction end, injects `CompactionSummaryMessage` into chat.
+- Added `onEscape` prop to `InputBox`. InkApp uses it to cancel retry/compaction, close modal, or clear editor.
+- Expanded `useRuntime` to expose `setMessages` for dynamic message injection from InkApp.
+- Test suite: 1094 passing, 100% pass rate. No regressions.
 
 ## Phases & Tasks Chi Tiết
 
