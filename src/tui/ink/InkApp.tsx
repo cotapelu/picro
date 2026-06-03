@@ -223,6 +223,31 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   }, [runtime, setInputValue, addToast]);
 
+  const handleEditor = useCallback(async (value: string) => {
+    try {
+      const editor = process.env.EDITOR || process.env.VISUAL || 'vim';
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+      const os = await import('node:os');
+      const { spawnSync } = await import('node:child_process');
+      const tmpdir = os.tmpdir();
+      const dir = fs.mkdtempSync(path.join(tmpdir, 'picro-'));
+      const filepath = path.join(dir, 'edit.txt');
+      try {
+        fs.writeFileSync(filepath, value || '', 'utf-8');
+        spawnSync(editor, [filepath], { stdio: 'inherit', cwd: runtime.cwd });
+        const newText = fs.readFileSync(filepath, 'utf-8');
+        setInputValue(newText);
+        addToast('Edited externally', 'success');
+      } finally {
+        fs.rmSync(dir, { recursive: true, force: true });
+      }
+    } catch (err: any) {
+      console.error('External edit error:', err);
+      addToast('External edit failed', 'error');
+    }
+  }, [runtime.cwd, setInputValue, addToast]);
+
   const handleSelectCommand = useCallback(async (commandId: string, slashArgs?: string) => {
     try {
       const result = await handleCommand({
@@ -884,7 +909,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     onLogin,
     onSessionSelector,
     onDebug,
-    onEditor,
+    onEditor: handleEditor,
     onPaste,
     onInterrupt,
     onDequeue: handleDequeue,
