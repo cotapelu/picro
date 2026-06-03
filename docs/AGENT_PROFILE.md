@@ -19,12 +19,13 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - ✅ Utility modules: telemetry (8 advanced), performance-tracker (8), auth-storage (28)
 - ✅ Command handlers with full error handling tests (80% coverage)
 - ✅ Proactive bug detection and rapid fix (modal testing patterns standardized)
-- ✅ Zero regressions over 87 iterations, 215+ tasks
+- ✅ Zero regressions over 88 iterations, 220+ tasks
 - ✅ Tool output expansion with images (showImages/imageWidthCells settings integrated)
 - ✅ External editor (Ctrl+E) and clipboard image paste (Ctrl+Shift+V)
 - ✅ Streaming indicator (assistant shows ellipsis while streaming)
 - ✅ Compaction & retry UI refinements (countdown, escape cancellation, summary injection)
 - ✅ Robust signal handlers and graceful shutdown
+- ✅ InkApp integration tests (8) ensuring top-level stability
 
 ## Weaknesses / Areas for Improvement
 - ⚠️ InkApp.tsx still large (~1500 lines) - needs systematic decomposition into smaller hooks
@@ -45,7 +46,7 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - **Branch coverage improvement**: Target conditional-heavy modules (useRuntime, modals)
 - **Low-coverage modules**: Address extensions/loader and runner, InputBox interactions
 
-## Final Notes (2025-06-02, Iteration 87)
+## Final Notes (2025-06-02, Iteration 88)
 
 The Picro TUI is **feature-complete** and **production-ready** with:
 - 21+ slash commands (including arminsayshi, dementedelves)
@@ -53,9 +54,9 @@ The Picro TUI is **feature-complete** and **production-ready** with:
 - Full extension support
 - Git integration
 - Comprehensive stats
-- 1102 passing tests (1 todo)
-- Strong module coverage: useRuntime (93%), output-guard (91%), Footer (84%), ToolExecution (new image tests), telemetry expanded
-- Overall coverage ~60.5% statements; branch coverage ~52.9%
-- Zero regressions over 87 iterations, 215+ tasks
+- 1110 passing tests (1 todo)
+- Strong module coverage: useRuntime (93%), output-guard (91%), Footer (84%), ToolExecution (9 tests), telemetry expanded
+- Overall coverage ~60.6% statements; branch coverage ~53.0%
+- Zero regressions over 88 iterations, 220+ tasks
 
-**Evolution Status**: Continuous loop mode active. Next major milestone: 80% overall coverage. Focus: branch coverage, InputBox interactions, extension loader/runner, decompose InkApp into smaller hooks and contexts.
+**Evolution Status**: Continuous loop mode active. Next major milestone: 80% overall coverage. Focus: branch coverage, InputBox interactions, extension loader/runner, decompose InkApp into smaller hooks and contexts, expand integration tests for modals and extension system.

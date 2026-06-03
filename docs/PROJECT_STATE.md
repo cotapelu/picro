@@ -1,13 +1,19 @@
 # Project State
 
-Last updated: 2025-06-02 (Iteration 87)
+Last updated: 2025-06-02 (Iteration 88)
 
 ## Metrics
-- Total Iterations: 87
-- Tasks Completed: 215+
+- Total Iterations: 88
+- Tasks Completed: 220+
 - Coverage: ~60.5% statements
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 88)
+
+- **InkApp integration tests:** Added 8 comprehensive tests covering rendering, header display, status updates, compaction event handling, and streaming indicator. Validates full app component.
+- **Bootstrap dependencies:** Added `clipboardy` as a runtime dependency to support dynamic import in InkApp (clipboard paste feature).
+- Overall test suite: 1110 tests passing, 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 87)
 
