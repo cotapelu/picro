@@ -2,19 +2,19 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-06-02, Iteration 90)
+## Current Metrics (as of 2025-06-02, Iteration 91)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 90 |
-| Tasks Completed | 230+ |
+| Total Iterations | 91 |
+| Tasks Completed | 231+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1130/1130 tests, 1 todo) |
-| Coverage (statements) | ~61.2% |
+| Test Pass Rate | 100% (1134/1134 tests, 1 todo) |
+| Coverage (statements) | ~61.3% |
 | Coverage (branches) | ~53.2% |
 | Coverage (functions) | ~62.3% |
 | Coverage (lines) | ~61.9% |
@@ -23,6 +23,7 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-06-02 | 91 | 4 | ✅ | **Extension wrapper tests:** Added unit tests for wrapRegisteredTool and wrapRegisteredTools (4 tests). Increased coverage for extension utilities. 1134 tests passing, coverage ~61.3%.
 | 2025-06-02 | 90 | 13 | ✅ | **Branch-summarization tests:** Added 13 unit tests covering file ops extraction, computation, formatting, token estimation (stub), message retrieval, and branch entry preparation. Coverage increased for session utilities. 1130 tests passing, coverage ~61.2%.
 | 2025-06-02 | 89 | 7 | ✅ | **AgentSessionRuntime unit tests:** Added 7 tests covering cwd, session getter, settings delegation, dispose, diagnostics, and modelFallbackMessage. Improved coverage of runtime layer. 1117 tests passing, coverage ~60.8%.
 | 2025-06-02 | 88 | 8 | ✅ | **InkApp integration tests:** Added 8 tests covering top-level rendering, status updates, compaction and streaming events. Added clipboardy dependency. 1110 tests passing, coverage ~60.6%.
