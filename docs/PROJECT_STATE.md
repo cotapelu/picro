@@ -1,13 +1,18 @@
 # Project State
 
-Last updated: 2025-06-02 (Iteration 89)
+Last updated: 2025-06-02 (Iteration 90)
 
 ## Metrics
-- Total Iterations: 89
-- Tasks Completed: 225+
+- Total Iterations: 90
+- Tasks Completed: 230+
 - Coverage: ~60.5% statements
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 90)
+
+- **Branch-summarization tests:** Added 13 unit tests for file ops handling, message extraction, token estimation, and branch preparation. Increased coverage for session utilities.
+- Overall test suite: 1130 tests passing, 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 89)
 

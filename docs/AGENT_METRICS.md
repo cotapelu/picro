@@ -2,28 +2,29 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-06-02, Iteration 89)
+## Current Metrics (as of 2025-06-02, Iteration 90)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 89 |
-| Tasks Completed | 225+ |
+| Total Iterations | 90 |
+| Tasks Completed | 230+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1117/1117 tests, 1 todo) |
-| Coverage (statements) | ~60.8% |
-| Coverage (branches) | ~53.0% |
-| Coverage (functions) | ~62.0% |
-| Coverage (lines) | ~61.7% |
+| Test Pass Rate | 100% (1130/1130 tests, 1 todo) |
+| Coverage (statements) | ~61.2% |
+| Coverage (branches) | ~53.2% |
+| Coverage (functions) | ~62.3% |
+| Coverage (lines) | ~61.9% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
-| 2025-06-02 | 89 | 7 | ✅ | **AgentSessionRuntime unit tests:** Added 7 tests covering cwd, session getter, settings delegation, dispose, diagnostics, and modelFallbackMessage. Improved runtime layer coverage. 1117 tests passing, coverage ~60.8%.
+| 2025-06-02 | 90 | 13 | ✅ | **Branch-summarization tests:** Added 13 unit tests covering file ops extraction, computation, formatting, token estimation (stub), message retrieval, and branch entry preparation. Coverage increased for session utilities. 1130 tests passing, coverage ~61.2%.
+| 2025-06-02 | 89 | 7 | ✅ | **AgentSessionRuntime unit tests:** Added 7 tests covering cwd, session getter, settings delegation, dispose, diagnostics, and modelFallbackMessage. Improved coverage of runtime layer. 1117 tests passing, coverage ~60.8%.
 | 2025-06-02 | 88 | 8 | ✅ | **InkApp integration tests:** Added 8 tests covering top-level rendering, status updates, compaction and streaming events. Added clipboardy dependency. 1110 tests passing, coverage ~60.6%.
 | 2025-06-02 | 87 | 10+ | ✅ | **ToolExecution image support:** Implemented showImages and imageWidthCells propagation, added 3 image tests. Streaming message unit tests expanded (10 new). Fixed flaky event-emitter test by increasing delay. 1102 tests passing. Coverage ~60.5% statements (slight increase).
 | 2025-06-02 | 86 | 2 | ✅ | **Compaction & retry UI (continued):** Added abortCompaction, escape handlers, countdown timer, status line, CompactionSummaryMessage injection. Completed external editor (Ctrl+E) and clipboard image paste (Ctrl+Shift+V). Streaming indicator in AssistantMessage. Docs updates. 1094 tests passing.
