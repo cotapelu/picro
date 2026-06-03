@@ -45,6 +45,7 @@ interface InputBoxProps {
   onPaste?: () => void;
   onInterrupt?: () => void;
   onDequeue?: () => void;
+  onEscape?: () => void;
 }
 
 export const InputBox: React.FC<InputBoxProps> = ({
@@ -158,6 +159,7 @@ export const InputBox: React.FC<InputBoxProps> = ({
     if (key.ctrl && key.shift && input === 'v') { onPaste?.(); return; }
     if (key.ctrl && input === 'c') { onInterrupt?.(); return; }
     if (key.ctrl && key.alt && input === 'e') { onDequeue?.(); return; }
+    if (key.escape) { onEscape?.(); return; }
 
     // Submit with Enter
     if (key.return && (!multiline || !key.shift)) {

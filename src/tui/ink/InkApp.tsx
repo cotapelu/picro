@@ -67,8 +67,11 @@ type ModalState =
   | null;
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
-  const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt, steeringMessages, followUpMessages, toolOutputExpanded, setToolOutputExpanded, hideThinkingBlock, setHideThinkingBlock, hiddenThinkingLabel, setHiddenThinkingLabel, currentModel } = useRuntime(runtime as any);
+  const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt, steeringMessages, followUpMessages, toolOutputExpanded, setToolOutputExpanded, hideThinkingBlock, setHideThinkingBlock, hiddenThinkingLabel, setHiddenThinkingLabel, currentModel, setMessages } = useRuntime(runtime as any);
   const [retryCountdown, setRetryCountdown] = React.useState(0);
+  const [retryMaxAttempts, setRetryMaxAttempts] = React.useState(3);
+  const [retryEscapeHandler, setRetryEscapeHandler] = React.useState<(() => void) | null>(null);
+  const [autoCompactionEscapeHandler, setAutoCompactionEscapeHandler] = React.useState<(() => void) | null>(null);
 
   // Extension shortcuts registry
   const extensionShortcutsRef = React.useRef<Map<string, (input: string, key: any) => boolean | void>>(new Map());
@@ -95,30 +98,21 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     extensionShortcutsRef.current = newMap;
   }, []);
 
-  // Retry countdown timer
+  // Retry countdown timer (decrements every second when active)
   React.useEffect(() => {
-    if (retryAttempt > 0) {
-      setRetryCountdown(3); // Assuming 3-second delay; could be configurable
-      const timer = setInterval(() => {
-        setRetryCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [retryAttempt]);
+    if (retryCountdown <= 0) return;
+    const interval = setInterval(() => {
+      setRetryCountdown(prev => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [retryCountdown]);
 
   // Compute status display
   let displayStatus = runtimeStatus || 'Ready';
   if (isCompacting) {
     displayStatus = 'Compacting... (Esc to cancel)';
   } else if (retryAttempt > 0) {
-    const maxAttempts = 3; // should get from runtime? For now hardcoded
-    displayStatus = `Retrying (${retryAttempt}/${maxAttempts}) in ${retryCountdown}s... (Esc to cancel)`;
+    displayStatus = `Retrying (${retryAttempt}/${retryMaxAttempts}) in ${retryCountdown}s... (Esc to cancel)`;
   }
   const { toggleTheme, isDark, theme } = useTheme();
   const [inputValue, setInputValue] = React.useState('');
@@ -158,11 +152,51 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     // Subscribe to events that affect footer
     const unsubscribe = session?.subscribe?.((event: any) => {
       switch (event.type) {
+        // Footer updates
         case 'agent_end':
         case 'compaction_end':
         case 'model_change':
         case 'session_tree':
           updateFooter();
+          break;
+        // Retry handling
+        case 'auto_retry_start':
+          setRetryAttempt(event.attempt ?? 0);
+          setRetryMaxAttempts(event.maxAttempts ?? 3);
+          setRetryCountdown(((event.delayMs ?? 3000) / 1000));
+          const retryHandler = () => {
+            (runtime.session as any).abortRetry?.();
+            setRetryEscapeHandler(null);
+          };
+          setRetryEscapeHandler(retryHandler);
+          break;
+        case 'auto_retry_end':
+          setRetryAttempt(0);
+          setRetryCountdown(0);
+          setRetryEscapeHandler(null);
+          break;
+        // Compaction handling
+        case 'compaction_start':
+          setIsCompacting(true);
+          const compactionHandler = () => {
+            (runtime.session as any).abortCompaction?.();
+            setAutoCompactionEscapeHandler(null);
+          };
+          setAutoCompactionEscapeHandler(compactionHandler);
+          break;
+        case 'compaction_end':
+          setIsCompacting(false);
+          setAutoCompactionEscapeHandler(null);
+          // Add CompactionSummaryMessage if available
+          if (event.summaryEntry) {
+            const summaryMsg: Message = {
+              id: `compaction-${Date.now()}`,
+              role: 'compactionSummary',
+              content: event.summaryEntry.toString() || '[Compaction]',
+              timestamp: Date.now(),
+            };
+            setMessages(prev => [...prev, summaryMsg]);
+          }
           break;
         default:
           break;
@@ -854,6 +888,19 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     onPaste,
     onInterrupt,
     onDequeue: handleDequeue,
+    onEscape: () => {
+      if (retryEscapeHandler) {
+        retryEscapeHandler();
+      } else if (autoCompactionEscapeHandler) {
+        autoCompactionEscapeHandler();
+      } else {
+        if (activeModal) {
+          setActiveModal(null);
+        } else {
+          setInputValue('');
+        }
+      }
+    },
   };  // Signal handlers for graceful shutdown
   React.useEffect(() => {
     const handleSignal = async (signal: string) => {

@@ -169,6 +169,7 @@ export class AgentSession {
   private _retryDelayMs = 1000;
   private _retryPromise: Promise<void> | undefined;
   private _retryResolve: (() => void) | undefined;
+  private _retryAborted = false;
 
   // Tool registry
   private _toolRegistry: Map<string, AgentTool> = new Map();
@@ -750,11 +751,20 @@ export class AgentSession {
    * Abort any pending retry.
    */
   abortRetry(): void {
+    this._retryAborted = true;
     if (this._retryAbortController) {
       this._retryAbortController.abort();
       this._retryAbortController = undefined;
     }
     this._resolveRetry();
+  }
+
+  /**
+   * Abort any ongoing compaction (manual or auto).
+   */
+  abortCompaction(): void {
+    this._compactionAbortController?.abort();
+    this._autoCompactionAbortController?.abort();
   }
 
   /**
@@ -1335,6 +1345,11 @@ export class AgentSession {
   }
 
   private async _processAgentEvent(event: any): Promise<void> {
+    // Reset retry abort flag when retry ends
+    if (event.type === 'auto_retry_end') {
+      this._retryAborted = false;
+    }
+
     // When a user message starts, check queue and remove it
     if (event.type === "message:start" && event.turn?.role === "user") {
       this._overflowRecoveryAttempted = false;

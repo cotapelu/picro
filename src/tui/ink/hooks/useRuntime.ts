@@ -239,6 +239,7 @@ export function useRuntime(runtime: ExtendedRuntime) {
     sendMessage,
     abort,
     setThinkingLevel,
+    setMessages,
 
     runtime,
   };
