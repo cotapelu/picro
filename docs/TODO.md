@@ -1,623 +1,486 @@
 # TUI Development TODO List
 
-## Mục tiêu
-Xây dựng thư mục `src/tui` đầy đủ và chuẩn, làm việc tốt với `AgentSessionRuntime`. Tham khảo code từ `llm-context/coding-agent/modes/interactive/` và `llm-context/agent/` nhưng KHÔNG copy, chỉ đối chiếu và implement theo cách phù hợp với kiến trúc hiện tại (React + Ink).
+## Bối cảnh & Mục tiêu
 
-## Cập nhật gần đây (2025-06-02)
-- ✅ **Iteration 85**: Telemetry decorator tests: Added 4 tests for telemetryMethod covering success, error, and suppression. Increased telemetry branch coverage. 1089 tests passing. Coverage: 60.5% statements, 52.87% branches, 61.95% functions, 61.58% lines.
-- ✅ **Iteration 84**: Coverage >60% milestone achieved: Added SettingsSelectorModal (11), ModelSelectorModal (5), telemetry (8), auth-storage (28), performance-tracker (8). Fixed shell mocks. 1085 tests passing (1 todo). Coverage: 60.29% statements, 61.35% lines.
-- ✅ **Iteration 9**: Bug Fix in `MessageItem.tsx` (shouldShowRole → showRoleLabel)
-- ✅ **Iteration 10**: Added `MessageItem.test.tsx` (13 tests) - coverage increased to ~29.5%
-- ✅ **Iteration 11**: Added tests for UserMessage, AssistantMessage, CommandPalette (29 tests total). Tests: 181 passing.
-- ✅ **Iteration 12**: Added `ToolExecution.test.tsx` (6 tests). Tests: 187 passing.
-- ✅ **Iteration 13**: Added `BashExecution.test.tsx` (5 tests). Tests: 192 passing.
-- ✅ **Iteration 14**: Added `useTheme.test.tsx` (2 tests). Tests: 194 passing.
-- ✅ **Iteration 15**: Added `HelpModal.test.tsx` (2 tests). Tests: 196 passing.
-- ✅ **Iteration 16**: Partial InkApp decomposition: integrated useModal hook and ModalRenderers component (renderModal unused)
-- ✅ **Iteration 17**: Command handler integration via handleSelectCommand wrapper; old handleCommandSelect unused
-- ✅ **Iteration 18**: Added InputBox tests (3 tests). Tests: 199 passing.
-- ✅ **Iteration 19**: Added Footer tests (5 tests). Tests: 204 passing.
-- ✅ **Iteration 20**: Added Header tests (3 tests). Tests: 207 passing.
-- ✅ **Iteration 21**: Added MessageList tests (5 tests). Tests: 212 passing.
-- ✅ **Iteration 22**: Added SettingsSelectorModal smoke test (1 test). Tests: 213 passing.
-- ✅ **Iteration 23**: Added ModelSelectorModal smoke test (1 test). Tests: 214 passing.
-- ✅ **Iteration 24**: Added Armin tests (2 tests). Tests: 216 passing.
-- ✅ **Iteration 25**: Added SessionSelectorModal smoke test (1 test). Tests: 217 passing.
-- ✅ **Iteration 26**: Removed broken InkApp integration test
-- ✅ **Iteration 27**: Added ChangelogModal smoke test (1 test). Tests: 218 passing.
-- ✅ **Iteration 28**: Added TreeSelectorModal smoke test (1 test). Tests: 219 passing.
-- ✅ **Iteration 29**: Added ConfirmationModal smoke test (1 test). Tests: 220 passing.
-- ✅ **Iteration 61**: AgentLoop comprehensive tests (24 new tests covering reset, transformContext, memoryStore, steering queue, initialTurns, autoSaveMemory, turn creation, drainQueue, combineSignals, transformPrompt, max rounds, debug emissions, shouldContinue strategies, signal integration, toolCallId, consecutive runs, snapshot immutability) + modal smoke tests. Tests: 704 passing. Overall coverage ~48.25%.
-- ✅ **Iteration 68**: utils/shell.ts: Added 6 tests (killProcessTree: 4, killTrackedDetachedChildren: 2) improving coverage and process management reliability. Tests: 922 passing.
-- ✅ **Iteration 75**: LoginModal backspace test: added test for backspace on empty input. Tests: 971 passing. Coverage ~58.0%.
-- ✅ **Iteration 76**: Shell env tests: added tests for getShellConfig (1) and getShellEnv (3). Tests: 975 passing. Coverage ~58.2%.
-- ✅ **Iteration 77**: sanitizeBinaryOutput extra test: added simple test for null removal. Tests: 975 passing. Coverage ~58.2%.
-- ✅ **Iteration 78**: Paths edge‑case tests: added 10 tests for isLocalPath; removed ModelSelectorModal test. Tests: 984 passing. Coverage ~58.3%.
-- ✅ **Iteration 74**: Truncate edge case test: added test for maxLines=0. Tests: 969 passing. Coverage ~57.9%.
-- ✅ **Iteration 73**: LoginModal interaction tests: added 8 tests for typing, backspace, Escape, empty submit, trimming, error handling. Tests: 968 passing. Coverage ~57.8%.
-- ✅ **Iteration 72**: SessionSelectorModal interaction tests: added 6 tests for navigation (up/down, clamps), selection (Enter), Escape cancellation, empty-list handling. Tests: 961 passing. Coverage ~57.5%.
-- ✅ **Iteration 71**: Modal interaction tests: added 3 tests for ConfirmationModal (toggle/confirm/cancel) and 3 for HotkeysModal (Escape handling). Tests: 955 passing. Coverage ~57.0%.
-- ✅ **Iteration 70**: src/tools/path-utils.test.ts: Added 14 unit tests covering expandPath, resolveToCwd, validatePathWithinBase. Tests: 949 passing. Coverage increased to ~56.5%.
-- ✅ **Iteration 69**: src/tools/truncate.ts: Added 13 unit tests for truncateHead, truncateTail, truncateLines, truncateOutput. Tests: 935 passing.
-- 📊 **Coverage**: ~30% statements (target 80%)
-- 🔄 **Next Priorities**:
-  1. Tiếp tục mở rộng test coverage: BashExecution, và các modals (Settings, Model, Session, etc.)
-  2. Tích hợp `command-handlers.ts` & `modal-renderers.tsx` vào InkApp (decomposition)
-  3. Implement theme watcher (dynamic light/dark switching)
-  4. So sánh chi tiết với reference code (llm-context/coding-agent/modes/interactive/)
+**Mục tiêu cuối cùng**: `InkApp.tsx` (React + Ink) phải có **đầy đủ tính năng** như `InteractiveMode` class trong `llm-context/coding-agent/src/modes/interactive/interactive-mode.ts` (~5500 dòng). Có thể khác kiến trúc (React hooks thay vì class OOP), nhưng **tính năng và behavior phải tương đương**.
+
+**Cấm**: Copy code trực tiếp từ reference (vi phạm bản quyền). Chỉ được **đọc hiểu** và **tự implement lại** theo cách phù hợp với React/Ink.
+
+**Hiện trạng**:
+- `InkApp.tsx` hiện tại ~1063 dòng, đã có layout cơ bản, một số modals, command handlers sơ lược.
+- Đã tách một số logic ra custom hooks: `useEditorState`, `useAppActions`, `useExtensionUIState`, `useResourceInfo`, `useVersionCheck`.
+- Coverage: ~60%, tests: ~1090 passing.
 
 ---
 
-## 📊 Tình hình hiện tại
+## Phân tích Gap (so với InteractiveMode)
 
-### Đã có (src/tui/ink)
-- ✅ InkApp.tsx - React component chính với layout cơ bản
-- ✅ useRuntime hook - kết nối basic với AgentSessionRuntime
-- ✅ useTheme hook - theme management
-- ✅ Các modals: CommandPalette, SettingsSelector, ModelSelector, ScopedModelsSelector, UserMessageSelector, SessionSelector, ThinkingModal, HelpModal, LoginModal, etc.
-- ✅ Các components: Header, Footer (với FooterDataProvider), MessageList, MessageItem (User, Assistant, Tool, BashExecution, CompactionSummary, BranchSummary, Custom), InputBox
-- ✅ Các molecule/organism: Armin, Daxnuts, EarendilAnnouncement, BorderedLoader, CountdownTimer
-- ✅ types.ts - Message, ToolCall types (including special message roles)
-- ✅ themes.ts - theme definitions
-- ✅ ErrorBoundary
-
-### Đã hoàn thành (so với interactive-mode.ts reference)
-- ✅ Expanded `useRuntime` hook to expose comprehensive state & actions (isStreaming, isCompacting, retryAttempt, currentModel, thinkingLevel, steering/follow-up queues, etc.)
-- ✅ Enhanced `Footer` component with `FooterDataProvider`: dynamic display of cwd, session name, model, thinking level, token stats (input/output/cache/cost), auto-compact indicator, hints, performance metrics
-- ✅ Improved `ModelSelectorModal`: loads all available models from modelRegistry, supports search/filter, sets model via session.setModel(), shows reasoning support
-- ✅ Implemented functional `SettingsSelectorModal` with most-used settings: theme, default thinking, transport, auto-compaction, hide thinking, show images, image width, skill commands, steering/follow-up modes, double escape action, quiet startup
-- ✅ Added `/debug` command: writes debug log with messages and stats to temp file
-- ✅ Added easter egg modals: `/arminsayshi` and `/dementedelves`
-- ✅ Fixed build: TypeScript compilation clean, esbuild bundle OK
-- ✅ `AssistantMessage` component: renders text content and thinking blocks (collapsible via hideThinkingBlock). Thinking blocks displayed italic with thinkingText color.
-- ✅ `ToolExecution` component: displays tool call arguments and result with expand/collapse toggle.
-- ✅ `BashExecution` component: displays ! command output with proper styling
-- ✅ Compaction/Retry UI: Status line above footer shows compaction in progress and retry countdown.
-- ✅ Tool output expansion toggle: Toggle via Ctrl+Shift+X, state managed in useRuntime.
-- ✅ Pending messages indicator: Shows count of queued steering/follow-up messages (Ctrl+E to edit hint).
-- ✅ **NEW: ScopedModelsSelectorModal**: React/Ink modal for selecting which models to cycle through (Ctrl+P). Supports toggle, reorder, enable/clear all, toggle provider, session-only changes persisted to settings via Ctrl+S.
-- ✅ **NEW: UserMessageSelectorModal**: React/Ink modal for selecting a user message to fork from. Integrates with runtime.fork().
-- ✅ **NEW: CompactionSummaryMessage, BranchSummaryMessage, CustomMessage components**: Properly renders special message types with appropriate formatting.
-- ✅ Message type conversion updated to preserve role and fields for special message types in useRuntime hook.
-
-### Đã hoàn thành thêm (TUI Enhancement Sprint)
-- ✅ ScopedModelsSelectorModal (modal và handler)
-- ✅ UserMessageSelectorModal (modal và handler)
-- ✅ Missing message components: CompactionSummaryMessage, BranchSummaryMessage, CustomMessage
-- ✅ FooterDataProvider để quản lý footer state tập trung
-- ✅ Integration FooterDataProvider vào Footer và InkApp
-- ✅ Cập nhật MessageItem để render các message type mới
-- ✅ Cập nhật useRuntime converter để giữ nguyên các role đặc biệt
-- ✅ Build successful
-
-### Vẫn còn (tương tự interactive-mode.ts)
-- ⏳ Unit tests: core utilities (output-guards, slash-commands) implemented; UI molecules cần test với ink-testing-library
-- ⏳ SkillInvocationMessage component (chưa cần thiết nếu không dùng skills)
-- ⏳ Complete extension system integration (setWidget, setHeader/Footer working but not fully tested)
-- ⏳ Many command handlers stubs cần implement: `/export` (HTML), `/import` (JSONL), `/share` (GitHub gist), `/name` (session name), `/session` (stats), `/clone` (done: uses fork), `/tree` (branch navigation), `/resume` (session selector), `/compact` (calls session.compact)
-- ⏳ Full extension bindings: bindExtensions() currently stub; cần implement command context actions, extension shortcuts
-- ⏳ Signal handlers & graceful shutdown (SIGTERM, SIGHUP) trong TUI
-- ⏳ Changelog display (read from file)
-- ⏳ Autocomplete: fd-based path completion (done), slash commands (done), prompt templates (done), extension commands (done), skills (done)
-- ⏳ Header resource loading display (counts of extensions, skills, prompts, themes, context files)
-- ⏳ Theme watcher và dynamic theme switching
-- ⏳ Many modals cần polish: SessionSelector (rename/delete), TreeSelector (summarization prompts), ScopedModelsSelector (improve UI hints)
-- ⏳ Error handling và UX improvements (loading states, cancellation)
-- ⏳ Performance optimization (large conversations, streaming)
-- ⏳ Unit tests: core utilities (output-guards, slash-commands) implemented; UI molecules pending (need ink-testing-library)
-
-
----
-
-## 🗂️ Phân loại công việc
-
-### A. Core Architecture & Integration
-
-#### A1. Runtime Integration
-- [ ] **useRuntime hook**: Mở rộng để include đầy đủ AgentSessionRuntimeInterface
-  - [ ] expose: `session`, `isStreaming`, `isCompacting`, `retryAttempt`, etc.
-  - [ ] expose: `getSteeringMessages()`, `getFollowUpMessages()`, `clearQueue()`
-  - [ ] expose: `getUserMessagesForForking()`, `getSessionStats()`, `getLastAssistantText()`
-  - [ ] expose: `getToolDefinition(toolName)`
-  - [ ] expose: `setAutoCompactionEnabled(enabled)`
-  - [ ] expose: `setSteeringMode(mode)`, `setFollowUpMode(mode)`
-  - [ ] expose: `cycleThinkingLevel()`, `cycleModel(direction)`, `setModel(model)`
-  - [ ] expose: `getAvailableThinkingLevels()`
-  - [ ] expose: `compact(customInstructions?)`
-  - [ ] expose: `executeBash(command, onChunk, options)`
-  - [ ] expose: `recordBashResult(command, result, options)`
-  - [ ] expose: `abortBash()`
-  - [ ] expose: `navigateTree(entryId, options)`, `getTree()`, `getLeafId()`
-  - [ ] expose: `reload()`
-  - [ ] expose: `getContextUsage()`
-
-#### A2. InkApp Component
-- [ ] **State management**: Expand state to include:
-  - [ ] `loadingAnimation`, `workingMessage`, `workingIndicatorOptions`
-  - [ ] `toolOutputExpanded`, `hideThinkingBlock`, `hiddenThinkingLabel`
-  - [ ] `streamingComponent`, `streamingMessage`
-  - [ ] `pendingTools` Map
-  - [ ] `bashComponent`, `pendingBashComponents`
-  - [ ] `autoCompactionLoader`, `retryLoader`, `retryCountdown`
-  - [ ] `compactionQueuedMessages`
-  - [ ] `extensionSelector`, `extensionInput`, `extensionEditor`
-  - [ ] `extensionWidgetsAbove`, `extensionWidgetsBelow`
-  - [ ] `customFooter`, `customHeader`
-  - [ ] `changelogMarkdown`, `startupNoticesShown`
-  - [ ] `anthropicSubscriptionWarningShown`
-- [ ] **Layout**: Implement đầy đủ layout theo reference:
-  - [ ] `headerContainer` (built-in or custom header)
-  - [ ] `chatContainer`
-  - [ ] `pendingMessagesContainer`
-  - [ ] `statusContainer`
-  - [ ] `widgetContainerAbove`, `widgetContainerBelow`
-  - [ ] `editorContainer` (với editor có thể thay đổi)
-  - [ ] `footer`
-- [ ] **Key handlers**: Implement tất cả key handlers từ interactive-mode.ts:
-  - [ ] `onEscape`, `onCtrlD`, `onCtrlC` (double-tap), `onCtrlZ`
-  - [ ] Actions: `app.clear`, `app.suspend`, `app.thinking.cycle`, `app.model.*`, `app.tools.expand`, `app.thinking.toggle`, `app.editor.external`, `app.message.followUp`, `app.message.dequeue`, `app.clipboard.pasteImage`
-  - [ ] Extension shortcuts integration
-- [ ] **Editor submit handler**: Xử lý tất cả slash commands và bash
-- [ ] **Signal handlers**: `registerSignalHandlers()`, `unregisterSignalHandlers()`, handle SIGTERM, SIGHUP, SIGCONT
-- [ ] **Shutdown**: `shutdown()`, `checkShutdownRequested()`, `stop()`
-
-#### A3. Agent Event Subscription
-- [ ] `subscribeToAgent()`: Subscribe to `AgentSessionRuntimeEvent`
-- [ ] `handleEvent(event)`: Xử lý tất cả event types:
-  - [ ] `agent_start` → show loader/status
-  - [ ] `agent_end` → hide loader, check shutdown, flush queues
-  - [ ] `queue_update` → update pending messages display
-  - [ ] `message_start` → create AssistantMessageComponent với streaming
-  - [ ] `message_update` → update streaming content, handle tool calls
-  - [ ] `message_end` → finalize, handle errors
-  - [ ] `tool_execution_start` → create/update ToolExecutionComponent
-  - [ ] `tool_execution_update` → update partial result
-  - [ ] `tool_execution_end` → mark complete
-  - [ ] `compaction_start` → show compaction loader, set escape handler
-  - [ ] `compaction_end` → rebuild chat, show summary
-  - [ ] `auto_retry_start` → show retry countdown, set escape handler
-  - [ ] `auto_retry_end` → restore escape, show error nếu fail
+| Module | Trạng thái | Cần làm |
+|--------|------------|---------|
+| **A. Core Architecture** |
+| State management | React useState | Thêm đầy đủ state: streamingComponent, streamingMessage, pendingTools, compactionQueuedMessages, autoCompactionLoader, retryLoader, retryCountdown, extension widgets, custom header/footer, etc. |
+| Event subscription | `useRuntime` + `useEffect` | Expand `useRuntime` để expose tất cả session methods và events cần thiết |
+| Signal handlers | Có sơ bản | Thêm SIGTERM, SIGHUP, SIGCONT, drainInput, emergencyTerminalExit |
+| Shutdown flow | Có | Thêm `checkShutdownRequested`, dispose, cleanup |
+| **B. Message Rendering** |
+| AssistantMessage (molecule) | Chưa có component riêng | Tạo `AssistantMessage` component với streaming updates, thinking blocks (collapsible), tool calls inline |
+| ToolExecution (molecule) | Đã có nhưng chưa expand/collapse, images | Thêm state expanded, showImages, imageWidthCells, markExecutionStarted, setArgsComplete |
+| BashExecution (molecule) | Đã có | OK |
+| CompactionSummaryMessage | Đã có component | OK |
+| BranchSummaryMessage | Đã có component | OK |
+| CustomMessage | Đã có component | OK |
+| Message conversion | `useRuntime` converter | Giữ nguyên để xử lý tất cả message roles |
+| **C. Modals/Selectors** |
+| CommandPalette | Có | OK (có thể enhance thêm) |
+| ThinkingModal | Có | OK |
+| SettingsSelectorModal | Có (70% hoàn) | Add remaining settings (nhiều) |
+| ModelSelectorModal | Có | OK |
+| ScopedModelsSelectorModal | Có | OK |
+| UserMessageSelectorModal | Có (test mới) | OK |
+| SessionSelectorModal | Có | Cần thêm rename, delete, session stats |
+| TreeSelectorModal | Có | Cần integrate summarization flow |
+| TreeSummarizationModal | Có | OK |
+| HelpModal | Có | OK |
+| HotkeysModal | Có | OK |
+| ChangelogModal | Có | OK |
+| LoginModal | Có | OK |
+| ConfirmationModal | Có | OK |
+| InputModal | Có | OK |
+| SelectModal | Có | OK |
+| ExternalEditorModal | Có | OK |
+| BashOutputModal | Có | OK |
+| SessionInfoModal | Có | OK |
+| Armin/Earendil easter eggs | Có modal | OK |
+| **D. Extension System** |
+| ExtensionUIContext | Stub (`extension-context.ts`) | Implement full API: select, confirm, input, editor, custom, setWidget, setFooter, setHeader, setStatus, setWorkingMessage, setWorkingIndicator, setHiddenThinkingLabel, setToolsExpanded, theme APIs, autocomplete providers, custom editor component |
+| bindExtensions() | Chưa có | Tạo function để inject ExtensionUIContext vào runtime session, register shortcuts, setup command context |
+| Extension shortcuts | partial (ref) | Implement full matching and handling in InputBox key handlers |
+| Widget management | state + setExtensionWidget | OK nhưng cần clear on reset |
+| Custom footer/header | customHeader state | OK nhưng cần integrate with extension setHeader/setFooter |
+| Custom editor component | customEditor state | OK nhưng cần wire events |
+| Autocomplete providers | factory array + register | OK nhưng cần slash commands, templates, extensions, skills integration |
+| **E. Commands** |
+| Slash commands (handlers) | Có `command-handlers.ts` | Hoàn thiện tất cả: `/export`, `/import`, `/share`, `/name`, `/session` (stats), `/clone` (fork), `/tree` (show selector), `/resume` (session selector), `/compact` (session.compact), `/reload` (settings reload), `/debug` (OK), `/arminsayshi` (OK), `/dementedelves` (OK) |
+| Bash commands (!, !!) | Có trong handleSubmit | OK |
+| Double-tap Escape | Chưa có | Implement: `/tree` hoặc `/fork` dựa vào setting `doubleEscapeAction` |
+| **F. UX Features** |
+| Compaction queue | Chưa có | Implement `compactionQueuedMessages`, `queueCompactionMessage`, `flushCompactionQueue`, `restoreQueuedMessagesToEditor` |
+| Retry countdown | Có nhưng hardcoded | Lấy delay từ session/retry config |
+| Pending messages indicator | Có | OK |
+| Tool output expansion | Có (toggle) | OK |
+| Thinking block visibility | Có (toggle) | OK |
+| External editor (Ctrl+E) | Có (stub) | Hoàn thiện: lấy current editor text, mở external editor, paste back |
+| Clipboard image paste | Có (stub) | Hoàn thiện: insert file path vào editor |
+| Theme switching | Có (toggle) | Add theme watcher, dynamic theme loading |
+| Status messages (spam dedup) | Cưc | OK |
+| Version check & auto-changelog | Có | OK |
+| Package updates check | Có | OK |
+| Anthropic auth warning | Có | OK |
+| Error boundary | Có | OK |
+| **G. Selector Components** |
+| SessionSelector | Có | Thêm rename, delete, create new, session info |
+| TreeSelector | Có | Thêm summarization UI flow (như interactive-mode) |
+| CommandPalette | Có | OK |
+| **H. Header/Footer** |
+| Header Expandable | Có ExpandableText | OK |
+| Header resource loading display | Có `showLoadedResources` | Enhance: scope groups, diagnostics, collision warnings (giống interactive-mode) |
+| Footer dynamic stats | Có FooterDataProvider | Expand: token stats, cost, performance metrics, provider count, session name, cwd |
+| **I. Performance & Utilities** |
+| Autocomplete (fd) | Có | OK |
+| Path completion | Có | OK |
+| Command autocomplete | Có | OK |
+| Template autocomplete | Có | OK |
+| Extension command autocomplete | Có | OK |
+| Skill command autocomplete | Có | OK |
+| Markdown rendering | Có (Markdown component) | OK |
+| Truncation utilities | Có | OK |
+| Output guards | Có | OK |
+| **J. Tests** |
+| Unit tests for hooks | Một số | Thêm测试 cho tất cả custom hooks |
+| Integration tests (Ink) | Đang có | Thêm tests cho các luồng phức tạp: compaction, retry, extension UI, modals |
+| Component tests | Đang có | Hoàn thiện tin cho AssistantMessage, ToolExecution (expanded), etc. |
 
 ---
 
-### B. Components Implementation/Completion
+## Phases & Tasks Chi Tiết
 
-#### B1. AssistantMessage Component (molecule)
-- [ ] **File**: `src/tui/ink/components/MessageItem/AssistantMessage.tsx` (new)
-- [ ] Props: `message`, `hideThinkingBlock`, `markdownTheme`, `hiddenThinkingLabel`
-- [ ] Methods: `setHideThinkingBlock()`, `setHiddenThinkingLabel()`, `updateContent(message)`
-- [ ] Render:
-  - [ ] text blocks (Markdown)
-  - [ ] thinking blocks (collapsible, italic, thinkingText color)
-  - [ ] tool calls (không render trực tiếp, được render riêng)
-  - [ ] stopReason: aborted/error
-- [ ] Streaming support: Có thể update content incrementally (giữ lại reference để update)
+### Phase 1: Complete Core State & Event Subscription
+**Mục tiêu**: InkApp có đầy đủ state và event handling tương tự InteractiveMode.
 
-#### B2. ToolExecution Component (molecule) - enhancement
-- [ ] **File**: `src/tui/ink/components/MessageItem/ToolExecution.tsx` (modify)
-- [ ] Add: `setExpanded(expanded)`
-- [ ] Add: `setShowImages(show)`, `setImageWidthCells(width)`
-- [ ] Add: `markExecutionStarted()`
-- [ ] Add: `setArgsComplete()`
-- [ ] Add: `updateArgs(args)`, `updateResult(result, isPartial)`
-- [ ] Support built-in tool definitions từ `createAllToolDefinitions(cwd)`
-- [ ] Support custom tool definitions từ extensions
-- [ ] Render:
-  - [ ] Call renderer (renderCall) nếu có
-  - [ ] Result renderer (renderResult) nếu có
-  - [ ] Fallback: title + JSON args + text output
-  - [ ] Image display với maxWidthCells, conversion cho Kitty
-- [ ] Background color: pending/error/success theo theme
+**Tasks**:
+1. **Expand useRuntime** (file: `src/tui/ink/hooks/useRuntime.ts`)
+   - expose: `session.getSteeringMessages()`, `session.getFollowUpMessages()`, `session.clearQueue()`
+   - expose: `session.getUserMessagesForForking()`, `session.getSessionStats()`, `session.getLastAssistantText()`
+   - expose: `session.getToolDefinition(name)`
+   - expose: `session.setAutoCompactionEnabled(enabled)`
+   - expose: `session.setSteeringMode(mode)`, `session.setFollowUpMode(mode)`
+   - expose: `session.cycleThinkingLevel()`, `session.cycleModel(direction)`, `session.setModel(model)`
+   - expose: `session.getAvailableThinkingLevels()`
+   - expose: `session.compact(customInstructions?)`
+   - expose: `session.executeBash(command, onChunk, options)` (if exists, hoặc implement wrapper)
+   - expose: `session.recordBashResult(command, result, options)`
+   - expose: `session.abortBash()`
+   - expose: `session.navigateTree(entryId, options)`, `session.getTree()`, `session.getLeafId()`
+   - expose: `session.reload()`
+   - expose: `session.getContextUsage()`
+   - Subscribe to thêm events: `compaction_start/end`, `auto_retry_start/end`, `tool_execution_*`, `message_*`, `queue_update`, `session_tree`, `error`, `session_info_changed`
 
-#### B3. BashExecution Component (molecule) - new
-- [ ] **File**: `src/tui/ink/components/MessageItem/BashExecution.tsx` (new)
-- [ ] Props: `command`, `ui`, `excludeFromContext`
-- [ ] Methods: `appendOutput(chunk)`, `setComplete(exitCode, cancelled, truncation?, fullOutputPath?)`
-- [ ] Render: command + output with appropriate styling (error if non-zero exit)
-- [ ] Truncation support (visual truncate indicator)
+2. **Add missing state** (InkApp.tsx)
+   - `const [streamingComponent, setStreamingComponent] = useState<AssistantMessageComponent | null>(null)`
+   - `const [streamingMessage, setStreamingMessage] = useState<AssistantMessage | null>(null)`
+   - `const [pendingTools, setPendingTools] = useState<Map<string, ToolExecutionComponent>>(new Map())`
+   - `const [compactionQueuedMessages, setCompactionQueuedMessages] = useState<Array<{text: string, mode: 'steer'|'followUp'}>>([])`
+   - `const [autoCompactionLoader, setAutoCompactionLoader] = useState<Loader | null>(null)`
+   - `const [autoCompactionEscapeHandler, setAutoCompactionEscapeHandler] = useState<(() => void) | null>(null)`
+   - `const [retryLoader, setRetryLoader] = useState<Loader | null>(null)`
+   - `const [retryCountdown, setRetryCountdown] = useState<CountdownTimer | null>(null)`
+   - `const [retryEscapeHandler, setRetryEscapeHandler] = useState<(() => void) | null>(null)`
+   - `const [bashComponent, setBashComponent] = useState<BashExecutionComponent | null>(null)`
+   - `const [pendingBashComponents, setPendingBashComponents] = useState<BashExecutionComponent[]>([])`
+   - `const [extensionWidgetsAbove, setExtensionWidgetsAbove] = useState<Map<string, Component>>(new Map())`
+   - `const [extensionWidgetsBelow, setExtensionWidgetsBelow] = useState<Map<string, Component>>(new Map())`
+   - `const [customFooter, setCustomFooter] = useState<Component | null>(null)`
+   - `const [customHeader, setCustomHeader] = useState<Component | null>(null)`
+   - `const [changelogMarkdown, setChangelogMarkdown] = useState<string | undefined>(undefined)`
+   - `const [startupNoticesShown, setStartupNoticesShown] = useState(false)`
+   - `const [anthropicSubscriptionWarningShown, setAnthropicSubscriptionWarningShown] = useState(false)`
+   - `const [lastStatusSpacer, setLastStatusSpacer] = useState<Spacer | null>(null)`
+   - `const [lastStatusText, setLastStatusText] = useState<Text | null>(null)`
+   - Keep refs: `extensionShortcutsRef`, `signalCleanupHandlers`, `unsubscribe`
 
-#### B4. UserMessage Component (molecule) - simple
-- [ ] **File**: `src/tui/ink/components/MessageItem/UserMessage.tsx` (new)
-- [ ] Props: `text`, `markdownTheme`
-- [ ] Render: markdown of text content (không cần expand/collapse)
+3. **Signal handlers & shutdown** (InkApp.tsx)
+   - Implement `registerSignalHandlers()`, `unregisterSignalHandlers()`
+   - Handle `SIGTERM`, `SIGHUP` (emergency exit), `SIGCONT` (resume after Ctrl+Z)
+   - Implement `shutdown()`, `checkShutdownRequested()`, `stop()`
+   - Implement `ui.terminal.drainInput(ms)` before shutdown (cần expose terminal drain)
+   - Implement `killTrackedDetachedChildren()` on exit
 
-#### B5. SkillInvocationMessage Component (molecule) - new
-- [ ] **File**: `src/tui/ink/components/MessageItem/SkillInvocationMessage.tsx` (new)
-- [ ] Props: `skillBlock` (từ `parseSkillBlock()`), `markdownTheme`
-- [ ] Render: skill name + arguments, có thể expand to show user message
+4. **Key handlers expansion**
+   - `defaultEditor.onEscape`: full logic (interrupt streaming, abort bash, toggle double-escape actions, etc.)
+   - `defaultEditor.onCtrlD`: shutdown
+   - `defaultEditor.onCtrlC`: double-tap to exit, single to clear
+   - `defaultEditor.onCtrlZ`: suspend (Unix only)
+   - `defaultEditor.onPasteImage`: clipboard image handling
+   - Action handlers: `app.clear`, `app.suspend`, `app.thinking.cycle`, `app.model.*`, `app.tools.expand`, `app.thinking.toggle`, `app.editor.external`, `app.message.followUp`, `app.message.dequeue`, `app.session.*`, etc.
 
-#### B6. CustomMessage Component (molecule) - new
-- [ ] **File**: `src/tui/ink/components/MessageItem/CustomMessage.tsx` (new)
-- [ ] Props: `message`, `renderer` (từ extensionRunner.getMessageRenderer), `markdownTheme`
-- [ ] Render custom content qua renderer
-
-#### B7. CompactionSummaryMessage Component (molecule) - new
-- [ ] **File**: `src/tu/ink/components/MessageItem/CompactionSummaryMessage.tsx` (new)
-- [ ] Props: `message` (từ `createCompactionSummaryMessage()`), `markdownTheme`
-- [ ] Render summary, có thể expand
-
-#### B8. BranchSummaryMessage Component (molecule) - new
-- [ ] **File**: `src/tui/ink/components/MessageItem/BranchSummaryMessage.tsx` (new)
-- [ ] Props: `message`, `markdownTheme`
-- [ ] Render branch summary
-
-#### B9. Other Static Components (already exist, cần kiểm tra)
-- [ ] `Armin` ✅ có
-- [ ] `Daxnuts` ✅ có
-- [ ] `EarendilAnnouncement` ✅ có
-- [ ] `DynamicBorder` ✅ có
-- [ ] `BorderedLoader` ✅ có
-- [ ] `CountdownTimer` ✅ có
+**Complexity**: High (state và event handling phức tạp, cần ensure React 18 batching đúng)
 
 ---
 
-### C. Selectors & Dialogs (molecules/organisms)
+### Phase 2: Message Rendering & Streaming
+**Mục tiêu**: Render messages đúng role, streaming assistant messages, tool execution UI.
 
-#### C1. Settings Selector ( molecule)
-- [ ] **File**: `src/tui/ink/modals/SettingsSelectorModal.tsx` (modify/complete)
-- [ ] Props: `runtime`, `onClose`
-- [ ] State: all settings từ SettingsManager:
-  - [ ] `autoCompact`, `showImages`, `imageWidthCells`, `autoResizeImages`, `blockImages`
-  - [ ] `enableSkillCommands`, `steeringMode`, `followUpMode`, `transport`
-  - [ ] `defaultThinkingLevel`, `availableThinkingLevels`
-  - [ ] `currentTheme`, `availableThemes`
-  - [ ] `hideThinkingBlock`, `collapseChangelog`, `enableInstallTelemetry`
-  - [ ] `doubleEscapeAction`, `treeFilterMode`
-  - [ ] `showHardwareCursor`, `editorPaddingX`, `autocompleteMaxVisible`
-  - [ ] `quietStartup`, `clearOnShrink`, `showTerminalProgress`
-- [ ] Callbacks: tất cả `on*Change` để cập nhật session/settings
-- [ ] Theme preview functionality
-- [ ] Render: list với checkboxes/toggles/selects
+**Tasks**:
+1. **Create AssistantMessage component** (`src/tui/ink/components/MessageItem/AssistantMessage.tsx`)
+   - Props: `message`, `hideThinkingBlock`, `markdownTheme`, `hiddenThinkingLabel`
+   - Methods: `setHideThinkingBlock(boolean)`, `setHiddenThinkingLabel(label)`, `updateContent(message)`
+   - Render:
+     - text content as Markdown
+     - thinking blocks (collapsible, italic, `theme.dim` or custom)
+     - tool calls? (ToolExecution components được add riêng trong chatContainer)
+     - handle stopReason: aborted/error messages
+   - Streaming: giữ component instance, update content tăng dần
 
-#### C2. Model Selector ( molecule)
-- [ ] **File**: `src/tui/ink/modals/ModelSelectorModal.tsx` (modify/complete)
-- [ ] Props: `runtime`, `onClose`, `initialSearchInput?`
-- [ ] Fetch models từ `session.modelRegistry.getAvailable()`
-- [ ] Support scoped models (nếu có)
-- [ ] Search/filter by provider/name
-- [ ] Show current model, thinking level
-- [ ] On select: `session.setModel(model)`, update footer, border, maybe warn about anthropic subscription
-- [ ] Easter egg: check daxnuts for OpenCode Kimi
+2. **Enhance ToolExecution component** (`src/tui/ink/components/MessageItem/ToolExecution.tsx`)
+   - Add `setExpanded(expanded: boolean)` method
+   - Add `setShowImages(enabled: boolean)`, `setImageWidthCells(width: number)`
+   - Add `markExecutionStarted()` (visual indicator)
+   - Add `setArgsComplete()` (khi arguments đã hoàn thiện, trigger diff computation nếu cần)
 
-#### C3. Scoped Models Selector ( molecule) - new
-- [ ] **File**: `src/tui/ink/modals/ScopedModelsSelectorModal.tsx` (new)
-- [ ] Props: `onChange`, `onPersist`, `onCancel`
-- [ ] Input: `allModels`, `enabledModelIds`
-- [ ] UI: list models với checkboxes, search
-- [ ] onChange: update session.scopedModels
-- [ ] onPersist: save to settings
+3. **Update MessageList rendering**
+   - `messages` array from `useRuntime` giờ phải giử nguyên object đặc biệt (assistant với toolCalls)
+   - Render `AssistantMessage` cho role assistant, `ToolExecution` cho từng tool call trong message
+   - Cập nhật `useRuntime` converter để giữ nguyên `toolCalls` và `toolCallId` trong message
 
-#### C4. Session Selector ( molecule)
-- [ ] **File**: `src/tui/ink/modals/SessionSelectorModal.tsx` (modify/complete)
-- [ ] Props: `runtime`, `onClose`
-- [ ] Fetch sessions từ `SessionManager.list()` và `listAll()`
-- [ ] Render: searchable list, show name/path/cwd/modified
-- [ ] Actions:
-  - [ ] Resume (enter)
-  - [ ] Rename (Ctrl+R hoặc button)
-  - [ ] Delete (Ctrl+D hoặc button) với confirmation
-  - [ ] New session (Ctrl+N)
-- [ ] Integration: `runtime.switchSession(path)`, `SessionManager.appendSessionInfo()`
+4. **Implement `addMessageToChat(message)`** trong InkApp
+   - Switch trên `message.role`:
+     - `user`: UserMessage component (có skill block parsing)
+     - `assistant`: Tạo AssistantMessage, add to chatContainer
+     - `tool`: bỏ qua (render qua assistant tool calls)
+     - `bashExecution`: BashExecution component
+     - `compactionSummary`: CompactionSummaryMessage component
+     - `branchSummary`: BranchSummaryMessage component
+     - `custom`: CustomMessage component với renderer từ extensionRunner
+   - Manage `streamingComponent` và `streamingMessage` cho agent_start/message_start/message_end events
 
-#### C5. Tree Selector ( molecule)
-- [ ] **File**: `src/tui/ink/modals/TreeSelectorModal.tsx` (modify/complete)
-- [ ] Props: `runtime`, `onClose`
-- [ ] Data: `sessionManager.getTree()`, `getLeafId()`, `terminalRows`
-- [ ] UI: tree view với indentation, labels, summary indicators
-- [ ] On select: navigate tree với summarization prompt:
-  - [ ] "No summary"
-  - [ ] "Summarize"
-  - [ ] "Summarize with custom prompt" → open extension editor
-- [ ] Show loader, cancelable during summarization
-- [ ] Label editing on the fly
+5. **Implement event handlers for message lifecycle** (trong `handleEvent`)
+   - `agent_start`: clear pendingTools, start loader if showTerminalProgress, restore escape handler
+   - `message_start`: tạo AssistantMessage nếu role assistant; add user/bash/custom
+   - `message_update`: update streamingMessage; nếu có toolCall mới → tạo ToolExecution, add to chat; update args if pending
+   - `message_end`: finalize streaming, handle aborted/error, set result for pending tools, clear streaming refs
+   - `tool_execution_start/update/end`: tìm/update ToolExecution component trong pendingTools
 
-#### C6. UserMessage Selector ( molecule)
-- [ ] **File**: `src/tui/ink/modals/UserMessageSelectorModal.tsx` (modify/complete)
-- [ ] Props: `messages` (array of {id, text}), `onSelect`, `onCancel`, `initialSelectedId?`
-- [ ] UI: searchable list of user messages
-- [ ] On select: `runtime.fork(entryId)`, render new session
-
-#### C7. Extension Selector ( molecule) - new
-- [ ] **File**: `src/tui/ink/components/ExtensionSelector.tsx` (new)
-- [ ] Props: `title`, `options` (string[]), `onSelect(option)`, `onCancel`, `{ tui, timeout? }`
-- [ ] UI: simple list với highlight, enter to select, esc to cancel
-- [ ] Focus management
-
-#### C7. Extension Input ( molecule) - new
-- [ ] **File**: `src/tui/ink/components/ExtensionInput.tsx` (new)
-- [ ] Props: `title`, `placeholder?`, `onSubmit(value)`, `onCancel`, `{ tui, timeout? }`
-- [ ] UI: InputBox with label, submit on Enter, cancel on Esc
-
-#### C8. Extension Editor ( molecule) - new
-- [ ] **File**: `src/tui/ink/components/ExtensionEditor.tsx` (new)
-- [ ] Props: `title`, `prefill?`, `onSubmit(value)`, `onCancel`, `{ tui, keybindings }`
-- [ ] UI: CustomEditor with multiline, Ctrl+G to submit
-
-#### C9. Login Dialog ( molecule)
-- [ ] **File**: `src/tui/ink/modals/LoginModal.tsx` (modify/complete)
-- [ ] Props: `onLogin(apiKey)`, `onClose`
-- [ ] State: current step (auth, prompt, manual input, progress, info)
-- [ ] Methods: `showAuth()`, `showPrompt()`, `showManualInput()`, `showProgress()`, `showInfo()`, `signal` for abort
-- [ ] Integration với `authStorage.login()`
-
-#### C10. Confirm Dialog ( molecule) - new
-- [ ] **File**: `src/tui/ink/modals/ConfirmationModal.tsx` (new)
-- [ ] Props: `title`, `message`, `onConfirm`, `onCancel?`
-- [ ] UI: Yes/No buttons, Enter/Esc handling
+**Complexity**: Medium-High (streaming updates, tool call/result correlation)
 
 ---
 
-### D. Extension System
+### Phase 3: Compaction & Retry UI
+**Mục tiêu**: Hiển thị compaction và retry states giống reference.
 
-#### D1. ExtensionUIContext Implementation
-- [ ] **File**: `src/tui/extension-ui-context.impl.ts` (new)
-- [ ] Implement interface `ExtensionUIContext`:
-  - [ ] `select(title, options, opts?)`: Promise<string | undefined>
-  - [ ] `confirm(title, message, opts?)`: Promise<boolean>
-  - [ ] `input(title, placeholder?, opts?)`: Promise<string | undefined>
-  - [ ] `notify(message, type?)`: void (toast/status)
-  - [ ] `onTerminalInput(handler)`: () => void (unsubscribe)
-  - [ ] `setStatus(key, text)`: Update footer extension status
-  - [ ] `setWorkingMessage(message)`
-  - [ ] `setWorkingIndicator(options?)`
-  - [ ] `setHiddenThinkingLabel(label)`
-  - [ ] `setWidget(key, content, options?)`: content can be string[] | factory
-  - [ ] `setFooter(factory?)`
-  - [ ] `setHeader(factory?)`
-  - [ ] `setTitle(title)`
-  - [ ] `custom(factory, options?)`: Show custom overlay/embedded
-  - [ ] `pasteToEditor(text)`
-  - [ ] `setEditorText(text)`, `getEditorText()`
-  - [ ] `editor(title, prefill?)`: Promise<string | undefined>
-  - [ ] `addAutocompleteProvider(factory)`
-  - [ ] `setEditorComponent(factory)`
-  - [ ] `theme` getter
-  - [ ] `getAllThemes()`, `getTheme(name)`, `setTheme(themeOrName)`
-  - [ ] `getToolsExpanded()`, `setToolsExpanded(expanded)`
+**Tasks**:
+1. **Compaction state**
+   - State: `isCompacting` từ `useRuntime`
+   - `handleEvent('compaction_start')`: show loader in statusContainer, set `autoCompactionEscapeHandler` để abort, message "Compacting... (Esc to cancel)" hoặc "Auto-compacting..."
+   - `handleEvent('compaction_end')`: stop loader, restore escape handler, nếu `!aborted` và có summary → rebuild chat, add CompactionSummaryMessage; nếu error → showError
+   - Call `flushCompactionQueue()` sau khi compaction end (giống reference)
 
-#### D2. Extension Integration trong InkApp
-- [ ] `createExtensionUIContext()`: Return implementation với closure over InkApp instance
-- [ ] `bindCurrentSessionExtensions()`:
-  - [ ] `session.bindExtensions({ uiContext, commandContextActions, shutdownHandler, onError })`
-  - [ ] `commandContextActions`: `waitForIdle`, `newSession`, `fork`, `navigateTree`, `switchSession`, `reload`
-  - [ ] Setup extension runner shortcuts: `setupExtensionShortcuts()`
-  - [ ] Show loaded resources: `showLoadedResources()`
-  - [ ] Setup autocomplete: `setupAutocompleteProvider()`
-  - [ ] Theme registration: `setRegisteredThemes()`
-- [ ] `resetExtensionUI()`: Cleanup tất cả extension state
-- [ ] Error display: `showExtensionError(extensionPath, error, stack)`
+2. **Retry state**
+   - State: `retryAttempt` từ `useRuntime`, `retryCountdown` state (seconds)
+   - `handleEvent('auto_retry_start')`: show loader với countdown, set escape handler to `session.abortRetry()`
+   - `handleEvent('auto_retry_end')`: restore escape handler, stop loader, show error nếu `!success`
+   - Compute delay từ event? (reference có `event.delayMs`)
+
+3. **Pending messages indicator**
+   - Compute từ `session.getSteeringMessages()` + `compactionQueuedMessages` (filter mode)
+   - Render trong `pendingMessagesContainer` (above editor) với hint "Ctrl+E to edit"
+   - Update on `queue_update` event và khi queue compaction messages thay đổi
+
+4. **Dequeue functionality**
+   - `handleDequeue()`: gọi `clearAllQueues()`, `restoreQueuedMessagesToEditor()`
+   - Bind to key (Ctrl+E) trong InputBox
+
+**Complexity**: Medium (queue management, timing)
 
 ---
 
-### E. Footer System
+### Phase 4: Extension System (Full)
+**Mục tiêu**: ExtensionUIContext đầy đủ, bindExtensions, shortcuts, widgets, custom UI.
 
-#### E1. FooterDataProvider (new)
-- [ ] **File**: `src/tui/ink/components/Footer/FooterDataProvider.ts` (new)
-- [ ] Class implements `ReadonlyFooterDataProvider` interface
-- [ ] Properties:
-  - [ ] `cwd` (update when switch session)
-  - [ ] `model` (từ session.model?.id ?? 'No model')
-  - [ ] `thinkingLevel` (từ session.thinkingLevel)
-  - [ ] `tokens` (input/output/total từ usage)
-  - [ ] `isStreaming`, `isCompacting`
-  - [ ] `autoCompactionEnabled`
-  - [ ] `availableProviderCount`
-  - [ ] Extension statuses (map key → text)
-- [ ] Methods: `setCwd()`, `setModel()`, `setThinkingLevel()`, `setTokens()`, `setExtensionStatus()`, `clearExtensionStatuses()`, `invalidate()`, `dispose()`
+**Tasks**:
+1. **Implement full ExtensionUIContext** (`src/tui/ink/extension-context.ts`)
+   ```ts
+   interface ExtensionUIContext {
+     select(title, options, opts?): Promise<string | undefined>
+     confirm(title, message, opts?): Promise<boolean>
+     input(title, placeholder?, opts?): Promise<string | undefined>
+     notify(message, type?): void
+     onTerminalInput(handler): () => void
+     setStatus(key, text): void
+     setWorkingMessage(message): void
+     setWorkingVisible(visible): void
+     setWorkingIndicator(options?): void
+     setHiddenThinkingLabel(label?): void
+     setWidget(key, content, options?): void
+     setFooter(factory): void
+     setHeader(factory): void
+     setTitle(title): void
+     custom(factory, options?): Promise<T>
+     pasteToEditor(text): void
+     setEditorText(text): void
+     getEditorText(): string
+     editor(title, prefill?): Promise<string | undefined>
+     addAutocompleteProvider(factory): void
+     setEditorComponent(factory): void
+     getEditorComponent(): EditorFactory | undefined
+     get theme(): Theme
+     getAllThemes(): Array<{name: string, path: string}>
+     getTheme(name): Theme | null
+     setTheme(themeOrName): {success: boolean, error?: string}
+     getToolsExpanded(): boolean
+     setToolsExpanded(expanded): void
+   }
+   ```
+   - Mỗi method cần map đến InkApp state/setters.
+   - `select`, `confirm`, `input`, `editor` → dùng `showSelector` với component tương ứng (đã có modal components)
+   - `custom` → dùng `showExtensionCustom` với overlay mode
+   - `setWidget` → update `extensionWidgetsAbove/Below` state
+   - `setFooter/Header` → update `customFooter/customHeader` state, replace built-in
+   - `setStatus` → `showStatus` (có dedup logic)
+   - `setWorkingMessage/Visible/Indicator` → update `workingMessage`, `workingVisible`, `workingIndicatorOptions` và start/stop loader
+   - `theme` APIs → integrate với `useTheme` hook và theme loader
 
-#### E2. Footer Component (enhance)
-- [ ] **File**: `src/tui/ink/components/Footer/Footer.tsx` (modify)
-- [ ] Props: `session`, `footerDataProvider`
-- [ ] Methods:
-  - [ ] `setSession(session)`
-  - [ ] `setAutoCompactEnabled(enabled)`
-  - [ ] `setLeftItems(items)`, `setRightItems(items)`
-  - [ ] `invalidate()`, `dispose()`
-- [ ] Render:
-  - [ ] Left: cwd basename, session name nếu có
-  - [ ] Center: model, thinking level
-  - [ ] Right: tokens, provider count, extension statuses, auto-compact badge
-  - [ ] Hints: dynamic hints từ KeybindingsManager
+2. **bindExtensions()** (InkApp)
+   - Khi `init()` hoặc session rebind, gọi:
+     - Lấy `session._extensionRunner`
+     - Gọi `createExtensionUIContext(inkApp)` và lưu vào session.__picroBound (như reference)
+     - Call `runner.bind(extensionUIContext)` (hoặc gì đó tương tự)
+     - Setup shortcuts: `setupExtensionShortcuts(runner)`
+     - Load extensions: `session.resourceLoader.getExtensions()` và register commands
+   - Kiểm tra diagnostics: command conflicts, shortcut conflicts
 
----
+3. **Extension shortcuts handling** (InputBox)
+   - Trước khi handle internal shortcuts, check `extensionShortcutsRef.current` với `matchesKey`
+   - Nếu có shortcut matches → call handler, nếu handler returns true → consume
 
-### F. Command Handlers (trong InkApp)
+4. **Resource loading display** (`showLoadedResources`)
+   - Phân tích extensions, skills, prompts, themes theo scope groups (user/project/path)
+   - Hiển thị trong chat với ExpandableText (collapsed/expanded)
+   - Hiển thị diagnostics: collisions, errors, warnings
 
-- [ ] `/settings` → showSettingsSelector()
-- [ ] `/model` hoặc `/model <search>` → handleModelCommand(searchTerm?)
-- [ ] `/scoped-models` → showModelsSelector()
-- [ ] `/export` hoặc `/export <path>` → handleExportCommand() (HTML/JSONL)
-- [ ] `/import` hoặc `/import <path>` → handleImportCommand()
-- [ ] `/share` → handleShareCommand() (gh gist)
-- [ ] `/copy` → handleCopyCommand() (last assistant)
-- [ ] `/name` hoặc `/name <name>` → handleNameCommand()
-- [ ] `/session` → handleSessionCommand() (stats)
-- [ ] `/changelog` → handleChangelogCommand()
-- [ ] `/hotkeys` → handleHotkeysCommand()
-- [ ] `/fork` → showUserMessageSelector()
-- [ ] `/clone` → handleCloneCommand()
-- [ ] `/tree` → showTreeSelector()
-- [ ] `/login` → showOAuthSelector("login")
-- [ ] `/logout` → showOAuthSelector("logout")
-- [ ] `/new` → handleClearCommand()
-- [ ] `/compact` hoặc `/compact <instructions>` → handleCompactCommand()
-- [ ] `/reload` → handleReloadCommand()
-- [ ] `/debug` → handleDebugCommand() (write debug log)
-- [ ] `/arminsayshi` → handleArminSaysHi()
-- [ ] `/dementedelves` → handleDementedDelves()
-- [ ] `/quit` → shutdown()
+5. **Autocomplete providers**
+   - Combine: slash commands, prompt templates, extension commands, skills
+   - Đã có `autocompleteProviderFactories`; đăng ký từ extensions qua `addAutocompleteProvider`
+   - InputBox `onAutocomplete` gọi `handleAutocomplete` → combine results
 
-#### Helper methods:
-- [ ] `getPathCommandArgument(text, command)`: parse path từ args
-- [ ] `checkDaxnutsEasterEgg(model)`
-- [ ] `maybeWarnAboutAnthropicSubscriptionAuth(model)`
-- [ ] `updateAvailableProviderCount()`
-
----
-
-### G. Runtime Utilities (modify/complete)
-
-- [ ] `applyRuntimeSettings()`: Apply settings to UI (editor padding, autocomplete max, cursor, clearOnShrink, theme, etc.)
-- [ ] `rebindCurrentSession()`: Gọi applyRuntimeSettings + bindExtensions + subscribe + update editor/title
-- [ ] `renderCurrentSessionState()`: Clear containers, rebuild chat
-- [ ] `rebuildChatFromMessages()`: Build từ SessionContext
-- [ ] `renderInitialMessages()`: Build context, populate history, show compaction info
-- [ ] `addMessageToChat(message, options?)`: Switch on message.role → create component phù hợp
-- [ ] `showLoadedResources(options?)`: Display loaded skills, prompts, extensions, themes, context files, diagnostics
-- [ ] `buildScopeGroups()`, `formatScopeGroups()`: Helper để group extensions/skills/prompts by scope
-- [ ] `getChangelogForDisplay()`: Only show new entries, skip for resumed sessions
-- [ ] `checkForNewVersion()`: Fetch npm, compare
-- [ ] `checkForPackageUpdates()`: Dùng DefaultPackageManager
-- [ ] `checkTmuxKeyboardSetup()`: Check tmux extended-keys
-- [ ] `updateTerminalTitle()`
-- [ ] `cycleModel(direction)`
-- [ ] `cycleThinkingLevel()`
-- [ ] `toggleToolOutputExpansion()`, `setToolsExpanded(expanded)`
-- [ ] `toggleThinkingBlockVisibility()`
-- [ ] `openExternalEditor()`
-- [ ] `handleClipboardImagePaste()`
-- [ ] `getAppKeyDisplay()`, `getEditorKeyDisplay()`
+**Complexity**: High (extension UI phức tạp, many edge cases)
 
 ---
 
-### H. Message Queue & Compaction
+### Phase 5: Session & Tree Navigation
+**Mục tiêu**: Session management (new, resume, fork, clone) và tree navigation với summarization.
 
-- [ ] `queueCompactionMessage(text, mode)`
-- [ ] `getAllQueuedMessages()`
-- [ ] `clearAllQueues()`
-- [ ] `updatePendingMessagesDisplay()`: Show steering/follow-up messages with dequeue hint
-- [ ] `restoreQueuedMessagesToEditor(options?)`: Move queued messages back to editor
-- [ ] `flushCompactionQueue(options?)`: Send queued messages after compaction
+**Tasks**:
+1. **Session commands**
+   - `/new`: `runtime.newSession()` → show toast, clear editor
+   - `/resume`: open SessionSelectorModal
+   - `/clone`: `runtime.fork(leafId, {position: 'at'})` → renderCurrentSessionState, clear editor
+   - `/fork`: open UserMessageSelectorModal
+   - `/tree`: open TreeSelectorModal
 
----
+2. **SessionSelectorModal enhancements**
+   - List sessions từ `SessionManager.list()` + `listAll`
+   - Show session name, cwd, modified, firstMessage
+   - Actions: resume (Enter), rename (Ctrl+R), delete (Ctrl+D), create new (Ctrl+N)
+   - Confirm delete với ConfirmationModal
+   - Update session name → `sessionManager.appendSessionInfo(newName)`
 
-### I. Widgets & Custom UI
+3. **TreeSelectorModal**
+   - Build tree từ `sessionManager.getTree()`
+   - Show labels (từ `sessionManager.appendLabelChange`), current leaf highlight
+   - Summarization prompt khi chọn non-current leaf:
+     - Show SelectModal with 3 options: "No summary", "Summarize", "Summarize with custom prompt..."
+     - Nếu custom → show ExtensionEditorModal (external editor) để nhập instructions
+   - Call `session.navigateTree(entryId, {summarize, customInstructions})`
+   - Handle result: `renderCurrentSessionState()`, set editor text nếu có
 
-- [ ] `MAX_WIDGET_LINES = 10`
-- [ ] `setExtensionWidget(key, content, options?)`: Support string[] | factory
-- [ ] `clearExtensionWidgets()`
-- [ ] `renderWidgets()`: Render above/below containers
-- [ ] `setExtensionFooter(factory?)`: Replace default footer
-- [ ] `setExtensionHeader(factory?)`: Replace default header
-- [ ] `showExtensionCustom(factory, options?)`: Overlay or embedded
-- [ ] `addExtensionTerminalInputListener(handler)`, `clearExtensionTerminalInputListeners()`
-- [ ] `setCustomEditorComponent(factory?)`: Swap editor (copy handlers từ default)
+4. **Fork và Clone**
+   - `runtime.fork(entryId)` → result `{cancelled, selectedText}`
+   - Nếu `!cancelled`: `renderCurrentSessionState()`, `editor.setText(result.selectedText || '')`, showStatus
 
----
-
-### J. Bash Execution
-
-- [ ] `handleBashCommand(command, excludeFromContext)`
-- [ ] Integration với `extensionRunner.emitUserBash()`
-- [ ] Show component trong pending area nếu streaming, chat nếu idle
-- [ ] Stream output, handle truncation, exit code, cancellation
-
----
-
-### K. Other Features
-
-- [ ] **Autocomplete**:
-  - [ ] `createBaseAutocompleteProvider()`: Slash commands + templates + extensions + skills
-  - [ ] `setupAutocompleteProvider()`: Apply wrappers
-  - [ ] `getAutocompleteSourceTag(sourceInfo)`, `prefixAutocompleteDescription()`
-  - [ ] `fdPath` từ `ensureTool("fd")` (có thể cần thêm vào runtime)
-- [ ] **Theme**:
-  - [ ] `getMarkdownThemeWithSettings()` dùng `settingsManager.getCodeBlockIndent()`
-  - [ ] Theme watcher: `onThemeChange()` invalidate UI
-- [ ] **Models**:
-  - [ ] `findExactModelMatch(searchTerm)`: use `findExactModelReferenceMatch`
-  - [ ] `getModelCandidates()`: scoped or all
-- [ ] **Login/Logout**:
-  - [ ] `getLoginProviderOptions(authType?)`, `getLogoutProviderOptions()`
-  - [ ] `showLoginAuthTypeSelector()`, `showLoginProviderSelector(authType)`
-  - [ ] `completeProviderAuthentication()`
-  - [ ] `showBedrockSetupDialog()`, `showApiKeyLoginDialog()`, `showLoginDialog()`
-- [ ] **Easter eggs**: `handleArminSaysHi()`, `handleDementedDelves()`, `handleDaxnuts()`
+**Complexity**: Medium (tree rendering, summarization flow)
 
 ---
 
-### L. Testing
+### Phase 6: Utilities & polish
+**Mục tiêu**: External editor, clipboard image, theme watcher, version check improvements.
 
-- [ ] Unit tests cho tất cả components (atoms/molecules/organisms)
-- [ ] Integration tests cho InkApp với mock runtime
-- [ ] Test agent event handling (streaming, tool execution, compaction, retry)
-- [ ] Test command handlers
-- [ ] Test extension system (UIContext, widgets, shortcuts)
-- [ ] Test selectors & dialogs
-- [ ] Test autocomplete
-- [ ] Test key handlers
-- [ ] Test signal handlers & shutdown
-- [ ] Edge cases: empty states, errors, truncation, cancellation
-- [ ] Performance tests (large conversations)
+**Tasks**:
+1. **External editor (Ctrl+E)**
+   - Lấy current editor text (từ `editor.getText()`)
+   - Ghi vào temp file
+   - `spawnSync(EDITOR, [file], {stdio: 'inherit', cwd: runtime.cwd})`
+   - Đọc lại file, set text vào editor
+   - Handle errors gracefully
 
----
+2. **Clipboard image paste**
+   - `readClipboardImage()` → Buffer, mimeType
+   - Ghi ra temp file (`picro-clipboard-<uuid>.<ext>`)
+   - Insert file path tại cursor position: `editor.insertTextAtCursor?.(filePath)`
 
-### M. Documentation
+3. **Theme watcher**
+   - Import `initTheme`, `onThemeChange`, `stopThemeWatcher` từ `./theme/theme.js`
+   - Call `initTheme(settingsManager.getTheme(), true)` khi startup
+   - `onThemeChange` → `ui.invalidate()`, `updateEditorBorderColor()`
+   - Cleanup on unmount: `stopThemeWatcher()`
 
-- [ ] README cho src/tui package
-- [ ] API docs cho components, hooks, types
-- [ ] Guide để mở rộng TUI với extensions
-- [ ] Guide để thêm selectors/commands mới
+4. **FooterDataProvider enhancements**
+   - `updateFromRuntime(runtime)`: populate tất cả fields: cwd, sessionName, modelId, thinkingLevel, token stats (input/output/cache), cost, autoCompact, provider count
+   - Compute stats từ `session.getSessionStats()` và `session.sessionManager`
 
----
+5. **Header resource counts**
+   - `showLoadedResources()` đã có; tinh chỉnh: format scope groups, path labels, package sources
 
-## ✅ Đã hoàn thành (tính đến 2025-05-22)
+6. **Error handling & UX**
+   - Loading states cho modals (Loader component)
+   - Cancelable operations (bash, compaction, retry)
+   - Better error messages (truncated, user-friendly)
 
-### C. Runtime Integration & Core UI
-- [x] **useRuntime hook**: Mở rộng state + actions (isStreaming, isCompacting, retryAttempt, steering/follow-up queues, currentModel, thinkingLevel, toolOutputExpanded, hideThinkingBlock, hiddenThinkingLabel).
-- [x] **Footer**: Dynamic hiển thị cwd, session name, model, thinking level, token stats (in/out/cache/cost), auto-compact hint.
-- [x] **ModelSelectorModal**: Load tất cả models từ modelRegistry, search, chọn và set model.
-- [x] **SettingsSelectorModal**: Hỗ trợ nhiều setting: theme, default thinking, transport, auto-compaction, hide thinking, show images, image width, skill commands, steering/follow-up mode, double-escape, quiet startup.
-- [x] **Debug command** (`/debug`): Ghi log debug (session stats, message history).
-- [x] **Easter eggs**: `/arminsayshi`, `/dementedelves`.
-- [x] **Build successful**: TypeScript + esbuild clean.
-- [x] **Command handlers integration**: Added `handleSelectCommand` wrapper to handle slash commands via `handleCommand` for both manual input and command palette.
-- [x] **Slash command handling**: Updated `handleSubmit` to detect and process slash commands locally before sending to agent.
-- [x] **Command handlers unit tests**: Created test suite for `handleCommand` covering core slash commands and error handling.
-- [x] **Message converter extraction**: Created pure utility `agentMessageToUiMessage` in utils with comprehensive tests; refactored `useRuntime` to use it, fixing an undefined `base` variable bug.
-- [x] **Message converter unit tests**: Added 21 tests covering all message type conversions, increasing coverage and reliability.
-- [x] **Special message component tests**: Added tests for BranchSummaryMessage, CompactionSummaryMessage, and CustomMessage (11 tests total), increasing component coverage and preventing UI regressions.
-- [x] **Extension context tests**: Added tests for `createExtensionUIContext` (15 tests), covering stub methods and forwarding logic, ensuring extension‑UI reliability.
-- [x] **Shell utilities tests**: Added tests for `sanitizeBinaryOutput` and `getShellEnv` (9 tests), improving coverage of core utils.
-- [x] **Proxy stream processor tests**: Added tests for `processProxyEvent` (10 tests), covering start, text/thinking/toolcall deltas, done, error, and unknown events, ensuring correct event handling.
-- [x] **AgentLoop unit tests**: Added 5 tests for core AgentLoop state management and lifecycle methods.
-- [x] **Validation utilities tests**: Added 5 tests for `validateToolCall` covering errors, valid inputs, and immutability.
-
-### D. Components (molecules)
-- [x] `UserMessage` component.
-- [x] `AssistantMessage` component (placeholder).
+**Complexity**: Low-Medium
 
 ---
 
-## 📦 Dependencies & Imports
+### Phase 7: Testing & Coverage
+**Mục tiêu**: Đạt 80%+ coverage, 100% pass.
 
-Cần đảm bảo imports đầy đủ từ:
-- `@mariozechner/pi-tui`: Container, TUI, Text, Box, Markdown, Loader, Spacer, etc.
-- `@mariozechner/pi-ai`: types cho messages
-- `../../core/...`: AgentSession, AgentSessionRuntime, ExtensionUIContext, etc.
-- `../../config.js`: APP_NAME, VERSION, getChangelogPath, etc.
-- `../../utils/...`: clipboard, image, shell, tools-manager
-- `./theme/theme.js`: theme helpers
-- `./components/*`: tất cả components đã có và mới
-- `./modals/*`: tất cả modals
-- `../keybindings`: KeybindingsManager, AppKeybinding types
-- `../settings`: SettingsManager
+**Tasks**:
+1. **Unit tests**
+   - Hooks: `useEditorState`, `useAppActions`, `useExtensionUIState`, `useResourceInfo`, `useVersionCheck`
+   - Utilities: `message-converter`, `output-guards`, `clipboard-image` (mock)
+   - Command handlers: all slash commands
+   - `FooterDataProvider` unit tests
+
+2. **Integration tests** (ink-testing-library)
+   - AssistantMessage streaming updates
+   - ToolExecution expand/collapse, image settings
+   - Compaction flow (trigger, queue, flush)
+   - Retry flow (auto-retry, cancel)
+   - Extension dialogs (select, confirm, input, editor, custom)
+   - Session management new/resume/fork/clone
+   - Tree navigation với summarization
+   - External editor flow (mock spawnSync)
+   - Clipboard image paste (mock readClipboardImage)
+
+3. **Modal tests** (đang có nhiều, cần bổ sung)
+   - SettingsSelectorModal: đầy đủ settings
+   - SessionSelectorModal: rename/delete
+   - TreeSelectorModal: summarization UI
+   - ScopedModelsSelectorModal: toggle, reorder, persist
+   - CommandPalette: filter, select
+   - ConfirmationModal, InputModal, SelectModal
+
+**Complexity**: Medium (cần viết nhiều tests, mocking phức tạp)
 
 ---
 
-## 🔄 Workflow
+## Ước tính Effort & Risk
 
-1. **Phase 1**: hoàn thiện InkApp state, layout, event handling
-2. **Phase 2**: implement message components (Assistant, Tool, Bash, etc.)
-3. **Phase 3**: implement selectors & dialogs còn thiếu
-4. **Phase 4**: implement extension system
-5. **Phase 5**: implement command handlers & utilities
-6. **Phase 6**: test, polish, performance
+| Phase | Effort (days) | Risk | Ghi chú |
+|-------|---------------|------|---------|
+| 1 | 2-3 | High | State lớn, event handling phức tạp, cần hiểu sâu session events |
+| 2 | 2 | Medium | AssistantMessage streaming, tool correlation |
+| 3 | 1 | Medium | Queue management, retry timing |
+| 4 | 3-4 | High | Extension system là phần phức tạp nhất, nhiều APIs |
+| 5 | 2 | Medium | Tree UI, summarization flow |
+| 6 | 1-2 | Low | Utils rõ ràng |
+| 7 | 2-3 | Medium | Tests cần mocking kỹ |
+
+**Tổng**: 13-15 days của một developer full-time.
 
 ---
 
-**Lưu ý**: Không copy code từ reference. Đọc, hiểu kiến trúc, sau đó implement theo cách phù hợp với React/Ink pattern hiện tại. Sử dụng types từ AgentSessionRuntimeInterface và các interface phù hợp.
-- ✅ **Iteration 80**: paths.extra tests: added isLocalPath test for current directory. Tests: 991 passing. Coverage ~58.5%.
-- ✅ **Iteration 81**: Header extra tests: added 2 tests for Header stats rendering. Tests: 993 passing. Coverage ~58.6%.
-- ✅ **Iteration 82**: timings extra tests: added tests for now() and measure(). Tests: 996 passing. Coverage ~58.7%.
-- ✅ **Iteration 83**: session-picker extra tests: added 4 tests for selectSession. Tests: 1000 passing. Coverage ~58.8%.
+## Checklist Implementation (không copy)
+
+- ✅ **Không copy**: Chỉ đọc `interactive-mode.ts` để hiểu flow và API, tự viết code mới trong React/Ink.
+- ✅ **Kiến trúc khác**: Class OOP → React hooks; Imperative UI → Declarative JSX.
+- ✅ **Tính năng tương đương**: Tất cả features trong reference đều có mặt (có thể một số khác bố cục).
+- ✅ **Tests**: Mỗi feature phải có ít nhất 1 unit/integration test.
+- ✅ **Coverage**: Mục tiêu ≥80% statements, functions, lines.
+
+---
+
+## Next Action (Ngay lập tức)
+
+1. **Start Phase 1**:
+   - Expand `useRuntime` với tất cả expose methods cần thiết.
+   - Thêm missing state vào InkApp.
+   - Implement signal handlers và shutdown.
+   - Update key handlers (Escape, Ctrl+C/D/Z, actions).
+2. **Commit tất cả changes** sau mỗi sub-task.
+3. **Run tests** thường xuyên (`npm run test`).
+4. **Update docs** (PROJECT_STATE.md, AGENT_METRICS.md) sau mỗi iteration.
+
+---
+
+## Notes
+
+- File `src/tui/ink/InkApp.tsx` sẽ trở nên rất lớn nếu không tách hooks. **Đã tách**:
+  - `useEditorState`: editor value, submit, interrupt
+  - `useAppActions`: all UI action callbacks (open modals, toggles, debug, etc.)
+  - `useExtensionUIState`: extension widgets, custom editor, autocomplete, shortcuts
+  - `useResourceInfo`: resource counts, `showLoadedResources`
+  - `useVersionCheck`: version check on mount
+- Các hooks này chưa hoàn chỉnh, cần integrate vào InkApp.
+- ModalRenderers component hiện có; cần đảm bảo tất cả modal types đều render đúng.
+- `command-handlers.ts` đã có nhiều commands; cần gọi từ `handleSelectCommand` trong InkApp.
+
+---
+
+**Sự khác biệt chính so với llm-context**:
+- Không có class InteractiveMode; thay vào đó là InkApp component + custom hooks.
+- Không có imperative `addChild`; mọi thứ declarative trong JSX.
+- Modals là components riêng, render conditionally, thay vì replace editor và focus.
+- State chia nhỏ qua hooks, nhưng vẫn có state tổng trong InkApp.
+
+---
+
+**Kiên nhẫn và systematic**: Mỗi phase cần đọc kỹ reference code, hiểu logic, rồi implement trong React style. Test liên tục để đảm bảo không regressions.

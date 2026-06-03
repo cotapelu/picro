@@ -33,12 +33,10 @@ export const UserMessageSelectorModal: React.FC<UserMessageSelectorModalProps> =
         const session = extRuntime.session;
         if (!session) return;
 
-        // Get session entries from session manager
         const sessionManager = session.sessionManager;
         if (!sessionManager) return;
 
         const entries = sessionManager.getEntries?.() || [];
-        // Filter to user messages only (role === 'user')
         const userMessages: UserMessageItem[] = entries
           .filter((entry: any) => entry.type === 'message' && entry.message?.role === 'user')
           .map((entry: any) => ({
@@ -46,12 +44,11 @@ export const UserMessageSelectorModal: React.FC<UserMessageSelectorModalProps> =
             text: extractTextFromContent(entry.message.content),
             timestamp: entry.timestamp,
           }))
-          // Sort by timestamp ascending (oldest first)
           .sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || ''));
 
         setMessages(userMessages);
         if (userMessages.length > 0) {
-          setSelectedIndex(userMessages.length - 1); // Default to most recent
+          setSelectedIndex(userMessages.length - 1);
         }
       } catch (err) {
         console.error('Failed to load user messages:', err);
