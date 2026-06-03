@@ -9,9 +9,11 @@ interface ToolExecutionProps {
   toolCall: ToolCall;
   expanded: boolean;
   onToggle: () => void;
+  showImages?: boolean;
+  imageWidthCells?: number;
 }
 
-export const ToolExecution: React.FC<ToolExecutionProps> = ({ toolCall, expanded, onToggle }) => {
+export const ToolExecution: React.FC<ToolExecutionProps> = ({ toolCall, expanded, onToggle, showImages = true, imageWidthCells = 60 }) => {
   const { theme } = useTheme();
 
   const renderArgs = () => {
@@ -26,6 +28,27 @@ export const ToolExecution: React.FC<ToolExecutionProps> = ({ toolCall, expanded
   const renderResult = () => {
     if (!toolCall.result) return null;
     try {
+      const result = toolCall.result as any;
+      // Handle Anthropic-style content array with possible images
+      if (result && typeof result === 'object' && Array.isArray(result.content)) {
+        const textParts = result.content
+          .filter((c: any) => c.type === 'text')
+          .map((c: any) => c.text)
+          .join('\n');
+        let output = textParts;
+        if (showImages) {
+          const imageBlocks = result.content.filter((c: any) => c.type === 'image');
+          if (imageBlocks.length > 0) {
+            const imageLines = imageBlocks.map((img: any) => {
+              const mime = img.mimeType || 'unknown';
+              const dataLen = img.data ? img.data.length : 0;
+              return `[Image: ${mime} size=${dataLen} bytes]`;
+            });
+            output = output ? output + '\n' + imageLines.join('\n') : imageLines.join('\n');
+          }
+        }
+        return output || '(empty)'; // don't call sanitize on raw? Apply sanitize
+      }
       const json = JSON.stringify(toolCall.result, null, 2);
       return json;
     } catch {

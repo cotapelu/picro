@@ -12,10 +12,12 @@ interface MessageListProps {
   messages: Message[];
   theme?: any;
   hideThinkingBlock?: boolean;
+  showImages?: boolean;
+  imageWidthCells?: number;
 }
 
 export const MessageList = forwardRef<MessageListRef, MessageListProps>(
-  ({ messages, theme, hideThinkingBlock = false }, ref) => {
+  ({ messages, theme, hideThinkingBlock = false, showImages = true, imageWidthCells = 60 }, ref) => {
     const [autoScroll, setAutoScroll] = useState(true);
 
     // Expose scrollToBottom to parent
@@ -75,6 +77,8 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
                   onToolToggle={toggleTool}
                   expandedTools={expandedTools}
                   hideThinkingBlock={hideThinkingBlock}
+                  showImages={showImages}
+                  imageWidthCells={imageWidthCells}
                 />
               </React.Fragment>
             ))}

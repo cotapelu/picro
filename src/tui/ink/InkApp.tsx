@@ -68,6 +68,9 @@ type ModalState =
 
 const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt, steeringMessages, followUpMessages, toolOutputExpanded, setToolOutputExpanded, hideThinkingBlock, setHideThinkingBlock, hiddenThinkingLabel, setHiddenThinkingLabel, currentModel, setMessages } = useRuntime(runtime as any);
+  // Image display settings
+  const showImages = runtime.session.settings?.get?.('terminal.showImages') ?? true;
+  const imageWidthCells = runtime.session.settings?.get?.('terminal.imageWidthCells') ?? 60;
   const [retryCountdown, setRetryCountdown] = React.useState(0);
   const [retryMaxAttempts, setRetryMaxAttempts] = React.useState(3);
   const [retryEscapeHandler, setRetryEscapeHandler] = React.useState<(() => void) | null>(null);
@@ -1084,6 +1087,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           ref={messageListRef}
           messages={messages}
           hideThinkingBlock={hideThinkingBlock}
+          showImages={showImages}
+          imageWidthCells={imageWidthCells}
         />
         {showDebug && (
           <Box position="absolute" top={0} right={0}>

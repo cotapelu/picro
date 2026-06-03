@@ -17,6 +17,8 @@ interface MessageItemProps {
   onToolToggle?: (toolId: string) => void;
   expandedTools?: Set<string>;
   hideThinkingBlock?: boolean;
+  showImages?: boolean;
+  imageWidthCells?: number;
 }
 
 export const MessageItem: React.FC<MessageItemProps> = ({
@@ -24,6 +26,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   onToolToggle,
   expandedTools = new Set(),
   hideThinkingBlock = false,
+  showImages = true,
+  imageWidthCells = 60,
 }) => {
   const { theme } = useTheme();
   const renderContent = (content: string) => {
@@ -57,6 +61,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           toolCall={tool}
           expanded={isExpanded}
           onToggle={() => onToolToggle?.(tool.id)}
+          showImages={showImages}
+          imageWidthCells={imageWidthCells}
         />
       );
     });

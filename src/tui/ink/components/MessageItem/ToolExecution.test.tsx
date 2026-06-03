@@ -87,7 +87,68 @@ describe('ToolExecution', () => {
     expect(lastFrame()).toContain('(truncated, full length'); // partial check
   });
 
-  it('handles non-JSON-parseable arguments', () => {
-    // Simulate arguments that cannot be JSON.stringify? Actually arguments is an object; stringify always works. But we could have circular? Not possible from runtime. Skip.
+  it('renders text from content array', () => {
+    const tool = createTool({
+      status: 'done',
+      result: { content: [{ type: 'text', text: 'Text output' }] },
+    });
+    const { lastFrame } = renderWithTheme(
+      <ToolExecution toolCall={tool} expanded={true} onToggle={() => {}} />
+    );
+    expect(lastFrame()).toContain('Text output');
+  });
+
+  it('renders image placeholder when showImages true', () => {
+    const tool = createTool({
+      status: 'done',
+      result: {
+        content: [
+          { type: 'text', text: 'See image:' },
+          { type: 'image', mimeType: 'image/png', data: 'iVBORw0KGgo...' },
+        ],
+      },
+    });
+    const { lastFrame } = renderWithTheme(
+      <ToolExecution toolCall={tool} expanded={true} onToggle={() => {}} showImages={true} />
+    );
+    expect(lastFrame()).toContain('[Image: image/png size=');
+    expect(lastFrame()).toContain('bytes]');
+  });
+
+  it('hides images when showImages false', () => {
+    const tool = createTool({
+      status: 'done',
+      result: {
+        content: [
+          { type: 'text', text: 'Text only' },
+          { type: 'image', mimeType: 'image/jpeg', data: 'data' },
+        ],
+      },
+    });
+    const { lastFrame } = renderWithTheme(
+      <ToolExecution toolCall={tool} expanded={true} onToggle={() => {}} showImages={false} />
+    );
+    expect(lastFrame()).toContain('Text only');
+    // Image placeholder should not appear
+    expect(lastFrame()).not.toContain('[Image:');
+  });
+
+  it('handles mixed text and image', () => {
+    const tool = createTool({
+      status: 'done',
+      result: {
+        content: [
+          { type: 'text', text: 'Here is an image:' },
+          { type: 'image', mimeType: 'image/gif', data: 'R0lGODdh...' },
+          { type: 'text', text: 'End of image' },
+        ],
+      },
+    });
+    const { lastFrame } = renderWithTheme(
+      <ToolExecution toolCall={tool} expanded={true} onToggle={() => {}} showImages={true} />
+    );
+    expect(lastFrame()).toContain('Here is an image:');
+    expect(lastFrame()).toContain('[Image: image/gif');
+    expect(lastFrame()).toContain('End of image');
   });
 });

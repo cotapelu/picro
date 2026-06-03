@@ -6,12 +6,42 @@ import { useRuntime } from './useRuntime';
 vi.mock('../utils/message-converter.js', () => ({
   agentMessageToUiMessage: vi.fn((msg: any) => {
     if (!msg) return null;
-    return {
-      id: msg.id || 'test-id',
+    // Extract text content
+    let content = '';
+    if (typeof msg.content === 'string') {
+      content = msg.content;
+    } else if (Array.isArray(msg.content)) {
+      const textBlocks = msg.content.filter((c: any) => c.type === 'text');
+      content = textBlocks.map((c: any) => c.text).join('');
+    }
+    const base: any = {
+      id: msg.id || `test-${Date.now()}`,
       role: msg.role,
-      content: msg.content,
+      content,
       timestamp: msg.timestamp || Date.now(),
     };
+    if (msg.role === 'assistant') {
+      if (Array.isArray(msg.content)) {
+        const thinking: string[] = [];
+        msg.content.forEach((c: any) => {
+          if (c.type === 'thinking') thinking.push(c.thinking);
+        });
+        if (thinking.length) base.thinkingBlocks = thinking;
+        const toolCallBlocks = msg.content.filter((c: any) => c.type === 'toolCall');
+        if (toolCallBlocks.length) {
+          base.toolCalls = toolCallBlocks.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            arguments: c.arguments,
+            status: 'pending',
+          }));
+        }
+      }
+      if (msg.toolCalls) base.toolCalls = msg.toolCalls;
+      if (msg.thinkingBlocks) base.thinkingBlocks = msg.thinkingBlocks;
+      base.streaming = msg.streaming ?? false;
+    }
+    return base;
   }),
 }));
 
@@ -328,6 +358,160 @@ describe('useRuntime', () => {
       await expect(act(async () => {
         await result.current.sendMessage('Hello');
       })).rejects.toThrow('Network error');
+    });
+  });
+
+  describe('streaming messages', () => {
+    it('should add assistant message on message:start', async () => {
+      let capturedHandler: (event: any) => void;
+      const session = runtime.session as any;
+      session.subscribe = vi.fn((handler: any) => {
+        capturedHandler = handler;
+        return () => {};
+      });
+
+      const { result, unmount } = renderHook(() => useRuntime(runtime));
+
+      await waitFor(() => {
+        expect(capturedHandler).toBeDefined();
+      });
+
+      act(() => {
+        capturedHandler({
+          type: 'message:start',
+          turn: { role: 'assistant', id: 'a1' }
+        });
+      });
+
+      await waitFor(() => {
+        expect(result.current.messages).toHaveLength(1);
+        expect(result.current.messages[0].role).toBe('assistant');
+        expect(result.current.messages[0].streaming).toBe(true);
+        expect(result.current.messages[0].id).toBe('a1');
+        expect(result.current.messages[0].content).toBe('');
+      });
+
+      unmount();
+    });
+
+    it('should update assistant message on message:update', async () => {
+      let capturedHandler: (event: any) => void;
+      const session = runtime.session as any;
+      session.subscribe = vi.fn((handler: any) => {
+        capturedHandler = handler;
+        return () => {};
+      });
+
+      const { result, unmount } = renderHook(() => useRuntime(runtime));
+
+      await waitFor(() => {
+        expect(capturedHandler).toBeDefined();
+      });
+
+      act(() => {
+        capturedHandler({
+          type: 'message:start',
+          turn: { role: 'assistant', id: 'a1' }
+        });
+      });
+      await waitFor(() => {
+        expect(result.current.messages[0].content).toBe('');
+        expect(result.current.messages[0].streaming).toBe(true);
+      });
+
+      act(() => {
+        capturedHandler({
+          type: 'message:update',
+          turn: { role: 'assistant', id: 'a1', content: [{ type: 'text', text: 'Hello world' }] }
+        });
+      });
+
+      await waitFor(() => {
+        expect(result.current.messages[0].content).toBe('Hello world');
+        expect(result.current.messages[0].streaming).toBe(true);
+      });
+
+      unmount();
+    });
+
+    it('should finalize assistant message on message:end', () => {
+      const { result } = renderHook(() => useRuntime(runtime));
+      const session = runtime.session as any;
+
+      act(() => {
+        session.subscribe.mock.calls[0][0]({
+          type: 'message:start',
+          turn: { role: 'assistant', id: 'a1', content: [] }
+        });
+      });
+      act(() => {
+        session.subscribe.mock.calls[0][0]({
+          type: 'message:end',
+          turn: { role: 'assistant', id: 'a1', stopReason: 'end' }
+        });
+      });
+
+      const msg = result.current.messages.find(m => m.id === 'a1');
+      expect(msg).toBeDefined();
+      expect(msg!.streaming).toBe(false);
+    });
+
+    it('should add tool call on tool:call:start', () => {
+      const { result } = renderHook(() => useRuntime(runtime));
+      const session = runtime.session as any;
+
+      act(() => {
+        session.subscribe.mock.calls[0][0]({
+          type: 'message:start',
+          turn: { role: 'assistant', id: 'a1', content: [] }
+        });
+      });
+
+      act(() => {
+        session.subscribe.mock.calls[0][0]({
+          type: 'tool:call:start',
+          toolCallId: 't1',
+          toolName: 'test_tool',
+          input: { arg: 1 }
+        });
+      });
+
+      const msg = result.current.messages.find(m => m.id === 'a1');
+      expect(msg?.toolCalls).toHaveLength(1);
+      expect(msg!.toolCalls![0].name).toBe('test_tool');
+      expect(msg!.toolCalls![0].status).toBe('running');
+    });
+
+    it('should update tool call on tool:call:end', () => {
+      const { result } = renderHook(() => useRuntime(runtime));
+      const session = runtime.session as any;
+
+      act(() => {
+        session.subscribe.mock.calls[0][0]({
+          type: 'message:start',
+          turn: { role: 'assistant', id: 'a1', content: [] }
+        });
+      });
+      act(() => {
+        session.subscribe.mock.calls[0][0]({
+          type: 'tool:call:start',
+          toolCallId: 't1',
+          toolName: 'test_tool',
+          input: {}
+        });
+      });
+      act(() => {
+        session.subscribe.mock.calls[0][0]({
+          type: 'tool:call:end',
+          toolCallId: 't1',
+          result: { output: 'ok' },
+          isError: false
+        });
+      });
+
+      const msg = result.current.messages.find(m => m.id === 'a1');
+      expect(msg?.toolCalls![0].status).toBe('done');
+      expect(msg!.toolCalls![0].result).toEqual({ output: 'ok' });
     });
   });
 

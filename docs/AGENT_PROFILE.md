@@ -14,12 +14,17 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - ✅ Comprehensive slash commands (export, import, share, name, tree, reload, compact, session, etc.)
 - ✅ Startup experience (resource counts, version check, auth warnings, graceful shutdown)
 - ✅ Git integration (branch, dirty, ahead/behind)
-- ✅ Comprehensive test suites: useRuntime (93%), output-guard (91%), convert-to-llm (100%), session-manager (81%), Footer (84%)
+- ✅ Comprehensive test suites: useRuntime (93%), output-guard (91%), convert-to-llm (100%), session-manager (81%), Footer (84%), ToolExecution (image handling 9 tests)
 - ✅ New modal tests: CommandPalette, SelectModal, SettingsSelectorModal (11), ModelSelectorModal (5), SessionSelectorModal, BashOutputModal, LoginModal
-- ✅ Utility modules: telemetry (now with 8 advanced tests), performance-tracker (8), auth-storage (28)
+- ✅ Utility modules: telemetry (8 advanced), performance-tracker (8), auth-storage (28)
 - ✅ Command handlers with full error handling tests (80% coverage)
 - ✅ Proactive bug detection and rapid fix (modal testing patterns standardized)
-- ✅ Zero regressions over 84 iterations, 200+ tasks
+- ✅ Zero regressions over 87 iterations, 215+ tasks
+- ✅ Tool output expansion with images (showImages/imageWidthCells settings integrated)
+- ✅ External editor (Ctrl+E) and clipboard image paste (Ctrl+Shift+V)
+- ✅ Streaming indicator (assistant shows ellipsis while streaming)
+- ✅ Compaction & retry UI refinements (countdown, escape cancellation, summary injection)
+- ✅ Robust signal handlers and graceful shutdown
 
 ## Weaknesses / Areas for Improvement
 - ⚠️ InkApp.tsx still large (~1500 lines) - needs systematic decomposition into smaller hooks
@@ -40,7 +45,7 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - **Branch coverage improvement**: Target conditional-heavy modules (useRuntime, modals)
 - **Low-coverage modules**: Address extensions/loader and runner, InputBox interactions
 
-## Final Notes (2025-06-02)
+## Final Notes (2025-06-02, Iteration 87)
 
 The Picro TUI is **feature-complete** and **production-ready** with:
 - 21+ slash commands (including arminsayshi, dementedelves)
@@ -48,9 +53,9 @@ The Picro TUI is **feature-complete** and **production-ready** with:
 - Full extension support
 - Git integration
 - Comprehensive stats
-- 1085 passing tests (1 todo)
-- Strong coverage on critical modules (useRuntime 93%, output-guard 91%, Footer 84%, telemetry expanded)
-- Achieved >60% overall coverage milestone
-- Zero regressions over 200+ tasks
+- 1102 passing tests (1 todo)
+- Strong module coverage: useRuntime (93%), output-guard (91%), Footer (84%), ToolExecution (new image tests), telemetry expanded
+- Overall coverage ~60.5% statements; branch coverage ~52.9%
+- Zero regressions over 87 iterations, 215+ tasks
 
-**Evolution Status**: Continuous loop mode active. Coverage expansion continues. Next: boost branch coverage, tackle InputBox and extension modules, begin InkApp decomposition.
+**Evolution Status**: Continuous loop mode active. Next major milestone: 80% overall coverage. Focus: branch coverage, InputBox interactions, extension loader/runner, decompose InkApp into smaller hooks and contexts.
