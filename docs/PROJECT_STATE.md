@@ -1,13 +1,18 @@
 # Project State
 
-Last updated: 2025-06-02 (Iteration 88)
+Last updated: 2025-06-02 (Iteration 89)
 
 ## Metrics
-- Total Iterations: 88
-- Tasks Completed: 220+
+- Total Iterations: 89
+- Tasks Completed: 225+
 - Coverage: ~60.5% statements
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 89)
+
+- **AgentSessionRuntime tests:** Added 7 unit tests covering cwd, session getter, settings delegation, dispose idempotency, diagnostics, and modelFallbackMessage. Increased coverage of runtime layer.
+- Overall test suite: 1117 tests passing, 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 88)
 
