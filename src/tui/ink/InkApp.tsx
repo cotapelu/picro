@@ -223,6 +223,34 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   }, [runtime, setInputValue, addToast]);
 
+  const handlePaste = useCallback(async () => {
+    try {
+      let pngBuffer: Buffer;
+      try {
+        const { execFileSync } = await import('node:child_process');
+        pngBuffer = execFileSync('wl-paste', ['--no-size', '--type', 'image/png']);
+      } catch (e1) {
+        try {
+          pngBuffer = execFileSync('xclip', ['-selection', 'clipboard', '-t', 'image/png', '-o']);
+        } catch (e2) {
+          addToast('No image in clipboard or missing wl-paste/xclip', 'error');
+          return;
+        }
+      }
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+      const timestamp = Date.now();
+      const filename = `pasted-${timestamp}.png`;
+      const filepath = path.join(runtime.cwd, filename);
+      fs.writeFileSync(filepath, pngBuffer);
+      setInputValue(prev => prev + filename);
+      addToast(`Pasted image as ${filename}`, 'success');
+    } catch (err: any) {
+      console.error('Paste error:', err);
+      addToast('Paste failed', 'error');
+    }
+  }, [runtime.cwd, setInputValue, addToast]);
+
   const handleEditor = useCallback(async (value: string) => {
     try {
       const editor = process.env.EDITOR || process.env.VISUAL || 'vim';
@@ -910,7 +938,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     onSessionSelector,
     onDebug,
     onEditor: handleEditor,
-    onPaste,
+    onPaste: handlePaste,
     onInterrupt,
     onDequeue: handleDequeue,
     onEscape: () => {

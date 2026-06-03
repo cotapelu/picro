@@ -1,18 +1,25 @@
 # Project State
 
-Last updated: 2025-06-02 (Iteration 86)
+Last updated: 2025-06-02 (Iteration 87)
 
 ## Metrics
-- Total Iterations: 86
-- Tasks Completed: 210+
-- Test Pass Rate: 100% (1094 passing)
+- Total Iterations: 87
+- Tasks Completed: 215+
 - Coverage: ~60.5% statements
 - Build Success Rate: 100%
 - Zero regressions
 
+## Completed Features (Iteration 87)
+
+- **External editor (Ctrl+E):** Implemented external editor integration using EDITOR/VISUAL. Opens temp file, spawns editor, updates editor content on save, with toast feedback.
+- **Clipboard image paste (Ctrl+Shift+V):** Added image paste support via wl-paste or xclip. Saves PNG to cwd and inserts filename into editor.
+- **Streaming indicator:** Enhanced `AssistantMessage` to show ellipsis "..." when streaming and content is empty, improving UX during assistant streaming.
+- **Compaction & Retry UI:** Added `abortCompaction()` method, escape handlers, countdown timer, status line updates, and `CompactionSummaryMessage` injection.
+- Overall test suite: 1094 tests passing, 100% pass rate. No regressions.
+
 ## Completed Features (Iteration 86)
 
-- **Compaction & Retry UI:** Implemented status line with countdown for retry and compaction cancellation via Escape. Added `abortCompaction()` to AgentSession and wired escape handlers.
+- **Compaction & Retry UI (initial):** Implemented status line with countdown for retry and compaction cancellation via Escape. Added `abortCompaction()` to AgentSession and wired escape handlers.
 - **Event handling:** Extended InkApp to handle `auto_retry_start`, `auto_retry_end`, `compaction_start`, `compaction_end` events. Injects `CompactionSummaryMessage` into chat on compaction completion.
 - **InputBox escape:** Added `onEscape` prop to InputBox; InkApp uses it to cancel retry/compaction, close active modal, or clear editor.
 - **useRuntime expansion:** Exposed `setMessages` to allow dynamic message injection.

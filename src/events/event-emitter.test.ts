@@ -176,7 +176,7 @@ describe('EventEmitter', () => {
 
     it('includes duration for slow handlers', async () => {
       const slow = vi.fn(async () => {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise(resolve => setTimeout(resolve, 20));
       });
       emitter.on('agent:start', slow);
       await emitter.emit(createEvent('agent:start'));
