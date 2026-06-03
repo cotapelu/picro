@@ -172,6 +172,23 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   }, [runtime, footerProvider]);
 
   // Command handler for slash commands (both manual and from palette)
+  const handleDequeue = useCallback(() => {
+    try {
+      const session = runtime.session as any;
+      if (typeof session.clearQueue === 'function') {
+        const { steering, followUp } = session.clearQueue();
+        const combined = [...steering, ...followUp].join('\n');
+        setInputValue(prev => prev + (prev && !prev.endsWith('\n') && combined ? '\n' : '') + combined);
+        addToast(`Dequeued ${steering.length + followUp.length} messages`, 'info');
+      } else {
+        addToast('Dequeue not supported', 'error');
+      }
+    } catch (err: any) {
+      console.error('Dequeue error:', err);
+      addToast('Dequeue failed', 'error');
+    }
+  }, [runtime, setInputValue, addToast]);
+
   const handleSelectCommand = useCallback(async (commandId: string, slashArgs?: string) => {
     try {
       const result = await handleCommand({
@@ -836,6 +853,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     onEditor,
     onPaste,
     onInterrupt,
+    onDequeue: handleDequeue,
   };  // Signal handlers for graceful shutdown
   React.useEffect(() => {
     const handleSignal = async (signal: string) => {
