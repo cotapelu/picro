@@ -928,7 +928,6 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     onTab,
     cwd: runtime.cwd,
     onPathComplete: onPathCompleteMemo,
-    onExternalEdit: onExternalEditMemo,
     onAutocomplete: onAutocompleteMemo,
     // pass shortcuts
     extensionShortcuts: extensionShortcutsRef,

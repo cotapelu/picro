@@ -29,7 +29,6 @@ interface InputBoxProps {
   onTab?: () => void;
   cwd?: string;
   onPathComplete?: (partial: string) => Promise<string[]>;
-  onExternalEdit?: (text: string) => Promise<string> | string;
   onAutocomplete?: (filter: string) => Promise<string[]>;
   // Global shortcuts & extension commands
   extensionShortcuts?: React.MutableRefObject<Map<string, (input: string, key: any) => boolean | void>>;
@@ -60,7 +59,6 @@ export const InputBox: React.FC<InputBoxProps> = ({
   onTab,
   cwd,
   onPathComplete,
-  onExternalEdit,
   onAutocomplete,
   // new props
   extensionShortcuts,
@@ -75,6 +73,8 @@ export const InputBox: React.FC<InputBoxProps> = ({
   onEditor,
   onPaste,
   onInterrupt,
+  onDequeue,
+  onEscape,
 }) => {
   const { theme } = useTheme();
   // Auto-focus this input on mount
@@ -148,14 +148,14 @@ export const InputBox: React.FC<InputBoxProps> = ({
 
     // Global shortcuts
     if (key.ctrl && input === 'p') { onCommandPalette?.(); return; }
-    if (key.ctrl && input === 't') { onThinking?.(); return; }
+    if (key.ctrl && input === 't' && !key.shift) { onThinking?.(); return; }
     if (key.ctrl && key.shift && input === 't') { onThemeToggle?.(); return; }
     if (key.ctrl && key.shift && input === 'x') { onToolOutputToggle?.(); return; }
     if (key.ctrl && key.shift && input === 'h') { onThinkingBlockToggle?.(); return; }
     if (key.ctrl && input === 'l') { onLogin?.(); return; }
     if (key.ctrl && input === 'r') { onSessionSelector?.(); return; }
     if (key.ctrl && input === 'd') { onDebug?.(); return; }
-    if (key.ctrl && input === 'e') { onEditor?.(value); return; }
+    if (key.ctrl && input === 'e' && !key.alt) { onEditor?.(value); return; }
     if (key.ctrl && key.shift && input === 'v') { onPaste?.(); return; }
     if (key.ctrl && input === 'c') { onInterrupt?.(); return; }
     if (key.ctrl && key.alt && input === 'e') { onDequeue?.(); return; }
@@ -278,16 +278,6 @@ export const InputBox: React.FC<InputBoxProps> = ({
         setCursorPosition(tokenStart + replacement.length);
       } else {
         onTab?.();
-      }
-      return;
-    }
-
-    // External editor (Ctrl+Alt+E)
-    if (key.ctrl && input === 'e' && key.alt) {
-      if (onExternalEdit) {
-        const edited = await onExternalEdit(value);
-        onChange(edited);
-        setCursorPosition(edited.length);
       }
       return;
     }
