@@ -1,11 +1,11 @@
 # Project State
 
-Last updated: 2025-06-02 (Iteration 91)
+Last updated: 2025-06-02 (Iteration 92)
 
 ## Metrics
-- Total Iterations: 91
-- Tasks Completed: 231+
-- Coverage: ~61.3% statements
+- Total Iterations: 92
+- Tasks Completed: 232+
+- Coverage: ~61.5% statements
 - Build Success Rate: 100%
 - Zero regressions
 
@@ -13,6 +13,11 @@ Last updated: 2025-06-02 (Iteration 91)
 
 - **Extension wrapper tests:** Added unit tests for wrapRegisteredTool and wrapRegisteredTools (4 tests). Increased coverage for extension utilities.
 - Overall test suite: 1134 tests passing, 100% pass rate. No regressions.
+
+## Completed Features (Iteration 92)
+
+- **ExtensionRunner extra tests:** Added 8 unit tests covering getCommands, getTools, flag management, invalidate, and onError. Increased coverage for runner utilities.
+- Overall test suite: 1142 tests passing, 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 90)
 

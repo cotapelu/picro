@@ -14,12 +14,12 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - ✅ Comprehensive slash commands (export, import, share, name, tree, reload, compact, session, etc.)
 - ✅ Startup experience (resource counts, version check, auth warnings, graceful shutdown)
 - ✅ Git integration (branch, dirty, ahead/behind)
-- ✅ Comprehensive test suites: useRuntime (93%), output-guard (91%), convert-to-llm (100%), session-manager (81%), Footer (84%), ToolExecution (9 tests), AgentSessionRuntime (7 tests), branch-summarization (13)
+- ✅ Comprehensive test suites: useRuntime (93%), output-guard (91%), convert-to-llm (100%), session-manager (81%), Footer (84%), ToolExecution (9 tests), AgentSessionRuntime (7 tests), branch-summarization (13), wrapper (4), runner (8)
 - ✅ New modal tests: CommandPalette, SelectModal, SettingsSelectorModal (11), ModelSelectorModal (5), SessionSelectorModal, BashOutputModal, LoginModal
 - ✅ Utility modules: telemetry (8 advanced), performance-tracker (8), auth-storage (28)
 - ✅ Command handlers with full error handling tests (80% coverage)
 - ✅ Proactive bug detection and rapid fix (modal testing patterns standardized)
-- ✅ Zero regressions over 91 iterations, 231+ tasks
+- ✅ Zero regressions over 92 iterations, 239+ tasks
 - ✅ Tool output expansion with images (showImages/imageWidthCells settings integrated)
 - ✅ External editor (Ctrl+E) and clipboard image paste (Ctrl+Shift+V)
 - ✅ Streaming indicator (assistant shows ellipsis while streaming)
@@ -47,7 +47,7 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - **Branch coverage improvement**: Target conditional-heavy modules (useRuntime, modals)
 - **Low-coverage modules**: Address extensions/loader and runner, InputBox interactions
 
-## Final Notes (2025-06-02, Iteration 91)
+## Final Notes (2025-06-02, Iteration 92)
 
 The Picro TUI is **feature-complete** and **production-ready** with:
 - 21+ slash commands (including arminsayshi, dementedelves)
@@ -55,9 +55,9 @@ The Picro TUI is **feature-complete** and **production-ready** with:
 - Full extension support
 - Git integration
 - Comprehensive stats
-- 1134 passing tests (1 todo)
-- Strong module coverage: useRuntime (93%), output-guard (91%), Footer (84%), ToolExecution (9), AgentSessionRuntime (7), branch-summarization (13), wrapper (4), telemetry expanded
-- Overall coverage ~61.3% statements; branch coverage ~53.2%
-- Zero regressions over 91 iterations, 231+ tasks
+- 1142 passing tests (1 todo)
+- Strong module coverage: useRuntime (93%), output-guard (91%), Footer (84%), ToolExecution (9), AgentSessionRuntime (7), branch-summarization (13), wrapper (4), runner (8), telemetry expanded
+- Overall coverage ~61.5% statements; branch coverage ~53.3%
+- Zero regressions over 92 iterations, 239+ tasks
 
 **Evolution Status**: Continuous loop mode active. Next major milestone: 80% overall coverage. Focus: branch coverage, InputBox interactions, extension loader/runner coverage, decompose InkApp into smaller hooks and contexts, expand integration tests for modals and extension system.
