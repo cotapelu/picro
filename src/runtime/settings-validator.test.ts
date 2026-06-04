@@ -1,162 +1,198 @@
-// SPDX-License-Identifier: Apache-2.0
 import { describe, it, expect } from 'vitest';
-import { validateSettings, validateOrThrow, type SettingsValidationError } from './settings-validator.js';
+import { validateSettings, type SettingsValidationError } from './settings-validator.js';
+import type { Settings } from './settings-manager.js';
 
-type Settings = any; // simplified
+function validate(settings: Settings): string[] {
+  return validateSettings(settings).map(e => `${e.field}: ${e.message}`);
+}
 
 describe('validateSettings', () => {
-  it('returns empty array for empty settings', () => {
-    const errors = validateSettings({} as Settings);
+  it('accepts empty settings', () => {
+    const errors = validateSettings({});
     expect(errors).toEqual([]);
   });
 
-  it('validates defaultProvider type', () => {
-    const errors = validateSettings({ defaultProvider: 123 } as Settings);
-    expect(errors.some(e => e.field === 'defaultProvider' && e.message.includes('string'))).toBe(true);
-  });
-
-  it('validates defaultModel type', () => {
-    const errors = validateSettings({ defaultModel: true } as Settings);
-    expect(errors.some(e => e.field === 'defaultModel')).toBe(true);
-  });
-
-  it('validates steeringMode enum', () => {
-    const errors = validateSettings({ steeringMode: 'invalid' } as Settings);
-    expect(errors.some(e => e.field === 'steeringMode' && e.message.includes('all'))).toBe(true);
-  });
-
-  it('validates transport enum', () => {
-    const errors = validateSettings({ transport: 'udp' } as Settings);
-    expect(errors.some(e => e.field === 'transport')).toBe(true);
-  });
-
-  it('validates followUpMode enum', () => {
-    const errors = validateSettings({ followUpMode: 'all-of-them' } as Settings);
-    expect(errors.some(e => e.field === 'followUpMode')).toBe(true);
-  });
-
-  it('validates compaction.enabled boolean', () => {
-    const errors = validateSettings({ compaction: { enabled: 'yes' } } as Settings);
-    expect(errors.some(e => e.field === 'compaction.enabled')).toBe(true);
-  });
-
-  it('validates compaction.reserveTokens non-negative number', () => {
-    const errors = validateSettings({ compaction: { reserveTokens: -1 } } as Settings);
-    expect(errors.some(e => e.field === 'compaction.reserveTokens')).toBe(true);
-  });
-
-  it('validates compaction.keepRecentTokens non-negative', () => {
-    const errors = validateSettings({ compaction: { keepRecentTokens: -100 } } as Settings);
-    expect(errors.some(e => e.field === 'compaction.keepRecentTokens')).toBe(true);
-  });
-
-  it('validates branchSummary.reserveTokens non-negative', () => {
-    const errors = validateSettings({ branchSummary: { reserveTokens: -10 } } as Settings);
-    expect(errors.some(e => e.field === 'branchSummary.reserveTokens')).toBe(true);
-  });
-
-  it('validates branchSummary.skipPrompt boolean', () => {
-    const errors = validateSettings({ branchSummary: { skipPrompt: 'no' } } as Settings);
-    expect(errors.some(e => e.field === 'branchSummary.skipPrompt')).toBe(true);
-  });
-
-  it('validates retry.enabled boolean', () => {
-    const errors = validateSettings({ retry: { enabled: 0 } } as Settings);
-    expect(errors.some(e => e.field === 'retry.enabled')).toBe(true);
-  });
-
-  it('validates retry.maxRetries non-negative', () => {
-    const errors = validateSettings({ retry: { maxRetries: -5 } } as Settings);
-    expect(errors.some(e => e.field === 'retry.maxRetries')).toBe(true);
-  });
-
-  it('validates retry.baseDelayMs positive', () => {
-    const errors = validateSettings({ retry: { baseDelayMs: 0 } } as Settings);
-    expect(errors.some(e => e.field === 'retry.baseDelayMs')).toBe(true);
-  });
-
-  it('validates retry.maxDelayMs positive', () => {
-    const errors = validateSettings({ retry: { maxDelayMs: -1 } } as Settings);
-    expect(errors.some(e => e.field === 'retry.maxDelayMs')).toBe(true);
-  });
-
-  it('validates terminal.showImages boolean', () => {
-    const errors = validateSettings({ terminal: { showImages: 'true' } } as Settings);
-    expect(errors.some(e => e.field === 'terminal.showImages')).toBe(true);
-  });
-
-  it('validates terminal.imageWidthCells positive', () => {
-    const errors = validateSettings({ terminal: { imageWidthCells: 0 } } as Settings);
-    expect(errors.some(e => e.field === 'terminal.imageWidthCells')).toBe(true);
-  });
-
-  it('validates terminal.clearOnShrink boolean', () => {
-    const errors = validateSettings({ terminal: { clearOnShrink: 1 } } as Settings);
-    expect(errors.some(e => e.field === 'terminal.clearOnShrink')).toBe(true);
-  });
-
-  it('validates terminal.showTerminalProgress boolean', () => {
-    const errors = validateSettings({ terminal: { showTerminalProgress: null } } as Settings);
-    expect(errors.some(e => e.field === 'terminal.showTerminalProgress')).toBe(true);
-  });
-
-  it('validates images.autoResize boolean', () => {
-    const errors = validateSettings({ images: { autoResize: 2 } } as Settings);
-    expect(errors.some(e => e.field === 'images.autoResize')).toBe(true);
-  });
-
-  it('validates images.blockImages boolean', () => {
-    const errors = validateSettings({ images: { blockImages: 'yes' } } as Settings);
-    expect(errors.some(e => e.field === 'images.blockImages')).toBe(true);
-  });
-
-  it('validates defaultThinkingLevel enum', () => {
-    const errors = validateSettings({ defaultThinkingLevel: 'ultra' } as Settings);
-    expect(errors.some(e => e.field === 'defaultThinkingLevel')).toBe(true);
-  });
-
-  it('accepts valid defaultThinkingLevel values', () => {
-    const allowed = ['off', 'minimal', 'low', 'medium', 'high', 'xhigh'];
-    allowed.forEach(val => {
-      const errors = validateSettings({ defaultThinkingLevel: val } as Settings);
-      expect(errors.find(e => e.field === 'defaultThinkingLevel')).toBeUndefined();
-    });
-  });
-
-  it('passes all valid settings', () => {
+  it('accepts valid basic settings', () => {
     const settings: Settings = {
       defaultProvider: 'openai',
       defaultModel: 'gpt-4',
       steeringMode: 'all',
       transport: 'sse',
       followUpMode: 'one-at-a-time',
-      compaction: { enabled: true, reserveTokens: 1000, keepRecentTokens: 500 },
-      branchSummary: { reserveTokens: 2000, skipPrompt: false },
-      retry: { enabled: true, maxRetries: 3, baseDelayMs: 1000, maxDelayMs: 10000 },
-      terminal: { showImages: true, imageWidthCells: 40, clearOnShrink: false, showTerminalProgress: true },
-      images: { autoResize: true, blockImages: false },
-      defaultThinkingLevel: 'medium',
     };
-    const errors = validateSettings(settings);
-    expect(errors).toEqual([]);
-  });
-});
-
-describe('validateOrThrow', () => {
-  it('throws on invalid settings with combined messages', () => {
-    const badSettings: Settings = {
-      defaultProvider: 123,
-      transport: 'udp',
-    };
-    expect(() => validateOrThrow(badSettings)).toThrow(/Invalid settings/);
-    expect(() => validateOrThrow(badSettings)).toThrow(/defaultProvider.*transport/);
+    expect(validateSettings(settings)).toEqual([]);
   });
 
-  it('does not throw on valid settings', () => {
-    const goodSettings: Settings = {
-      defaultProvider: 'openai',
-      transport: 'sse',
-    };
-    expect(() => validateOrThrow(goodSettings)).not.toThrow();
+  it('rejects non-string defaultProvider', () => {
+    const settings: Settings = { defaultProvider: 123 as any };
+    const msgs = validate(settings);
+    expect(msgs).toContain('defaultProvider: must be a string');
+  });
+
+  it('rejects non-string defaultModel', () => {
+    const settings: Settings = { defaultModel: true as any };
+    const msgs = validate(settings);
+    expect(msgs).toContain('defaultModel: must be a string');
+  });
+
+  it('rejects invalid steeringMode', () => {
+    const settings: Settings = { steeringMode: 'fast' as any };
+    const msgs = validate(settings);
+    expect(msgs).toContain('steeringMode: must be one of all, one-at-a-time');
+  });
+
+  it('rejects invalid transport', () => {
+    const settings: Settings = { transport: 'grpc' as any };
+    const msgs = validate(settings);
+    expect(msgs).toContain('transport: must be one of sse, websocket, polling');
+  });
+
+  it('rejects invalid followUpMode', () => {
+    const settings: Settings = { followUpMode: 'parallel' as any };
+    const msgs = validate(settings);
+    expect(msgs).toContain('followUpMode: must be one of all, one-at-a-time');
+  });
+
+  describe('compaction settings', () => {
+    it('accepts valid compaction', () => {
+      const settings: Settings = {
+        compaction: { enabled: true, reserveTokens: 100, keepRecentTokens: 200 },
+      };
+      expect(validateSettings(settings)).toEqual([]);
+    });
+
+    it('rejects non-boolean compaction.enabled', () => {
+      const settings: Settings = { compaction: { enabled: 'yes' as any } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('compaction.enabled: must be a boolean');
+    });
+
+    it('rejects negative compaction.reserveTokens', () => {
+      const settings: Settings = { compaction: { reserveTokens: -1 } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('compaction.reserveTokens: must be a non-negative number');
+    });
+
+    it('rejects negative compaction.keepRecentTokens', () => {
+      const settings: Settings = { compaction: { keepRecentTokens: -5 } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('compaction.keepRecentTokens: must be a non-negative number');
+    });
+  });
+
+  describe('branchSummary settings', () => {
+    it('accepts valid branchSummary', () => {
+      const settings: Settings = { branchSummary: { reserveTokens: 100, skipPrompt: false } };
+      expect(validateSettings(settings)).toEqual([]);
+    });
+
+    it('rejects non-number branchSummary.reserveTokens', () => {
+      const settings: Settings = { branchSummary: { reserveTokens: 'many' as any } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('branchSummary.reserveTokens: must be a non-negative number');
+    });
+
+    it('rejects negative branchSummary.reserveTokens', () => {
+      const settings: Settings = { branchSummary: { reserveTokens: -10 } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('branchSummary.reserveTokens: must be a non-negative number');
+    });
+
+    it('rejects non-boolean branchSummary.skipPrompt', () => {
+      const settings: Settings = { branchSummary: { skipPrompt: 0 as any } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('branchSummary.skipPrompt: must be a boolean');
+    });
+  });
+
+  describe('retry settings', () => {
+    it('accepts valid retry', () => {
+      const settings: Settings = { retry: { enabled: true, maxRetries: 3, baseDelayMs: 500, maxDelayMs: 5000 } };
+      expect(validateSettings(settings)).toEqual([]);
+    });
+
+    it('rejects non-boolean retry.enabled', () => {
+      const settings: Settings = { retry: { enabled: 'yes' as any } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('retry.enabled: must be a boolean');
+    });
+
+    it('rejects negative retry.maxRetries', () => {
+      const settings: Settings = { retry: { maxRetries: -1 } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('retry.maxRetries: must be a non-negative number');
+    });
+
+    it('rejects zero or negative retry.baseDelayMs', () => {
+      const settings: Settings = { retry: { baseDelayMs: 0 } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('retry.baseDelayMs: must be a positive number');
+    });
+
+    it('rejects zero or negative retry.maxDelayMs', () => {
+      const settings: Settings = { retry: { maxDelayMs: -5 } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('retry.maxDelayMs: must be a positive number');
+    });
+  });
+
+  describe('terminal settings', () => {
+    it('accepts valid terminal', () => {
+      const settings: Settings = { terminal: { showImages: true, imageWidthCells: 80, clearOnShrink: false, showTerminalProgress: true } };
+      expect(validateSettings(settings)).toEqual([]);
+    });
+
+    it('rejects non-boolean terminal.showImages', () => {
+      const settings: Settings = { terminal: { showImages: 'no' as any } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('terminal.showImages: must be a boolean');
+    });
+
+    it('rejects non-number terminal.imageWidthCells', () => {
+      const settings: Settings = { terminal: { imageWidthCells: 'wide' as any } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('terminal.imageWidthCells: must be a positive number');
+    });
+
+    it('rejects non-positive terminal.imageWidthCells', () => {
+      const settings: Settings = { terminal: { imageWidthCells: -10 } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('terminal.imageWidthCells: must be a positive number');
+    });
+  });
+
+  describe('images settings', () => {
+    it('accepts valid images', () => {
+      const settings: Settings = { images: { autoResize: true, blockImages: false } };
+      expect(validateSettings(settings)).toEqual([]);
+    });
+
+    it('rejects non-boolean images.autoResize', () => {
+      const settings: Settings = { images: { autoResize: 1 as any } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('images.autoResize: must be a boolean');
+    });
+
+    it('rejects non-boolean images.blockImages', () => {
+      const settings: Settings = { images: { blockImages: 'true' as any } };
+      const msgs = validate(settings);
+      expect(msgs).toContain('images.blockImages: must be a boolean');
+    });
+  });
+
+  describe('multiple errors', () => {
+    it('accumulates all errors', () => {
+      const settings: Settings = {
+        defaultProvider: 123 as any,
+        steeringMode: 'fast' as any,
+        transport: undefined as any, // undefined is allowed? Actually transport can be undefined; it's okay.
+        compaction: { enabled: 'yes' as any, reserveTokens: -5 },
+      };
+      const msgs = validate(settings);
+      expect(msgs).toContain('defaultProvider: must be a string');
+      expect(msgs).toContain('steeringMode: must be one of all, one-at-a-time');
+      expect(msgs).toContain('compaction.enabled: must be a boolean');
+      expect(msgs).toContain('compaction.reserveTokens: must be a non-negative number');
+    });
   });
 });

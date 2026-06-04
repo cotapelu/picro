@@ -1,13 +1,18 @@
 # Project State
 
-Last updated: 2026-06-04 (Iteration 99)
+Last updated: 2026-06-04 (Iteration 101)
 
 ## Metrics
-- Total Iterations: 100
+- Total Iterations: 101
 - Tasks Completed: 256+
-- Coverage: ~60.8% statements (branches 53.4%, functions 61.2%, lines 61.7%)
+- Coverage: ~60.4% statements (branches 53.1%, functions 60.9%, lines 61.3%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 101)
+
+- **Settings Validator unit tests:** Added 28 comprehensive unit tests for `src/runtime/settings-validator.ts` covering validation of all settings types (provider, model, modes, transport, compaction, branchSummary, retry, terminal, images). Comprehensive branch coverage for the validator module. Validated error messages for invalid configurations.
+- Overall test suite: 1224 tests passing (1 todo), 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 100)
 

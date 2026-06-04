@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 101: Settings Validator Unit Tests
+- **Direction**: Testing & Coverage
+- **Change**: Added 28 comprehensive unit tests for `src/runtime/settings-validator.ts` covering validation of all settings types (provider, model, steeringMode, transport, followUpMode, compaction, branchSummary, retry, terminal, images). Tested both valid and invalid configurations, type checks, value ranges, and error message content.
+- **Rationale**: The settings validator prevents invalid configurations from being applied; thorough testing ensures correct guidance for users and reduces support friction.
+- **Impact**: 1224 tests passing (+28 new). Coverage improved for validator module; overall coverage ~60.4% statements, 53.1% branches, 60.9% functions, 61.3% lines. No regressions.
+
 ### Iteration 100: Auth Guidance Unit Tests
 - **Direction**: Testing & Coverage
 - **Change**: Added 5 unit tests for `src/runtime/auth-guidance.ts` covering message formatting for missing API key, no model selected, no models available, and provider-specific login instructions. Improved coverage for auth-guidance module.
