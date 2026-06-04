@@ -2,27 +2,28 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-04, Iteration 98)
+## Current Metrics (as of 2026-06-04, Iteration 99)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 98 |
+| Total Iterations | 99 |
 | Tasks Completed | 256+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1220/1220 tests, 1 todo) |
-| Coverage (statements) | 60.32% |
-| Coverage (branches) | 52.99% |
-| Coverage (functions) | 60.71% |
-| Coverage (lines) | 61.26% |
+| Test Pass Rate | 100% (1232/1232 tests, 1 todo) |
+| Coverage (statements) | 60.78% |
+| Coverage (branches) | 53.37% |
+| Coverage (functions) | 61.21% |
+| Coverage (lines) | 61.70% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2026-06-04 | 99 | 1 | ✅ | **ModelRegistry unit tests:** Added 16 unit tests covering model lookup, provider enumeration, auth detection (env/custom), API key/header resolution, provider registration, and header merging. Increased model-registry coverage from ~19% to >80%. 1232 tests passing, coverage ~60.8% statements. |
 | 2026-06-04 | 98 | 2 | ✅ | **Session resume & model persistence:** Fixed model restoration from session context and agent state history rehydration. Fixed buildSessionContext to avoid model override from assistant messages without provider/model fields. Added unit test for resume flow. Coverage increased; 1220 tests passing, ~60.3% statements. |
 | 2026-06-04 | 97 | 1 | ✅ | **prompt-templates unit tests:** Added 19 tests for parseCommandArgs and substituteArgs, improving coverage for runtime prompt processing. 1219 tests passing. |
 | 2025-06-04 | 96 | 5 | ✅ | **StreamBuffer unit tests:** Added 19 comprehensive tests for the StreamBuffer class covering add, flush, adaptive threshold, timer scheduling, reset, metrics, and provider configs. Increased coverage for src/llm/utils/stream-buffer.js from ~1.7% to >90%. 1200 tests passing, coverage 58.29%.

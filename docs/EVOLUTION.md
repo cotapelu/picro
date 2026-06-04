@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 99: ModelRegistry Unit Tests
+- **Direction**: Testing & Coverage
+- **Change**: Added 16 comprehensive unit tests for `src/session/model-registry.ts` covering model lookup, provider enumeration, auth detection (env/custom), API key/header resolution (custom, env, model-specific merging), provider registration, and header merging. Increased coverage for model-registry module from ~19% to >80%.
+- **Rationale**: The ModelRegistry is central to model and provider management. Ensuring its correctness is critical for API key resolution and provider configuration.
+- **Impact**: 1232 tests passing (+16 new). Coverage increased to 60.78% statements, 53.37% branches, 61.21% functions, 61.70% lines. No regressions.
+
 ### Iteration 98: Session Resume & Model Persistence
 - **Direction**: Bug Fix & Testing
 - **Change**: Fixed model restoration from session context by enhancing `createAgentSessionRuntime` to prioritize model from the existing session file. Added agent state history restoration in `createAgentSessionFromServices` to rehydrate previous conversation messages. Fixed `buildSessionContext` to avoid overriding model with undefined when assistant messages lack provider/model fields. Added comprehensive unit test covering session resume flow (model + messages).

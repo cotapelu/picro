@@ -1,13 +1,18 @@
 # Project State
 
-Last updated: 2026-06-04 (Iteration 98)
+Last updated: 2026-06-04 (Iteration 99)
 
 ## Metrics
-- Total Iterations: 98
+- Total Iterations: 99
 - Tasks Completed: 256+
-- Coverage: ~60.3% statements (branches 53.0%, functions 60.7%, lines 61.3%)
+- Coverage: ~60.8% statements (branches 53.4%, functions 61.2%, lines 61.7%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 99)
+
+- **ModelRegistry unit tests:** Added 16 comprehensive unit tests for `src/session/model-registry.ts` covering model lookup, provider enumeration, auth detection (env/custom), API key/header resolution, provider registration, and header merging. Increased coverage for the model-registry module from ~19% to >80%.
+- Overall test suite: 1232 tests passing (1 todo), 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 98)
 
