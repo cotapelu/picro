@@ -1,13 +1,23 @@
 # Project State
 
-Last updated: 2025-06-04 (Iteration 96)
+Last updated: 2026-06-04 (Iteration 98)
 
 ## Metrics
-- Total Iterations: 96
+- Total Iterations: 98
 - Tasks Completed: 256+
-- Coverage: ~58.3% statements
+- Coverage: ~60.3% statements (branches 53.0%, functions 60.7%, lines 61.3%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 98)
+
+- **Model selection persistence and session rehydration:** Fixed model restoration from existing session context; enhanced `createAgentSessionRuntime` to prioritize model from session history. Added agent state history restoration in `createAgentSessionFromServices` to resume previous conversation messages. Fixed `buildSessionContext` to avoid overriding model with undefined from assistant messages lacking provider/model fields. Added comprehensive unit test for session resume flow. Improved coverage for `agent-session-runtime`, `agent-session-services`, and `session-manager` modules.
+- Overall test suite: 1220 tests passing, 100% pass rate. No regressions.
+
+## Completed Features (Iteration 97)
+
+- **prompt-templates unit tests:** Added 19 unit tests for `src/runtime/prompt-templates.ts` covering `parseCommandArgs` and `substituteArgs`. Improved coverage for prompt template parsing and substitution logic.
+- Overall test suite: 1219 tests passing, 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 96)
 

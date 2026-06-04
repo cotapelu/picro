@@ -4,6 +4,18 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 98: Session Resume & Model Persistence
+- **Direction**: Bug Fix & Testing
+- **Change**: Fixed model restoration from session context by enhancing `createAgentSessionRuntime` to prioritize model from the existing session file. Added agent state history restoration in `createAgentSessionFromServices` to rehydrate previous conversation messages. Fixed `buildSessionContext` to avoid overriding model with undefined when assistant messages lack provider/model fields. Added comprehensive unit test covering session resume flow (model + messages).
+- **Rationale**: Align with reference implementation (llm-context) which persists selected model in session and restores it on startup. The `buildSessionContext` bug prevented correct model restoration because assistant messages without provider/model were overwriting the model_change entry. This fix ensures the model from the session is preserved and used to initialize the new session.
+- **Impact**: 1220 tests passing (+1 new). Coverage increased for `agent-session-runtime.ts`, `agent-session-services.ts`, and `session-manager.ts`. Overall coverage 60.32% statements, 52.99% branches, 60.71% functions, 61.26% lines. No regressions.
+
+### Iteration 97: Prompt Templates Unit Tests
+- **Direction**: Testing & Coverage
+- **Change**: Added 19 unit tests for `src/runtime/prompt-templates.ts` covering `parseCommandArgs` and `substituteArgs` functions. Improved coverage for prompt template parsing and substitution logic.
+- **Rationale**: Prompt template handling is core to turning user input and command arguments into LLM prompts. Ensuring correctness and improving coverage reduces risk of malformed prompts.
+- **Impact**: 1219 tests passing (+19 new). Coverage increased; no regressions.
+
 ### Iteration 96: StreamBuffer Unit Tests
 - **Direction**: Testing & Coverage
 - **Change**: Added 19 comprehensive unit tests for `stream-buffer.js` covering buffer creation, `add` behavior (immediate flush, threshold, maxDelay), `flush`, `getAdaptiveThreshold`, `scheduleFlush`, `reset`, metrics, and provider-specific configurations. Increased coverage for `src/llm/utils/stream-buffer.js` from ~1.7% to >90%.

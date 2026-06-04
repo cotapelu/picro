@@ -441,14 +441,23 @@ export async function createAgentSessionRuntime(
       resolvedModel = options.model;
     }
   } else {
-    // Try to get default model from settings (but don't throw if not configured)
-    const defaultProvider = services.settingsManager.getDefaultProvider();
-    const defaultModelId = services.settingsManager.getDefaultModel();
-
-    if (defaultProvider && defaultModelId) {
-      const found = services.modelRegistry.find(defaultProvider, defaultModelId);
-      if (found) {
-        resolvedModel = found;
+    // Try to get model from existing session (resuming)
+    const sessionContext = sessionManager.buildSessionContext();
+    if (sessionContext.model) {
+      const restored = services.modelRegistry.find(sessionContext.model.provider, sessionContext.model.modelId);
+      if (restored && services.modelRegistry.hasConfiguredAuth(restored)) {
+        resolvedModel = restored;
+      }
+    }
+    // Fallback to settings default if not found
+    if (!resolvedModel) {
+      const defaultProvider = services.settingsManager.getDefaultProvider();
+      const defaultModelId = services.settingsManager.getDefaultModel();
+      if (defaultProvider && defaultModelId) {
+        const found = services.modelRegistry.find(defaultProvider, defaultModelId);
+        if (found) {
+          resolvedModel = found;
+        }
       }
     }
   }

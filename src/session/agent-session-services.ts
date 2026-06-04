@@ -309,5 +309,12 @@ export async function createAgentSessionFromServices(
     session.setThinkingLevel(defaultThinkingLevel);
   }
 
+  // Restore existing session messages into agent state for continuity
+  const sessionContext = sessionManager.buildSessionContext();
+  if (sessionContext.messages.length > 0) {
+    // Set agent runner's history to the existing messages
+    (session.agent as any).runner.state.history = sessionContext.messages;
+  }
+
   return session;
 }

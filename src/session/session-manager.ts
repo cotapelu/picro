@@ -426,7 +426,9 @@ export function buildSessionContext(
       };
     } else if (entry.type === "message" && (entry as SessionMessageEntry).message.role === "assistant") {
       const msg = (entry as SessionMessageEntry).message;
-      model = { provider: msg.provider, modelId: msg.model };
+      if (msg.provider && msg.model) {
+        model = { provider: msg.provider, modelId: msg.model };
+      }
     } else if (entry.type === "compaction") {
       compaction = entry as CompactionEntry;
     }
