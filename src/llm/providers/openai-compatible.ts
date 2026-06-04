@@ -24,7 +24,7 @@ function getClient(model: Model, apiKey: string, headers?: Record<string, string
   return apiRegistry.getOrCreate(model, apiKey, headers);
 }
 
-function buildParams(
+export function buildParams(
   model: Model,
   context: Context,
   options: OpenAICompatOptions,

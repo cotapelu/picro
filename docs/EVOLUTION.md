@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 102: Provider and Settings Manager Tests
+- **Direction**: Testing & Coverage
+- **Change**: Added 19 unit tests for `src/llm/providers/openai-compatible.ts` covering `buildParams` function: system/developer roles, user/assistant/tool messages, image handling, thinking blocks, tool calls, toolResult mapping, assistant placeholder insertion, OpenRouter cache control, and tool call id sanitization. Added 17 unit tests for `src/runtime/settings-manager.ts` covering defaults, storage loading, project overrides, setters, and error handling. Both modules now have >80% coverage.
+- **Rationale**: These modules are core to LLM communication and settings persistence. Ensuring correctness improves reliability and user experience.
+- **Impact**: 1260 tests passing (+36 new). Overall coverage increased to 61.86% statements, 54.96% branches, 62.42% functions, 62.74% lines. No regressions.
+
 ### Iteration 101: Settings Validator Unit Tests
 - **Direction**: Testing & Coverage
 - **Change**: Added 28 comprehensive unit tests for `src/runtime/settings-validator.ts` covering validation of all settings types (provider, model, steeringMode, transport, followUpMode, compaction, branchSummary, retry, terminal, images). Tested both valid and invalid configurations, type checks, value ranges, and error message content.

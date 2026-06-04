@@ -1,13 +1,18 @@
 # Project State
 
-Last updated: 2026-06-04 (Iteration 101)
+Last updated: 2026-06-04 (Iteration 102)
 
 ## Metrics
-- Total Iterations: 101
+- Total Iterations: 102
 - Tasks Completed: 256+
-- Coverage: ~60.4% statements (branches 53.1%, functions 60.9%, lines 61.3%)
+- Coverage: ~61.9% statements (branches 55.0%, functions 62.4%, lines 62.7%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 102)
+
+- **Provider and Settings Manager unit tests:** Added 19 unit tests for `src/llm/providers/openai-compatible.ts` covering `buildParams` (message transformation, image handling, tool calls, OpenRouter cache control, id sanitization), and 17 unit tests for `src/runtime/settings-manager.ts` covering defaults, storage, overrides, setters, and error handling. Both modules now >80% coverage.
+- Overall test suite: 1260 tests passing (1 todo), 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 101)
 
