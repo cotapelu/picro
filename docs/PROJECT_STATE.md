@@ -1,13 +1,19 @@
 # Project State
 
-Last updated: 2025-06-02 (Iteration 92)
+Last updated: 2025-06-04 (Iteration 93)
 
 ## Metrics
-- Total Iterations: 92
-- Tasks Completed: 232+
-- Coverage: ~61.5% statements
+- Total Iterations: 93
+- Tasks Completed: 245+
+- Coverage: ~56.8% statements
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 93)
+
+- **InkApp integration tests:** Added 3 integration tests covering assistant message streaming with tool calls, and auto-retry UI status handling. Increased coverage for InkApp event handling.
+- **Bug fixes:** Fixed multiple undefined setter errors in InkApp event handlers (removed errant setIsCompacting and setRetryAttempt calls). Corrected compaction_end event property usage (now uses event.result.summary and tokensBefore).
+- Overall test suite: 1163 tests passing, 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 91)
 

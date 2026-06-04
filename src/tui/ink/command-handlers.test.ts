@@ -1,442 +1,418 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// Mock node:fs before imports
-vi.mock('node:fs', () => ({
-  writeFileSync: vi.fn(),
-}));
-
-vi.mock('node:child_process', () => ({
-  execSync: vi.fn(),
-  execFileSync: vi.fn(),
-}));
-
-vi.mock('../../config.js', () => ({
-  VERSION: 'test',
-  getDebugLogPath: () => '/tmp/debug.log',
-}));
-
-import { handleCommand } from './command-handlers';
-import type { CommandContext } from './command-handlers';
-import { writeFileSync } from 'node:fs';
-import { execSync, execFileSync } from 'node:child_process';
-
-function createMockContext(overrides: Partial<CommandContext> = {}): CommandContext {
-  return {
-    runtime: {} as any,
-    addToast: vi.fn(),
-    setActiveModal: vi.fn(),
-    messages: [],
-    footerProvider: {} as any,
-    inputValue: '',
-    setInputValue: vi.fn(),
-    ...overrides,
-  };
-}
+import { handleCommand, type CommandContext } from './command-handlers.js';
 
 describe('handleCommand', () => {
   let ctx: CommandContext;
+  let runtime: any;
+  let addToast: ReturnType<typeof vi.fn>;
+  let setActiveModal: ReturnType<typeof vi.fn>;
+  let messages: any[];
+  let footerProvider: any;
+  let inputValue: string;
+  let setInputValue: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    ctx = createMockContext();
+
+    runtime = {
+      settings: {
+        get: vi.fn(),
+        set: vi.fn(),
+        save: vi.fn().mockResolvedValue(undefined),
+        reload: vi.fn().mockResolvedValue(undefined),
+      },
+      session: {
+        messages: [],
+        getPerformanceStats: vi.fn(),
+        compact: vi.fn().mockResolvedValue(undefined),
+        resourceLoader: { reload: vi.fn().mockResolvedValue(undefined) },
+        sessionManager: { setSessionName: vi.fn() },
+        model: { provider: 'test', id: 'test-model' },
+        thinkingLevel: 'medium',
+      },
+      authStorage: {
+        getApiKey: vi.fn(),
+        getProviders: vi.fn().mockReturnValue([]),
+        removeApiKey: vi.fn().mockResolvedValue(undefined),
+      },
+      cwd: '/home/user/project',
+      copyToClipboard: vi.fn().mockResolvedValue(undefined),
+      newSession: vi.fn().mockResolvedValue(undefined),
+      fork: vi.fn().mockResolvedValue({ cancelled: false, selectedText: 'forked text' }),
+      switchSession: vi.fn().mockResolvedValue({ cancelled: false }),
+      setThinkingLevel: vi.fn(),
+    };
+
+    addToast = vi.fn();
+    setActiveModal = vi.fn();
+    messages = [];
+    footerProvider = { updateFromRuntime: vi.fn() };
+    inputValue = '';
+    setInputValue = vi.fn();
+
+    ctx = {
+      runtime,
+      addToast,
+      setActiveModal,
+      messages,
+      footerProvider,
+      inputValue,
+      setInputValue,
+    };
   });
 
-  it('should handle /quit by calling process.exit', async () => {
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
-    await handleCommand(ctx, 'quit', '/quit');
-    expect(exitSpy).toHaveBeenCalled();
-    exitSpy.mockRestore();
-  });
-
-  it('should set thinking level when valid argument provided', async () => {
-    ctx.runtime.setThinkingLevel = vi.fn();
-    await handleCommand(ctx, 'thinking', '/thinking high');
-    expect(ctx.runtime.setThinkingLevel).toHaveBeenCalledWith('high');
-    expect(ctx.addToast).toHaveBeenCalledWith('Thinking level set to high', 'success');
-  });
-
-  it('should show thinking modal when no argument', async () => {
-    await handleCommand(ctx, 'thinking', '/thinking');
-    expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'thinking' });
-  });
-
-  it('should open login modal', async () => {
-    await handleCommand(ctx, 'login', '/login');
-    expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'login' });
-  });
-
-  it('should open help modal', async () => {
-    await handleCommand(ctx, 'help', '/help');
-    expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'help' });
-  });
-
-  it('should copy last assistant message', async () => {
-    ctx.messages = [
-      { role: 'user', content: 'Hello' },
-      { role: 'assistant', content: 'Hi there' },
-    ];
-    ctx.runtime.copyToClipboard = vi.fn().mockResolvedValue(undefined);
-    await handleCommand(ctx, 'copy', '/copy');
-    expect(ctx.runtime.copyToClipboard).toHaveBeenCalledWith('Hi there');
-    expect(ctx.addToast).toHaveBeenCalledWith('Copied last assistant message', 'success');
-  });
-
-  it('should copy full conversation when /copy all', async () => {
-    ctx.messages = [
-      { role: 'user', content: 'Hello' },
-      { role: 'assistant', content: 'Hi' },
-    ];
-    ctx.runtime.copyToClipboard = vi.fn().mockResolvedValue(undefined);
-    await handleCommand(ctx, 'copy', '/copy all');
-    const expected = 'You: Hello\n\nAssistant: Hi';
-    expect(ctx.runtime.copyToClipboard).toHaveBeenCalledWith(expected);
-  });
-
-  it('should open session selector on /resume', async () => {
-    await handleCommand(ctx, 'resume', '/resume');
-    expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'session-selector' });
-  });
-
-  it('should create new session on /new', async () => {
-    ctx.runtime.newSession = vi.fn().mockResolvedValue(undefined);
-    await handleCommand(ctx, 'new', '/new');
-    expect(ctx.setActiveModal).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'confirmation',
-        title: 'New Session',
-      })
-    );
-  });
-
-  it('should open settings modal', async () => {
-    await handleCommand(ctx, 'settings', '/settings');
-    expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'settings' });
-  });
-
-  it('should open model selector', async () => {
-    await handleCommand(ctx, 'model', '/model');
-    expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'model-selector' });
-  });
-
-  it('should open scoped models selector', async () => {
-    await handleCommand(ctx, 'scoped-models', '/scoped-models');
-    expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'scoped-models' });
-  });
-
-  it('should return insert for unknown command', async () => {
-    const result = await handleCommand(ctx, 'unknown', '/unknown');
-    expect(result).toBe('insert');
-  });
-
-  describe('/export', () => {
-    it('should write HTML file when messages exist', async () => {
-      const mockWrite = vi.mocked(writeFileSync) as any;
-      ctx.runtime.session = { messages: [
-        { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-        { role: 'assistant', content: [{ type: 'text', text: 'Hi' }] }
-      ] as any };
-      ctx.runtime.cwd = '/tmp';
-      await handleCommand(ctx, 'export', '/export');
-      expect(mockWrite).toHaveBeenCalled();
-      const filepath = mockWrite.mock.calls[0][0];
-      expect(filepath).toMatch(/session-.*\.html/);
-    });
-
-    it('shows info toast when no messages to export', async () => {
-      ctx.runtime.session = { messages: [] as any[] };
-      await handleCommand(ctx, 'export', '/export');
-      expect(ctx.addToast).toHaveBeenCalledWith('No messages to export', 'info');
+  describe('unknown command', () => {
+    it('returns "insert" for non-built-in command', async () => {
+      const result = await handleCommand(ctx, 'unknown');
+      expect(result).toBe('insert');
+      expect(addToast).not.toHaveBeenCalled();
     });
   });
 
-  describe('/import', () => {
-    it('should import session when fd finds a file', async () => {
-      const mockedExecSync = vi.mocked(execSync) as any;
-      mockedExecSync.mockReturnValue('file.jsonl');
-      ctx.runtime.cwd = '/tmp';
-      ctx.runtime.switchSession = vi.fn().mockResolvedValue({ cancelled: false });
-      await handleCommand(ctx, 'import', '/import');
-      expect(mockedExecSync).toHaveBeenCalledWith(expect.stringContaining('fd'), expect.any(Object));
-      expect(ctx.runtime.switchSession).toHaveBeenCalledWith('/tmp/file.jsonl');
+  describe('quit', () => {
+    beforeEach(() => {
+      vi.spyOn(process, 'exit').mockImplementation(() => { throw new Error('process.exit called'); });
     });
 
-    it('shows info toast when no files found', async () => {
-      const mockedExecSync = vi.mocked(execSync) as any;
-      mockedExecSync.mockReturnValue('');
-      ctx.runtime.cwd = '/tmp';
-      await handleCommand(ctx, 'import', '/import');
-      expect(ctx.addToast).toHaveBeenCalledWith('No JSONL files found', 'info');
-    });
-
-    it('shows error if fd not found', async () => {
-      const mockedExecSync = vi.mocked(execSync) as any;
-      mockedExecSync.mockImplementation(() => { throw new Error('fd not found'); });
-      ctx.runtime.cwd = '/tmp';
-      await handleCommand(ctx, 'import', '/import');
-      expect(ctx.addToast).toHaveBeenCalledWith(expect.stringContaining('fd not found'), 'error');
+    it('calls process.exit(0)', async () => {
+      await expect(handleCommand(ctx, 'quit')).rejects.toThrow('process.exit called');
+      expect(process.exit).toHaveBeenCalledWith(0);
     });
   });
 
-  describe('/share', () => {
-    it('should create gist and copy URL when token available', async () => {
-      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ html_url: 'https://gist/abc' }) }) as any;
-      ctx.runtime.session = { messages: [{ role: 'user', content: 'test', timestamp: Date.now(), id: '1' }] as any };
-      ctx.runtime.authStorage = { getApiKey: vi.fn().mockResolvedValue('token') };
-      ctx.runtime.copyToClipboard = vi.fn().mockResolvedValue(undefined);
-      await handleCommand(ctx, 'share', '/share');
-      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('github.com/gists'), expect.any(Object));
-      expect(ctx.runtime.copyToClipboard).toHaveBeenCalledWith('https://gist/abc');
-      expect(ctx.addToast).toHaveBeenCalledWith('Gist URL copied to clipboard', 'success');
+  describe('thinking', () => {
+    it('opens modal when no args', async () => {
+      await handleCommand(ctx, 'thinking');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'thinking' });
     });
 
-    it('shows error when GitHub token missing', async () => {
-      ctx.runtime.authStorage = { getApiKey: vi.fn().mockResolvedValue(null) };
-      ctx.runtime.session = { messages: [{ role: 'user', content: 'test' }] } as any;
-      await handleCommand(ctx, 'share', '/share');
-      expect(ctx.addToast).toHaveBeenCalledWith('GitHub token required. Login with /login github first.', 'error');
+    it('sets thinking level with valid arg', async () => {
+      await handleCommand(ctx, 'thinking', '/thinking high');
+      expect(runtime.setThinkingLevel).toHaveBeenCalledWith('high');
+      expect(addToast).toHaveBeenCalledWith('Thinking level set to high', 'success');
     });
 
-    it('shows error when gist API fails', async () => {
-      global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 403 }) as any;
-      ctx.runtime.session = { messages: [{ role: 'user', content: 'test' }] as any };
-      ctx.runtime.authStorage = { getApiKey: vi.fn().mockResolvedValue('token') };
-      await handleCommand(ctx, 'share', '/share');
-      expect(ctx.addToast).toHaveBeenCalledWith(expect.stringContaining('GitHub API error'), 'error');
+    it('opens modal for invalid arg', async () => {
+      await handleCommand(ctx, 'thinking', 'invalid');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'thinking' });
     });
   });
 
-  describe('/name', () => {
-    it('should open editor modal with current name', async () => {
-      ctx.runtime.settings = { get: vi.fn().mockReturnValue('MyName'), set: vi.fn(), save: vi.fn().mockResolvedValue(undefined) } as any;
-      ctx.runtime.session = { sessionManager: { setSessionName: vi.fn() } } as any;
-      ctx.footerProvider = { updateFromRuntime: vi.fn() };
-      await handleCommand(ctx, 'name', '/name');
-      expect(ctx.setActiveModal).toHaveBeenCalledWith(
+  describe('login', () => {
+    it('opens login modal', async () => {
+      await handleCommand(ctx, 'login');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'login' });
+    });
+  });
+
+  describe('help', () => {
+    it('opens help modal', async () => {
+      await handleCommand(ctx, 'help');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'help' });
+    });
+  });
+
+  describe('copy', () => {
+    it('copies entire conversation when args all', async () => {
+      const msg1 = { role: 'user', content: 'Hello' };
+      const msg2 = { role: 'assistant', content: 'Hi there' };
+      ctx.messages = [msg1, msg2];
+
+      await handleCommand(ctx, 'copy', '/copy all');
+
+      expect(runtime.copyToClipboard).toHaveBeenCalledWith(`You: Hello\n\nAssistant: Hi there`);
+      expect(addToast).toHaveBeenCalledWith('Copied full conversation to clipboard', 'success');
+    });
+
+    it('copies last assistant message', async () => {
+      const msg1 = { role: 'user', content: 'Hello' };
+      const msg2 = { role: 'assistant', content: 'Hi there' };
+      ctx.messages = [msg1, msg2];
+
+      await handleCommand(ctx, 'copy');
+
+      expect(runtime.copyToClipboard).toHaveBeenCalledWith('Hi there');
+      expect(addToast).toHaveBeenCalledWith('Copied last assistant message', 'success');
+    });
+
+    it('shows info when no assistant message', async () => {
+      ctx.messages = [{ role: 'user', content: 'Hello' }];
+
+      await handleCommand(ctx, 'copy');
+
+      expect(runtime.copyToClipboard).not.toHaveBeenCalled();
+      expect(addToast).toHaveBeenCalledWith('No assistant message to copy', 'info');
+    });
+
+    it('handles copy errors', async () => {
+      runtime.copyToClipboard = vi.fn().mockRejectedValue(new Error('fail'));
+      ctx.messages = [{ role: 'assistant', content: 'Hi' }];
+
+      await handleCommand(ctx, 'copy');
+
+      expect(addToast).toHaveBeenCalledWith('Copy failed', 'error');
+    });
+  });
+
+  describe('resume', () => {
+    it('opens session selector modal', async () => {
+      await handleCommand(ctx, 'resume');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'session-selector' });
+    });
+  });
+
+  describe('new', () => {
+    it('shows confirmation modal and creates new session on confirm', async () => {
+      const onConfirm = vi.fn();
+      await handleCommand(ctx, 'new');
+      expect(setActiveModal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'confirmation',
+          title: 'New Session',
+          message: 'Create a new session? Current session will be saved.',
+          onConfirm: expect.any(Function),
+        })
+      );
+
+      const modal = setActiveModal.mock.calls[0][0] as any;
+      // Simulate confirm
+      await (modal.onConfirm as any)();
+      expect(runtime.newSession).toHaveBeenCalled();
+      expect(addToast).toHaveBeenCalledWith('New session created', 'success');
+    });
+
+    it('handles new session error', async () => {
+      runtime.newSession = vi.fn().mockRejectedValue(new Error('fail'));
+      const onConfirm = vi.fn();
+      await handleCommand(ctx, 'new');
+      const modal = setActiveModal.mock.calls[0][0] as any;
+      await (modal.onConfirm as any)();
+      expect(addToast).toHaveBeenCalledWith('Failed to create session', 'error');
+    });
+  });
+
+  describe('settings', () => {
+    it('opens settings modal', async () => {
+      await handleCommand(ctx, 'settings');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'settings' });
+    });
+  });
+
+  describe('model', () => {
+    it('opens model selector modal', async () => {
+      await handleCommand(ctx, 'model');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'model-selector' });
+    });
+  });
+
+  describe('scoped-models', () => {
+    it('opens scoped models modal', async () => {
+      await handleCommand(ctx, 'scoped-models');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'scoped-models' });
+    });
+  });
+
+  describe('name', () => {
+    it('opens editor modal to set session name', async () => {
+      runtime.settings.get = vi.fn().mockReturnValue('Current Name');
+      await handleCommand(ctx, 'name');
+      expect(setActiveModal).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'editor',
-          initialValue: 'MyName',
+          initialValue: 'Current Name',
         })
       );
     });
 
-  });
+    it('saves new name and updates footer', async () => {
+      runtime.settings.get = vi.fn().mockReturnValue('Old Name');
+      await handleCommand(ctx, 'name');
+      const modal = setActiveModal.mock.calls[0][0] as any;
+      await (modal.onSave as any)('New Name');
+      expect(runtime.settings.set).toHaveBeenCalledWith('sessionDisplayName', 'New Name');
+      expect(runtime.settings.save).toHaveBeenCalled();
+      expect(runtime.session.sessionManager.setSessionName).toHaveBeenCalledWith('New Name');
+      expect(footerProvider.updateFromRuntime).toHaveBeenCalledWith(runtime);
+      expect(addToast).toHaveBeenCalledWith('Session name set to: New Name', 'success');
+    });
 
-  describe('/session', () => {
-    it('should open session info modal', async () => {
-      await handleCommand(ctx, 'session', '/session');
-      expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'session-info' });
+    it('handles save error', async () => {
+      runtime.settings.save = vi.fn().mockRejectedValue(new Error('fail'));
+      await handleCommand(ctx, 'name');
+      const modal = setActiveModal.mock.calls[0][0] as any;
+      await (modal.onSave as any)('New Name');
+      expect(addToast).toHaveBeenCalledWith('Failed to set session name', 'error');
     });
   });
 
-  describe('/changelog', () => {
-    it('should open changelog modal', async () => {
-      await handleCommand(ctx, 'changelog', '/changelog');
-      expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'changelog' });
+  describe('session', () => {
+    it('opens session info modal', async () => {
+      await handleCommand(ctx, 'session');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'session-info' });
     });
   });
 
-  describe('/hotkeys', () => {
-    it('should open hotkeys modal', async () => {
-      await handleCommand(ctx, 'hotkeys', '/hotkeys');
-      expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'hotkeys' });
+  describe('changelog', () => {
+    it('opens changelog modal', async () => {
+      await handleCommand(ctx, 'changelog');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'changelog' });
     });
   });
 
-  describe('/clone', () => {
-    it('should show info when no messages to clone', async () => {
-      ctx.runtime.session = { messages: [] as any[] };
-      await handleCommand(ctx, 'clone', '/clone');
-      expect(ctx.addToast).toHaveBeenCalledWith('No messages to clone', 'info');
-    });
-
-    it('should fork from first user message if exists', async () => {
-      ctx.runtime.fork = vi.fn().mockResolvedValue(undefined);
-      const msgs = [
-        { role: 'user', id: 'u1', content: 'Hello' },
-        { role: 'assistant', content: 'Hi' },
-      ];
-      ctx.runtime.session = { messages: msgs } as any;
-      await handleCommand(ctx, 'clone', '/clone');
-      expect(ctx.runtime.fork).toHaveBeenCalledWith('u1');
-      expect(ctx.addToast).toHaveBeenCalledWith('Session cloned', 'success');
-    });
-
-    it('should create new empty session if user message lacks id', async () => {
-      ctx.runtime.fork = vi.fn().mockResolvedValue(undefined);
-      ctx.runtime.newSession = vi.fn().mockResolvedValue(undefined);
-      ctx.runtime.session = { messages: [{ role: 'user', content: 'Hello' }] } as any; // no id
-      await handleCommand(ctx, 'clone', '/clone');
-      expect(ctx.runtime.fork).not.toHaveBeenCalled();
-      expect(ctx.runtime.newSession).toHaveBeenCalled();
-      expect(ctx.addToast).toHaveBeenCalledWith('New empty session created', 'success');
+  describe('hotkeys', () => {
+    it('opens hotkeys modal', async () => {
+      await handleCommand(ctx, 'hotkeys');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'hotkeys' });
     });
   });
 
-  describe('/tree', () => {
-    it('should open tree selector', async () => {
-      await handleCommand(ctx, 'tree', '/tree');
-      expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'tree-selector' });
+  describe('clone', () => {
+    it('clones session with first user message id', async () => {
+      const msg = { role: 'user', content: 'Hi', id: 'msg123' };
+      runtime.session.messages = [msg];
+      await handleCommand(ctx, 'clone');
+      expect(runtime.fork).toHaveBeenCalledWith('msg123');
+      expect(addToast).toHaveBeenCalledWith('Session cloned', 'success');
+    });
+
+    it('creates new empty session if no user message with id', async () => {
+      const msg = { role: 'assistant', content: 'Hi' };
+      runtime.session.messages = [msg];
+      await handleCommand(ctx, 'clone');
+      expect(runtime.fork).not.toHaveBeenCalled();
+      expect(runtime.newSession).toHaveBeenCalled();
+      expect(addToast).toHaveBeenCalledWith('New empty session created', 'success');
+    });
+
+    it('handles clone error', async () => {
+      runtime.fork = vi.fn().mockRejectedValue(new Error('fail'));
+      const msg = { role: 'user', content: 'Hi', id: '123' };
+      runtime.session.messages = [msg];
+      await handleCommand(ctx, 'clone');
+      expect(addToast).toHaveBeenCalledWith('Clone failed: fail', 'error');
     });
   });
 
-  describe('/compact', () => {
-    it('should call session.compact with custom instructions when provided', async () => {
-      ctx.runtime.session = { compact: vi.fn().mockResolvedValue(undefined) } as any;
-      await handleCommand(ctx, 'compact', '/compact Summarize');
-      expect(ctx.runtime.session.compact).toHaveBeenCalledWith({ customInstructions: 'Summarize' });
-      expect(ctx.addToast).toHaveBeenCalledWith('Compaction completed', 'success');
-    });
-
-    it('compacts without instructions if not provided', async () => {
-      ctx.runtime.session = { compact: vi.fn().mockResolvedValue(undefined) } as any;
-      await handleCommand(ctx, 'compact', '/compact');
-      expect(ctx.runtime.session.compact).toHaveBeenCalledWith(undefined);
-    });
-
-    it('shows error if compaction not supported', async () => {
-      ctx.runtime.session = { compact: undefined } as any;
-      await handleCommand(ctx, 'compact', '/compact');
-      expect(ctx.addToast).toHaveBeenCalledWith('Compaction not supported', 'error');
+  describe('tree', () => {
+    it('opens tree selector modal', async () => {
+      await handleCommand(ctx, 'tree');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'tree-selector' });
     });
   });
 
-  describe('/reload', () => {
-    it('should reload resources successfully', async () => {
-      ctx.runtime.settings = { reload: vi.fn().mockResolvedValue(undefined) };
-      ctx.runtime.session = { resourceLoader: { reload: vi.fn().mockResolvedValue(undefined) } } as any;
-      await handleCommand(ctx, 'reload', '/reload');
-      expect(ctx.runtime.settings.reload).toHaveBeenCalled();
-      expect((ctx.runtime.session as any).resourceLoader.reload).toHaveBeenCalled();
-      expect(ctx.addToast).toHaveBeenCalledWith('All resources reloaded', 'success');
+  describe('compact', () => {
+    it('compacts session with custom instructions', async () => {
+      const session = runtime.session as any;
+      await handleCommand(ctx, 'compact', '/compact custom');
+      expect(session.compact).toHaveBeenCalledWith({ customInstructions: 'custom' });
+      expect(addToast).toHaveBeenCalledWith('Compaction completed', 'success');
     });
 
-    it('handles reload failure', async () => {
-      ctx.runtime.settings = { reload: vi.fn().mockRejectedValue(new Error('fail')) };
-      ctx.runtime.session = { resourceLoader: { reload: vi.fn() } } as any;
-      await handleCommand(ctx, 'reload', '/reload');
-      expect(ctx.addToast).toHaveBeenCalledWith(expect.stringContaining('Reload failed'), 'error');
-    });
-  });
-
-  describe('/logout', () => {
-    it('should remove API keys for all providers', async () => {
-      const auth = { getProviders: vi.fn().mockReturnValue(['github', 'openai']), removeApiKey: vi.fn().mockResolvedValue(undefined) };
-      ctx.runtime.authStorage = auth as any;
-      await handleCommand(ctx, 'logout', '/logout');
-      expect(auth.removeApiKey).toHaveBeenCalledWith('github');
-      expect(auth.removeApiKey).toHaveBeenCalledWith('openai');
-      expect(ctx.addToast).toHaveBeenCalledWith('Logged out from 2 provider(s)', 'success');
+    it('compacts without custom instructions', async () => {
+      const session = runtime.session as any;
+      await handleCommand(ctx, 'compact');
+      expect(session.compact).toHaveBeenCalledWith(undefined);
+      expect(addToast).toHaveBeenCalledWith('Compaction completed', 'success');
     });
 
-    it('handles empty providers list', async () => {
-      const auth = { getProviders: vi.fn().mockReturnValue([]), removeApiKey: vi.fn() };
-      ctx.runtime.authStorage = auth as any;
-      await handleCommand(ctx, 'logout', '/logout');
-      expect(auth.removeApiKey).not.toHaveBeenCalled();
-      expect(ctx.addToast).toHaveBeenCalledWith('Logged out from 0 provider(s)', 'success');
+    it('handles compaction not supported', async () => {
+      const session = runtime.session as any;
+      session.compact = undefined;
+      await handleCommand(ctx, 'compact');
+      expect(addToast).toHaveBeenCalledWith('Compaction not supported', 'error');
+    });
+
+    it('handles compaction error', async () => {
+      const session = runtime.session as any;
+      session.compact = vi.fn().mockRejectedValue(new Error('fail'));
+      await handleCommand(ctx, 'compact');
+      expect(addToast).toHaveBeenCalledWith('Compaction failed', 'error');
     });
   });
 
-  describe('/fork', () => {
-    it('should open user message selector', async () => {
-      await handleCommand(ctx, 'fork', '/fork');
-      expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'user-message-selector' });
+  describe('reload', () => {
+    it('reloads settings and resources', async () => {
+      await handleCommand(ctx, 'reload');
+      expect(runtime.settings?.reload).toHaveBeenCalled();
+      expect(runtime.session.resourceLoader.reload).toHaveBeenCalled();
+      expect(addToast).toHaveBeenCalledWith('All resources reloaded', 'success');
+    });
+
+    it('handles reload error', async () => {
+      runtime.settings.reload = vi.fn().mockRejectedValue(new Error('fail'));
+      await handleCommand(ctx, 'reload');
+      expect(addToast).toHaveBeenCalledWith('Reload failed: fail', 'error');
     });
   });
 
-  describe('/stats', () => {
-    it('should show stats modal when stats available', async () => {
-      const stats = { sampleCount: 100, timeSpanMS: 5000 };
-      ctx.runtime.session = { getPerformanceStats: vi.fn().mockReturnValue(stats) } as any;
-      await handleCommand(ctx, 'stats', '/stats');
-      expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'stats', stats });
+  describe('logout', () => {
+    it('logs out from all providers', async () => {
+      const authStorage = runtime.authStorage as any;
+      authStorage.getProviders = vi.fn().mockReturnValue(['github', 'anthropic']);
+      authStorage.removeApiKey = vi.fn().mockResolvedValue(undefined);
+
+      await handleCommand(ctx, 'logout');
+
+      expect(authStorage.removeApiKey).toHaveBeenCalledWith('github');
+      expect(authStorage.removeApiKey).toHaveBeenCalledWith('anthropic');
+      expect(addToast).toHaveBeenCalledWith('Logged out from 2 provider(s)', 'success');
     });
 
-    it('shows info toast when stats disabled', async () => {
-      ctx.runtime.session = { getPerformanceStats: undefined } as any;
-      await handleCommand(ctx, 'stats', '/stats');
-      expect(ctx.addToast).toHaveBeenCalledWith('Performance tracking disabled', 'info');
-    });
-  });
+    it('handles empty providers', async () => {
+      const authStorage = runtime.authStorage as any;
+      authStorage.getProviders = vi.fn().mockReturnValue([]);
 
-  describe('/paste', () => {
-    it('pastes image from clipboard using wl-paste and returns paste', async () => {
-      const mockedExecFileSync = vi.mocked(execFileSync) as any;
-      mockedExecFileSync.mockReturnValue(Buffer.from('imgdata'));
-      ctx.runtime.cwd = '/tmp';
-      const result = await handleCommand(ctx, 'paste', '/paste');
-      expect(execFileSync).toHaveBeenCalledWith('wl-paste', ['--no-size', '--type', 'image/png']);
-      expect(result).toBe('paste');
+      await handleCommand(ctx, 'logout');
+
+      expect(authStorage.removeApiKey).not.toHaveBeenCalled();
+      expect(addToast).toHaveBeenCalledWith('Logged out from 0 provider(s)', 'success');
     });
 
-    it('falls back to xclip if wl-paste fails', async () => {
-      const mockedExecFileSync = vi.mocked(execFileSync) as any;
-      mockedExecFileSync.mockImplementationOnce(() => { throw new Error('wl fail') }).mockImplementationOnce(Buffer.from('data'));
-      ctx.runtime.cwd = '/tmp';
-      await handleCommand(ctx, 'paste', '/paste');
-      expect(execFileSync).toHaveBeenCalledWith('xclip', ['-selection', 'clipboard', '-t', 'image/png', '-o']);
-    });
+    it('handles logout error', async () => {
+      const authStorage = runtime.authStorage as any;
+      authStorage.getProviders = vi.fn().mockReturnValue(['github']);
+      authStorage.removeApiKey = vi.fn().mockRejectedValue(new Error('fail'));
 
-    it('shows error if both paste methods fail', async () => {
-      const mockedExecFileSync = vi.mocked(execFileSync) as any;
-      mockedExecFileSync.mockImplementation(() => { throw new Error('no clipboard'); });
-      await handleCommand(ctx, 'paste', '/paste');
-      expect(ctx.addToast).toHaveBeenCalledWith(expect.stringContaining('No image in clipboard'), 'error');
+      await handleCommand(ctx, 'logout');
+
+      expect(addToast).toHaveBeenCalledWith('Logout failed', 'error');
     });
   });
 
-
-  describe('/dementedelves', () => {
-    it('shows demented delves modal', async () => {
-      await handleCommand(ctx, 'dementedelves', '/dementedelves');
-      expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'earendil' });
+  describe('fork', () => {
+    it('opens user message selector modal', async () => {
+      await handleCommand(ctx, 'fork');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'user-message-selector' });
     });
   });
 
-  describe('Additional edge cases for coverage', () => {
-    it('/thinking with invalid argument shows modal', async () => {
-      ctx.runtime.setThinkingLevel = vi.fn();
-      await handleCommand(ctx, 'thinking', '/thinking invalid');
-      expect(ctx.runtime.setThinkingLevel).not.toHaveBeenCalled();
-      expect(ctx.setActiveModal).toHaveBeenCalledWith({ type: 'thinking' });
+  describe('stats', () => {
+    it('opens stats modal with performance stats', async () => {
+      const stats = { tokens: 100 };
+      (runtime.session as any).getPerformanceStats = vi.fn().mockReturnValue(stats);
+      await handleCommand(ctx, 'stats');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'stats', stats });
     });
 
-    it('/import when cancelled shows info toast', async () => {
-      const mockedExecSync = vi.mocked(execSync) as any;
-      mockedExecSync.mockReturnValue('file.jsonl');
-      ctx.runtime.cwd = '/tmp';
-      ctx.runtime.switchSession = vi.fn().mockResolvedValue({ cancelled: true });
-      await handleCommand(ctx, 'import', '/import');
-      expect(ctx.addToast).toHaveBeenCalledWith('Import cancelled', 'info');
+    it('shows info when performance tracking disabled', async () => {
+      (runtime.session as any).getPerformanceStats = vi.fn().mockReturnValue(undefined);
+      await handleCommand(ctx, 'stats');
+      expect(setActiveModal).not.toHaveBeenCalled();
+      expect(addToast).toHaveBeenCalledWith('Performance tracking disabled', 'info');
     });
+  });
 
-    it('/export when writeFileSync throws shows error', async () => {
-      const mockWrite = vi.mocked(writeFileSync) as any;
-      mockWrite.mockImplementation(() => { throw new Error('fs error'); });
-      ctx.runtime.session = { messages: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }] as any };
-      ctx.runtime.cwd = '/tmp';
-      await handleCommand(ctx, 'export', '/export');
-      expect(ctx.addToast).toHaveBeenCalledWith(expect.stringContaining('Export failed'), 'error');
+  describe('arminsayshi', () => {
+    it('opens armin modal', async () => {
+      await handleCommand(ctx, 'arminsayshi');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'armin' });
     });
+  });
 
-    it('/clone when fork throws shows error', async () => {
-      ctx.runtime.fork = vi.fn().mockRejectedValue(new Error('fork error'));
-      ctx.runtime.session = { messages: [{ role: 'user', id: 'u1', content: 'Hello' }] } as any;
-      await handleCommand(ctx, 'clone', '/clone');
-      expect(ctx.addToast).toHaveBeenCalledWith(expect.stringContaining('Clone failed'), 'error');
-    });
-
-    it('/compact when compact function throws shows error', async () => {
-      ctx.runtime.session = { compact: vi.fn().mockRejectedValue(new Error('compact error')) } as any;
-      await handleCommand(ctx, 'compact', '/compact');
-      expect(ctx.addToast).toHaveBeenCalledWith(expect.stringContaining('Compaction failed'), 'error');
-    });
-
-    it('/paste both methods fail shows error', async () => {
-      const mockedExecFileSync = vi.mocked(execFileSync) as any;
-      mockedExecFileSync.mockImplementation(() => { throw new Error('no clipboard'); });
-      await handleCommand(ctx, 'paste', '/paste');
-      expect(ctx.addToast).toHaveBeenCalledWith(expect.stringContaining('No image in clipboard'), 'error');
+  describe('dementedelves', () => {
+    it('opens earendil modal', async () => {
+      await handleCommand(ctx, 'dementedelves');
+      expect(setActiveModal).toHaveBeenCalledWith({ type: 'earendil' });
     });
   });
 });

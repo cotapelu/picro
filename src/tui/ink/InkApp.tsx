@@ -164,7 +164,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           break;
         // Retry handling
         case 'auto_retry_start':
-          setRetryAttempt(event.attempt ?? 0);
+          // setRetryAttempt is managed by useRuntime
           setRetryMaxAttempts(event.maxAttempts ?? 3);
           setRetryCountdown(((event.delayMs ?? 3000) / 1000));
           const retryHandler = () => {
@@ -174,13 +174,12 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           setRetryEscapeHandler(retryHandler);
           break;
         case 'auto_retry_end':
-          setRetryAttempt(0);
           setRetryCountdown(0);
           setRetryEscapeHandler(null);
           break;
         // Compaction handling
         case 'compaction_start':
-          setIsCompacting(true);
+          // isCompacting is managed by useRuntime
           const compactionHandler = () => {
             (runtime.session as any).abortCompaction?.();
             setAutoCompactionEscapeHandler(null);
@@ -188,15 +187,15 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           setAutoCompactionEscapeHandler(compactionHandler);
           break;
         case 'compaction_end':
-          setIsCompacting(false);
           setAutoCompactionEscapeHandler(null);
           // Add CompactionSummaryMessage if available
-          if (event.summaryEntry) {
+          if (event.result?.summary) {
             const summaryMsg: Message = {
               id: `compaction-${Date.now()}`,
               role: 'compactionSummary',
-              content: event.summaryEntry.toString() || '[Compaction]',
+              content: event.result.summary.toString() || '[Compaction]',
               timestamp: Date.now(),
+              tokensBefore: event.result.tokensBefore,
             };
             setMessages(prev => [...prev, summaryMsg]);
           }

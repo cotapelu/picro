@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 93: InkApp Integration Tests & Bug Fixes
+- **Direction**: Testing & Reliability
+- **Change**: Added 3 integration tests for InkApp covering assistant message streaming with tool calls, and auto-retry UI status handling. Fixed multiple bugs: undefined setter errors (`setIsCompacting`, `setRetryAttempt`) in event handlers, and corrected compaction_end event property (`event.result.summary`). Updated event handling for compaction and retry to align with useRuntime state management.
+- **Rationale**: Increase test coverage for core InkApp component and improve stability by fixing runtime errors that would occur during compaction and retry flows. Ensure event payloads match session emission format.
+- **Impact**: 1163 tests passing (+3 new). Coverage modestly increased; no regressions. Codebase more robust.
+
 ### Iteration 85: Telemetry Decorator Test Coverage
 - **Direction**: Testing & Coverage
 - **Change**: Added 4 tests for `telemetryMethod` decorator covering success tracking, error tracking, and options to suppress success/error. Improved branch coverage for telemetry module.

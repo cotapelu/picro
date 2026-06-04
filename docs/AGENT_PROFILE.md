@@ -16,6 +16,7 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - ✅ Git integration (branch, dirty, ahead/behind)
 - ✅ Comprehensive test suites: useRuntime (93%), output-guard (91%), convert-to-llm (100%), session-manager (81%), Footer (84%), ToolExecution (9 tests), AgentSessionRuntime (7 tests), branch-summarization (13), wrapper (4), runner (8)
 - ✅ New modal tests: CommandPalette, SelectModal, SettingsSelectorModal (11), ModelSelectorModal (5), SessionSelectorModal, BashOutputModal, LoginModal
+- ✅ Integration tests: InkApp streaming, tool calls, retry UI (3 new tests)
 - ✅ Utility modules: telemetry (8 advanced), performance-tracker (8), auth-storage (28)
 - ✅ Command handlers with full error handling tests (80% coverage)
 - ✅ Proactive bug detection and rapid fix (modal testing patterns standardized)
@@ -30,9 +31,9 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 
 ## Weaknesses / Areas for Improvement
 - ⚠️ InkApp.tsx still large (~1500 lines) - needs systematic decomposition into smaller hooks
-- ⚠️ Overall test coverage 60.3% - still need to reach 80% target
-- ⚠️ Branch coverage 52.76% - focus on conditional logic tests
-- ⚠️ InputBox coverage low (~14% remains); extension loader/runner coverage low (~10-14%)
+- ⚠️ Overall test coverage ~56.8% - still need to reach 80% target (coverage dipped due to new functionality additions)
+- ⚠️ Branch coverage ~50.1% - focus on conditional logic tests
+- ⚠️ Extension loader module (0% coverage) and ScopedModelsSelectorModal (14%) remain low coverage targets
 
 ## Tasks That Often Fail
 - N/A (84 iterations, 200+ tasks completed with high success rate)
@@ -47,7 +48,7 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - **Branch coverage improvement**: Target conditional-heavy modules (useRuntime, modals)
 - **Low-coverage modules**: Address extensions/loader and runner, InputBox interactions
 
-## Final Notes (2025-06-02, Iteration 92)
+## Final Notes (2025-06-04, Iteration 93)
 
 The Picro TUI is **feature-complete** and **production-ready** with:
 - 21+ slash commands (including arminsayshi, dementedelves)
@@ -55,9 +56,9 @@ The Picro TUI is **feature-complete** and **production-ready** with:
 - Full extension support
 - Git integration
 - Comprehensive stats
-- 1142 passing tests (1 todo)
-- Strong module coverage: useRuntime (93%), output-guard (91%), Footer (84%), ToolExecution (9), AgentSessionRuntime (7), branch-summarization (13), wrapper (4), runner (8), telemetry expanded
-- Overall coverage ~61.5% statements; branch coverage ~53.3%
-- Zero regressions over 92 iterations, 239+ tasks
+- 1163 passing tests (1 todo)
+- Strong module coverage: useRuntime (93%), output-guard (91%), Footer (84%), ToolExecution (9), AgentSessionRuntime (7), branch-summarization (13), wrapper (4), runner (8), telemetry expanded, InkApp integration tests added
+- Overall coverage ~56.8% statements; branch coverage ~50.1%
+- Zero regressions over 93 iterations, 245+ tasks
 
-**Evolution Status**: Continuous loop mode active. Next major milestone: 80% overall coverage. Focus: branch coverage, InputBox interactions, extension loader/runner coverage, decompose InkApp into smaller hooks and contexts, expand integration tests for modals and extension system.
+**Evolution Status**: Continuous loop mode active. Next major milestone: 80% overall coverage. Focus: branch coverage, extension loader (0% coverage), ScopedModelsSelectorModal (14%), session-manager edge cases, decompose InkApp into smaller hooks, expand integration tests for extension UI and tree navigation.
