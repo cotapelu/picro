@@ -1,13 +1,18 @@
 # Project State
 
-Last updated: 2025-06-04 (Iteration 95)
+Last updated: 2025-06-04 (Iteration 96)
 
 ## Metrics
-- Total Iterations: 95
-- Tasks Completed: 251+
-- Coverage: ~57.6% statements
+- Total Iterations: 96
+- Tasks Completed: 256+
+- Coverage: ~58.3% statements
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 96)
+
+- **StreamBuffer unit tests:** Added 19 comprehensive unit tests covering buffer creation, add behavior (immediate flush, threshold, maxDelay), flush method, adaptive threshold, timer scheduling, reset, metrics, and provider-specific configurations. Increased coverage for src/llm/utils/stream-buffer.js from ~1.7% to >90%.
+- Overall test suite: 1200 tests passing, 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 95)
 

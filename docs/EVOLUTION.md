@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 96: StreamBuffer Unit Tests
+- **Direction**: Testing & Coverage
+- **Change**: Added 19 comprehensive unit tests for `stream-buffer.js` covering buffer creation, `add` behavior (immediate flush, threshold, maxDelay), `flush`, `getAdaptiveThreshold`, `scheduleFlush`, `reset`, metrics, and provider-specific configurations. Increased coverage for `src/llm/utils/stream-buffer.js` from ~1.7% to >90%.
+- **Rationale**: StreamBuffer optimizes streaming responses by coalescing small chunks; testing ensures correct buffering behavior under various timing and size conditions.
+- **Impact**: 1200 tests passing (+19 new). Coverage increased to 58.29% statements, 51.4% branches, 59.21% functions, 59.08% lines. No regressions.
+
 ### Iteration 95: Overflow Unit Tests
 - **Direction**: Testing & Coverage
 - **Change**: Added 11 unit tests for `overflow.ts` covering token estimation, context token accumulation (text, images, thinking), system prompt handling, message truncation (FIFO), and large message content slicing. Increased coverage for `src/llm/overflow.ts` from 0% to >90%.
