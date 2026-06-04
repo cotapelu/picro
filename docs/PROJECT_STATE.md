@@ -1,13 +1,19 @@
 # Project State
 
-Last updated: 2025-06-04 (Iteration 93)
+Last updated: 2025-06-04 (Iteration 94)
 
 ## Metrics
-- Total Iterations: 93
-- Tasks Completed: 245+
-- Coverage: ~56.8% statements
+- Total Iterations: 94
+- Tasks Completed: 248+
+- Coverage: ~57.0% statements
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 94)
+
+- **api-registry unit tests:** Added 7 unit tests for the ApiRegistry class covering client reuse, API key inference (env), stats reporting, and client lifecycle. Increased coverage for the llm/api-registry module from 0% to 95.65%.
+- **Test reliability:** Fixed a timing issue in SessionSelectorModal.test.tsx that caused flaky failures under certain test order by adding proper act() boundaries between key events.
+- Overall test suite: 1170 tests passing, 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 93)
 

@@ -106,3 +106,6 @@ class ApiRegistry {
 
 // Global singleton
 export const apiRegistry = new ApiRegistry();
+
+// Also export the class itself for testing/advanced usage
+export { ApiRegistry };

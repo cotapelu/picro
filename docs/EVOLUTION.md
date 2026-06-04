@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 94: ApiRegistry Unit Tests & Test Reliability
+- **Direction**: Testing & Reliability
+- **Change**: Added 7 unit tests for `ApiRegistry` covering client reuse, API key inference (env), stats reporting, and client lifecycle. Increased coverage for `src/llm/api-registry.ts` from 0% to 95.65%. Fixed a test reliability issue in `SessionSelectorModal.test.tsx` by adding proper `act()` boundaries between keyboard events to prevent flaky failures under certain test order.
+- **Rationale**: The api-registry module is central to LLM client management; testing ensures correct behavior and improves overall coverage. The modal test timing fix improves test suite stability.
+- **Impact**: 1170 tests passing (+7 new). Coverage increased to 57.05% statements, 50.28% branches, 58.14% functions, 57.74% lines. No regressions.
+
 ### Iteration 93: InkApp Integration Tests & Bug Fixes
 - **Direction**: Testing & Reliability
 - **Change**: Added 3 integration tests for InkApp covering assistant message streaming with tool calls, and auto-retry UI status handling. Fixed multiple bugs: undefined setter errors (`setIsCompacting`, `setRetryAttempt`) in event handlers, and corrected compaction_end event property (`event.result.summary`). Updated event handling for compaction and retry to align with useRuntime state management.

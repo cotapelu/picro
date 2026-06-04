@@ -111,6 +111,7 @@ describe('SessionSelectorModal', () => {
 
       // Initial selection should be 0 (A)
       await pressKey({ downArrow: true });
+      await act(async () => {}); // ensure state update
       // After down, selected should be 1 (B)
       // To verify, we trigger Enter and check which session passed
       await pressKey({ return: true });
@@ -129,7 +130,9 @@ describe('SessionSelectorModal', () => {
 
       // Start at 0, move down to 1, then up to 0, select
       await pressKey({ downArrow: true });
+      await act(async () => {});
       await pressKey({ upArrow: true });
+      await act(async () => {});
       await pressKey({ return: true });
       expect(runtime.switchSession).toHaveBeenCalledWith('/1');
     });
