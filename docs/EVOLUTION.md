@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 95: Overflow Unit Tests
+- **Direction**: Testing & Coverage
+- **Change**: Added 11 unit tests for `overflow.ts` covering token estimation, context token accumulation (text, images, thinking), system prompt handling, message truncation (FIFO), and large message content slicing. Increased coverage for `src/llm/overflow.ts` from 0% to >90%.
+- **Rationale**: The overflow module is critical for context window management; testing ensures correct truncation logic and prevents context overflow bugs.
+- **Impact**: 1181 tests passing (+11 new). Coverage increased to 57.56% statements, 50.78% branches, 58.42% functions, 58.28% lines. No regressions.
+
 ### Iteration 94: ApiRegistry Unit Tests & Test Reliability
 - **Direction**: Testing & Reliability
 - **Change**: Added 7 unit tests for `ApiRegistry` covering client reuse, API key inference (env), stats reporting, and client lifecycle. Increased coverage for `src/llm/api-registry.ts` from 0% to 95.65%. Fixed a test reliability issue in `SessionSelectorModal.test.tsx` by adding proper `act()` boundaries between keyboard events to prevent flaky failures under certain test order.

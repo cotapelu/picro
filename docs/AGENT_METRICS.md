@@ -2,27 +2,28 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2025-06-04, Iteration 94)
+## Current Metrics (as of 2025-06-04, Iteration 95)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 94 |
-| Tasks Completed | 248+ |
+| Total Iterations | 95 |
+| Tasks Completed | 251+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1170/1170 tests, 1 todo) |
-| Coverage (statements) | 57.05% |
-| Coverage (branches) | 50.28% |
-| Coverage (functions) | 58.14% |
-| Coverage (lines) | 57.74% |
+| Test Pass Rate | 100% (1181/1181 tests, 1 todo) |
+| Coverage (statements) | 57.56% |
+| Coverage (branches) | 50.78% |
+| Coverage (functions) | 58.42% |
+| Coverage (lines) | 58.28% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2025-06-04 | 95 | 4 | ✅ | **overflow unit tests:** Added 11 unit tests for token estimation and context truncation, covering images, thinking blocks, system prompt truncation, and message FIFO removal. Increased coverage for src/llm/overflow.ts from 0% to >90%. 1181 tests passing, coverage 57.56%.
 | 2025-06-04 | 94 | 3 | ✅ | **ApiRegistry unit tests:** Added 7 unit tests covering client reuse, API key inference, stats, and lifecycle. Improved coverage for llm/api-registry (95.65%). Fixed SessionSelectorModal test timing. 1170 tests passing, coverage 57.05%.
 | 2025-06-04 | 93 | 6 | ✅ | **InkApp integration & bug fixes:** Added 3 integration tests for streaming/tool calls/retry. Fixed undefined setter errors in compaction/retry handlers and corrected compaction event shape. 1163 tests passing, coverage ~56.8%.
 | 2025-06-02 | 92 | 8 | ✅ | **ExtensionRunner extra tests:** Added 8 unit tests covering getCommands, getTools, flag management, invalidate, and onError. Increased coverage for runner utilities. 1142 tests passing, coverage ~61.5%.

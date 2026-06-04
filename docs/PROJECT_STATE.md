@@ -1,13 +1,18 @@
 # Project State
 
-Last updated: 2025-06-04 (Iteration 94)
+Last updated: 2025-06-04 (Iteration 95)
 
 ## Metrics
-- Total Iterations: 94
-- Tasks Completed: 248+
-- Coverage: ~57.0% statements
+- Total Iterations: 95
+- Tasks Completed: 251+
+- Coverage: ~57.6% statements
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 95)
+
+- **overflow unit tests:** Added 11 unit tests covering token estimation, context truncation, system prompt handling, and image/thinking content. Increased coverage for src/llm/overflow.ts from 0% to >90%.
+- Overall test suite: 1181 tests passing, 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 94)
 
