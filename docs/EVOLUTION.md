@@ -4,6 +4,12 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 100: Auth Guidance Unit Tests
+- **Direction**: Testing & Coverage
+- **Change**: Added 5 unit tests for `src/runtime/auth-guidance.ts` covering message formatting for missing API key, no model selected, no models available, and provider-specific login instructions. Improved coverage for auth-guidance module.
+- **Rationale**: Auth guidance messages are shown to users in error scenarios; ensuring correctness improves user experience.
+- **Impact**: 1223 tests passing (+5 new). Coverage maintained at 60.78% statements, 53.37% branches, 61.21% functions, 61.70% lines. No regressions.
+
 ### Iteration 99: ModelRegistry Unit Tests
 - **Direction**: Testing & Coverage
 - **Change**: Added 16 comprehensive unit tests for `src/session/model-registry.ts` covering model lookup, provider enumeration, auth detection (env/custom), API key/header resolution (custom, env, model-specific merging), provider registration, and header merging. Increased coverage for model-registry module from ~19% to >80%.

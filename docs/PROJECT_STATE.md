@@ -3,11 +3,16 @@
 Last updated: 2026-06-04 (Iteration 99)
 
 ## Metrics
-- Total Iterations: 99
+- Total Iterations: 100
 - Tasks Completed: 256+
 - Coverage: ~60.8% statements (branches 53.4%, functions 61.2%, lines 61.7%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 100)
+
+- **Auth Guidance unit tests:** Added 5 unit tests for `src/runtime/auth-guidance.ts` covering message formatting for missing API key, model selection, no models available, and provider-specific login instructions. Improved coverage for auth-guidance module.
+- Overall test suite: 1223 tests passing (1 todo), 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 99)
 

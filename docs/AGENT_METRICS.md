@@ -2,18 +2,18 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-04, Iteration 99)
+## Current Metrics (as of 2026-06-04, Iteration 100)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 99 |
+| Total Iterations | 100 |
 | Tasks Completed | 256+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1232/1232 tests, 1 todo) |
+| Test Pass Rate | 100% (1223/1223 tests, 1 todo) |
 | Coverage (statements) | 60.78% |
 | Coverage (branches) | 53.37% |
 | Coverage (functions) | 61.21% |
@@ -23,6 +23,7 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2026-06-04 | 100 | 1 | ✅ | **Auth Guidance unit tests:** Added 5 unit tests covering auth-guidance.ts for missing API key, no model selected, no models available, and login instructions. Improved coverage for auth-guidance module. 1223 tests passing, coverage ~60.8% statements. |
 | 2026-06-04 | 99 | 1 | ✅ | **ModelRegistry unit tests:** Added 16 unit tests covering model lookup, provider enumeration, auth detection (env/custom), API key/header resolution, provider registration, and header merging. Increased model-registry coverage from ~19% to >80%. 1232 tests passing, coverage ~60.8% statements. |
 | 2026-06-04 | 98 | 2 | ✅ | **Session resume & model persistence:** Fixed model restoration from session context and agent state history rehydration. Fixed buildSessionContext to avoid model override from assistant messages without provider/model fields. Added unit test for resume flow. Coverage increased; 1220 tests passing, ~60.3% statements. |
 | 2026-06-04 | 97 | 1 | ✅ | **prompt-templates unit tests:** Added 19 tests for parseCommandArgs and substituteArgs, improving coverage for runtime prompt processing. 1219 tests passing. |
