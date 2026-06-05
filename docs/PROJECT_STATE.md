@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 113)
+Last updated: 2026-06-05 (Iteration 114)
 
 ## Metrics
-- Total Iterations: 113
-- Tasks Completed: 260+
-- Coverage: ~67.9% statements (branches 60.0%, functions 66.9%, lines 68.7%)
+- Total Iterations: 114
+- Tasks Completed: 261+
+- Coverage: ~68.2% statements (branches 60.0%, functions 67.3%, lines 69.0%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 114)
+
+- **useAppActions unit tests:** Added 18 unit tests covering all callbacks: command palette, thinking, theme toggle, tool output toggle, thinking block toggle, login, session selector, debug log generation (success, error, content verification), external editor (success and error), paste image (no image, error), slash command, and tab. Increased coverage for `useAppActions` hook. Overall test suite: 1504 tests passing (+18 new), no regressions.
 
 ## Completed Features (Iteration 113)
 

@@ -4,6 +4,13 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 114: useAppActions Unit Tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added 18 unit tests for `src/tui/ink/hooks/useAppActions.test.tsx` covering all callbacks: command palette, thinking, theme toggle, tool output toggle, thinking block toggle, login, session selector, debug log generation (success, error, content verification), external editor (success and error paths), paste image (no image, error), slash command, and tab. Mocks for `node:fs`, `node:child_process`, `node:path`, `node:os`, and clipboard-image allow isolated testing.
+- **Rationale**: `useAppActions` provides most UI action callbacks. Testing ensures correct behavior and increases coverage of the hook module significantly.
+- **Impact**: 1504 tests passing (+18 new). Coverage increased to ~68.2% statements (+0.25%), 60.0% branches (+0.03%), 67.3% functions (+0.3%), 69.0% lines (+0.3%). No regressions.
+
 ### Iteration 113: useEditorState Unit Tests
 
 - **Direction**: Testing & Coverage

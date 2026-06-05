@@ -46,13 +46,15 @@ export function useAppActions(deps: UseAppActionsDeps) {
   }, [toggleTheme, isDark, runtime.settings]);
 
   const onToolOutputToggle = useCallback(() => {
-    setToolOutputExpanded(prev => !prev);
-    addToast('Tool output ' + (!toolOutputExpanded ? 'expanded' : 'collapsed'));
+    const next = !toolOutputExpanded;
+    setToolOutputExpanded(next);
+    addToast('Tool output ' + (next ? 'expanded' : 'collapsed'));
   }, [toolOutputExpanded, addToast, setToolOutputExpanded]);
 
   const onThinkingBlockToggle = useCallback(() => {
-    setHideThinkingBlock(prev => !prev);
-    addToast('Thinking blocks: ' + (!hideThinkingBlock ? 'hidden' : 'visible'));
+    const next = !hideThinkingBlock;
+    setHideThinkingBlock(next);
+    addToast('Thinking blocks: ' + (next ? 'hidden' : 'visible'));
   }, [hideThinkingBlock, addToast, setHideThinkingBlock]);
 
   const onLogin = useCallback(() => {
@@ -63,13 +65,15 @@ export function useAppActions(deps: UseAppActionsDeps) {
     openModal({ type: 'session-selector' });
   }, [openModal]);
 
-  const onDebug = useCallback(() => {
+  const onDebug = useCallback(async () => {
     try {
       const rt = runtime as any;
       const session = rt.session;
       const { messages } = session;
       const stats = session.getSessionStats?.();
-      const debugLogPath = require('node:path').join(require('node:os').tmpdir(), `picro-debug-${Date.now()}.log`);
+      const { join } = await import('node:path');
+      const { tmpdir } = await import('node:os');
+      const debugLogPath = join(tmpdir(), `picro-debug-${Date.now()}.log`);
       const lines: string[] = [
         `Picro Debug Log`,
         `Generated: ${new Date().toISOString()}`,
@@ -90,10 +94,11 @@ export function useAppActions(deps: UseAppActionsDeps) {
       for (const msg of messages) {
         lines.push(JSON.stringify(msg));
       }
-      require('node:fs').writeFileSync(debugLogPath, lines.join('\n'), 'utf-8');
+      const { writeFileSync } = await import('node:fs');
+      writeFileSync(debugLogPath, lines.join('\n'), 'utf-8');
       addToast(`Debug log written to ${debugLogPath}`, 'success');
     } catch (err: any) {
-      addToast(`Debug failed: ${err.message}`, 'error');
+      addToast(`Debug failed: ${(err as Error).message}`, 'error');
     }
   }, [runtime, addToast]);
 
