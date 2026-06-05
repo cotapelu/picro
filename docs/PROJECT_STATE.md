@@ -1,17 +1,21 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 109)
+Last updated: 2026-06-05 (Iteration 110)
 
 ## Metrics
-- Total Iterations: 109
-- Tasks Completed: 257+
-- Coverage: ~67.0% statements (branches 59.5%, functions 66.0%, lines 67.8%)
+- Total Iterations: 110
+- Tasks Completed: 258+
+- Coverage: ~67.1% statements (branches 59.6%, functions 66.2%, lines 67.9%)
 - Build Success Rate: 100%
 - Zero regressions
 
 ## Completed Features (Iteration 109)
 
 - **Fixed failing AgentSessionRuntime tests:** Resolved 6 failing tests in `agent-session-runtime.extra.test.ts` by aligning implementation with reference. Changes: added `setThinkingLevel` to mock session, updated `fork` method to always call `getEntry` to validate entry existence, enhanced `SessionManager` mock to include static methods (`open`, `continueRecent`, `list`, `listAll`, `importSession`, `create`), switchedSession test now checks `SessionManager.open` instead of direct fs calls, and refactored `importFromJsonl` to use consistent fs namespace. Updated `agent-session-runtime.ts` to import `fs` namespace (fs.existsSync, fs.readFileSync). All 1445 tests passing, 100% pass rate, zero regressions.
+
+## Completed Features (Iteration 110)
+
+- **useResourceInfo unit tests:** Added 7 unit tests covering hook behavior: initial counts zero, counting extensions/skills/prompts/themes from resource loader, toast display when not quiet, suppressed toast when quietStartup true, force option to show toast even when quiet, graceful handling of missing loader, and handling exceptions in loader methods. Increased coverage for `useResourceInfo` hook and improved hook test reliability. Overall test suite: 1459 tests passing, no regressions.
 
 ## Completed Features (Iteration 108)
 
