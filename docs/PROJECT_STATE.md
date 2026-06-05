@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 108)
+Last updated: 2026-06-05 (Iteration 109)
 
 ## Metrics
-- Total Iterations: 108
-- Tasks Completed: 256+
-- Coverage: ~66.7% statements (branches 59.3%, functions 65.8%, lines 67.5%)
+- Total Iterations: 109
+- Tasks Completed: 257+
+- Coverage: ~67.0% statements (branches 59.5%, functions 66.0%, lines 67.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 109)
+
+- **Fixed failing AgentSessionRuntime tests:** Resolved 6 failing tests in `agent-session-runtime.extra.test.ts` by aligning implementation with reference. Changes: added `setThinkingLevel` to mock session, updated `fork` method to always call `getEntry` to validate entry existence, enhanced `SessionManager` mock to include static methods (`open`, `continueRecent`, `list`, `listAll`, `importSession`, `create`), switchedSession test now checks `SessionManager.open` instead of direct fs calls, and refactored `importFromJsonl` to use consistent fs namespace. Updated `agent-session-runtime.ts` to import `fs` namespace (fs.existsSync, fs.readFileSync). All 1445 tests passing, 100% pass rate, zero regressions.
 
 ## Completed Features (Iteration 108)
 

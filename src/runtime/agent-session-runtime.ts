@@ -6,7 +6,7 @@
  * It serves as the composition root for the entire agent system.
  */
 
-import { existsSync, mkdirSync } from "node:fs";
+import * as fs from "node:fs";
 import { join, dirname } from "node:path";
 import { homedir } from "node:os";
 
@@ -185,6 +185,11 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
       return { cancelled: true };
     }
 
+    if (!fs.existsSync(sessionPath)) {
+      console.error(`Session file not found: ${sessionPath}`);
+      return { cancelled: true };
+    }
+
     try {
       // Call rebind handler if set
       if (this._rebindSession) {
@@ -257,9 +262,14 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
 
     try {
       const position = options?.position ?? "at";
-      const branchFromId = position === "before" 
-        ? this._session.sessionManager.getEntry(entryId)?.parentId ?? null
-        : entryId;
+      // Validate entry exists
+      const selectedEntry = this._session.sessionManager.getEntry(entryId);
+      if (!selectedEntry) {
+        throw new Error("Invalid entry ID for forking");
+      }
+      const branchFromId = position === "before"
+        ? selectedEntry.parentId ?? null
+        : selectedEntry.id;
 
       // Create branch summary
       const result = this._session.sessionManager.branchWithSummary(
@@ -310,12 +320,12 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
     }
 
     try {
-      if (!existsSync(inputPath)) {
+      if (!fs.existsSync(inputPath)) {
         console.error(`Session file not found: ${inputPath}`);
         return { cancelled: true };
       }
 
-      const content = require('node:fs').readFileSync(inputPath, "utf-8");
+      const content = fs.readFileSync(inputPath, "utf-8");
       const cwd = cwdOverride ?? this._cwd;
       const sessionDir = this._services.sessionDir;
 
@@ -394,8 +404,8 @@ export async function createAgentSessionRuntime(
   const agentDir = options.agentDir;
 
   // Ensure agent directory exists
-  if (!existsSync(agentDir)) {
-    mkdirSync(agentDir, { recursive: true });
+  if (!fs.existsSync(agentDir)) {
+    fs.mkdirSync(agentDir, { recursive: true });
   }
 
   // Create services
