@@ -13,8 +13,9 @@ import {
   move,
   getSortedIds,
 } from './scoped-models-utils.js';
+import { handleScopedModelsKey } from './scoped-models-handler.js';
 
-interface ModelInfo {
+export interface ModelInfo {
   fullId: string;
   provider: string;
   id: string;
@@ -86,99 +87,63 @@ export const ScopedModelsSelectorModal: React.FC<ScopedModelsSelectorModalProps>
   const filteredItems = getFilteredItems();
 
   const handleKey = useCallback(async (input: string, key: any) => {
-    // Escape to close
-    if (key.escape) {
-      onClose();
-      return;
-    }
-    // Return to toggle selection
-    if (key.return) {
-      if (filteredItems.length === 0) return;
-      const selected = filteredItems[selectedIndex];
-      if (selected) {
-        setEnabledIds(prev => toggle(prev, selected.fullId));
-        setIsDirty(true);
-      }
-      return;
-    }
-    // Reorder (must be before plain navigation to allow shift+arrow)
-    if (key.upArrow && key.shift) {
-      if (enabledIds !== null) {
-        const selected = filteredItems[selectedIndex];
-        if (selected && isEnabled(enabledIds, selected.fullId)) {
-          setEnabledIds(prev => move(prev, selected.fullId, -1));
+    const action = handleScopedModelsKey(input, key, {
+      enabledIds,
+      models,
+      selectedIndex,
+      search,
+    });
+
+    switch (action.type) {
+      case 'CLOSE':
+        onClose();
+        break;
+
+      case 'TOGGLE':
+        if (filteredItems.length > 0 && filteredItems[selectedIndex]) {
+          setEnabledIds(prev => toggle(prev, filteredItems[selectedIndex].fullId));
           setIsDirty(true);
         }
-      }
-      return;
-    }
-    if (key.downArrow && key.shift) {
-      if (enabledIds !== null) {
-        const selected = filteredItems[selectedIndex];
-        if (selected && isEnabled(enabledIds, selected.fullId)) {
-          setEnabledIds(prev => move(prev, selected.fullId, 1));
+        break;
+
+      case 'MOVE':
+        if (enabledIds !== null && filteredItems[selectedIndex]) {
+          setEnabledIds(prev => move(prev, filteredItems[selectedIndex].fullId, action.direction));
           setIsDirty(true);
         }
-      }
-      return;
-    }
-    // Plain navigation
-    if (key.upArrow) {
-      setSelectedIndex(prev => Math.max(0, prev - 1));
-      return;
-    }
-    if (key.downArrow) {
-      setSelectedIndex(prev => Math.min(filteredItems.length - 1, prev + 1));
-      return;
-    }
-    // Enable all filtered or all
-    if (key.ctrl && input === 'a') {
-      const targetIds = search ? filteredItems.map(i => i.fullId) : undefined;
-      setEnabledIds(prev => enableAll(prev, models.map(m => m.fullId), targetIds));
-      setIsDirty(true);
-      return;
-    }
-    // Clear all filtered or all
-    if (key.ctrl && input === 'x') {
-      const targetIds = search ? filteredItems.map(i => i.fullId) : undefined;
-      setEnabledIds(prev => clearAll(prev, models.map(m => m.fullId), targetIds));
-      setIsDirty(true);
-      return;
-    }
-    // Toggle provider
-    if (key.ctrl && input === 'p') {
-      const selected = filteredItems[selectedIndex];
-      if (selected) {
-        const provider = selected.provider;
-        const providerIds = models.filter(m => m.provider === provider).map(m => m.fullId);
-        const allEnabled = providerIds.every(id => isEnabled(enabledIds, id));
-        setEnabledIds(prev => allEnabled ? clearAll(prev, models.map(m => m.fullId), providerIds) : enableAll(prev, models.map(m => m.fullId), providerIds));
+        break;
+
+      case 'SET_ENABLED_IDS':
+        setEnabledIds(action.ids);
         setIsDirty(true);
+        break;
+
+      case 'SET_SELECTED_INDEX':
+        setSelectedIndex(action.index);
+        break;
+
+      case 'SET_SEARCH':
+        setSearch(action.search);
+        setSelectedIndex(0);
+        break;
+
+      case 'SET_DIRTY':
+        setIsDirty(action.dirty);
+        break;
+
+      case 'SAVE': {
+        const settings = runtime.settings as any;
+        if (settings) {
+          settings.set('scopedModelsEnabled', true);
+          settings.set('scopedModelIds', enabledIds === null ? models.map(m => m.fullId) : enabledIds);
+          await settings.save?.();
+          setIsDirty(false);
+        }
+        break;
       }
-      return;
-    }
-    // Save (persist to settings)
-    if (key.ctrl && input === 's') {
-      const settings = runtime.settings as any;
-      if (settings) {
-        settings.set('scopedModelsEnabled', true);
-        settings.set('scopedModelIds', enabledIds === null ? models.map(m => m.fullId) : enabledIds);
-        await settings.save?.();
-        setIsDirty(false);
-      }
-      return;
-    }
-    // Backspace to clear search
-    if (key.backspace) {
-      setSearch(prev => prev.slice(0, -1));
-      setSelectedIndex(0);
-      return;
-    }
-    // Type to search (single character)
-    if (input && input.length === 1 && !key.ctrl && !key.meta && !key.alt) {
-      setSearch(prev => prev + input);
-      setSelectedIndex(0);
-      return;
+
+      case 'NOOP':
+        break;
     }
   }, [filteredItems, selectedIndex, enabledIds, models, search, onClose, runtime]);
 
