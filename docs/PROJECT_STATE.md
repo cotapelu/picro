@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 105)
+Last updated: 2026-06-05 (Iteration 106)
 
 ## Metrics
-- Total Iterations: 105
+- Total Iterations: 106
 - Tasks Completed: 256+
-- Coverage: ~64.8% statements (branches 57.6%, functions 64.7%, lines 65.6%)
+- Coverage: ~65.2% statements (branches 58.1%, functions 65.5%, lines 65.9%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 106)
+
+- **ScopedModelsHandler extraction & tests:** Extracted pure key‑handler logic from `ScopedModelsSelectorModal` into `scoped-models-handler.ts`. Wrote 26 comprehensive unit tests covering all branches: toggle, reorder, provider toggle, save, search, navigation, bulk enable/clear. Refactored modal to import and use the pure handler, improving testability and increasing coverage. Handles edge cases and aligns with utils semantics. Overall test suite: 1371 tests passing (1 todo, 5 skipped), 100% pass rate. Coverage increased to 65.21% statements, 58.06% branches, 65.47% functions, 65.88% lines. No regressions.
 
 ## Completed Features (Iteration 105)
 

@@ -2,27 +2,28 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-05, Iteration 105)
+## Current Metrics (as of 2026-06-05, Iteration 106)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 105 |
+| Total Iterations | 106 |
 | Tasks Completed | 256+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1345/1345 tests, 1 todo, 5 skipped) |
-| Coverage (statements) | 64.82% |
-| Coverage (branches) | 57.61% |
-| Coverage (functions) | 64.66% |
-| Coverage (lines) | 65.61% |
+| Test Pass Rate | 100% (1371/1371 tests, 1 todo, 5 skipped) |
+| Coverage (statements) | 65.21% |
+| Coverage (branches) | 58.06% |
+| Coverage (functions) | 65.47% |
+| Coverage (lines) | 65.88% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2026-06-05 | 106 | 2 | ✅ | **ScopedModelsHandler extraction & tests:** Extracted pure key‑handler logic from `ScopedModelsSelectorModal` into `scoped-models-handler.ts`. Added 26 comprehensive unit tests covering all branches (toggle, reorder, provider, save, search, navigation, bulk ops). Refactored modal to use the pure handler, increasing testability and coverage. Overall test suite: 1371 tests passing (1 todo, 5 skipped), coverage increased to 65.21% statements, 58.06% branches, 65.47% functions, 65.88% lines. No regressions. |
 | 2026-06-05 | 105 | 2 | ✅ | **ScopedModelsSelectorModal component tests & bugfix:** Added 10 interaction unit tests covering handler registration, Escape, Ctrl+S/A/X, navigation (up/down), typing, backspace, and non-reorder cases. Fixed bug: reorder (Shift+Up/Down) now works by checking shift combos before plain navigation. Skipped 5 complex tests (Enter toggle, provider Ctrl+P, Shift+reorder) due to test environment timing; will revisit with improved testability. Overall test suite: 1345 tests passing, coverage increased to 64.82% statements (+0.89%), branches +0.95%. |
 | 2026-06-05 | 104 | 2 | ✅ | **ScopedModelsUtils refactor & tests:** Extracted helper functions from `ScopedModelsSelectorModal` into `scoped-models-utils.ts`. Added 38 unit tests covering all branches, edge cases, and corrected `move` implementation (splice). Refactored modal to use utils. Overall test suite: 1335 tests passing, coverage increased to 63.93% statements. |
 | 2026-06-05 | 103 | 2 | ✅ | **Extension loader unit tests:** Added 21 comprehensive unit tests for `src/extensions/loader.ts` covering `loadExtensionFromFactory`, `loadExtensions`, and `discoverAndLoadExtensions`. Achieved >80% coverage for the module. Also fixed test setup to guard `window` usage for Node environment. Overall test suite: 1297 tests passing, coverage increased to 63.43% statements. |
