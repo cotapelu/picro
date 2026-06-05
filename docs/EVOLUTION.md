@@ -4,6 +4,13 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 104: ScopedModelsUtils Refactor & Tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Extracted pure helper functions (`isEnabled`, `toggle`, `enableAll`, `clearAll`, `move`, `getSortedIds`) from `ScopedModelsSelectorModal.tsx` into new `scoped-models-utils.ts`. Refactored modal to use these utilities. Added 38 comprehensive unit tests covering all branches, edge cases, and corrected the `move` implementation (use splice instead of swap). Improved modularity and testability.
+- **Rationale**: The ScopedModelsSelectorModal contained complex state manipulation logic that was hard to test inline. Extracting pure functions enables unit testing, increases coverage, and reduces duplication. The fix to `move` ensures correct ordering when reordering enabled models.
+- **Impact**: 1335 tests passing (+38 new). Overall coverage increased to 63.93% statements, 56.66% branches, 64.02% functions, 64.73% lines. No regressions.
+
 ### Iteration 103: Extension Loader Tests
 
 - **Direction**: Testing & Coverage

@@ -1,20 +1,20 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 103)
+Last updated: 2026-06-05 (Iteration 104)
 
 ## Metrics
-- Total Iterations: 103
+- Total Iterations: 104
 - Tasks Completed: 256+
-- Coverage: ~63.4% statements (branches 56.1%, functions 63.4%, lines 64.3%)
+- Coverage: ~63.9% statements (branches 56.7%, functions 64.0%, lines 64.7%)
 - Build Success Rate: 100%
 - Zero regressions
 
+## Completed Features (Iteration 104)
+
+- **ScopedModelsSelectorModal refactor & utils tests:** Extracted pure helper functions from `ScopedModelsSelectorModal.tsx` into new `scoped-models-utils.ts` module (`isEnabled`, `toggle`, `enableAll`, `clearAll`, `move`, `getSortedIds`). Refactored modal to use these utilities. Added 38 comprehensive unit tests for the utils covering all branches, edge cases, and corrected the `move` implementation (splice instead of swap). Reduced duplication and improved testability.
+- Overall test suite: 1335 tests passing (1 todo), 100% pass rate. No regressions.
+
 ## Completed Features (Iteration 103)
-
-- **Extension Loader unit tests:** Added 21 comprehensive unit tests for `src/extensions/loader.ts` covering `loadExtensionFromFactory`, `loadExtensions` (empty, errors, collisions, runtime sharing), `discoverAndLoadExtensions` (integration with file system), and indirect tests for `createExtensionAPI`. Achieved >80% coverage for the extension loader module. Also fixed test setup to guard `window` usage for Node environment.
-- Overall test suite: 1297 tests passing (1 todo), 100% pass rate. No regressions.
-
-## Completed Features (Iteration 102)
 
 - **Provider and Settings Manager unit tests:** Added 19 unit tests for `src/llm/providers/openai-compatible.ts` covering `buildParams` (message transformation, image handling, tool calls, OpenRouter cache control, id sanitization), and 17 unit tests for `src/runtime/settings-manager.ts` covering defaults, storage, overrides, setters, and error handling. Both modules now >80% coverage.
 - Overall test suite: 1260 tests passing (1 todo), 100% pass rate. No regressions.

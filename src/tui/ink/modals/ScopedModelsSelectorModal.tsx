@@ -4,6 +4,15 @@ import { Box, Text, useInput, useFocus } from 'ink';
 import type { AgentSessionRuntimeInterface } from '../../../runtime.js';
 import { useTheme } from '../hooks/useTheme.js';
 import { Modal } from './Modal.js';
+import {
+  type EnabledIds,
+  isEnabled,
+  toggle,
+  enableAll,
+  clearAll,
+  move,
+  getSortedIds,
+} from './scoped-models-utils.js';
 
 interface ModelInfo {
   fullId: string;
@@ -15,56 +24,6 @@ interface ModelInfo {
 interface ScopedModelsSelectorModalProps {
   runtime: AgentSessionRuntimeInterface;
   onClose: () => void;
-}
-
-// EnabledIds: null = all enabled (no filter), string[] = explicit ordered list
-type EnabledIds = string[] | null;
-
-function isEnabled(enabledIds: EnabledIds, id: string): boolean {
-  return enabledIds === null || enabledIds.includes(id);
-}
-
-function toggle(enabledIds: EnabledIds, id: string): EnabledIds {
-  if (enabledIds === null) return [id];
-  const index = enabledIds.indexOf(id);
-  if (index >= 0) return [...enabledIds.slice(0, index), ...enabledIds.slice(index + 1)];
-  return [...enabledIds, id];
-}
-
-function enableAll(enabledIds: EnabledIds, allIds: string[], targetIds?: string[]): EnabledIds {
-  if (enabledIds === null) return null;
-  const targets = targetIds ?? allIds;
-  const result = [...enabledIds];
-  for (const id of targets) {
-    if (!result.includes(id)) result.push(id);
-  }
-  return result.length === allIds.length ? null : result;
-}
-
-function clearAll(enabledIds: EnabledIds, allIds: string[], targetIds?: string[]): EnabledIds {
-  if (enabledIds === null) {
-    return targetIds ? allIds.filter((id) => !targetIds.includes(id)) : [];
-  }
-  const targets = new Set(targetIds ?? enabledIds);
-  return enabledIds.filter((id) => !targets.has(id));
-}
-
-function move(enabledIds: EnabledIds, id: string, delta: number): EnabledIds {
-  if (enabledIds === null) return null;
-  const list = [...enabledIds];
-  const index = list.indexOf(id);
-  if (index < 0) return list;
-  const newIndex = index + delta;
-  if (newIndex < 0 || newIndex >= list.length) return list;
-  const result = [...list];
-  [result[index], result[newIndex]] = [result[newIndex], result[index]];
-  return result;
-}
-
-function getSortedIds(enabledIds: EnabledIds, allIds: string[]): string[] {
-  if (enabledIds === null) return allIds;
-  const enabledSet = new Set(enabledIds);
-  return [...enabledIds, ...allIds.filter((id) => !enabledSet.has(id))];
 }
 
 export const ScopedModelsSelectorModal: React.FC<ScopedModelsSelectorModalProps> = ({ runtime, onClose }) => {
