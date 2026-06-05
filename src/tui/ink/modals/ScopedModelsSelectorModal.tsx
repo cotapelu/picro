@@ -86,11 +86,12 @@ export const ScopedModelsSelectorModal: React.FC<ScopedModelsSelectorModalProps>
   const filteredItems = getFilteredItems();
 
   const handleKey = useCallback(async (input: string, key: any) => {
-    // Navigation
+    // Escape to close
     if (key.escape) {
       onClose();
       return;
     }
+    // Return to toggle selection
     if (key.return) {
       if (filteredItems.length === 0) return;
       const selected = filteredItems[selectedIndex];
@@ -100,15 +101,7 @@ export const ScopedModelsSelectorModal: React.FC<ScopedModelsSelectorModalProps>
       }
       return;
     }
-    if (key.upArrow) {
-      setSelectedIndex(prev => Math.max(0, prev - 1));
-      return;
-    }
-    if (key.downArrow) {
-      setSelectedIndex(prev => Math.min(filteredItems.length - 1, prev + 1));
-      return;
-    }
-    // Reorder
+    // Reorder (must be before plain navigation to allow shift+arrow)
     if (key.upArrow && key.shift) {
       if (enabledIds !== null) {
         const selected = filteredItems[selectedIndex];
@@ -127,6 +120,15 @@ export const ScopedModelsSelectorModal: React.FC<ScopedModelsSelectorModalProps>
           setIsDirty(true);
         }
       }
+      return;
+    }
+    // Plain navigation
+    if (key.upArrow) {
+      setSelectedIndex(prev => Math.max(0, prev - 1));
+      return;
+    }
+    if (key.downArrow) {
+      setSelectedIndex(prev => Math.min(filteredItems.length - 1, prev + 1));
       return;
     }
     // Enable all filtered or all
