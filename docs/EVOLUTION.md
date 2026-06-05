@@ -4,6 +4,13 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 103: Extension Loader Tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added 21 comprehensive unit tests for `src/extensions/loader.ts` covering `loadExtensionFromFactory`, `loadExtensions`, and `discoverAndLoadExtensions`. Achieved >80% coverage for the extension loader module. Also fixed test setup to guard `window` usage for Node environment.
+- **Rationale**: The extension loader is responsible for dynamically loading user and built-in extensions, a core part of the extensibility system. Ensuring correctness and full coverage improves reliability and user experience when using extensions.
+- **Impact**: 1297 tests passing (+21 new). Overall coverage increased to 63.43% statements, 56.06% branches, 63.38% functions, 64.34% lines. No regressions.
+
 ### Iteration 102: Provider and Settings Manager Tests
 - **Direction**: Testing & Coverage
 - **Change**: Added 19 unit tests for `src/llm/providers/openai-compatible.ts` covering `buildParams` function: system/developer roles, user/assistant/tool messages, image handling, thinking blocks, tool calls, toolResult mapping, assistant placeholder insertion, OpenRouter cache control, and tool call id sanitization. Added 17 unit tests for `src/runtime/settings-manager.ts` covering defaults, storage loading, project overrides, setters, and error handling. Both modules now have >80% coverage.

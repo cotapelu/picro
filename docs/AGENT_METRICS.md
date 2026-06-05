@@ -2,27 +2,28 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-04, Iteration 102)
+## Current Metrics (as of 2026-06-05, Iteration 103)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 102 |
+| Total Iterations | 103 |
 | Tasks Completed | 256+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1260/1260 tests, 1 todo) |
-| Coverage (statements) | 61.86% |
-| Coverage (branches) | 54.96% |
-| Coverage (functions) | 62.42% |
-| Coverage (lines) | 62.74% |
+| Test Pass Rate | 100% (1297/1297 tests, 1 todo) |
+| Coverage (statements) | 63.43% |
+| Coverage (branches) | 56.06% |
+| Coverage (functions) | 63.38% |
+| Coverage (lines) | 64.34% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2026-06-05 | 103 | 2 | ✅ | **Extension loader unit tests:** Added 21 comprehensive unit tests for `src/extensions/loader.ts` covering `loadExtensionFromFactory`, `loadExtensions`, and `discoverAndLoadExtensions`. Achieved >80% coverage for the module. Also fixed test setup to guard `window` usage for Node environment. Overall test suite: 1297 tests passing, coverage increased to 63.43% statements. |
 | 2026-06-04 | 102 | 2 | ✅ | **Provider unit tests:** Added 19 comprehensive unit tests for src/llm/providers/openai-compatible.ts covering param building, message transformation, image handling, tool calls, cache control, and id sanitization. Also added 17 unit tests for src/runtime/settings-manager.ts covering defaults, loading, persistence, and error handling. Increased coverage: +1.5% statements, +1.85% branches. 1260 tests passing, coverage ~61.86% statements. |
 | 2026-06-04 | 101 | 1 | ✅ | **Settings Validator unit tests:** Added 28 unit tests covering validation of all settings types (provider, model, modes, transport, compaction, branchSummary, retry, terminal, images). Comprehensive branch coverage; error message correctness. 1224 tests passing, coverage ~60.4% statements. |
 | 2026-06-04 | 100 | 1 | ✅ | **Auth Guidance unit tests:** Added 5 unit tests covering auth-guidance.ts for missing API key, no model selected, no models available, and provider-specific login instructions. Improved coverage for auth-guidance module. 1223 tests passing, coverage ~60.8% statements. |

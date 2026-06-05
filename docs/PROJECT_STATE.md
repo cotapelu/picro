@@ -1,13 +1,18 @@
 # Project State
 
-Last updated: 2026-06-04 (Iteration 102)
+Last updated: 2026-06-05 (Iteration 103)
 
 ## Metrics
-- Total Iterations: 102
+- Total Iterations: 103
 - Tasks Completed: 256+
-- Coverage: ~61.9% statements (branches 55.0%, functions 62.4%, lines 62.7%)
+- Coverage: ~63.4% statements (branches 56.1%, functions 63.4%, lines 64.3%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 103)
+
+- **Extension Loader unit tests:** Added 21 comprehensive unit tests for `src/extensions/loader.ts` covering `loadExtensionFromFactory`, `loadExtensions` (empty, errors, collisions, runtime sharing), `discoverAndLoadExtensions` (integration with file system), and indirect tests for `createExtensionAPI`. Achieved >80% coverage for the extension loader module. Also fixed test setup to guard `window` usage for Node environment.
+- Overall test suite: 1297 tests passing (1 todo), 100% pass rate. No regressions.
 
 ## Completed Features (Iteration 102)
 
