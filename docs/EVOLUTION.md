@@ -4,6 +4,20 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 107: Command-Handlers Missing Tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added 17 comprehensive unit tests covering previously untested slash commands: `export` (HTML file generation, content correctness, write errors), `import` (fd listing, session switching, cancellation, fd missing error), `share` (GitHub gist flow with token validation, fetch errors, copy errors), `paste` (image paste from clipboard via wl-paste/xclip with fallback and error handling). Mocked node built‑ins (`fs`, `child_process`, `path`, `os`) and `fetch` to isolate tests. Covered both happy and error paths.
+- **Rationale**: The `command-handlers.ts` module had significant coverage gaps (~54% statements) despite its central role. Testing these commands increases overall coverage and improves confidence in critical user‑facing features.
+- **Impact**: 1388 tests passing (+17 new). Coverage increased to 66.28% statements (+1.07%), 58.72% branches (+0.66%), 65.61% functions, 67.02% lines (+1.14%). No regressions.
+
+### Iteration 106: ScopedModelsHandler Extraction & Tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Extracted pure key‑handler logic from `ScopedModelsSelectorModal` into `scoped-models-handler.ts`. Added 26 comprehensive unit tests covering all branches: toggle, reorder, provider toggle, save, search, navigation, bulk enable/clear. Refactored modal to use the pure handler, increasing testability and coverage. Handles edge cases and aligns with utils semantics.
+- **Rationale**: Testing UI key handling directly is hard; extracting pure function enables thorough unit testing and improves code organization.
+- **Impact**: 1371 tests passing (+26 new). Coverage increased to 65.21% statements, 58.06% branches, 65.47% functions, 65.88% lines. No regressions.
+
 ### Iteration 105: ScopedModelsSelectorModal Component Tests & Bugfix
 
 - **Direction**: Testing & Coverage

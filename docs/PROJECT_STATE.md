@@ -1,17 +1,19 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 106)
+Last updated: 2026-06-05 (Iteration 107)
 
 ## Metrics
-- Total Iterations: 106
+- Total Iterations: 107
 - Tasks Completed: 256+
-- Coverage: ~65.2% statements (branches 58.1%, functions 65.5%, lines 65.9%)
+- Coverage: ~66.3% statements (branches 58.7%, functions 65.6%, lines 67.0%)
 - Build Success Rate: 100%
 - Zero regressions
 
-## Completed Features (Iteration 106)
+## Completed Features (Iteration 107)
 
-- **ScopedModelsHandler extraction & tests:** Extracted pure key‑handler logic from `ScopedModelsSelectorModal` into `scoped-models-handler.ts`. Wrote 26 comprehensive unit tests covering all branches: toggle, reorder, provider toggle, save, search, navigation, bulk enable/clear. Refactored modal to import and use the pure handler, improving testability and increasing coverage. Handles edge cases and aligns with utils semantics. Overall test suite: 1371 tests passing (1 todo, 5 skipped), 100% pass rate. Coverage increased to 65.21% statements, 58.06% branches, 65.47% functions, 65.88% lines. No regressions.
+- **command-handlers additional tests:** Added 17 unit tests covering previously untested slash commands: `export` (HTML file generation with proper content and error handling), `import` (fd listing, cancellation, fd missing error), `share` (GitHub gist creation with token validation, fetch errors, copy errors), `paste` (clipboard image paste via wl-paste/xclip with fallback and error handling). Mocked node built‑ins (`fs`, `child_process`, `path`, `os`) and `fetch` for isolation. Increased statement coverage by ~1% and branch coverage by ~0.7%. Overall test suite: 1388 passing (1 todo, 5 skipped), 100% pass rate. No regressions.
+
+## Completed Features (Iteration 106)
 
 ## Completed Features (Iteration 105)
 
