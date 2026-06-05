@@ -4,6 +4,13 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 112: Keybindings Unit Tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added 17 unit tests for `src/runtime/keybindings.ts` covering `KEYBINDINGS` constant, `KeybindingsManager` (get, setCustom, clearCustom, getAll), `createKeybindingsManager`, and `loadCustomKeybindings` (file exists, missing file, invalid JSON, partial custom file, read errors, empty content). Used temporary real filesystem to avoid complex mocks, resulting in robust, integration-style unit tests.
+- **Rationale**: `keybindings.ts` provides pure configuration and management logic that was completely untested. Testing this module yields solid coverage gains with minimal risk.
+- **Impact**: 1473 tests passing (+17 new). Coverage increased to ~67.8% statements (+0.6%), 60.0% branches (+0.3%), 66.9% functions (+0.6%), 68.6% lines (+0.6%). No regressions.
+
 ### Iteration 108: ModalRenderers Unit Tests & Missing Modals
 
 - **Direction**: Testing & Coverage + Feature Completion

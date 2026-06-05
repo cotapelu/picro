@@ -1,17 +1,25 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 111)
+Last updated: 2026-06-05 (Iteration 112)
 
 ## Metrics
-- Total Iterations: 110
-- Tasks Completed: 258+
-- Coverage: ~67.1% statements (branches 59.6%, functions 66.2%, lines 67.9%)
+- Total Iterations: 112
+- Tasks Completed: 259+
+- Coverage: ~67.8% statements (branches 60.0%, functions 66.9%, lines 68.6%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 112)
+
+- **keybindings unit tests:** Added 17 unit tests covering `KEYBINDINGS` const, `KeybindingsManager` (get/setCustom/clearCustom/getAll), `createKeybindingsManager`, and `loadCustomKeybindings` (file exists, missing file, invalid JSON, partial custom, read errors, empty content). Increased coverage for `src/runtime/keybindings.ts` significantly. Overall test suite: 1473 tests passing (+17 new), no regressions.
 
 ## Completed Features (Iteration 111)
 
 - **useModal unit tests:** Added 4 unit tests covering useModal hook behavior: initial null state, setting modal, closing modal, and multiple set calls. Increased coverage for `useModal` hook to 100%. Overall test suite: 1456 tests passing (+4 new), no regressions.
+
+## Completed Features (Iteration 110)
+
+- **useResourceInfo unit tests:** Added 7 unit tests covering hook behavior: initial counts zero, counting extensions/skills/prompts/themes from resource loader, toast display when not quiet, suppressed toast when quietStartup true, force option to show toast even when quiet, graceful handling of missing loader, and handling exceptions in loader methods. Increased coverage for `useResourceInfo` hook and improved hook test reliability. Overall test suite: 1459 tests passing, no regressions.
 
 ## Completed Features (Iteration 109)
 

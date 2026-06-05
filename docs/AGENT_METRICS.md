@@ -2,27 +2,28 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-05, Iteration 111)
+## Current Metrics (as of 2026-06-05, Iteration 112)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 111 |
+| Total Iterations | 112 |
 | Tasks Completed | 259+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1456/1456 tests, 1 todo, 5 skipped) |
-| Coverage (statements) | ~67.2% |
-| Coverage (branches) | ~59.7% |
-| Coverage (functions) | ~66.3% |
-| Coverage (lines) | ~68.0% |
+| Test Pass Rate | 100% (1473/1473 tests, 1 todo, 5 skipped) |
+| Coverage (statements) | ~67.8% |
+| Coverage (branches) | ~60.0% |
+| Coverage (functions) | ~66.9% |
+| Coverage (lines) | ~68.6% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2026-06-05 | 112 | 1 | ✅ | **keybindings unit tests:** Added 17 unit tests covering `KEYBINDINGS` const, `KeybindingsManager` (get/setCustom/clearCustom/getAll), `createKeybindingsManager`, and `loadCustomKeybindings` (file exists, missing file, invalid JSON, partial custom, read errors, empty content). Increased coverage for `src/runtime/keybindings.ts` significantly. Overall test suite: 1473 tests passing (+17 new), no regressions. |
 | 2026-06-05 | 111 | 1 | ✅ | **useModal unit tests:** Added 4 unit tests covering useModal hook behavior: initial null state, setting modal, closing modal, and multiple set calls. Increased coverage for `useModal` hook to 100%. Overall test suite: 1456 tests passing (+4 new), no regressions. |
 | 2026-06-05 | 110 | 1 | ✅ | **useResourceInfo unit tests:** Added 7 unit tests covering hook behavior: initial counts zero, resource loader counting (extensions, skills, prompts, themes), toast display when not quiet, suppressed toast when quietStartup true, force option to show toast even when quiet, handling missing loader, and exception handling. Increased coverage for `useResourceInfo` hook. All tests passing, no regressions. |
 | 2026-06-05 | 109 | 1 | ✅ | **Fixed failing AgentSessionRuntime tests:** Resolved 6 failing tests in `agent-session-runtime.extra.test.ts` by aligning implementation with reference. Updated `fork` to always call `getEntry`, added `setThinkingLevel` to mock, enhanced `SessionManager` mock with static methods, adjusted tests to check `SessionManager.open` instead of fs calls. Refactored `agent-session-runtime.ts` to use `fs` namespace. All 1445 tests passing, 100% pass rate, zero regressions. |
