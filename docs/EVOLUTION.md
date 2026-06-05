@@ -4,6 +4,13 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 116: useCommandRegistry Comprehensive Unit Tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added ~39 unit tests covering all built‑in slash commands and many error paths, including quit, thinking (valid/invalid), help, copy variants, paste, new, settings, resume, model, scoped‑models, tree, session info, changelog, hotkeys, armin, earendil, name, share (empty/token/API error/success), logout (success/error), compact (with args/unsupported), reload (success/error), clone (empty/fork), fork selector, stats (available/disabled). Mocks for `node:child_process`, `node:fs`, `fetch`, and runtime enable isolated testing.
+- **Rationale**: `useCommandRegistry` is the central hub for slash command handling. Previously untested, this large set of tests ensures correct behavior for all major user‑facing commands and improves overall test coverage.
+- **Impact**: Overall test suite: 1549 tests passing (+28 new). Coverage increased to ~68.6% statements (+0.4%), 60.4% branches (+0.3%), 67.6% functions (+0.3%), 69.3% lines (+0.2%). No regressions.
+
 ### Iteration 115: useVersionCheck Unit Tests
 
 - **Direction**: Testing & Coverage

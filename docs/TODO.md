@@ -484,7 +484,7 @@
 
 **Tasks**:
 1. **Unit tests**
-   - Hooks: ✅ `useEditorState`, ✅ `useAppActions`, ✅ `useResourceInfo`, `useExtensionUIState`, ✅ `useVersionCheck`
+   - Hooks: ✅ `useEditorState`, ✅ `useAppActions`, ✅ `useResourceInfo`, ✅ `useCommandRegistry`, `useExtensionUIState`, ✅ `useVersionCheck`
    - Utilities: `message-converter`, `output-guards`, `clipboard-image` (mock)
    - Command handlers: all slash commands
    - `FooterDataProvider` unit tests

@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 115)
+Last updated: 2026-06-05 (Iteration 116)
 
 ## Metrics
-- Total Iterations: 115
-- Tasks Completed: 262+
-- Coverage: ~68.2% statements (branches 60.1%, functions 67.3%, lines 69.1%)
+- Total Iterations: 116
+- Tasks Completed: 263+
+- Coverage: ~68.6% statements (branches 60.4%, functions 67.6%, lines 69.3%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 116)
+
+- **useCommandRegistry unit tests:** Added ~39 unit tests covering all built‑in slash commands and error conditions (quit, thinking, help, copy all/last/error/no assistant, new confirmation, settings, paste success/failure, resume, model, scoped‑models, tree, session info, changelog, hotkeys, armin, earendil, name editor, share scenarios, logout, compact, reload, clone, fork, stats). Increased coverage for `useCommandRegistry` hook significantly. Overall test suite: 1549 tests passing (+28 new), no regressions.
 
 ## Completed Features (Iteration 115)
 

@@ -2,26 +2,27 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-05, Iteration 115)
+## Current Metrics (as of 2026-06-05, Iteration 116)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 115 |
-| Tasks Completed | 262+ |
+| Total Iterations | 116 |
+| Tasks Completed | 263+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1510/1510 tests, 1 todo, 5 skipped) |
-| Coverage (statements) | ~68.2% |
-| Coverage (branches) | ~60.1% |
-| Coverage (functions) | ~67.3% |
-| Coverage (lines) | ~69.1% |
+| Test Pass Rate | 100% (1549/1549 tests, 1 todo, 5 skipped) |
+| Coverage (statements) | ~68.6% |
+| Coverage (branches) | ~60.4% |
+| Coverage (functions) | ~67.6% |
+| Coverage (lines) | ~69.3% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
+| 2026-06-05 | 116 | 1 | ✅ | **useCommandRegistry unit tests:** Added ~39 unit tests covering all built‑in slash commands and error conditions (quit, thinking, help, copy all/last/error/no assistant, new confirmation, settings, paste success/failure, resume, model, scoped‑models, tree, session info, changelog, hotkeys, armin, earendil, name editor, share scenarios, logout, compact, reload, clone, fork, stats). Increased coverage for `useCommandRegistry` hook significantly. Overall test suite: 1549 tests passing (+28 new), no regressions. |
 |------|-----------|-------|--------------|-------|
 | 2026-06-05 | 115 | 1 | ✅ | **useVersionCheck unit tests:** Added 6 unit tests covering hook behavior: fetch newer version prompt (toast + changelog modal), current version matches latest (no toast), non‑OK response (no toast), network error (silent), openModal optional (not called when omitted), timeout handling. Increased coverage for `useVersionCheck` hook. Overall test suite: 1510 tests passing (+6 new), no regressions.
 | 2026-06-05 | 114 | 1 | ✅ | **useAppActions unit tests:** Added 18 unit tests covering all callbacks: command palette, thinking, theme toggle, tool output toggle, thinking block toggle, login, session selector, debug log generation (success, error, content), external editor (success, error), paste image (no image, error), slash command, and tab. Increased coverage for `useAppActions` hook. Overall test suite: 1504 tests passing (+18 new), no regressions. |
