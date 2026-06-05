@@ -178,6 +178,13 @@ export const ModalRenderers: React.FC<ModalRenderersProps> = ({
         </Modal>
       );
 
+    case 'help':
+      return (
+        <Modal onClose={onClose}>
+          <HelpModal onClose={onClose} />
+        </Modal>
+      );
+
     case 'tree-selector':
       return (
         <Modal onClose={onClose}>
@@ -331,6 +338,13 @@ export const ModalRenderers: React.FC<ModalRenderersProps> = ({
           <Box justifyContent="center" alignItems="center" flexDirection="column">
             <Text bold color="yellow">DEMENTED ELVES HAVE EMERGED</Text>
           </Box>
+        </Modal>
+      );
+
+    case 'custom':
+      return (
+        <Modal onClose={onClose}>
+          {activeModal.factory ? activeModal.factory() : null}
         </Modal>
       );
 
