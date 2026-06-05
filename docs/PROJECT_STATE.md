@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 110)
+Last updated: 2026-06-05 (Iteration 111)
 
 ## Metrics
 - Total Iterations: 110
@@ -8,6 +8,10 @@ Last updated: 2026-06-05 (Iteration 110)
 - Coverage: ~67.1% statements (branches 59.6%, functions 66.2%, lines 67.9%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 111)
+
+- **useModal unit tests:** Added 4 unit tests covering useModal hook behavior: initial null state, setting modal, closing modal, and multiple set calls. Increased coverage for `useModal` hook to 100%. Overall test suite: 1456 tests passing (+4 new), no regressions.
 
 ## Completed Features (Iteration 109)
 

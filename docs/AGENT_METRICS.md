@@ -2,27 +2,28 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-05, Iteration 110)
+## Current Metrics (as of 2026-06-05, Iteration 111)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 110 |
-| Tasks Completed | 258+ |
+| Total Iterations | 111 |
+| Tasks Completed | 259+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1452/1452 tests, 1 todo, 5 skipped) |
-| Coverage (statements) | ~67.1% |
-| Coverage (branches) | ~59.6% |
-| Coverage (functions) | ~66.2% |
-| Coverage (lines) | ~67.9% |
+| Test Pass Rate | 100% (1456/1456 tests, 1 todo, 5 skipped) |
+| Coverage (statements) | ~67.2% |
+| Coverage (branches) | ~59.7% |
+| Coverage (functions) | ~66.3% |
+| Coverage (lines) | ~68.0% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2026-06-05 | 111 | 1 | ✅ | **useModal unit tests:** Added 4 unit tests covering useModal hook behavior: initial null state, setting modal, closing modal, and multiple set calls. Increased coverage for `useModal` hook to 100%. Overall test suite: 1456 tests passing (+4 new), no regressions. |
 | 2026-06-05 | 110 | 1 | ✅ | **useResourceInfo unit tests:** Added 7 unit tests covering hook behavior: initial counts zero, resource loader counting (extensions, skills, prompts, themes), toast display when not quiet, suppressed toast when quietStartup true, force option to show toast even when quiet, handling missing loader, and exception handling. Increased coverage for `useResourceInfo` hook. All tests passing, no regressions. |
 | 2026-06-05 | 109 | 1 | ✅ | **Fixed failing AgentSessionRuntime tests:** Resolved 6 failing tests in `agent-session-runtime.extra.test.ts` by aligning implementation with reference. Updated `fork` to always call `getEntry`, added `setThinkingLevel` to mock, enhanced `SessionManager` mock with static methods, adjusted tests to check `SessionManager.open` instead of fs calls. Refactored `agent-session-runtime.ts` to use `fs` namespace. All 1445 tests passing, 100% pass rate, zero regressions. |
 | 2026-06-05 | 108 | 1 | ✅ | **modal-renderers unit tests & missing modals:** Added 24 unit tests covering all modal branches in `ModalRenderers`. Implemented previously missing `'help'` and `'custom'` modal cases to align with `ModalState` type and fix broken `/help` functionality. Fixed command-palette test with proper runtime mocks. Added default case test. Coverage increased: statements +0.46% to 66.74%, branches +0.56% to 59.28%, functions +0.22%, lines +0.49%. Overall test suite: 1412 passing, no regressions. |
