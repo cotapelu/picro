@@ -14,7 +14,7 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - ✅ Comprehensive slash commands (export, import, share, name, tree, reload, compact, session, etc.)
 - ✅ Startup experience (resource counts, version check, auth warnings, graceful shutdown)
 - ✅ Git integration (branch, dirty, ahead/behind)
-- ✅ Comprehensive test suites: useRuntime (93%), output-guard (91%), convert-to-llm (100%), session-manager (81%), Footer (84%), ToolExecution (9), AgentSessionRuntime (7), branch-summarization (13), wrapper (4), runner (8), api-registry (7), overflow (11), stream-buffer (19), prompt-templates (19), agent-session-resume (1), model-registry (16), auth-guidance (5), settings-validator (28), openai-compatible (19), settings-manager (17)
+- ✅ Comprehensive test suites: useRuntime (93%), output-guard (91%), convert-to-llm (100%), session-manager (81%), Footer (84%), ToolExecution (9), AgentSessionRuntime (7), branch-summarization (13), wrapper (4), runner (8), api-registry (7), overflow (11), stream-buffer (19), prompt-templates (19), agent-session-resume (1), model-registry (16), auth-guidance (5), settings-validator (28), openai-compatible (19), settings-manager (17), extension-loader (21), scoped-models-utils (38)
 - ✅ New modal tests: CommandPalette, SelectModal, SettingsSelectorModal (11), ModelSelectorModal (5), SessionSelectorModal, BashOutputModal, LoginModal
 - ✅ Integration tests: InkApp streaming, tool calls, retry UI (3 new tests)
 - ✅ Utility modules: telemetry (8 advanced), performance-tracker (8), auth-storage (28)
@@ -33,9 +33,10 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 
 ## Weaknesses / Areas for Improvement
 - ⚠️ InkApp.tsx still large (~1500 lines) - needs systematic decomposition into smaller hooks
-- ⚠️ Overall test coverage 60.36% - still need to reach 80% target
-- ⚠️ Branch coverage 53.11% - focus on conditional logic tests
-- ⚠️ Extension loader module (0% coverage) and ScopedModelsSelectorModal (~14%) remain low coverage targets
+- ⚠️ Overall test coverage ~63.9% - still need to reach 80% target
+- ⚠️ Branch coverage ~56.7% - focus on conditional logic tests
+- ⚠️ ScopedModelsSelectorModal component coverage remains low; utils extracted and tested, but modal integration needs tests
+- ⚠️ Some low-coverage modules: command-handlers branch coverage, resource-loader interactions
 
 ## Tasks That Often Fail
 - N/A (84 iterations, 200+ tasks completed with high success rate)
@@ -50,7 +51,7 @@ Self-assessment of agent capabilities, weaknesses, and patterns.
 - **Branch coverage improvement**: Target conditional-heavy modules (useRuntime, modals)
 - **Low-coverage modules**: Address extensions/loader and runner, InputBox interactions
 
-## Final Notes (2026-06-04, Iteration 102)
+## Final Notes (2026-06-05, Iteration 104)
 
 The Picro TUI is **feature-complete** and **production-ready** with:
 - 21+ slash commands (including arminsayshi, dementedelves)
@@ -58,10 +59,10 @@ The Picro TUI is **feature-complete** and **production-ready** with:
 - Full extension support
 - Git integration
 - Comprehensive stats
-- 1224 passing tests (1 todo)
-- Strong module coverage: useRuntime (93%), output-guard (91%), convert-to-llm (100%), session-manager (81%), Footer (84%), ToolExecution (9), AgentSessionRuntime (7), branch-summarization (13), wrapper (4), runner (8), api-registry (7), overflow (11), stream-buffer (19), prompt-templates (19), agent-session-resume (1), model-registry (16), auth-guidance (5), settings-validator (28), openai-compatible (19), settings-manager (17), telemetry expanded, InkApp integration tests
-- 1260 passing tests (1 todo)
-- Overall coverage 61.86% statements, 54.96% branches, 62.42% functions, 62.74% lines
-- Zero regressions over 102 iterations, 256+ tasks
+- 1335 passing tests (1 todo)
+- Strong module coverage: useRuntime (93%), output-guard (91%), convert-to-llm (100%), session-manager (81%), Footer (84%), ToolExecution (9), AgentSessionRuntime (7), branch-summarization (13), wrapper (4), runner (8), api-registry (7), overflow (11), stream-buffer (19), prompt-templates (19), agent-session-resume (1), model-registry (16), auth-guidance (5), settings-validator (28), openai-compatible (19), settings-manager (17), extension-loader (21), scoped-models-utils (38), telemetry expanded, InkApp integration tests
+- Overall coverage 63.93% statements, 56.66% branches, 64.02% functions, 64.73% lines
+- Zero regressions over 104 iterations, 256+ tasks
 
-**Evolution Status**: Continuous loop mode active. Next major milestone: 80% overall coverage. Focus: branch coverage, extension loader (0% coverage), ScopedModelsSelectorModal (~14%), session-manager edge cases, decompose InkApp into smaller hooks, expand integration tests for extension UI and tree navigation.
+**Evolution Status**: Continuous loop mode active. Next major milestone: 80% overall coverage. Focus: branch coverage, ScopedModelsSelectorModal component integration, command-handlers remaining edge cases, InkApp decomposition, expand integration tests for extension UI and tree navigation.
+
