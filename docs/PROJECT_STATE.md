@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 112)
+Last updated: 2026-06-05 (Iteration 113)
 
 ## Metrics
-- Total Iterations: 112
-- Tasks Completed: 259+
-- Coverage: ~67.8% statements (branches 60.0%, functions 66.9%, lines 68.6%)
+- Total Iterations: 113
+- Tasks Completed: 260+
+- Coverage: ~67.9% statements (branches 60.0%, functions 66.9%, lines 68.7%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 113)
+
+- **useEditorState unit tests:** Added 13 unit tests covering React hook behavior: initial state, input updates, early returns (empty), message submission (regular, trim), error handling reset, bash mode (!cmd, !!cmd, errors), slash command handling (including errors), and double Ctrl+C detection (shutdown vs clear). Increased coverage for `useEditorState` hook. Overall test suite: 1486 tests passing (+13 new), no regressions.
 
 ## Completed Features (Iteration 112)
 

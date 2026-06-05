@@ -4,6 +4,13 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 113: useEditorState Unit Tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added 13 unit tests for `src/tui/ink/hooks/useEditorState.test.tsx` covering React hook behavior: initial state, input updates, early returns (empty), message submission (regular, trim), error handling reset, bash mode (!cmd, !!cmd, errors), slash command handling (including errors), and double Ctrl+C detection (shutdown vs clear). Tests use fake timers to simulate precise timing for double-press detection and mock `node:child_process` for bash mode.
+- **Rationale**: `useEditorState` coordinates user input handling, including bash execution and slash commands. It had no direct tests. Adding tests improves coverage and ensures correctness of critical input flows.
+- **Impact**: 1486 tests passing (+13 new). Coverage increased to ~67.9% statements (+0.16%), 60.0% branches (+0.08%), 66.9% functions (+0.05%), 68.7% lines (+0.13%). No regressions.
+
 ### Iteration 112: Keybindings Unit Tests
 
 - **Direction**: Testing & Coverage

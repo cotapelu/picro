@@ -2,27 +2,28 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-05, Iteration 112)
+## Current Metrics (as of 2026-06-05, Iteration 113)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 112 |
-| Tasks Completed | 259+ |
+| Total Iterations | 113 |
+| Tasks Completed | 260+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1473/1473 tests, 1 todo, 5 skipped) |
-| Coverage (statements) | ~67.8% |
+| Test Pass Rate | 100% (1486/1486 tests, 1 todo, 5 skipped) |
+| Coverage (statements) | ~67.9% |
 | Coverage (branches) | ~60.0% |
 | Coverage (functions) | ~66.9% |
-| Coverage (lines) | ~68.6% |
+| Coverage (lines) | ~68.7% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2026-06-05 | 113 | 1 | ✅ | **useEditorState unit tests:** Added 13 unit tests covering React hook behavior: initial state, input updates, early returns (empty), message submission (regular, trim), error handling reset, bash mode (!cmd, !!cmd, errors), slash command handling (including errors), and double Ctrl+C detection (shutdown vs clear). Increased coverage for `useEditorState` hook. Overall test suite: 1486 tests passing (+13 new), no regressions. |
 | 2026-06-05 | 112 | 1 | ✅ | **keybindings unit tests:** Added 17 unit tests covering `KEYBINDINGS` const, `KeybindingsManager` (get/setCustom/clearCustom/getAll), `createKeybindingsManager`, and `loadCustomKeybindings` (file exists, missing file, invalid JSON, partial custom, read errors, empty content). Increased coverage for `src/runtime/keybindings.ts` significantly. Overall test suite: 1473 tests passing (+17 new), no regressions. |
 | 2026-06-05 | 111 | 1 | ✅ | **useModal unit tests:** Added 4 unit tests covering useModal hook behavior: initial null state, setting modal, closing modal, and multiple set calls. Increased coverage for `useModal` hook to 100%. Overall test suite: 1456 tests passing (+4 new), no regressions. |
 | 2026-06-05 | 110 | 1 | ✅ | **useResourceInfo unit tests:** Added 7 unit tests covering hook behavior: initial counts zero, resource loader counting (extensions, skills, prompts, themes), toast display when not quiet, suppressed toast when quietStartup true, force option to show toast even when quiet, handling missing loader, and exception handling. Increased coverage for `useResourceInfo` hook. All tests passing, no regressions. |
