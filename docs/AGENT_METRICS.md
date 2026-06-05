@@ -2,27 +2,28 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-05, Iteration 107)
+## Current Metrics (as of 2026-06-05, Iteration 108)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 107 |
+| Total Iterations | 108 |
 | Tasks Completed | 256+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1388/1388 tests, 1 todo, 5 skipped) |
-| Coverage (statements) | 66.28% |
-| Coverage (branches) | 58.72% |
-| Coverage (functions) | 65.61% |
-| Coverage (lines) | 67.02% |
+| Test Pass Rate | 100% (1412/1412 tests, 1 todo, 5 skipped) |
+| Coverage (statements) | 66.74% |
+| Coverage (branches) | 59.28% |
+| Coverage (functions) | 65.83% |
+| Coverage (lines) | 67.51% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2026-06-05 | 108 | 1 | ✅ | **modal-renderers unit tests & missing modals:** Added 24 unit tests covering all modal branches in `ModalRenderers`. Implemented previously missing `'help'` and `'custom'` modal cases to align with `ModalState` type and fix broken `/help` functionality. Fixed command-palette test with proper runtime mocks. Added default case test. Coverage increased: statements +0.46% to 66.74%, branches +0.56% to 59.28%, functions +0.22%, lines +0.49%. Overall test suite: 1412 passing, no regressions. |
 | 2026-06-05 | 107 | 1 | ✅ | **command-handlers missing tests:** Added 17 unit tests covering previously untested slash commands: `export` (HTML file generation), `import` (using fd, handling cancellation), `share` (GitHub gist flow with token, fetch, copy), `paste` (image paste from clipboard with wl-paste/xclip). Mocked node built‑ins (`fs`, `child_process`, `path`, `os`) and `fetch` for isolation. Covered success and error paths (file write errors, fd missing, API failures, clipboard errors). Increased statement coverage by ~1% and branch coverage by ~0.7%. Overall test suite: 1388 passing, no regressions. |
 | 2026-06-05 | 106 | 2 | ✅ | **ScopedModelsHandler extraction & tests:** Extracted pure key‑handler logic from `ScopedModelsSelectorModal` into `scoped-models-handler.ts`. Added 26 comprehensive unit tests covering all branches (toggle, reorder, provider, save, search, navigation, bulk ops). Refactored modal to use the pure handler, increasing testability and coverage. Overall test suite: 1371 tests passing (1 todo, 5 skipped), coverage increased to 65.21% statements, 58.06% branches, 65.47% functions, 65.88% lines. No regressions. |
 | 2026-06-05 | 105 | 2 | ✅ | **ScopedModelsSelectorModal component tests & bugfix:** Added 10 interaction unit tests covering handler registration, Escape, Ctrl+S/A/X, navigation (up/down), typing, backspace, and non-reorder cases. Fixed bug: reorder (Shift+Up/Down) now works by checking shift combos before plain navigation. Skipped 5 complex tests (Enter toggle, provider Ctrl+P, Shift+reorder) due to test environment timing; will revisit with improved testability. Overall test suite: 1345 tests passing, coverage increased to 64.82% statements (+0.89%), branches +0.95%. |

@@ -1,17 +1,19 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 107)
+Last updated: 2026-06-05 (Iteration 108)
 
 ## Metrics
-- Total Iterations: 107
+- Total Iterations: 108
 - Tasks Completed: 256+
-- Coverage: ~66.3% statements (branches 58.7%, functions 65.6%, lines 67.0%)
+- Coverage: ~66.7% statements (branches 59.3%, functions 65.8%, lines 67.5%)
 - Build Success Rate: 100%
 - Zero regressions
 
-## Completed Features (Iteration 107)
+## Completed Features (Iteration 108)
 
-- **command-handlers additional tests:** Added 17 unit tests covering previously untested slash commands: `export` (HTML file generation with proper content and error handling), `import` (fd listing, cancellation, fd missing error), `share` (GitHub gist creation with token validation, fetch errors, copy errors), `paste` (clipboard image paste via wl-paste/xclip with fallback and error handling). Mocked node built‑ins (`fs`, `child_process`, `path`, `os`) and `fetch` for isolation. Increased statement coverage by ~1% and branch coverage by ~0.7%. Overall test suite: 1388 passing (1 todo, 5 skipped), 100% pass rate. No regressions.
+- **modal-renderers unit tests & missing modals:** Added 24 unit tests covering all modal branches in `ModalRenderers`, including tests for each implemented modal type (command-palette, thinking, login, session-selector, confirmation, settings, model-selector, scoped-models, user-message-selector, session-info, changelog, hotkeys, tree-selector, bash-output, input, select, stats, armin, earendil, editor). Implemented previously missing `'help'` modal (rendering `HelpModal`) and `'custom'` modal (factory rendering), aligning with declared `ModalState` type and fixing broken `/help` functionality. Added default case test for unknown types. Coverage increased to 66.74% statements (+0.46%), 59.28% branches (+0.56%), 65.83% functions, 67.51% lines. Overall test suite: 1412 passing, no regressions.
+
+## Completed Features (Iteration 107)
 
 ## Completed Features (Iteration 106)
 

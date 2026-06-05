@@ -4,6 +4,13 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 108: ModalRenderers Unit Tests & Missing Modals
+
+- **Direction**: Testing & Coverage + Feature Completion
+- **Change**: Added 24 unit tests covering all modal branches in `ModalRenderers`. Implemented previously missing `'help'` modal (renders `HelpModal`) and `'custom'` modal (factory renderer), aligning with the declared `ModalState` type and fixing broken `/help` functionality. Provided proper mocks for command-palette test to cover its branch without errors. Added default case test for unknown modal types. Increased coverage of `modal-renderers.tsx` from ~1% to near 100% of switch branches.
+- **Rationale**: `ModalRenderers` is central to UI rendering; its switch statement had gaps (help/custom unimplemented) and almost no test coverage. Adding tests not only improves metrics but also ensures all modal types work correctly. Implementing missing modals completes user-facing features like `/help`.
+- **Impact**: 1412 tests passing (+24 new). Coverage increased to 66.74% statements (+0.46%), 59.28% branches (+0.56%), 65.83% functions, 67.51% lines (+0.49%). No regressions. Added ~162 lines of test and implementation.
+
 ### Iteration 107: Command-Handlers Missing Tests
 
 - **Direction**: Testing & Coverage
