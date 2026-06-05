@@ -4,6 +4,13 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 115: useVersionCheck Unit Tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added 6 unit tests for `src/tui/ink/hooks/useVersionCheck.test.tsx` covering hook behavior under various conditions: newer version available shows toast and opens changelog, current version matches latest (no action), non‑OK response, network error, optional openModal omitted, and timeout handling. Mocks for `fetch` and `../../config.js` ensure isolated testing.
+- **Rationale**: `useVersionCheck` pings npm registry to notify users of updates; ensuring its correctness improves user experience with minimal risk.
+- **Impact**: Overall test suite: 1510 tests passing (+6 new). Coverage increased slightly to ~68.2% statements, 60.1% branches, 67.3% functions, 69.1% lines. No regressions.
+
 ### Iteration 114: useAppActions Unit Tests
 
 - **Direction**: Testing & Coverage

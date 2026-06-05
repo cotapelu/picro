@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 114)
+Last updated: 2026-06-05 (Iteration 115)
 
 ## Metrics
-- Total Iterations: 114
-- Tasks Completed: 261+
-- Coverage: ~68.2% statements (branches 60.0%, functions 67.3%, lines 69.0%)
+- Total Iterations: 115
+- Tasks Completed: 262+
+- Coverage: ~68.2% statements (branches 60.1%, functions 67.3%, lines 69.1%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 115)
+
+- **useVersionCheck unit tests:** Added 6 unit tests covering hook behavior: fetch newer version prompt (toast + changelog modal), current version matches latest (no toast), non‑OK response (no toast), network error (silent), openModal optional (not called when omitted), timeout handling. Increased coverage for `useVersionCheck` hook. Overall test suite: 1510 tests passing (+6 new), no regressions.
 
 ## Completed Features (Iteration 114)
 

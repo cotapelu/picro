@@ -2,27 +2,28 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-05, Iteration 114)
+## Current Metrics (as of 2026-06-05, Iteration 115)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 114 |
-| Tasks Completed | 261+ |
+| Total Iterations | 115 |
+| Tasks Completed | 262+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1504/1504 tests, 1 todo, 5 skipped) |
+| Test Pass Rate | 100% (1510/1510 tests, 1 todo, 5 skipped) |
 | Coverage (statements) | ~68.2% |
-| Coverage (branches) | ~60.0% |
+| Coverage (branches) | ~60.1% |
 | Coverage (functions) | ~67.3% |
-| Coverage (lines) | ~69.0% |
+| Coverage (lines) | ~69.1% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
 |------|-----------|-------|--------------|-------|
+| 2026-06-05 | 115 | 1 | ✅ | **useVersionCheck unit tests:** Added 6 unit tests covering hook behavior: fetch newer version prompt (toast + changelog modal), current version matches latest (no toast), non‑OK response (no toast), network error (silent), openModal optional (not called when omitted), timeout handling. Increased coverage for `useVersionCheck` hook. Overall test suite: 1510 tests passing (+6 new), no regressions.
 | 2026-06-05 | 114 | 1 | ✅ | **useAppActions unit tests:** Added 18 unit tests covering all callbacks: command palette, thinking, theme toggle, tool output toggle, thinking block toggle, login, session selector, debug log generation (success, error, content), external editor (success, error), paste image (no image, error), slash command, and tab. Increased coverage for `useAppActions` hook. Overall test suite: 1504 tests passing (+18 new), no regressions. |
 | 2026-06-05 | 113 | 1 | ✅ | **useEditorState unit tests:** Added 13 unit tests covering React hook behavior: initial state, input updates, early returns (empty), message submission (regular, trim), error handling reset, bash mode (!cmd, !!cmd, errors), slash command handling (including errors), and double Ctrl+C detection (shutdown vs clear). Increased coverage for `useEditorState` hook. Overall test suite: 1486 tests passing (+13 new), no regressions. |
 | 2026-06-05 | 112 | 1 | ✅ | **keybindings unit tests:** Added 17 unit tests covering `KEYBINDINGS` const, `KeybindingsManager` (get/setCustom/clearCustom/getAll), `createKeybindingsManager`, and `loadCustomKeybindings` (file exists, missing file, invalid JSON, partial custom, read errors, empty content). Increased coverage for `src/runtime/keybindings.ts` significantly. Overall test suite: 1473 tests passing (+17 new), no regressions. |
