@@ -126,6 +126,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const [toasts, setToasts] = React.useState<Array<{ id: number; message: string; type: 'info' | 'success' | 'error' }>>([]);
   const toastIdRef = React.useRef(0);
   const lastCtrlCTimeRef = React.useRef<number>(0);
+  const lastEscapeTimeRef = React.useRef<number>(0);
   const [modelRefresh, setModelRefresh] = React.useState(0); // used to trigger footer re-render on model change
 
   // Close command palette if slash removed
@@ -945,14 +946,39 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     onEscape: () => {
       if (retryEscapeHandler) {
         retryEscapeHandler();
-      } else if (autoCompactionEscapeHandler) {
+        return;
+      }
+      if (autoCompactionEscapeHandler) {
         autoCompactionEscapeHandler();
-      } else {
-        if (activeModal) {
-          setActiveModal(null);
-        } else {
-          setInputValue('');
+        return;
+      }
+      if (activeModal) {
+        setActiveModal(null);
+        return;
+      }
+
+      // If editor has text, clear it
+      const text = inputValue.trim();
+      if (text) {
+        setInputValue('');
+        return;
+      }
+
+      // Empty editor: double-escape detection for tree/fork
+      const now = Date.now();
+      const lastTime = lastEscapeTimeRef.current;
+      if (now - lastTime < 500) {
+        // Double-escape triggered
+        lastEscapeTimeRef.current = 0;
+        const action = runtime.session.settingsManager?.getDoubleEscapeAction?.() ?? 'tree';
+        if (action === 'tree') {
+          setActiveModal({ type: 'tree-selector' });
+        } else if (action === 'fork') {
+          setActiveModal({ type: 'user-message-selector' });
         }
+      } else {
+        // First escape, record time for potential double-tap
+        lastEscapeTimeRef.current = now;
       }
     },
   };  // Signal handlers for graceful shutdown
