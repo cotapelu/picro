@@ -24,7 +24,7 @@ export function useExtensionUIState(runtime: AgentSessionRuntimeInterface): UseE
   const [extensionWidgetsAbove, setExtensionWidgetsAbove] = useState<Map<string, string>>(new Map());
   const [extensionWidgetsBelow, setExtensionWidgetsBelow] = useState<Map<string, string>>(new Map());
   const [customEditor, setCustomEditor] = useState<React.ComponentType<any> | null>(null);
-  const [autocompleteProviderFactories, setAutocompleteProviderFactories] = useState<Array<(ctx: any) => Promise<Array<{label: string; description?: string; insertText?: string}>>>([]);
+  const [autocompleteProviderFactories, setAutocompleteProviderFactories] = useState<AutocompleteProviderFactories>([]);
 
   const extensionShortcutsRef = useRef<Map<string, (input: string, key: any) => boolean | void>>(new Map());
 

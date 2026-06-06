@@ -4,6 +4,13 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 117: Double-Escape & Hook Unit Tests
+
+- **Direction**: Testing & Coverage + Feature
+- **Change**: Implemented double‑tap Escape detection to open tree selector or fork selector based on runtime setting `doubleEscapeAction`. Added comprehensive unit tests for `useTheme` hook (4 tests, >90% coverage) and `useExtensionUIState` hook (14 tests, >97% coverage). Refactored `useExtensionUIState` with type alias for clarity.
+- **Rationale**: Double‑escape improves user workflow for navigating sessions. Testing core hooks significantly increases coverage and reliability of the UI layer.
+- **Impact**: Overall test suite: 1578 tests passing (+29 new). Coverage increased to 69.01% statements (+0.41%), 60.49% branches (+0.09%), 67.99% functions (+0.39%), 69.81% lines (+0.51%). No regressions.
+
 ### Iteration 116: useCommandRegistry Comprehensive Unit Tests
 
 - **Direction**: Testing & Coverage

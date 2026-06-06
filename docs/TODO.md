@@ -62,7 +62,7 @@
 | **E. Commands** | | |
 | Slash commands (handlers) | Có `command-handlers.ts` | Hoàn thiện tất cả: `/export`, `/import`, `/share`, `/name`, `/session` (stats), `/clone` (fork), `/tree` (show selector), `/resume` (session selector), `/compact` (session.compact), `/reload` (settings reload), `/debug` (OK), `/arminsayshi` (OK), `/dementedelves` (OK) |
 | Bash commands (!, !!) | Có trong handleSubmit | OK |
-| Double-tap Escape | Chưa có | Implement: `/tree` hoặc `/fork` dựa vào setting `doubleEscapeAction` |
+| Double-tap Escape | Có | Implement: `/tree` hoặc `/fork` dựa vào setting `doubleEscapeAction` |
 | **F. UX Features** | | |
 | Compaction queue | Chưa có | Implement `compactionQueuedMessages`, `queueCompactionMessage`, `flushCompactionQueue`, `restoreQueuedMessagesToEditor` |
 | Retry countdown | Có nhưng hardcoded | Lấy delay từ session/retry config |
@@ -96,7 +96,7 @@
 | Truncation utilities | Có | OK |
 | Output guards | Có | OK |
 | **J. Tests** | | |
-| Unit tests for hooks | Một số | Thêm测试 cho tất cả custom hooks |
+| Unit tests for hooks | Có | Thêm测试 cho tất cả custom hooks |
 | Integration tests (Ink) | Đang có | Thêm tests cho các luồng phức tạp: compaction, retry, extension UI, modals |
 | **A. Core Architecture** |
 | State management | React useState | Thêm đầy đủ state: streamingComponent, streamingMessage, pendingTools, compactionQueuedMessages, autoCompactionLoader, retryLoader, retryCountdown, extension widgets, custom header/footer, etc. |
@@ -143,7 +143,7 @@
 | **E. Commands** |
 | Slash commands (handlers) | Có `command-handlers.ts` | Hoàn thiện tất cả: `/export`, `/import`, `/share`, `/name`, `/session` (stats), `/clone` (fork), `/tree` (show selector), `/resume` (session selector), `/compact` (session.compact), `/reload` (settings reload), `/debug` (OK), `/arminsayshi` (OK), `/dementedelves` (OK) |
 | Bash commands (!, !!) | Có trong handleSubmit | OK |
-| Double-tap Escape | Chưa có | Implement: `/tree` hoặc `/fork` dựa vào setting `doubleEscapeAction` |
+| Double-tap Escape | Có | Implement: `/tree` hoặc `/fork` dựa vào setting `doubleEscapeAction` |
 | **F. UX Features** |
 | Compaction queue | Chưa có | Implement `compactionQueuedMessages`, `queueCompactionMessage`, `flushCompactionQueue`, `restoreQueuedMessagesToEditor` |
 | Retry countdown | Có nhưng hardcoded | Lấy delay từ session/retry config |
@@ -177,7 +177,7 @@
 | Truncation utilities | Có | OK |
 | Output guards | Có | OK |
 | **J. Tests** |
-| Unit tests for hooks | Một số | Thêm测试 cho tất cả custom hooks |
+| Unit tests for hooks | Có | Thêm测试 cho tất cả custom hooks |
 | Integration tests (Ink) | Đang có | Thêm tests cho các luồng phức tạp: compaction, retry, extension UI, modals |
 | Component tests | Đang có | Hoàn thiện tin cho AssistantMessage, ToolExecution (expanded), etc. |
 
@@ -484,7 +484,7 @@
 
 **Tasks**:
 1. **Unit tests**
-   - Hooks: ✅ `useEditorState`, ✅ `useAppActions`, ✅ `useResourceInfo`, ✅ `useCommandRegistry`, `useExtensionUIState`, ✅ `useVersionCheck`
+   - Hooks: ✅ `useEditorState`, ✅ `useAppActions`, ✅ `useResourceInfo`, ✅ `useCommandRegistry`, ✅ `useExtensionUIState`, ✅ `useTheme`, ✅ `useVersionCheck`
    - Utilities: `message-converter`, `output-guards`, `clipboard-image` (mock)
    - Command handlers: all slash commands
    - `FooterDataProvider` unit tests

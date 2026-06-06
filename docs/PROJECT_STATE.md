@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-06-05 (Iteration 116)
+Last updated: 2026-06-06 (Iteration 117)
 
 ## Metrics
 - Total Iterations: 116
@@ -195,6 +195,10 @@ Last updated: 2026-06-05 (Iteration 116)
 
 ## Completed Features (Iteration 74)
 - **Truncate edge case test**: Added test for maxLines=0 in truncateLines.
+
+## Completed Features (Iteration 117)
+
+- **Double-escape feature & hook unit tests:** Implemented double‑tap Escape detection to open tree selector or fork selector based on runtime setting `doubleEscapeAction`. Added comprehensive unit tests for `useTheme` hook (4 tests, >90% coverage) and `useExtensionUIState` hook (14 tests, >97% coverage). Refactored `useExtensionUIState` with type alias for clarity. Overall test suite: 1578 tests passing (+29 new), no regressions. Coverage increased to 69.01% statements (+0.41%), 60.49% branches (+0.09%), 67.99% functions (+0.39%), 69.81% lines (+0.51%).
 
 ## Current Priorities
 1. Maintain >60% coverage and 100% test pass rate.

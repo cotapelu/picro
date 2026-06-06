@@ -2,28 +2,29 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-05, Iteration 116)
+## Current Metrics (as of 2026-06-06, Iteration 117)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 116 |
-| Tasks Completed | 263+ |
+| Total Iterations | 117 |
+| Tasks Completed | 265+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1549/1549 tests, 1 todo, 5 skipped) |
-| Coverage (statements) | ~68.6% |
-| Coverage (branches) | ~60.4% |
-| Coverage (functions) | ~67.6% |
-| Coverage (lines) | ~69.3% |
+| Test Pass Rate | 100% (1578/1578 tests, 1 todo, 14 skipped) |
+| Coverage (statements) | ~69.0% |
+| Coverage (branches) | ~60.5% |
+| Coverage (functions) | ~68.0% |
+| Coverage (lines) | ~69.8% |
 
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
-| 2026-06-05 | 116 | 1 | ✅ | **useCommandRegistry unit tests:** Added ~39 unit tests covering all built‑in slash commands and error conditions (quit, thinking, help, copy all/last/error/no assistant, new confirmation, settings, paste success/failure, resume, model, scoped‑models, tree, session info, changelog, hotkeys, armin, earendil, name editor, share scenarios, logout, compact, reload, clone, fork, stats). Increased coverage for `useCommandRegistry` hook significantly. Overall test suite: 1549 tests passing (+28 new), no regressions. |
+| 2026-06-06 | 117 | 2 | ✅ | **Double-escape feature & hook unit tests:** Implemented double‑tap Escape detection to open tree selector or fork selector based on runtime setting `doubleEscapeAction`. Added comprehensive unit tests for `useTheme` hook (4 tests, >90% coverage) and `useExtensionUIState` hook (14 tests, >97% coverage). Refactored `useExtensionUIState` with type alias for clarity. Overall test suite: 1578 tests passing (+29 new), no regressions. Coverage increased to 69.01% statements (+0.41%), 60.49% branches (+0.09%), 67.99% functions (+0.39%), 69.81% lines (+0.51%). |
 |------|-----------|-------|--------------|-------|
+| 2026-06-05 | 116 | 1 | ✅ | **useCommandRegistry unit tests:** Added ~39 unit tests covering all built‑in slash commands and error conditions (quit, thinking, help, copy all/last/error/no assistant, new confirmation, settings, paste success/failure, resume, model, scoped‑models, tree, session info, changelog, hotkeys, armin, earendil, name editor, share scenarios, logout, compact, reload, clone, fork, stats). Increased coverage for `useCommandRegistry` hook significantly. Overall test suite: 1549 tests passing (+28 new), no regressions. |
 | 2026-06-05 | 115 | 1 | ✅ | **useVersionCheck unit tests:** Added 6 unit tests covering hook behavior: fetch newer version prompt (toast + changelog modal), current version matches latest (no toast), non‑OK response (no toast), network error (silent), openModal optional (not called when omitted), timeout handling. Increased coverage for `useVersionCheck` hook. Overall test suite: 1510 tests passing (+6 new), no regressions.
 | 2026-06-05 | 114 | 1 | ✅ | **useAppActions unit tests:** Added 18 unit tests covering all callbacks: command palette, thinking, theme toggle, tool output toggle, thinking block toggle, login, session selector, debug log generation (success, error, content), external editor (success, error), paste image (no image, error), slash command, and tab. Increased coverage for `useAppActions` hook. Overall test suite: 1504 tests passing (+18 new), no regressions. |
 | 2026-06-05 | 113 | 1 | ✅ | **useEditorState unit tests:** Added 13 unit tests covering React hook behavior: initial state, input updates, early returns (empty), message submission (regular, trim), error handling reset, bash mode (!cmd, !!cmd, errors), slash command handling (including errors), and double Ctrl+C detection (shutdown vs clear). Increased coverage for `useEditorState` hook. Overall test suite: 1486 tests passing (+13 new), no regressions. |
