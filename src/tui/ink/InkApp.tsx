@@ -944,12 +944,17 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     onInterrupt,
     onDequeue: handleDequeue,
     onEscape: () => {
+      const session = runtime.session as any;
       if (retryEscapeHandler) {
         retryEscapeHandler();
         return;
       }
       if (autoCompactionEscapeHandler) {
         autoCompactionEscapeHandler();
+        return;
+      }
+      if (session.isBashRunning) {
+        session.abortBash();
         return;
       }
       if (activeModal) {

@@ -110,9 +110,9 @@ export interface SessionStats {
   };
   cost: number;
   contextUsage?: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
+    tokens: number;
+    contextWindow: number;
+    percent: number;
   };
 }
 

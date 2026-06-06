@@ -96,13 +96,17 @@ export function useInkApp(runtime: AgentSessionRuntimeInterface, runtimeDeps: an
       return 'insert';
     }
 
-    // Extract args
+    // Extract args - slashArgs may be full '/cmd args' or just 'args'
     let args = '';
     if (slashArgs) {
-      const withoutSlash = slashArgs.slice(1).trim();
-      const parts = withoutSlash.split(' ');
-      if (parts[0] === commandId) {
-        args = parts.slice(1).join(' ').trim();
+      if (slashArgs.startsWith('/')) {
+        const withoutSlash = slashArgs.slice(1).trim();
+        const parts = withoutSlash.split(' ');
+        if (parts[0] === commandId) {
+          args = parts.slice(1).join(' ').trim();
+        }
+      } else {
+        args = slashArgs.trim();
       }
     }
 
@@ -125,8 +129,9 @@ export function useInkApp(runtime: AgentSessionRuntimeInterface, runtimeDeps: an
         setActiveModal({ type: 'help' });
         break;
       case 'copy':
+        const sessionMessages = (runtime.session as any).messages || [];
         if (args === 'all') {
-          const conversation = messages.map((m: any) => {
+          const conversation = sessionMessages.map((m: any) => {
             const role = m.role === 'user' ? 'You' : m.role === 'assistant' ? 'Assistant' : 'Tool';
             return `${role}: ${m.content}`;
           }).join('\n\n');
@@ -137,7 +142,7 @@ export function useInkApp(runtime: AgentSessionRuntimeInterface, runtimeDeps: an
             addToast('Copy failed', 'error');
           }
         } else {
-          const lastAssistant = [...messages].reverse().find((m: any) => m.role === 'assistant');
+          const lastAssistant = [...sessionMessages].reverse().find((m: any) => m.role === 'assistant');
           if (lastAssistant) {
             try {
               await runtime.copyToClipboard(lastAssistant.content);

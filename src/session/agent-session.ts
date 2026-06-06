@@ -29,7 +29,7 @@ import type { ModelRegistry } from "./model-registry.js";
 
 // Backward compatible alias
 type ModelAny = ModelEntry;
-import type { SessionManager, CompactionEntry, BranchSummaryEntry } from "../session/session-manager.js";
+import type { SessionManager, CompactionEntry, BranchSummaryEntry, SessionTreeNode } from "../session/session-manager.js";
 import type { SettingsManager } from "../runtime/settings-manager.js";
 import type { ResourceLoader } from "../runtime/resource-loader.js";
 import {
@@ -64,6 +64,7 @@ export type {
 
 import { EventEmitter } from "../events/event-emitter.js";
 import type { AgentEvent } from "../agent/types.js";
+import type { SessionStats } from "./agent-session-types.js";
 
 // ============================================================================
 // Constants
@@ -1750,6 +1751,128 @@ export class AgentSession {
    */
   stopPerformanceTracking(): void {
     this._performanceTracker?.stop();
+  }
+
+  // =========================================================================
+  // Additional Interface Methods (for TUI compatibility)
+  // =========================================================================
+
+  get autoCompactionEnabled(): boolean {
+    return this.settingsManager.getCompactionEnabled();
+  }
+
+  setAutoCompactionEnabled(enabled: boolean): void {
+    this.settingsManager.setCompactionEnabled(enabled);
+  }
+
+  abortBranchSummary(): void {
+    this._branchSummaryAbortController?.abort();
+  }
+
+  getTree(): SessionTreeNode[] {
+    return this.sessionManager.getTree();
+  }
+
+  getLeafId(): string | null {
+    return this.sessionManager.getLeafId();
+  }
+
+  getUserMessagesForForking(): Array<{ entryId: string; text: string }> {
+    const entries = this.sessionManager.getEntries();
+    const result: Array<{ entryId: string; text: string }> = [];
+
+    for (const entry of entries) {
+      if (entry.type !== "message") continue;
+      if (entry.message.role !== "user") continue;
+      const text = this._extractUserMessageText(entry.message.content);
+      if (text) {
+        result.push({ entryId: entry.id, text });
+      }
+    }
+
+    return result;
+  }
+
+  private _extractUserMessageText(content: string | Array<{ type: string; text?: string }>): string {
+    if (typeof content === "string") return content;
+    if (Array.isArray(content)) {
+      return content
+        .filter((c): c is { type: "text"; text: string } => c.type === "text")
+        .map((c) => c.text)
+        .join("");
+    }
+    return "";
+  }
+
+  getLastAssistantText(): string | undefined {
+    const messages = this.messages.slice().reverse();
+    for (const msg of messages) {
+      if (msg.role !== "assistant") continue;
+      const assistantMsg = msg as any;
+      if (assistantMsg.stopReason === "aborted" && (!assistantMsg.content || assistantMsg.content.length === 0)) continue;
+      const contentBlocks = assistantMsg.content || [];
+      const text = contentBlocks
+        .filter((c: any) => c.type === "text")
+        .map((c: any) => c.text)
+        .join("");
+      if (text) return text.trim();
+    }
+    return undefined;
+  }
+
+  getSessionStats(): SessionStats {
+    const msgs = this.messages;
+    const userMessages = msgs.filter(m => m.role === "user").length;
+    const assistantMessages = msgs.filter(m => m.role === "assistant").length;
+    const toolResults = msgs.filter(m => m.role === "toolResult").length;
+
+    let toolCalls = 0;
+    let totalInput = 0;
+    let totalOutput = 0;
+    let totalCacheRead = 0;
+    let totalCacheWrite = 0;
+    let totalCost = 0;
+
+    for (const msg of msgs) {
+      if (msg.role === "assistant") {
+        toolCalls += (msg.content || []).filter((c: any) => c.type === "toolCall").length;
+        const usage = msg.usage || {};
+        totalInput += usage.input || 0;
+        totalOutput += usage.output || 0;
+        totalCacheRead += usage.cacheRead || 0;
+        totalCacheWrite += usage.cacheWrite || 0;
+        totalCost += usage.cost?.total || 0;
+      }
+    }
+
+    return {
+      sessionFile: this.sessionManager.getSessionFile(),
+      sessionId: this.sessionManager.getSessionId(),
+      userMessages,
+      assistantMessages,
+      toolCalls,
+      toolResults,
+      totalMessages: msgs.length,
+      tokens: {
+        input: totalInput,
+        output: totalOutput,
+        cacheRead: totalCacheRead,
+        cacheWrite: totalCacheWrite,
+        total: totalInput + totalOutput + totalCacheRead + totalCacheWrite,
+      },
+      cost: totalCost,
+      contextUsage: this.getContextUsage(),
+    };
+  }
+
+  getContextUsage(): { tokens: number; contextWindow: number; percent: number } | undefined {
+    const model = this._model;
+    if (!model) return undefined;
+    const contextWindow = model.contextWindow ?? 0;
+    if (contextWindow <= 0) return undefined;
+    const estimate = estimateContextUsage(this._agentState.history);
+    const percent = (estimate.tokens / contextWindow) * 100;
+    return { tokens: estimate.tokens, contextWindow, percent };
   }
 
 }

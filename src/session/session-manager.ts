@@ -764,6 +764,10 @@ export class SessionManager {
     return undefined;
   }
 
+  setSessionName(name: string): void {
+    this.appendSessionInfo(name);
+  }
+
   appendCustomMessageEntry<T>(
     customType: string,
     content: string | any[],
