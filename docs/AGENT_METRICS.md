@@ -2,7 +2,7 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-06, Iteration 118)
+## Current Metrics (as of 2026-06-06, Iteration 119)
 
 | Metric | Value |
 |--------|-------:|
@@ -22,6 +22,7 @@ Track agent performance and reliability across iterations.
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
+| 2026-06-06 | 119 | 2 | ✅ | **Event handling corrections & UI threading:** Fixed streaming message event types to match AgentEvent spec (`message_start`, `message_update`, `message_end`, `tool_execution_start/end`). Added `hiddenThinkingLabel` prop threading through MessageList → MessageItem → AssistantMessage. Updated tests to use correct event shapes. No regressions. |
 | 2026-06-06 | 118 | 3 | ✅ | **Missing AgentSession methods & UI improvements:** Added missing session methods to align with reference (`getUserMessagesForForking`, `getLastAssistantText`, `getSessionStats`, `getContextUsage`, `abortBranchSummary`, `autoCompactionEnabled` getter/setter, `getTree`, `getLeafId`, `setSessionName`). Integrated `isBashRunning` check into Escape handler for aborting bash commands. Fixed `useInkApp` hook tests by improving argument parsing and using `runtime.session.messages` directly; all tests now passing. No regressions. |
 | 2026-06-06 | 117 | 2 | ✅ | **Double-escape feature & hook unit tests:** Implemented double‑tap Escape detection to open tree selector or fork selector based on runtime setting `doubleEscapeAction`. Added comprehensive unit tests for `useTheme` hook (4 tests, >90% coverage) and `useExtensionUIState` hook (14 tests, >97% coverage). Refactored `useExtensionUIState` with type alias for clarity. Overall test suite: 1578 tests passing (+29 new), no regressions. Coverage increased to 69.01% statements (+0.41%), 60.49% branches (+0.09%), 67.99% functions (+0.39%), 69.81% lines (+0.51%). |
 |------|-----------|-------|--------------|-------|

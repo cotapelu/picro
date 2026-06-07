@@ -4,6 +4,13 @@ Track trajectory changes, planned refactors, and anticipated debt.
 
 ## Trajectory Changes
 
+### Iteration 119: Event Handling Corrections & UI Threading
+
+- **Direction**: Bug Fixing + Testing
+- **Change**: Corrected streaming message event types in `useRuntime` to match AgentEvent specification: `message_start`, `message_update`, `message_end`, `tool_execution_start/end`. Fixed `useInkApp` argument parsing to accept both raw args and full slash command. Updated integration and unit tests to use correct event shapes and data fields (`message` instead of `turn`, `args` instead of `input`). Added `hiddenThinkingLabel` prop threading through `MessageList` → `MessageItem` → `AssistantMessage` to support dynamic thinking labels.
+- **Rationale**: The mismatched event types prevented streaming updates and tool execution from working correctly. Aligning with the reference specification restores full messaging functionality. The hiddenThinkingLabel prop enables extensions to customize thinking block labels.
+- **Impact**: All 1610 tests passing, 100% pass rate, no regressions. Coverage remains stable (~69.0% statements). System now correctly handles streaming assistant responses, tool call lifecycle, and dynamic thinking labels.
+
 ### Iteration 118: Missing AgentSession Methods & UI Improvements
 
 - **Direction**: Core Completion + Testing

@@ -86,7 +86,7 @@ describe('InkApp Integration', () => {
 
     // Start assistant message
     act(() => {
-      handler({ type: 'message:start', turn: { role: 'assistant' } });
+      handler({ type: 'message_start', message: { role: 'assistant' } });
     });
     rerender(<InkApp runtime={runtime} />);
     let output = lastFrame();
@@ -95,8 +95,8 @@ describe('InkApp Integration', () => {
     // Send an update with content
     act(() => {
       handler({
-        type: 'message:update',
-        turn: { role: 'assistant', content: 'Hello, let me check that.' },
+        type: 'message_update',
+        message: { role: 'assistant', content: 'Hello, let me check that.' },
       });
     });
     rerender(<InkApp runtime={runtime} />);
@@ -106,10 +106,10 @@ describe('InkApp Integration', () => {
     // Tool call start
     act(() => {
       handler({
-        type: 'tool:call:start',
+        type: 'tool_execution_start',
         toolCallId: 'tool1',
         toolName: 'get_weather',
-        input: { city: 'Paris' },
+        args: { city: 'Paris' },
       });
     });
     rerender(<InkApp runtime={runtime} />);
@@ -120,7 +120,7 @@ describe('InkApp Integration', () => {
     // Tool call end with result
     act(() => {
       handler({
-        type: 'tool:call:end',
+        type: 'tool_execution_end',
         toolCallId: 'tool1',
         result: { temp: 22, unit: 'C' },
         isError: false,
@@ -134,8 +134,8 @@ describe('InkApp Integration', () => {
     // End assistant message
     act(() => {
       handler({
-        type: 'message:end',
-        turn: { role: 'assistant', content: 'The weather in Paris is 22°C.' },
+        type: 'message_end',
+        message: { role: 'assistant', content: 'The weather in Paris is 22°C.' },
       });
     });
     rerender(<InkApp runtime={runtime} />);

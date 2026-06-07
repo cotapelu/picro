@@ -1116,6 +1116,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           ref={messageListRef}
           messages={messages}
           hideThinkingBlock={hideThinkingBlock}
+          hiddenThinkingLabel={hiddenThinkingLabel}
           showImages={showImages}
           imageWidthCells={imageWidthCells}
         />

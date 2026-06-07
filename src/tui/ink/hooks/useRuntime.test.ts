@@ -378,8 +378,8 @@ describe('useRuntime', () => {
 
       act(() => {
         capturedHandler({
-          type: 'message:start',
-          turn: { role: 'assistant', id: 'a1' }
+          type: 'message_start',
+          message: { role: 'assistant', id: 'a1' }
         });
       });
 
@@ -410,8 +410,8 @@ describe('useRuntime', () => {
 
       act(() => {
         capturedHandler({
-          type: 'message:start',
-          turn: { role: 'assistant', id: 'a1' }
+          type: 'message_start',
+          message: { role: 'assistant', id: 'a1' }
         });
       });
       await waitFor(() => {
@@ -421,8 +421,8 @@ describe('useRuntime', () => {
 
       act(() => {
         capturedHandler({
-          type: 'message:update',
-          turn: { role: 'assistant', id: 'a1', content: [{ type: 'text', text: 'Hello world' }] }
+          type: 'message_update',
+          message: { role: 'assistant', id: 'a1', content: [{ type: 'text', text: 'Hello world' }] }
         });
       });
 
@@ -440,14 +440,14 @@ describe('useRuntime', () => {
 
       act(() => {
         session.subscribe.mock.calls[0][0]({
-          type: 'message:start',
-          turn: { role: 'assistant', id: 'a1', content: [] }
+          type: 'message_start',
+          message: { role: 'assistant', id: 'a1', content: [] }
         });
       });
       act(() => {
         session.subscribe.mock.calls[0][0]({
-          type: 'message:end',
-          turn: { role: 'assistant', id: 'a1', stopReason: 'end' }
+          type: 'message_end',
+          message: { role: 'assistant', id: 'a1', stopReason: 'end' }
         });
       });
 
@@ -462,17 +462,17 @@ describe('useRuntime', () => {
 
       act(() => {
         session.subscribe.mock.calls[0][0]({
-          type: 'message:start',
-          turn: { role: 'assistant', id: 'a1', content: [] }
+          type: 'message_start',
+          message: { role: 'assistant', id: 'a1', content: [] }
         });
       });
 
       act(() => {
         session.subscribe.mock.calls[0][0]({
-          type: 'tool:call:start',
+          type: 'tool_execution_start',
           toolCallId: 't1',
           toolName: 'test_tool',
-          input: { arg: 1 }
+          args: { arg: 1 }
         });
       });
 
@@ -488,21 +488,21 @@ describe('useRuntime', () => {
 
       act(() => {
         session.subscribe.mock.calls[0][0]({
-          type: 'message:start',
-          turn: { role: 'assistant', id: 'a1', content: [] }
+          type: 'message_start',
+          message: { role: 'assistant', id: 'a1', content: [] }
         });
       });
       act(() => {
         session.subscribe.mock.calls[0][0]({
-          type: 'tool:call:start',
+          type: 'tool_execution_start',
           toolCallId: 't1',
           toolName: 'test_tool',
-          input: {}
+          args: {}
         });
       });
       act(() => {
         session.subscribe.mock.calls[0][0]({
-          type: 'tool:call:end',
+          type: 'tool_execution_end',
           toolCallId: 't1',
           result: { output: 'ok' },
           isError: false

@@ -1,11 +1,11 @@
 # Project State
 
-Last updated: 2026-06-06 (Iteration 117)
+Last updated: 2026-06-06 (Iteration 119)
 
 ## Metrics
-- Total Iterations: 116
-- Tasks Completed: 263+
-- Coverage: ~68.6% statements (branches 60.4%, functions 67.6%, lines 69.3%)
+- Total Iterations: 119
+- Tasks Completed: 268+
+- Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
 
@@ -195,6 +195,14 @@ Last updated: 2026-06-06 (Iteration 117)
 
 ## Completed Features (Iteration 74)
 - **Truncate edge case test**: Added test for maxLines=0 in truncateLines.
+
+## Completed Features (Iteration 119)
+
+- **Event handling corrections & UI threading:** Fixed streaming message event types to match AgentEvent specification, added hiddenThinkingLabel prop threading, updated tests. All 1610 tests passing, no regressions.
+
+## Completed Features (Iteration 118)
+
+- **Missing AgentSession methods & UI improvements:** Implemented missing session methods (getUserMessagesForForking, getLastAssistantText, getSessionStats, getContextUsage, abortBranchSummary, autoCompactionEnabled getter/setter, getTree, getLeafId, setSessionName). Integrated isBashRunning check, fixed useInkApp argument parsing. All tests passing, no regressions. Coverage ~69.0%.
 
 ## Completed Features (Iteration 117)
 

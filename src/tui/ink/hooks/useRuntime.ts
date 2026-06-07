@@ -108,33 +108,21 @@ export function useRuntime(runtime: ExtendedRuntime) {
           }
           break;
         // Streaming message handling
-        case 'message:start': {
-          const turn = event.turn;
+        case 'message_start': {
+          const turn = event.message;
           if (!turn) break;
-          const role = turn.role as any;
-          if (role === 'user') {
-            const uiMsg = convertAgentMessage(turn);
-            if (uiMsg) {
-              setMessages(prev => [...prev, uiMsg]);
+          const uiMsg = convertAgentMessage(turn);
+          if (uiMsg) {
+            const streamingMsg: Message = { ...uiMsg, streaming: true };
+            setMessages(prev => [...prev, streamingMsg]);
+            if (uiMsg.role === 'assistant') {
+              streamingMessageIdRef.current = uiMsg.id;
             }
-          } else if (role === 'assistant') {
-            const id = turn.id || `assistant-${Date.now()}`;
-            const newMsg: Message = {
-              id,
-              role: 'assistant',
-              content: '',
-              timestamp: Date.now(),
-              streaming: true,
-              toolCalls: [],
-              thinkingBlocks: [],
-            };
-            setMessages(prev => [...prev, newMsg]);
-            streamingMessageIdRef.current = id;
           }
           break;
         }
-        case 'message:update': {
-          const turn = event.turn;
+        case 'message_update': {
+          const turn = event.message;
           if (!turn) break;
           const id = streamingMessageIdRef.current;
           if (!id) break;
@@ -144,8 +132,8 @@ export function useRuntime(runtime: ExtendedRuntime) {
           }
           break;
         }
-        case 'message:end': {
-          const turn = event.turn;
+        case 'message_end': {
+          const turn = event.message;
           if (!turn) break;
           const role = turn.role as any;
           if (role === 'user') {
@@ -163,22 +151,36 @@ export function useRuntime(runtime: ExtendedRuntime) {
           streamingMessageIdRef.current = null;
           break;
         }
-        case 'tool:call:start': {
-          const { toolCallId, toolName, input } = event;
+        case 'tool_execution_start': {
+          const { toolCallId, toolName, args } = event;
           const id = streamingMessageIdRef.current;
           if (!id) break;
-          const newTool: ToolCall = { id: toolCallId, name: toolName, arguments: input, status: 'running' };
-          setMessages(prev => prev.map(msg => msg.id === id ? { ...msg, toolCalls: [...(msg.toolCalls || []), newTool] } : msg));
+          setMessages(prev => prev.map(msg => {
+            if (msg.id !== id) return msg;
+            const existing = msg.toolCalls?.find(tc => tc.id === toolCallId);
+            if (existing) {
+              return {
+                ...msg,
+                toolCalls: msg.toolCalls?.map(tc => tc.id === toolCallId ? { ...tc, status: 'running' as const, arguments: args } : tc)
+              };
+            } else {
+              const newTool: ToolCall = { id: toolCallId, name: toolName, arguments: args, status: 'running' };
+              return { ...msg, toolCalls: [...(msg.toolCalls || []), newTool] };
+            }
+          }));
           break;
         }
-        case 'tool:call:end': {
+        case 'tool_execution_end': {
           const { toolCallId, result, isError } = event;
           const id = streamingMessageIdRef.current;
           if (!id) break;
-          setMessages(prev => prev.map(msg => msg.id === id ? {
-            ...msg,
-            toolCalls: (msg.toolCalls || []).map(tc => tc.id === toolCallId ? { ...tc, status: isError ? 'error' : 'done', result } : tc),
-          } : msg));
+          setMessages(prev => prev.map(msg => {
+            if (msg.id !== id) return msg;
+            return {
+              ...msg,
+              toolCalls: (msg.toolCalls || []).map(tc => tc.id === toolCallId ? { ...tc, status: isError ? 'error' : 'done' as const, result } : tc),
+            };
+          }));
           break;
         }
         default:
