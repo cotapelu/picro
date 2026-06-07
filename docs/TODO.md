@@ -337,7 +337,7 @@
 **Mục tiêu**: ExtensionUIContext đầy đủ, bindExtensions, shortcuts, widgets, custom UI.
 
 **Tasks**:
-1. **Implement full ExtensionUIContext** (`src/tui/ink/extension-context.ts`)
+1. [x] **Implement full ExtensionUIContext** (`src/tui/ink/extension-context.ts`)
    ```ts
    interface ExtensionUIContext {
      select(title, options, opts?): Promise<string | undefined>
@@ -379,7 +379,7 @@
    - `setWorkingMessage/Visible/Indicator` → update `workingMessage`, `workingVisible`, `workingIndicatorOptions` và start/stop loader
    - `theme` APIs → integrate với `useTheme` hook và theme loader
 
-2. **bindExtensions()** (InkApp)
+2. [x] **bindExtensions()** (InkApp)
    - Khi `init()` hoặc session rebind, gọi:
      - Lấy `session._extensionRunner`
      - Gọi `createExtensionUIContext(inkApp)` và lưu vào session.__picroBound (như reference)
@@ -388,16 +388,16 @@
      - Load extensions: `session.resourceLoader.getExtensions()` và register commands
    - Kiểm tra diagnostics: command conflicts, shortcut conflicts
 
-3. **Extension shortcuts handling** (InputBox)
+3. [x] **Extension shortcuts handling** (InputBox)
    - Trước khi handle internal shortcuts, check `extensionShortcutsRef.current` với `matchesKey`
    - Nếu có shortcut matches → call handler, nếu handler returns true → consume
 
-4. **Resource loading display** (`showLoadedResources`)
+4. [x] **Resource loading display** (`showLoadedResources`)
    - Phân tích extensions, skills, prompts, themes theo scope groups (user/project/path)
    - Hiển thị trong chat với ExpandableText (collapsed/expanded)
    - Hiển thị diagnostics: collisions, errors, warnings
 
-5. **Autocomplete providers**
+5. [x] **Autocomplete providers**
    - Combine: slash commands, prompt templates, extension commands, skills
    - Đã có `autocompleteProviderFactories`; đăng ký từ extensions qua `addAutocompleteProvider`
    - InputBox `onAutocomplete` gọi `handleAutocomplete` → combine results

@@ -76,6 +76,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const [retryMaxAttempts, setRetryMaxAttempts] = React.useState(3);
   const [retryEscapeHandler, setRetryEscapeHandler] = React.useState<(() => void) | null>(null);
   const [autoCompactionEscapeHandler, setAutoCompactionEscapeHandler] = React.useState<(() => void) | null>(null);
+  const [workingMessage, setWorkingMessageState] = React.useState<string>('');
+  const [workingVisible, setWorkingVisibleState] = React.useState<boolean>(false);
 
   // Missing state for parity with InteractiveMode
   const streamingComponent = React.useRef<any>(null);
@@ -139,12 +141,14 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
 
   // Compute status display
   let displayStatus = runtimeStatus || 'Ready';
-  if (isCompacting) {
+  if (workingVisible) {
+    displayStatus = workingMessage || 'Working...';
+  } else if (isCompacting) {
     displayStatus = 'Compacting... (Esc to cancel)';
   } else if (retryAttempt > 0) {
     displayStatus = `Retrying (${retryAttempt}/${retryMaxAttempts}) in ${retryCountdown}s... (Esc to cancel)`;
   }
-  const { toggleTheme, isDark, theme } = useTheme();
+  const { toggleTheme, isDark, theme, setThemeMode } = useTheme();
   const [inputValue, setInputValue] = React.useState('');
   const inputValueRef = React.useRef(inputValue);
   React.useEffect(() => {
@@ -631,7 +635,41 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const [extensionWidgetsAbove, setExtensionWidgetsAbove] = React.useState<Map<string, React.ReactNode>>(new Map<string, React.ReactNode>());
   const [extensionWidgetsBelow, setExtensionWidgetsBelow] = React.useState<Map<string, React.ReactNode>>(new Map<string, React.ReactNode>());
 
-  const setExtensionWidget = React.useCallback((placement: 'above' | 'below', key: string, node: React.ReactNode, dispose?: () => void) => {
+  const setExtensionWidget = React.useCallback((key: string, content: any, options?: { placement?: 'above' | 'below'; dispose?: () => void }) => {
+    const placement = options?.placement || 'above';
+    // Removal case
+    if (content == null) {
+      if (placement === 'above') {
+        setExtensionWidgetsAbove(prev => {
+          const next = new Map(prev);
+          next.delete(key);
+          return next;
+        });
+      } else {
+        setExtensionWidgetsBelow(prev => {
+          const next = new Map(prev);
+          next.delete(key);
+          return next;
+        });
+      }
+      widgetDisposersRef.current.delete(key);
+      return;
+    }
+
+    // Convert content to ReactNode
+    let node: React.ReactNode;
+    if (typeof content === 'string') {
+      node = <Text>{content}</Text>;
+    } else if (typeof content === 'function') {
+      // Factory: create element
+      const element = React.createElement(content);
+      node = element;
+    } else if (Array.isArray(content)) {
+      node = <>{content.map((line, i) => <Text key={i}>{line}</Text>)}</>;
+    } else {
+      node = content as React.ReactNode;
+    }
+
     if (placement === 'above') {
       const prevDispose = widgetDisposersRef.current.get(key);
       if (prevDispose) {
@@ -643,8 +681,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         next.set(key, node);
         return next;
       });
-      if (dispose) {
-        widgetDisposersRef.current.set(key, dispose);
+      if (options?.dispose) {
+        widgetDisposersRef.current.set(key, options.dispose);
       }
     } else {
       const prevDispose = widgetDisposersRef.current.get(key);
@@ -657,30 +695,11 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         next.set(key, node);
         return next;
       });
-      if (dispose) {
-        widgetDisposersRef.current.set(key, dispose);
+      if (options?.dispose) {
+        widgetDisposersRef.current.set(key, options.dispose);
       }
     }
   }, []);
-  const setExtensionWidget = React.useCallback((key: string, content: any, options?: any) => {
-    const placement = options?.placement || 'above';
-    if (placement === 'above') {
-      setExtensionWidgetsAbove(prev => {
-        const next = new Map(prev);
-        if (content == null) next.delete(key);
-        else if (typeof content === 'string') next.set(key, content);
-        return next;
-      });
-    } else if (placement === 'below') {
-      setExtensionWidgetsBelow(prev => {
-        const next = new Map(prev);
-        if (content == null) next.delete(key);
-        else if (typeof content === 'string') next.set(key, content);
-        return next;
-      });
-    }
-  }, []);
-
   // Custom editor component support
   const [customEditor, setCustomEditor] = React.useState<React.ComponentType<any> | null>(null);
 
@@ -912,9 +931,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       // Could use footer provider's extension statuses; TUI specific.
       // For now, ignore or log.
     },
-    setWorkingMessage: (message?: string) => {
-      // Could update status line; not currently used
-    },
+    setWorkingMessage: (message?: string) => setWorkingMessageState(message || ''),
+    setWorkingVisible: (visible: boolean) => setWorkingVisibleState(visible),
     setWorkingIndicator: (options?: any) => {
       // Could adjust loading animation options
     },
@@ -956,10 +974,19 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       return [];
     },
     getTheme: (name: string) => null,
-    setTheme: (themeOrName: any) => {
-      // Should toggle theme appropriately
-      toggleTheme();
-      return { success: true };
+    setTheme: async (themeOrName: any) => {
+      const name = typeof themeOrName === 'string' ? themeOrName : themeOrName?.name;
+      if (name === 'dark' || name === 'light') {
+        setThemeMode(name);
+        try {
+          await runtime.settings?.set?.('theme', name);
+          await runtime.settings?.save?.();
+          return { success: true };
+        } catch (e) {
+          return { success: false, error: (e as Error).message };
+        }
+      }
+      return { success: false, error: 'Invalid theme' };
     },
     getToolsExpanded: () => toolOutputExpanded,
     setToolsExpanded: (expanded: boolean) => setToolOutputExpanded(expanded),
@@ -1409,10 +1436,10 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           ))}
         </Box>
       )}
-      {/* Status line for compaction/retry */}
-      {(isCompacting || retryAttempt > 0) && (
+      {/* Status line for compaction/retry/working */}
+      {(isCompacting || retryAttempt > 0 || workingVisible) && (
         <Box paddingX={1}>
-          <Text color={isCompacting ? 'yellow' : 'orange'}>
+          <Text color={workingVisible ? 'cyan' : isCompacting ? 'yellow' : 'orange'}>
             {displayStatus}
           </Text>
         </Box>

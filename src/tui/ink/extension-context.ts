@@ -50,6 +50,11 @@ export function createExtensionUIContext(inkApp: any): any {
         inkApp.setWorkingMessage(message);
       }
     },
+    setWorkingVisible: (visible: boolean) => {
+      if (inkApp.setWorkingVisible) {
+        inkApp.setWorkingVisible(visible);
+      }
+    },
     setWorkingIndicator: (options?: any) => {
       if (inkApp.setWorkingIndicator) {
         inkApp.setWorkingIndicator(options);
