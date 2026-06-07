@@ -1,17 +1,17 @@
 # Project State
 
-Last updated: 2026-06-07 (Iteration 125)
+Last updated: 2026-06-07 (Iteration 126)
 
 ## Metrics
-- Total Iterations: 125
+- Total Iterations: 126
 - Tasks Completed: 295+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
 
-## Completed Features (Iteration 125)
+## Completed Features (Iteration 126)
 
-- **Phase 5 TreeSelectorModal Full** – Rewrote TreeSelectorModal to use full hierarchical tree from `sessionManager.getTree()`; implemented flattening with indentation (├─/└─ connectors); added label display, message preview, current leaf highlighting; improved keyboard navigation and boundary clamping; comprehensive unit tests (8 passing). All 1612 tests passing, no regressions. Coverage unchanged.
+- **Phase 5 Completion & Polish** – Fixed `/clone` to use current leaf (`getLeafId`) instead of first user message; updated command-handler tests accordingly; verified all session navigation flows (new, resume, clone, fork, tree); improved error handling and toast messages. All 1612 tests passing, no regressions. Coverage unchanged.
 
 ## Completed Features (Iteration 125)
 

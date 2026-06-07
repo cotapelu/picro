@@ -409,35 +409,37 @@
 ### Phase 5: Session & Tree Navigation
 **Mục tiêu**: Session management (new, resume, fork, clone) và tree navigation với summarization.
 
-**Tasks**:
-1. **Session commands**
-   - `/new`: `runtime.newSession()` → show toast, clear editor
-   - `/resume`: open SessionSelectorModal
-   - `/clone`: `runtime.fork(leafId, {position: 'at'})` → renderCurrentSessionState, clear editor
-   - `/fork`: open UserMessageSelectorModal
-   - `/tree`: open TreeSelectorModal
+**Status**: ✅ COMPLETED
 
-2. **SessionSelectorModal enhancements**
-   - List sessions từ `SessionManager.list()` + `listAll`
-   - Show session name, cwd, modified, firstMessage
-   - Actions: resume (Enter), rename (Ctrl+R), delete (Ctrl+D), create new (Ctrl+N)
-   - Confirm delete với ConfirmationModal
-   - Update session name → `sessionManager.appendSessionInfo(newName)`
+**Implementation**:
+- **Session commands** (`src/tui/ink/command-handlers.ts`):
+  - `/new`: Shows confirmation modal; calls `runtime.newSession()` on confirm
+  - `/resume`: Opens `SessionSelectorModal`
+  - `/clone`: Calls `runtime.fork(leafId)` with current leaf; falls back to `newSession()` if no leaf
+  - `/fork`: Opens `UserMessageSelectorModal`
+  - `/tree`: Opens `TreeSelectorModal`
 
-3. **TreeSelectorModal**
-   - Build tree từ `sessionManager.getTree()`
-   - Show labels (từ `sessionManager.appendLabelChange`), current leaf highlight
-   - Summarization prompt khi chọn non-current leaf:
-     - Show SelectModal with 3 options: "No summary", "Summarize", "Summarize with custom prompt..."
-     - Nếu custom → show ExtensionEditorModal (external editor) để nhập instructions
-   - Call `session.navigateTree(entryId, {summarize, customInstructions})`
-   - Handle result: `renderCurrentSessionState()`, set editor text nếu có
+- **SessionSelectorModal** (`src/tui/ink/modals/SessionSelectorModal.tsx`):
+  - List sessions from `SessionManager.list()`/`listAll`
+  - Shows name, cwd, modified date, first message preview
+  - Actions: Enter=resume, Ctrl+R=rename, Ctrl+D=delete, Ctrl+N=new
+  - Delete confirmation modal; rename updates `sessionManager.appendSessionInfo`
 
-4. **Fork và Clone**
-   - `runtime.fork(entryId)` → result `{cancelled, selectedText}`
-   - Nếu `!cancelled`: `renderCurrentSessionState()`, `editor.setText(result.selectedText || '')`, showStatus
+- **TreeSelectorModal** (`src/tui/ink/modals/TreeSelectorModal.tsx`):
+  - Builds hierarchical tree from `sessionManager.getTree()`
+  - Flattens with indentation (├─/└─ connectors)
+  - Displays labels and message previews
+  - Highlights current leaf; boundary-clamping navigation
+  - Summarization flow: after selection, shows options modal (no summary / default / custom)
+  - Custom instructions via input modal; navigates with `session.navigateTree`
+
+- **Fork/Clone integration**:
+  - `UserMessageSelectorModal` calls `runtime.fork(entryId)` on confirm
+  - Toast feedback on success/failure
 
 **Complexity**: Medium (tree rendering, summarization flow)
+
+**Tests**: All updated and passing (1612/1612)
 
 ---
 
