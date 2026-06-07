@@ -308,24 +308,24 @@
 **Mục tiêu**: Hiển thị compaction và retry states giống reference.
 
 **Tasks**:
-1. **Compaction state**
+1. [x] **Compaction state**
    - State: `isCompacting` từ `useRuntime`
    - `handleEvent('compaction_start')`: show loader in statusContainer, set `autoCompactionEscapeHandler` để abort, message "Compacting... (Esc to cancel)" hoặc "Auto-compacting..."
    - `handleEvent('compaction_end')`: stop loader, restore escape handler, nếu `!aborted` và có summary → rebuild chat, add CompactionSummaryMessage; nếu error → showError
    - Call `flushCompactionQueue()` sau khi compaction end (giống reference)
 
-2. **Retry state**
+2. [x] **Retry state**
    - State: `retryAttempt` từ `useRuntime`, `retryCountdown` state (seconds)
    - `handleEvent('auto_retry_start')`: show loader với countdown, set escape handler to `session.abortRetry()`
    - `handleEvent('auto_retry_end')`: restore escape handler, stop loader, show error nếu `!success`
    - Compute delay từ event? (reference có `event.delayMs`)
 
-3. **Pending messages indicator**
+3. [x] **Pending messages indicator**
    - Compute từ `session.getSteeringMessages()` + `compactionQueuedMessages` (filter mode)
    - Render trong `pendingMessagesContainer` (above editor) với hint "Ctrl+E to edit"
    - Update on `queue_update` event và khi queue compaction messages thay đổi
 
-4. **Dequeue functionality**
+4. [x] **Dequeue functionality**
    - `handleDequeue()`: gọi `clearAllQueues()`, `restoreQueuedMessagesToEditor()`
    - Bind to key (Ctrl+E) trong InputBox
 

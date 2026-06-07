@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-07 (Iteration 120)
+Last updated: 2026-06-07 (Iteration 121)
 
 ## Metrics
-- Total Iterations: 120
-- Tasks Completed: 275+
+- Total Iterations: 121
+- Tasks Completed: 280+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 121)
+
+- **Phase 3: Compaction & Retry UI** – Implemented message queuing during compaction/retry: `queueCompactionMessage`, `flushCompactionQueue`, and `restoreQueuedMessagesToEditor`. Modified `handleSubmit` to queue messages when `isCompacting` or `retryAttempt > 0`. Enhanced `handleDequeue` to include local queued messages. Updated pending indicator to display local queue count. Events flush queue after `compaction_end` (non‑aborted) and `auto_retry_end` (successful). All 1612 tests passing, no regressions. Coverage remains ~69.0%.
 
 ## Completed Features (Iteration 120)
 
