@@ -2,18 +2,18 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-07, Iteration 131)
+## Current Metrics (as of 2026-06-07, Iteration 133)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 132 |
+| Total Iterations | 133 |
 | Tasks Completed | 295+
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1632/1632 tests, 14 skipped, 1 todo) |
+| Test Pass Rate | 100% (1647/1647 tests, 14 skipped, 1 todo) |
 | Coverage (statements) | ~69.0% |
 | Coverage (branches) | ~60.5% |
 | Coverage (functions) | ~68.0% |
@@ -21,6 +21,7 @@ Track agent performance and reliability across iterations.
 
 ## History
 
+| 2026-06-07 | 133 | 1 | ✅ | **Phase 7 Agent Unit Tests** – Added comprehensive unit tests for Agent class covering setLLMProvider, queues, abort behavior, state queries, config strategy, constructor with model, and reset. 15 new tests; all 1647 tests passing, no regressions. Coverage increased.
 | 2026-06-07 | 132 | 1 | ✅ | **Fix: Fork result integration** – Added missing onForkResult prop wiring and consumption that was previously documented but not committed. No new tests. All 1632 tests passing, no regressions. Coverage unchanged.
 | 2026-06-07 | 131 | 1 | ✅ | **Phase 7 Services Factory Tests** – Added comprehensive unit tests for `createAgentSessionServices` covering defaults, custom overrides, resourceLoaderOptions propagation, extension discovery errors, flag parsing, and error propagation. 12 new tests; all 1632 tests passing, no regressions. Coverage increased.
 | 2026-06-07 | 130 | 1 | ✅ | **Phase 7 Telemetry Tests** – Added telemetry.extra.test.ts covering flush when disabled, listener error handling, and enabled flag toggling with queue. All 1620 tests passing, no regressions. Coverage increased slightly.

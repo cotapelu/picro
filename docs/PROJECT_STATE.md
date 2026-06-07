@@ -1,19 +1,19 @@
 # Project State
 
-Last updated: 2026-06-07 (Iteration 132)
+Last updated: 2026-06-07 (Iteration 133)
 
 ## Metrics
-- Total Iterations: 132
+- Total Iterations: 133
 - Tasks Completed: 295+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
 
+## Completed Features (Iteration 133)
+
+- **Phase 7 Agent Unit Tests** – Added comprehensive unit tests for Agent class covering setLLMProvider, queues, abort behavior, state queries, config-based strategy selection, constructor with model, and reset. 15 new tests; all 1647 tests passing, no regressions. Coverage increased.
+
 ## Completed Features (Iteration 132)
-
-- **Fix: Fork result integration** – Added missing onForkResult prop wiring and consumption that was previously documented but not committed. No new tests. All 1632 tests passing, no regressions. Coverage unchanged.
-
-## Completed Features (Iteration 131)
 
 - **Phase 7 Services Factory Tests** – Added comprehensive unit tests for `createAgentSessionServices` covering defaults, custom overrides, resourceLoaderOptions propagation, extension discovery errors, flag parsing, and error propagation. 12 new tests; all 1632 tests passing, no regressions. Coverage increased.
 
