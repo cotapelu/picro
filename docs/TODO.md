@@ -198,7 +198,7 @@
 **Mục tiêu**: InkApp có đầy đủ state và event handling tương tự InteractiveMode.
 
 **Tasks**:
-1. **Expand useRuntime** (file: `src/tui/ink/hooks/useRuntime.ts`)
+1. [x] **Expand useRuntime** (file: `src/tui/ink/hooks/useRuntime.ts`)
    - expose: `session.getSteeringMessages()`, `session.getFollowUpMessages()`, `session.clearQueue()`
    - expose: `session.getUserMessagesForForking()`, `session.getSessionStats()`, `session.getLastAssistantText()`
    - expose: `session.getToolDefinition(name)`
@@ -215,7 +215,7 @@
    - expose: `session.getContextUsage()`
    - Subscribe to thêm events: `compaction_start/end`, `auto_retry_start/end`, `tool_execution_*`, `message_*`, `queue_update`, `session_tree`, `error`, `session_info_changed`
 
-2. **Add missing state** (InkApp.tsx)
+2. [x] **Add missing state** (InkApp.tsx)
    - `const [streamingComponent, setStreamingComponent] = useState<AssistantMessageComponent | null>(null)`
    - `const [streamingMessage, setStreamingMessage] = useState<AssistantMessage | null>(null)`
    - `const [pendingTools, setPendingTools] = useState<Map<string, ToolExecutionComponent>>(new Map())`
@@ -238,14 +238,14 @@
    - `const [lastStatusText, setLastStatusText] = useState<Text | null>(null)`
    - Keep refs: `extensionShortcutsRef`, `signalCleanupHandlers`, `unsubscribe`
 
-3. **Signal handlers & shutdown** (InkApp.tsx)
+3. [x] **Signal handlers & shutdown** (InkApp.tsx)
    - Implement `registerSignalHandlers()`, `unregisterSignalHandlers()`
    - Handle `SIGTERM`, `SIGHUP` (emergency exit), `SIGCONT` (resume after Ctrl+Z)
    - Implement `shutdown()`, `checkShutdownRequested()`, `stop()`
    - Implement `ui.terminal.drainInput(ms)` before shutdown (cần expose terminal drain)
    - Implement `killTrackedDetachedChildren()` on exit
 
-4. **Key handlers expansion**
+4. [x] **Key handlers expansion**
    - `defaultEditor.onEscape`: full logic (interrupt streaming, abort bash, toggle double-escape actions, etc.)
    - `defaultEditor.onCtrlD`: shutdown
    - `defaultEditor.onCtrlC`: double-tap to exit, single to clear
@@ -261,7 +261,7 @@
 **Mục tiêu**: Render messages đúng role, streaming assistant messages, tool execution UI.
 
 **Tasks**:
-1. **Create AssistantMessage component** (`src/tui/ink/components/MessageItem/AssistantMessage.tsx`)
+1. [x] **Create AssistantMessage component** (`src/tui/ink/components/MessageItem/AssistantMessage.tsx`)
    - Props: `message`, `hideThinkingBlock`, `markdownTheme`, `hiddenThinkingLabel`
    - Methods: `setHideThinkingBlock(boolean)`, `setHiddenThinkingLabel(label)`, `updateContent(message)`
    - Render:
@@ -271,18 +271,18 @@
      - handle stopReason: aborted/error messages
    - Streaming: giữ component instance, update content tăng dần
 
-2. **Enhance ToolExecution component** (`src/tui/ink/components/MessageItem/ToolExecution.tsx`)
+2. [x] **Enhance ToolExecution component** (`src/tui/ink/components/MessageItem/ToolExecution.tsx`)
    - Add `setExpanded(expanded: boolean)` method
    - Add `setShowImages(enabled: boolean)`, `setImageWidthCells(width: number)`
    - Add `markExecutionStarted()` (visual indicator)
    - Add `setArgsComplete()` (khi arguments đã hoàn thiện, trigger diff computation nếu cần)
 
-3. **Update MessageList rendering**
+3. [x] **Update MessageList rendering**
    - `messages` array from `useRuntime` giờ phải giử nguyên object đặc biệt (assistant với toolCalls)
    - Render `AssistantMessage` cho role assistant, `ToolExecution` cho từng tool call trong message
    - Cập nhật `useRuntime` converter để giữ nguyên `toolCalls` và `toolCallId` trong message
 
-4. **Implement `addMessageToChat(message)`** trong InkApp
+4. [x] **Implement `addMessageToChat(message)`** trong InkApp
    - Switch trên `message.role`:
      - `user`: UserMessage component (có skill block parsing)
      - `assistant`: Tạo AssistantMessage, add to chatContainer
@@ -293,7 +293,7 @@
      - `custom`: CustomMessage component với renderer từ extensionRunner
    - Manage `streamingComponent` và `streamingMessage` cho agent_start/message_start/message_end events
 
-5. **Implement event handlers for message lifecycle** (trong `handleEvent`)
+5. [x] **Implement event handlers for message lifecycle** (trong `handleEvent`)
    - `agent_start`: clear pendingTools, start loader if showTerminalProgress, restore escape handler
    - `message_start`: tạo AssistantMessage nếu role assistant; add user/bash/custom
    - `message_update`: update streamingMessage; nếu có toolCall mới → tạo ToolExecution, add to chat; update args if pending
