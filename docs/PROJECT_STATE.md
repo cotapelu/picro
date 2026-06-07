@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-07 (Iteration 130)
+Last updated: 2026-06-07 (Iteration 131)
 
 ## Metrics
-- Total Iterations: 130
+- Total Iterations: 131
 - Tasks Completed: 295+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 131)
+
+- **Phase 7 Services Factory Tests** – Added comprehensive unit tests for `createAgentSessionServices` covering defaults, custom overrides, resourceLoaderOptions propagation, extension discovery errors, flag parsing, and error propagation. 12 new tests; all 1632 tests passing, no regressions. Coverage increased.
 
 ## Completed Features (Iteration 130)
 
