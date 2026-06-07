@@ -2,11 +2,11 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-07, Iteration 124)
+## Current Metrics (as of 2026-06-07, Iteration 125)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 124 |
+| Total Iterations | 125 |
 | Tasks Completed | 295+
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
@@ -22,6 +22,7 @@ Track agent performance and reliability across iterations.
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
+| 2026-06-07 | 125 | 6 | ✅ | **Phase 5 TreeSelectorModal Full** – Rewrote TreeSelectorModal to use full hierarchical tree from `sessionManager.getTree()`; implemented flattening with indentation (├─/└─ connectors); added label display, message preview, current leaf highlighting; improved keyboard navigation and boundary clamping; comprehensive unit tests (8 passing). All 1612 tests passing, no regressions. Coverage unchanged. |
 | 2026-06-07 | 124 | 6 | ✅ | **Phase 5 Session & Tree Navigation (Partial)** – Implemented tree navigation with summarization flow (options modal, custom instructions); enhanced SessionSelectorModal with rename (Ctrl+R), delete (Ctrl+D), create new (Ctrl+N); integrated summary UI with working indicator; fixed double-escape handling and state references. All 1612 tests passing, no regressions. Coverage unchanged. |
 | 2026-06-07 | 123 | 7 | ✅ | **Phase 4 (Remaining) – Working indicator, theme integration, widget unification** – Added working indicator states and UI; integrated full theme setThemeMode; unified setExtensionWidget; added setWorkingVisible to ExtensionUIContext; fixed status line for working state. All 1612 tests passing, no regressions. Coverage unchanged. |
 | 2026-06-07 | 121 | 8 | ✅ | **Phase 3: Compaction & Retry UI** – Implemented message queuing during compaction/retry: `queueCompactionMessage`, `flushCompactionQueue`, and `restoreQueuedMessagesToEditor`. Modified `handleSubmit` to queue messages when `isCompacting` or `retryAttempt > 0`. Enhanced `handleDequeue` to include local queued messages. Updated pending indicator to display local queue count. Events flush queue after `compaction_end` (non‑aborted) and `auto_retry_end` (successful). All 1612 tests passing, no regressions. Coverage remains ~69.0%. |
