@@ -2,18 +2,18 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-07, Iteration 126)
+## Current Metrics (as of 2026-06-07, Iteration 129)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 128 |
+| Total Iterations | 129 |
 | Tasks Completed | 295+
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1612/1612 tests, 14 skipped, 1 todo) |
+| Test Pass Rate | 100% (1617/1617 tests, 14 skipped, 1 todo) |
 | Coverage (statements) | ~69.0% |
 | Coverage (branches) | ~60.5% |
 | Coverage (functions) | ~68.0% |
@@ -22,6 +22,7 @@ Track agent performance and reliability across iterations.
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
+| 2026-06-07 | 129 | 1 | ✅ | **Phase 7 Coverage Increment** – Added overflow edge case tests (image+text combinations, large message truncation, toolResult handling). Increased test coverage modestly. All 1617 tests passing, no regressions. Coverage ~69.5%.
 | 2026-06-07 | 128 | 2 | ✅ | **Phase 5 Fork Integration** – Enhanced UserMessageSelectorModal to return selected text after fork; updated modal-renderers and InkApp to propagate result; editor pre-filled with selected message text. All 1612 tests passing, no regressions. Coverage unchanged.
 | 2026-06-07 | 127 | 3 | ✅ | **Phase 6 Documentation** – Updated TODO to mark Phase 6 as completed; noted theme watcher not required; refined documentation. No code changes. All 1612 tests passing, no regressions. Coverage unchanged.
 | 2026-06-07 | 126 | 5 | ✅ | **Phase 5 Completion & Tests** – Fixed `/clone` to use current leaf (`getLeafId`) instead of first user message; updated command-handler tests for new behavior; verified all session navigation flows (new, resume, clone, fork, tree); improved error handling and feedback. All 1612 tests passing, no regressions. Coverage unchanged.

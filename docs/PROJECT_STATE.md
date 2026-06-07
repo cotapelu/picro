@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-07 (Iteration 128)
+Last updated: 2026-06-07 (Iteration 129)
 
 ## Metrics
-- Total Iterations: 128
+- Total Iterations: 129
 - Tasks Completed: 295+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 129)
+
+- **Phase 7 Coverage Increment** – Added overflow edge case tests (image+text combinations, large message truncation, toolResult handling). Increased test coverage modestly. All 1612+5=1617 tests passing, no regressions. Coverage ~69.5%.
 
 ## Completed Features (Iteration 128)
 
