@@ -230,15 +230,10 @@ export async function handleCommand(ctx: CommandContext, commandId: string, slas
       break;
     case 'clone':
       try {
-        const msgs = runtime.session.messages as any[];
-        if (msgs.length === 0) {
-          addToast('No messages to clone', 'info');
-          break;
-        }
-        const firstUserMsg = msgs.find((m: any) => m.role === 'user');
-        if (firstUserMsg && firstUserMsg.id) {
-          await runtime.fork(firstUserMsg.id);
-          addToast('Session cloned', 'success');
+        const leafId = runtime.session.getLeafId();
+        if (leafId) {
+          await runtime.fork(leafId);
+          addToast('Session cloned from current position', 'success');
         } else {
           await runtime.newSession();
           addToast('New empty session created', 'success');

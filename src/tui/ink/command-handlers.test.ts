@@ -267,17 +267,16 @@ describe('handleCommand', () => {
   });
 
   describe('clone', () => {
-    it('clones session with first user message id', async () => {
-      const msg = { role: 'user', content: 'Hi', id: 'msg123' };
-      runtime.session.messages = [msg];
+    it('clones session from current leaf', async () => {
+      const leafId = 'leaf123';
+      (runtime.session as any).getLeafId = vi.fn().mockReturnValue(leafId);
       await handleCommand(ctx, 'clone');
-      expect(runtime.fork).toHaveBeenCalledWith('msg123');
-      expect(addToast).toHaveBeenCalledWith('Session cloned', 'success');
+      expect(runtime.fork).toHaveBeenCalledWith(leafId);
+      expect(addToast).toHaveBeenCalledWith('Session cloned from current position', 'success');
     });
 
-    it('creates new empty session if no user message with id', async () => {
-      const msg = { role: 'assistant', content: 'Hi' };
-      runtime.session.messages = [msg];
+    it('creates new empty session if no current leaf', async () => {
+      (runtime.session as any).getLeafId = vi.fn().mockReturnValue(null);
       await handleCommand(ctx, 'clone');
       expect(runtime.fork).not.toHaveBeenCalled();
       expect(runtime.newSession).toHaveBeenCalled();
@@ -286,8 +285,8 @@ describe('handleCommand', () => {
 
     it('handles clone error', async () => {
       runtime.fork = vi.fn().mockRejectedValue(new Error('fail'));
-      const msg = { role: 'user', content: 'Hi', id: '123' };
-      runtime.session.messages = [msg];
+      const leafId = 'leaf123';
+      (runtime.session as any).getLeafId = vi.fn().mockReturnValue(leafId);
       await handleCommand(ctx, 'clone');
       expect(addToast).toHaveBeenCalledWith('Clone failed: fail', 'error');
     });
