@@ -92,6 +92,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const lastStatusText = React.useRef<any>(null);
   const signalCleanupHandlers = React.useRef<Array<() => void>>([]);
   const unsubscribeRef = React.useRef<(() => void) | null>(null);
+  const compactionQueueRef = React.useRef<Array<{text: string, mode: 'steer' | 'followUp'}>>([]);
 
   // Extension shortcuts registry
   const extensionShortcutsRef = React.useRef<Map<string, (input: string, key: any) => boolean | void>>(new Map());
@@ -126,6 +127,11 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }, 1000);
     return () => clearInterval(interval);
   }, [retryCountdown]);
+
+  // Sync compaction queue to ref for event handlers
+  React.useEffect(() => {
+    compactionQueueRef.current = compactionQueuedMessages;
+  }, [compactionQueuedMessages]);
 
   // Compute status display
   let displayStatus = runtimeStatus || 'Ready';
@@ -194,6 +200,26 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         case 'auto_retry_end':
           setRetryCountdown(0);
           setRetryEscapeHandler(null);
+          if (event.success) {
+            (async () => {
+              const queued = compactionQueueRef.current;
+              if (queued.length > 0) {
+                setCompactionQueuedMessages([]);
+                for (const msg of queued) {
+                  try {
+                    await sendMessage(msg.text);
+                  } catch (err) {
+                    console.error('Flush after retry failed:', err);
+                    const idx = queued.indexOf(msg);
+                    const remaining = queued.slice(idx).map(m => m.text);
+                    setInputValue(prev => prev ? `${prev}\n\n${remaining.join('\n\n')}` : remaining.join('\n\n'));
+                    addToast(`Failed to send queued message: ${(err as Error).message}`, 'error');
+                    break;
+                  }
+                }
+              }
+            })();
+          }
           break;
         // Compaction handling
         case 'compaction_start':
@@ -217,6 +243,27 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
             };
             setMessages(prev => [...prev, summaryMsg]);
           }
+          // Flush queued messages if not aborted
+          if (!event.aborted) {
+            (async () => {
+              const queued = compactionQueueRef.current;
+              if (queued.length > 0) {
+                setCompactionQueuedMessages([]);
+                for (const msg of queued) {
+                  try {
+                    await sendMessage(msg.text);
+                  } catch (err) {
+                    console.error('Flush after compaction failed:', err);
+                    const idx = queued.indexOf(msg);
+                    const remaining = queued.slice(idx).map(m => m.text);
+                    setInputValue(prev => prev ? `${prev}\n\n${remaining.join('\n\n')}` : remaining.join('\n\n'));
+                    addToast(`Failed to send queued message: ${(err as Error).message}`, 'error');
+                    break;
+                  }
+                }
+              }
+            })();
+          }
           break;
         default:
           break;
@@ -233,19 +280,29 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const handleDequeue = useCallback(() => {
     try {
       const session = runtime.session as any;
+      let count = 0;
+      const parts: string[] = [];
       if (typeof session.clearQueue === 'function') {
         const { steering, followUp } = session.clearQueue();
-        const combined = [...steering, ...followUp].join('\n');
-        setInputValue(prev => prev + (prev && !prev.endsWith('\n') && combined ? '\n' : '') + combined);
-        addToast(`Dequeued ${steering.length + followUp.length} messages`, 'info');
-      } else {
-        addToast('Dequeue not supported', 'error');
+        count += steering.length + followUp.length;
+        parts.push(...steering, ...followUp);
       }
+      // Include local queued messages
+      if (compactionQueuedMessages.length > 0) {
+        count += compactionQueuedMessages.length;
+        parts.push(...compactionQueuedMessages.map(m => m.text));
+        setCompactionQueuedMessages([]);
+      }
+      if (parts.length > 0) {
+        const text = parts.join('\n');
+        setInputValue(prev => prev ? `${prev}\n\n${text}` : text);
+      }
+      addToast(`Dequeued ${count} messages`, 'info');
     } catch (err: any) {
       console.error('Dequeue error:', err);
       addToast('Dequeue failed', 'error');
     }
-  }, [runtime, setInputValue, addToast]);
+  }, [runtime, compactionQueuedMessages, setInputValue, addToast]);
 
   const handlePaste = useCallback(async () => {
     try {
@@ -323,6 +380,12 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   }, [runtime, addToast, setActiveModal, messages, footerProvider, inputValue, setInputValue]);
 
+  // Queue message during compaction/retry
+  const queueCompactionMessage = useCallback((text: string) => {
+    setCompactionQueuedMessages(prev => [...prev, { text, mode: 'steer' as const }]);
+    addToast('Queued message for after compaction', 'info');
+  }, [addToast]);
+
   // Handle input submission
   const handleSubmit = useCallback(async () => {
     if (inputValue.trim() === '' || isSubmitting) return;
@@ -361,6 +424,13 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       return;
     }
 
+    // If compaction or retry is active, queue message for later
+    if (isCompacting || retryAttempt > 0) {
+      queueCompactionMessage(userInput);
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       await sendMessage(userInput);
     } catch (err: any) {
@@ -368,7 +438,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [inputValue, isSubmitting, sendMessage, handleSelectCommand]);
+  }, [inputValue, isSubmitting, sendMessage, handleSelectCommand, isCompacting, retryAttempt, queueCompactionMessage]);
 
   // Version check on mount
   React.useEffect(() => {
@@ -1131,10 +1201,10 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       )}
       <Box flexGrow={1} overflow="hidden" position="relative">
         {/* Pending messages indicator */}
-        {(steeringMessages.length > 0 || followUpMessages.length > 0) && (
+        {(steeringMessages.length > 0 || followUpMessages.length > 0 || compactionQueuedMessages.length > 0) && (
           <Box borderBottom paddingX={1}>
             <Text color="yellow" dim>
-              Queued: {steeringMessages.length} steer, {followUpMessages.length} follow-up (Ctrl+Alt+E to edit)
+              Queued: {steeringMessages.length} steer, {followUpMessages.length} follow-up, {compactionQueuedMessages.length} local (Ctrl+Alt+E to edit)
             </Text>
           </Box>
         )}
