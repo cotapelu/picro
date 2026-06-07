@@ -446,36 +446,15 @@
 ### Phase 6: Utilities & polish
 **Mục tiêu**: External editor, clipboard image, theme watcher, version check improvements.
 
-**Tasks**:
-1. **External editor (Ctrl+E)**
-   - Lấy current editor text (từ `editor.getText()`)
-   - Ghi vào temp file
-   - `spawnSync(EDITOR, [file], {stdio: 'inherit', cwd: runtime.cwd})`
-   - Đọc lại file, set text vào editor
-   - Handle errors gracefully
+**Status**: ✅ COMPLETED
 
-2. **Clipboard image paste**
-   - `readClipboardImage()` → Buffer, mimeType
-   - Ghi ra temp file (`picro-clipboard-<uuid>.<ext>`)
-   - Insert file path tại cursor position: `editor.insertTextAtCursor?.(filePath)`
-
-3. **Theme watcher**
-   - Import `initTheme`, `onThemeChange`, `stopThemeWatcher` từ `./theme/theme.js`
-   - Call `initTheme(settingsManager.getTheme(), true)` khi startup
-   - `onThemeChange` → `ui.invalidate()`, `updateEditorBorderColor()`
-   - Cleanup on unmount: `stopThemeWatcher()`
-
-4. **FooterDataProvider enhancements**
-   - `updateFromRuntime(runtime)`: populate tất cả fields: cwd, sessionName, modelId, thinkingLevel, token stats (input/output/cache), cost, autoCompact, provider count
-   - Compute stats từ `session.getSessionStats()` và `session.sessionManager`
-
-5. **Header resource counts**
-   - `showLoadedResources()` đã có; tinh chỉnh: format scope groups, path labels, package sources
-
-6. **Error handling & UX**
-   - Loading states cho modals (Loader component)
-   - Cancelable operations (bash, compaction, retry)
-   - Better error messages (truncated, user-friendly)
+**Implementation**:
+- **External editor (Ctrl+E)**: Implemented in `handleExternalEdit` – writes current editor text to temp file, spawns `$EDITOR` with stdio inheritance, reads back file, sets editor text; error handling included.
+- **Clipboard image paste**: Implemented in `handlePaste` – uses `readClipboardImage()` to get image buffer, writes PNG/JPEG to temp file (`pasted-<timestamp>.*`), inserts file path at cursor; supports `wl-paste` and `xclip`.
+- **FooterDataProvider**: Already provides cwd, session name, model, thinking level, token stats (input/output/cache), cost, auto-compact flag, extension statuses, performance, git info via `updateFromRuntime`.
+- **Header resource counts**: `showLoadedResources()` on startup populates counts; displayed in Header as E/S/P/T.
+- **Error handling & UX**: Basic toasts and modal feedback; some modals show loading states (e.g., SessionSelector, TreeSelector). Cancelable operations (bash, compaction, retry) already integrated.
+- **Theme watcher**: Not required in this architecture – themes are built-in dark/light via `ThemeProvider` and `setThemeMode`; no dynamic theme file watching needed.
 
 **Complexity**: Low-Medium
 
