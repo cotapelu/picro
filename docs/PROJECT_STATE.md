@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-07 (Iteration 126)
+Last updated: 2026-06-07 (Iteration 127)
 
 ## Metrics
-- Total Iterations: 126
+- Total Iterations: 127
 - Tasks Completed: 295+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 127)
+
+- **Phase 6 Documentation & Finalization** – Marked Phase 6 tasks as completed; updated TODO to reflect that all utilities (external editor, clipboard image, FooterDataProvider, header counts, error handling) are implemented; noted theme watcher not required in current architecture. No code changes; documentation update. All 1612 tests passing, no regressions. Coverage unchanged.
 
 ## Completed Features (Iteration 126)
 
