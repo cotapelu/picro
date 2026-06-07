@@ -13,6 +13,7 @@ import { Footer } from './components/Footer/Footer.js';
 import { createFooterDataProvider, type FooterDataProvider } from './components/Footer/FooterDataProvider.js';
 import { ErrorBoundary, useGlobalErrorHandler } from './ErrorBoundary.js';
 import { ModalRenderers } from './modal-renderers.js';
+import { createExtensionUIContext } from './extension-context.js';
 import { handleCommand } from './command-handlers.js';
 import { CommandPalette } from './modals/CommandPalette.js';
 import { ThinkingModal } from './modals/ThinkingModal.js';
@@ -96,6 +97,9 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
 
   // Extension shortcuts registry
   const extensionShortcutsRef = React.useRef<Map<string, (input: string, key: any) => boolean | void>>(new Map());
+  const widgetDisposersRef = React.useRef<Map<string, () => void>>(new Map());
+  const headerDisposeRef = React.useRef<(() => void) | null>(null);
+  const footerDisposeRef = React.useRef<(() => void) | null>(null);
 
   // Helper to match keyId string like "ctrl+p"
   const matchesKey = (input: string, key: any, keyId: string): boolean => {
@@ -142,6 +146,10 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   }
   const { toggleTheme, isDark, theme } = useTheme();
   const [inputValue, setInputValue] = React.useState('');
+  const inputValueRef = React.useRef(inputValue);
+  React.useEffect(() => {
+    inputValueRef.current = inputValue;
+  }, [inputValue]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { activeModal, setActiveModal } = useModal();
   const [showDebug, setShowDebug] = React.useState(false);
@@ -620,8 +628,40 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   }, [showLoadedResources]);
 
   // Extension widget management (above editor)
-  const [extensionWidgetsAbove, setExtensionWidgetsAbove] = React.useState<Map<string, string>>(new Map<string, string>());
-  const [extensionWidgetsBelow, setExtensionWidgetsBelow] = React.useState<Map<string, string>>(new Map<string, string>());
+  const [extensionWidgetsAbove, setExtensionWidgetsAbove] = React.useState<Map<string, React.ReactNode>>(new Map<string, React.ReactNode>());
+  const [extensionWidgetsBelow, setExtensionWidgetsBelow] = React.useState<Map<string, React.ReactNode>>(new Map<string, React.ReactNode>());
+
+  const setExtensionWidget = React.useCallback((placement: 'above' | 'below', key: string, node: React.ReactNode, dispose?: () => void) => {
+    if (placement === 'above') {
+      const prevDispose = widgetDisposersRef.current.get(key);
+      if (prevDispose) {
+        prevDispose();
+        widgetDisposersRef.current.delete(key);
+      }
+      setExtensionWidgetsAbove(prev => {
+        const next = new Map(prev);
+        next.set(key, node);
+        return next;
+      });
+      if (dispose) {
+        widgetDisposersRef.current.set(key, dispose);
+      }
+    } else {
+      const prevDispose = widgetDisposersRef.current.get(key);
+      if (prevDispose) {
+        prevDispose();
+        widgetDisposersRef.current.delete(key);
+      }
+      setExtensionWidgetsBelow(prev => {
+        const next = new Map(prev);
+        next.set(key, node);
+        return next;
+      });
+      if (dispose) {
+        widgetDisposersRef.current.set(key, dispose);
+      }
+    }
+  }, []);
   const setExtensionWidget = React.useCallback((key: string, content: any, options?: any) => {
     const placement = options?.placement || 'above';
     if (placement === 'above') {
@@ -647,6 +687,9 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   // Autocomplete provider management
   type AutocompleteProvider = (ctx: {sessionId: string; cwd: string; filter: string}) => Promise<Array<{label: string; description?: string; insertText?: string}>>;
   const [autocompleteProviderFactories, setAutocompleteProviderFactories] = React.useState<AutocompleteProvider[]>([]);
+  const addAutocompleteProvider = React.useCallback((factory: any) => {
+    setAutocompleteProviderFactories(prev => [...prev, factory]);
+  }, [setAutocompleteProviderFactories]);
   const registerAutocompleteProvider = React.useCallback((factory: AutocompleteProvider) => {
     setAutocompleteProviderFactories(prev => [...prev, factory]);
   }, []);
@@ -769,6 +812,46 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   // Input editor (default or custom) props
   const [customHeader, setCustomHeader] = React.useState<React.ReactNode>(null);
   const [customFooter, setCustomFooter] = React.useState<React.ReactNode>(null);
+
+  const setCustomHeaderFactory = React.useCallback((factory?: () => React.ReactNode) => {
+    if (factory) {
+      const element = React.createElement(factory);
+      if (headerDisposeRef.current) {
+        headerDisposeRef.current();
+        headerDisposeRef.current = null;
+      }
+      if ((element as any).dispose && typeof (element as any).dispose === 'function') {
+        headerDisposeRef.current = (element as any).dispose;
+      }
+      setCustomHeader(element);
+    } else {
+      if (headerDisposeRef.current) {
+        headerDisposeRef.current();
+        headerDisposeRef.current = null;
+      }
+      setCustomHeader(null);
+    }
+  }, [setCustomHeader]);
+
+  const setCustomFooterFactory = React.useCallback((factory?: () => React.ReactNode) => {
+    if (factory) {
+      const element = React.createElement(factory);
+      if (footerDisposeRef.current) {
+        footerDisposeRef.current();
+        footerDisposeRef.current = null;
+      }
+      if ((element as any).dispose && typeof (element as any).dispose === 'function') {
+        footerDisposeRef.current = (element as any).dispose;
+      }
+      setCustomFooter(element);
+    } else {
+      if (footerDisposeRef.current) {
+        footerDisposeRef.current();
+        footerDisposeRef.current = null;
+      }
+      setCustomFooter(null);
+    }
+  }, [setCustomFooter]);
 
   // Custom overlay (for extensions)
   const [customOverlay, setCustomOverlay] = React.useState<{factory: Function; resolve: (value: any) => void} | null>(null);
@@ -1101,6 +1184,93 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     };
   }, [runtime]);
 
+  // Bind extensions to runtime session if available
+  React.useEffect(() => {
+    if (!runtime?.session) return;
+    const session = runtime.session as any;
+    const runner = session._extensionRunner;
+    if (!runner) return;
+    if (boundExtensionsRef.current) return;
+
+    // Adapter object exposing extension UI methods
+    const adapter: any = {};
+
+    adapter.setHiddenThinkingLabel = setHiddenThinkingLabel;
+    adapter.setToolOutputExpanded = setToolOutputExpanded;
+    adapter.setCustomHeader = setCustomHeaderFactory;
+    adapter.setCustomFooter = setCustomFooterFactory;
+    adapter.setExtensionWidget = setExtensionWidget;
+    adapter.addAutocompleteProvider = addAutocompleteProvider;
+    adapter.notify = (message: string, type?: string) => {
+      addToast(message, type as any);
+    };
+    adapter.showSelectorModal = (title: string, options: readonly string[], opts?: any) => {
+      return new Promise<string | undefined>((resolve) => {
+        setActiveModal({
+          type: 'select',
+          title,
+          options,
+          onSelect: (opt: string) => { setActiveModal(null); resolve(opt); },
+          onCancel: () => { setActiveModal(null); resolve(undefined); },
+        });
+      });
+    };
+    adapter.showConfirmModal = (title: string, message: string, opts?: any) => {
+      return new Promise<boolean>((resolve) => {
+        setActiveModal({
+          type: 'confirmation',
+          title,
+          message,
+          onConfirm: async () => { setActiveModal(null); resolve(true); },
+          onCancel: () => { setActiveModal(null); resolve(false); },
+        });
+      });
+    };
+    adapter.showInputModal = (title: string, placeholder?: string, opts?: any) => {
+      return new Promise<string | undefined>((resolve) => {
+        setActiveModal({
+          type: 'input',
+          title,
+          placeholder,
+          onSubmit: (val: string) => { setActiveModal(null); resolve(val); },
+          onCancel: () => { setActiveModal(null); resolve(undefined); },
+        });
+      });
+    };
+    adapter.showEditorModal = (title: string, prefill?: string, opts?: any) => {
+      return Promise.resolve(prefill);
+    };
+    adapter.showCustomOverlay = showCustomOverlay;
+    adapter.getEditorText = () => inputValueRef.current;
+    adapter.setEditorText = (text: string) => setInputValue(text);
+    adapter.pasteToEditor = (text: string) => setInputValue(prev => prev + text);
+    // Theme methods
+    adapter.getAllThemes = () => [
+      { name: 'dark', path: 'dark' },
+      { name: 'light', path: 'light' },
+    ];
+    adapter.getTheme = () => theme;
+    adapter.setTheme = async (themeOrName: any) => {
+      const name = typeof themeOrName === 'string' ? themeOrName : themeOrName?.name;
+      if (name) {
+        try {
+          await runtime.settings?.set?.('theme', name);
+          await runtime.settings?.save?.();
+          return { success: true };
+        } catch (e) {
+          return { success: false, error: (e as Error).message };
+        }
+      }
+      return { success: false, error: 'Invalid theme' };
+    };
+
+    const context = createExtensionUIContext(adapter);
+    runner.bind(context);
+    setupExtensionShortcuts(runner);
+    runner.loadExtensions?.();
+    boundExtensionsRef.current = true;
+  }, [runtime, setHiddenThinkingLabel, setToolOutputExpanded, setCustomHeaderFactory, setCustomFooterFactory, setExtensionWidget, addAutocompleteProvider, addToast, setActiveModal, showCustomOverlay, inputValueRef, setInputValue, theme, setupExtensionShortcuts]);
+
   // Helper function for /export command
   const generateSessionHtml = (messages: any[], options: { title: string; includeStyles: boolean; includeImages: boolean; cwd: string }) => {
     const { title, includeStyles, includeImages, cwd } = options;
@@ -1224,8 +1394,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       </Box>
       {extensionWidgetsAbove.size > 0 && (
         <Box flexDirection="column" paddingX={1} borderTop="thin">
-          {Array.from(extensionWidgetsAbove.entries()).map(([key, text]) => (
-            <Text key={key}>{text}</Text>
+          {Array.from(extensionWidgetsAbove.entries()).map(([key, node]) => (
+            <Box key={key}>{node}</Box>
           ))}
         </Box>
       )}
@@ -1234,8 +1404,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         : <InputBox {...inputProps} />}
       {extensionWidgetsBelow.size > 0 && (
         <Box flexDirection="column" paddingX={1} borderTop="thin">
-          {Array.from(extensionWidgetsBelow.entries()).map(([key, text]) => (
-            <Text key={key}>{text}</Text>
+          {Array.from(extensionWidgetsBelow.entries()).map(([key, node]) => (
+            <Box key={key}>{node}</Box>
           ))}
         </Box>
       )}
