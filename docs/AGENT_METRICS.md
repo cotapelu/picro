@@ -6,7 +6,7 @@ Track agent performance and reliability across iterations.
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 127 |
+| Total Iterations | 128 |
 | Tasks Completed | 295+
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
@@ -22,6 +22,7 @@ Track agent performance and reliability across iterations.
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
+| 2026-06-07 | 128 | 2 | ✅ | **Phase 5 Fork Integration** – Enhanced UserMessageSelectorModal to return selected text after fork; updated modal-renderers and InkApp to propagate result; editor pre-filled with selected message text. All 1612 tests passing, no regressions. Coverage unchanged.
 | 2026-06-07 | 127 | 3 | ✅ | **Phase 6 Documentation** – Updated TODO to mark Phase 6 as completed; noted theme watcher not required; refined documentation. No code changes. All 1612 tests passing, no regressions. Coverage unchanged.
 | 2026-06-07 | 126 | 5 | ✅ | **Phase 5 Completion & Tests** – Fixed `/clone` to use current leaf (`getLeafId`) instead of first user message; updated command-handler tests for new behavior; verified all session navigation flows (new, resume, clone, fork, tree); improved error handling and feedback. All 1612 tests passing, no regressions. Coverage unchanged.
 | 2026-06-07 | 125 | 6 | ✅ | **Phase 5 TreeSelectorModal Full** – Rewrote TreeSelectorModal to use full hierarchical tree from `sessionManager.getTree()`; implemented flattening with indentation (├─/└─ connectors); added label display, message preview, current leaf highlighting; improved keyboard navigation and boundary clamping; comprehensive unit tests (8 passing). All 1612 tests passing, no regressions. Coverage unchanged. |

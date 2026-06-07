@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-07 (Iteration 127)
+Last updated: 2026-06-07 (Iteration 128)
 
 ## Metrics
-- Total Iterations: 127
+- Total Iterations: 128
 - Tasks Completed: 295+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 128)
+
+- **Phase 5 Fork Integration** – Enhanced UserMessageSelectorModal to return selected text after fork; updated modal-renderers and InkApp to propagate result; editor is pre-filled with selected user message text. All 1612 tests passing, no regressions. Coverage unchanged.
 
 ## Completed Features (Iteration 127)
 
