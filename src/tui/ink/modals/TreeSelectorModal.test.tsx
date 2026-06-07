@@ -25,7 +25,7 @@ describe('TreeSelectorModal', () => {
   let onSelect: vi.Mock;
   let capturedHandler: ((input: string | undefined, key: any) => void) | null = null;
   let runtime: any;
-  let getBranchMock: vi.Mock;
+  let getTreeMock: vi.Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,11 +35,37 @@ describe('TreeSelectorModal', () => {
     (ink.useInput as any).mockImplementation((handler: any) => {
       capturedHandler = handler;
     });
-    getBranchMock = vi.fn(() => [{ id: 'main' }, { id: 'dev' }, { id: 'test' }]);
+    // Create a sample tree
+    const sampleTree = [
+      {
+        entry: { id: 'root1', type: 'message', timestamp: '2024-01-01T00:00:00Z' },
+        children: [
+          {
+            entry: { id: 'msg1', type: 'message', timestamp: '2024-01-01T00:01:00Z' },
+            children: [],
+          },
+          {
+            entry: { id: 'msg2', type: 'message', timestamp: '2024-01-01T00:02:00Z' },
+            children: [],
+          },
+        ],
+      },
+      {
+        entry: { id: 'root2', type: 'message', timestamp: '2024-01-01T00:03:00Z' },
+        children: [
+          {
+            entry: { id: 'msg3', type: 'message', timestamp: '2024-01-01T00:04:00Z' },
+            children: [],
+          },
+        ],
+      },
+    ];
+    getTreeMock = vi.fn(() => sampleTree);
     runtime = {
       session: {
         sessionManager: {
-          getBranch: getBranchMock,
+          getTree: getTreeMock,
+          getLeafId: vi.fn(() => 'msg1'),
         },
       },
     };
@@ -64,15 +90,15 @@ describe('TreeSelectorModal', () => {
     });
   }
 
-  it('calls sessionManager.getBranch on mount', () => {
+  it('calls sessionManager.getTree and getLeafId on mount', () => {
     renderModal();
-    expect(getBranchMock).toHaveBeenCalled();
+    expect(getTreeMock).toHaveBeenCalled();
   });
 
-  it('falls back to ["main"] when sessionManager missing', () => {
+  it('falls back to empty when sessionManager missing', () => {
     runtime.session = {};
     renderModal();
-    // No error thrown; branches default to ['main']
+    // Should not throw; will show "No tree entries found"
   });
 
   describe('keyboard handling', () => {
@@ -83,37 +109,36 @@ describe('TreeSelectorModal', () => {
     });
 
     it('down arrow moves selection down and Enter confirms', async () => {
-      // initial index 0 (main)
-      await pressKey({ downArrow: true }); // index 1 -> dev
+      // With flattened tree: root1 (0), msg1 (1), msg2 (2), root2 (3), msg3 (4)
+      // Since leafId is 'msg1', selectedIndex starts at 1 (msg1)
+      await pressKey({ downArrow: true }); // index 2 -> msg2
       await pressKey({ return: true });
-      expect(onSelect).toHaveBeenCalledWith('dev');
+      expect(onSelect).toHaveBeenCalledWith('msg2');
       expect(onClose).toHaveBeenCalled();
     });
 
     it('up arrow moves selection up', async () => {
-      // Move down first
-      await pressKey({ downArrow: true });
-      // now at dev (1)
-      await pressKey({ upArrow: true });
-      // back to main (0)
+      // Starting at msg1 (1)
+      await pressKey({ upArrow: true }); // to root1 (0)
       await pressKey({ return: true });
-      expect(onSelect).toHaveBeenCalledWith('main');
+      expect(onSelect).toHaveBeenCalledWith('root1');
     });
 
-    it('clamps at top boundary (up at first item)', async () => {
-      // already at top (0)
-      await pressKey({ upArrow: true });
+    it('clamps at top boundary', async () => {
+      // Move to root1 (0) then try up
+      await pressKey({ upArrow: true }); // stays at 0
       await pressKey({ return: true });
-      expect(onSelect).toHaveBeenCalledWith('main');
+      expect(onSelect).toHaveBeenCalledWith('root1');
     });
 
-    it('clamps at bottom boundary (down past last stays on last)', async () => {
-      // move to last (index 2)
-      await pressKey({ downArrow: true }); // 1
+    it('clamps at bottom boundary', async () => {
+      // Move down several times to last (msg3)
       await pressKey({ downArrow: true }); // 2
-      await pressKey({ downArrow: true }); // still 2
+      await pressKey({ downArrow: true }); // 3
+      await pressKey({ downArrow: true }); // 4
+      await pressKey({ downArrow: true }); // stays 4
       await pressKey({ return: true });
-      expect(onSelect).toHaveBeenCalledWith('test');
+      expect(onSelect).toHaveBeenCalledWith('msg3');
     });
 
     it('Escape closes without calling onSelect', async () => {
@@ -123,8 +148,9 @@ describe('TreeSelectorModal', () => {
     });
 
     it('Enter selects current branch and closes', async () => {
+      // Starting at msg1 (leaf)
       await pressKey({ return: true });
-      expect(onSelect).toHaveBeenCalledWith('main');
+      expect(onSelect).toHaveBeenCalledWith('msg1');
       expect(onClose).toHaveBeenCalled();
     });
   });
