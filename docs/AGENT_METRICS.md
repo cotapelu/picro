@@ -2,12 +2,12 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-07, Iteration 121)
+## Current Metrics (as of 2026-06-07, Iteration 122)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 121 |
-| Tasks Completed | 280+ |
+| Total Iterations | 122 |
+| Tasks Completed | 288+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
@@ -23,6 +23,7 @@ Track agent performance and reliability across iterations.
 
 | Date | Iteration | Tasks | Build Status | Notes |
 | 2026-06-07 | 121 | 8 | ✅ | **Phase 3: Compaction & Retry UI** – Implemented message queuing during compaction/retry: `queueCompactionMessage`, `flushCompactionQueue`, and `restoreQueuedMessagesToEditor`. Modified `handleSubmit` to queue messages when `isCompacting` or `retryAttempt > 0`. Enhanced `handleDequeue` to include local queued messages. Updated pending indicator to display local queue count. Events flush queue after `compaction_end` (non‑aborted) and `auto_retry_end` (successful). All 1612 tests passing, no regressions. Coverage remains ~69.0%. |
+| 2026-06-07 | 122 | 8 | ✅ | **Phase 4 Extension System (Partial)** – Extended `ExtensionUIContext` with full forwarding methods; implemented `bindExtensions` in InkApp; added widget state with disposal, rendering, and custom header/footer; integrated autocomplete provider registration; stubbed theme APIs; improved extension shortcut integration. All 1612 tests passing, no regressions. Coverage unchanged.
 | 2026-06-07 | 120 | 7 | ✅ | **Phase 1: Core State & Event Subscription** – Expanded `AgentSessionInterface` to expose all required session methods; extended `useRuntime` type with comprehensive capabilities; added missing state variables to `InkApp.tsx` for reference parity; enhanced signal handling (SIGCONT handler, stored unsubscribe for cleanup); refined event subscription cleanup. All 1612 tests passing, no regressions. Coverage remains ~69.0%. |
 | 2026-06-06 | 119 | 2 | ✅ | **Event handling corrections & UI threading:** Fixed streaming message event types to match AgentEvent spec (`message_start`, `message_update`, `message_end`, `tool_execution_start/end`). Added `hiddenThinkingLabel` prop threading through MessageList → MessageItem → AssistantMessage. Updated tests to use correct event shapes. No regressions. |
 | 2026-06-06 | 118 | 3 | ✅ | **Missing AgentSession methods & UI improvements:** Added missing session methods to align with reference (`getUserMessagesForForking`, `getLastAssistantText`, `getSessionStats`, `getContextUsage`, `abortBranchSummary`, `autoCompactionEnabled` getter/setter, `getTree`, `getLeafId`, `setSessionName`). Integrated `isBashRunning` check into Escape handler for aborting bash commands. Fixed `useInkApp` hook tests by improving argument parsing and using `runtime.session.messages` directly; all tests now passing. No regressions. |

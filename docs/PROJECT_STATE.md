@@ -9,6 +9,10 @@ Last updated: 2026-06-07 (Iteration 121)
 - Build Success Rate: 100%
 - Zero regressions
 
+## Completed Features (Iteration 122)
+
+- **Phase 4 Extension System (Partial)** – Extended `ExtensionUIContext` with full forwarding methods; implemented `bindExtensions` in InkApp; added widget state with disposal, rendering, and custom header/footer; integrated autocomplete provider registration; stubbed theme APIs; improved extension shortcut integration. All 1612 tests passing, no regressions. Coverage unchanged.
+
 ## Completed Features (Iteration 121)
 
 - **Phase 3: Compaction & Retry UI** – Implemented message queuing during compaction/retry: `queueCompactionMessage`, `flushCompactionQueue`, and `restoreQueuedMessagesToEditor`. Modified `handleSubmit` to queue messages when `isCompacting` or `retryAttempt > 0`. Enhanced `handleDequeue` to include local queued messages. Updated pending indicator to display local queue count. Events flush queue after `compaction_end` (non‑aborted) and `auto_retry_end` (successful). All 1612 tests passing, no regressions. Coverage remains ~69.0%.
