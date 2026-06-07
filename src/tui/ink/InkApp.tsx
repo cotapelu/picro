@@ -543,10 +543,72 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     }
   }, [runtime, addToast]);
 
-  const handleTreeSelect = useCallback((branchId: string) => {
-    // Open summarization options modal
-    setActiveModal({ type: 'tree-summarization', branchId });
-  }, []);
+  const handleTreeSelect = useCallback(async (branchId: string) => {
+    // Close tree selector modal
+    setActiveModal(null);
+    // Show summarization options
+    setActiveModal({
+      type: 'select',
+      title: 'Branch Navigation',
+      options: ['No summary', 'Summarize with default', 'Summarize with custom prompt...'],
+      onSelect: async (option: string) => {
+        setActiveModal(null);
+        const session = runtime.session as any;
+        if (option === 'No summary') {
+          try {
+            await session.navigateTree(branchId, { summarize: false });
+            addToast('Navigated to branch', 'success');
+          } catch (err: any) {
+            addToast(`Navigation failed: ${err.message}`, 'error');
+          }
+        } else if (option === 'Summarize with default') {
+          setWorkingVisibleState(true);
+          setWorkingMessageState('Summarizing branch...');
+          try {
+            await session.navigateTree(branchId, { summarize: true });
+            addToast('Navigated with summary', 'success');
+          } catch (err: any) {
+            addToast(`Navigation failed: ${err.message}`, 'error');
+          } finally {
+            setWorkingVisibleState(false);
+            setWorkingMessageState('');
+          }
+        } else if (option === 'Summarize with custom prompt...') {
+          // Open input modal for custom instructions
+          setActiveModal({
+            type: 'input',
+            title: 'Custom Summarization Instructions',
+            placeholder: 'Enter instructions for summarizing the branch...',
+            onSubmit: async (customInstructions: string) => {
+              setActiveModal(null);
+              const text = customInstructions.trim();
+              if (!text) {
+                addToast('No instructions provided', 'info');
+                return;
+              }
+              setWorkingVisibleState(true);
+              setWorkingMessageState('Summarizing branch...');
+              try {
+                await session.navigateTree(branchId, { summarize: true, customInstructions: text });
+                addToast('Navigated with custom summary', 'success');
+              } catch (err: any) {
+                addToast(`Navigation failed: ${err.message}`, 'error');
+              } finally {
+                setWorkingVisibleState(false);
+                setWorkingMessageState('');
+              }
+            },
+            onCancel: () => {
+              // nothing
+            }
+          });
+        }
+      },
+      onCancel: () => {
+        // nothing
+      }
+    });
+  }, [runtime, setActiveModal, setWorkingVisibleState, setWorkingMessageState, addToast]);
 
   // Path autocomplete using fd
   const handlePathComplete = useCallback(async (partial: string): Promise<string[]> => {
@@ -1460,6 +1522,8 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           onSelectCommand={handleSelectCommand}
           onTreeSelect={handleTreeSelect}
           onClose={() => setActiveModal(null)}
+          setActiveModal={setActiveModal}
+          addToast={addToast}
         />
       )}
       {/* Toast notifications */}

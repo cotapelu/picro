@@ -1,6 +1,11 @@
 /** @jsxImportSource react */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Box, Text, useInput, useFocus } from 'ink';
+import { SessionManager } from '../../../session/session-manager.js';
+import { unlink } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import * as os from 'node:os';
 
 interface Session {
   id: string;
@@ -12,11 +17,17 @@ interface Session {
 }
 
 interface SessionSelectorModalProps {
-  runtime: any; // AgentSessionRuntimeInterface
+  runtime: any;
   onClose: () => void;
+  setActiveModal: (modal: any) => void;
+  addToast: (message: string, type?: 'info' | 'success' | 'error') => void;
 }
 
-export const SessionSelectorModal: React.FC<SessionSelectorModalProps> = ({ runtime, onClose }) => {
+/**
+ * Modal for selecting a session to resume.
+ * Supports navigation, loading states, errors, rename, delete, create new.
+ */
+export const SessionSelectorModal: React.FC<SessionSelectorModalProps> = ({ runtime, onClose, setActiveModal, addToast }) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   // Auto-focus this modal
   const { focus } = useFocus();
@@ -25,28 +36,118 @@ export const SessionSelectorModal: React.FC<SessionSelectorModalProps> = ({ runt
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const list = await runtime.listSessions();
-        // Sort by modified descending (most recent first)
-        const sorted = list.sort((a: any, b: any) => {
-          const dateA = a.modified?.getTime() || 0;
-          const dateB = b.modified?.getTime() || 0;
-          return dateB - dateA;
-        });
-        setSessions(sorted);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load sessions');
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const loadSessions = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const list = await runtime.listSessions();
+      const sorted = list.sort((a: any, b: any) => {
+        const dateA = a.modified?.getTime() || 0;
+        const dateB = b.modified?.getTime() || 0;
+        return dateB - dateA;
+      });
+      setSessions(sorted);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load sessions');
+    } finally {
+      setLoading(false);
+    }
   }, [runtime]);
+
+  useEffect(() => {
+    loadSessions();
+  }, [loadSessions]);
+
+  const handleRename = () => {
+    const session = sessions[selectedIndex];
+    if (!session) return;
+    const currentName = session.name || '';
+    setActiveModal({
+      type: 'input',
+      title: 'Rename Session',
+      placeholder: 'Session name',
+      initialValue: currentName,
+      onSubmit: async (newName: string) => {
+        setActiveModal(null);
+        const name = newName.trim();
+        if (!name) return;
+        try {
+          const mgr = SessionManager.open(session.path);
+          mgr.appendSessionInfo(name);
+          addToast(`Session renamed to: ${name}`, 'success');
+          loadSessions();
+        } catch (err: any) {
+          addToast('Failed to rename session: ' + err.message, 'error');
+        }
+      },
+      onCancel: () => {}
+    });
+  };
+
+  const handleDelete = () => {
+    const session = sessions[selectedIndex];
+    if (!session) return;
+    setActiveModal({
+      type: 'confirmation',
+      title: 'Delete Session',
+      message: `Delete session "${session.name || 'session'}"? This cannot be undone.`,
+      onConfirm: async () => {
+        setActiveModal(null);
+        try {
+          let deleted = false;
+          // Try trash first
+          try {
+            const trashResult = spawnSync('trash', [session.path], { encoding: 'utf-8' });
+            if (trashResult.status === 0) {
+              deleted = true;
+            }
+          } catch {}
+          if (!deleted || existsSync(session.path)) {
+            if (existsSync(session.path)) {
+              await unlink(session.path);
+            }
+          }
+          addToast('Session deleted', 'success');
+          loadSessions();
+        } catch (err: any) {
+          addToast('Failed to delete session: ' + err.message, 'error');
+        }
+      },
+      onCancel: () => {}
+    });
+  };
+
+  const handleCreateNew = async () => {
+    try {
+      const result = await runtime.newSession();
+      if (result.cancelled) {
+        addToast('New session cancelled', 'info');
+      } else {
+        addToast('New session created', 'success');
+        loadSessions();
+      }
+    } catch (err: any) {
+      addToast('Failed to create session: ' + (err as Error).message, 'error');
+    }
+  };
 
   useInput((input, key) => {
     if (key.escape) {
       onClose();
+      return;
+    }
+
+    // Shortcuts
+    if (key.ctrl && input === 'r') {
+      handleRename();
+      return;
+    }
+    if (key.ctrl && input === 'd') {
+      handleDelete();
+      return;
+    }
+    if (key.ctrl && input === 'n') {
+      handleCreateNew();
       return;
     }
 
@@ -100,7 +201,7 @@ export const SessionSelectorModal: React.FC<SessionSelectorModalProps> = ({ runt
     );
   }
 
-  const formatDate = (d: Date) => d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  const formatDate = (d: Date) => d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
     <Box flexDirection="column" borderStyle="round" borderColor="cyan" padding={1}>
@@ -128,7 +229,7 @@ export const SessionSelectorModal: React.FC<SessionSelectorModalProps> = ({ runt
         })}
       </Box>
       <Box marginTop={1}>
-        <Text dim>↑↓ to navigate, Enter to select, Esc to cancel</Text>
+        <Text dim>↑↓ navigate · Enter select · Ctrl+N new · Ctrl+R rename · Ctrl+D delete · Esc cancel</Text>
       </Box>
     </Box>
   );

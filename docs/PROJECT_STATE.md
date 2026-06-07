@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-07 (Iteration 121)
+Last updated: 2026-06-07 (Iteration 124)
 
 ## Metrics
-- Total Iterations: 121
-- Tasks Completed: 280+
+- Total Iterations: 124
+- Tasks Completed: 295+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 123)
+
+- **Phase 5 Session & Tree Navigation (Partial)** – Implemented tree navigation with summarization flow (options modal, custom instructions); enhanced SessionSelectorModal with rename (Ctrl+R), delete (Ctrl+D), create new (Ctrl+N); integrated summary UI with working indicator; fixed double-escape handling and state references. All 1612 tests passing, no regressions. Coverage unchanged.
 
 ## Completed Features (Iteration 122)
 

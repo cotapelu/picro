@@ -17,7 +17,6 @@ import { SessionInfoModal } from './modals/SessionInfoModal.js';
 import { ChangelogModal } from './modals/ChangelogModal.js';
 import { HotkeysModal } from './modals/HotkeysModal.js';
 import { TreeSelectorModal } from './modals/TreeSelectorModal.js';
-import { TreeSummarizationModal } from './modals/TreeSummarizationModal.js';
 import { BashOutputModal } from './modals/BashOutputModal.js';
 import { InputModal } from './modals/InputModal.js';
 import { SelectModal } from './modals/SelectModal.js';
@@ -39,7 +38,6 @@ export type ModalState =
   | { type: 'changelog' }
   | { type: 'hotkeys' }
   | { type: 'tree-selector' }
-  | { type: 'tree-summarization'; branchId: string }
   | { type: 'bash-output'; command: string; output: string; error?: boolean }
   | { type: 'stats'; stats: any }
   | { type: 'armin' }
@@ -55,6 +53,8 @@ interface ModalRenderersProps {
   onSelectCommand: (commandId: string, slashArgs?: string) => void;
   onTreeSelect: (branchId: string) => void;
   onClose: () => void;
+  setActiveModal: (modal: ModalState) => void;
+  addToast: (message: string, type?: 'info' | 'success' | 'error') => void;
 }
 
 export const ModalRenderers: React.FC<ModalRenderersProps> = ({
@@ -63,6 +63,8 @@ export const ModalRenderers: React.FC<ModalRenderersProps> = ({
   onSelectCommand,
   onTreeSelect,
   onClose,
+  setActiveModal,
+  addToast,
 }) => {
   if (!activeModal) return null;
 
@@ -125,7 +127,12 @@ export const ModalRenderers: React.FC<ModalRenderersProps> = ({
     case 'session-selector':
       return (
         <Modal onClose={onClose}>
-          <SessionSelectorModal runtime={runtime} onClose={onClose} />
+          <SessionSelectorModal
+            runtime={runtime}
+            onClose={onClose}
+            setActiveModal={setActiveModal}
+            addToast={addToast}
+          />
         </Modal>
       );
 
@@ -192,29 +199,6 @@ export const ModalRenderers: React.FC<ModalRenderersProps> = ({
             runtime={runtime}
             onClose={onClose}
             onSelect={onTreeSelect}
-          />
-        </Modal>
-      );
-
-    case 'tree-summarization':
-      return (
-        <Modal onClose={onClose}>
-          <SelectModal
-            title="Summarization Options"
-            options={['No summary', 'Summarize with default', 'Summarize with custom prompt...']}
-            onSelect={async (option) => {
-              onClose();
-              if (!activeModal.branchId) return;
-              if (option === 'No summary') {
-                await (runtime as any).navigateTree(activeModal.branchId, { summarize: false });
-              } else if (option === 'Summarize with default') {
-                await (runtime as any).navigateTree(activeModal.branchId, { summarize: true });
-              } else if (option === 'Summarize with custom prompt...') {
-                // Open editor for custom instructions - handled by caller
-                onTreeSelect(activeModal.branchId); // Signal to open editor
-              }
-            }}
-            onCancel={onClose}
           />
         </Modal>
       );
