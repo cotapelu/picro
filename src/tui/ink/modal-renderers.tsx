@@ -55,6 +55,7 @@ interface ModalRenderersProps {
   onClose: () => void;
   setActiveModal: (modal: ModalState) => void;
   addToast: (message: string, type?: 'info' | 'success' | 'error') => void;
+  onForkResult?: (text: string) => void;
 }
 
 export const ModalRenderers: React.FC<ModalRenderersProps> = ({
@@ -65,6 +66,7 @@ export const ModalRenderers: React.FC<ModalRenderersProps> = ({
   onClose,
   setActiveModal,
   addToast,
+  onForkResult,
 }) => {
   if (!activeModal) return null;
 
@@ -160,7 +162,7 @@ export const ModalRenderers: React.FC<ModalRenderersProps> = ({
     case 'user-message-selector':
       return (
         <Modal onClose={onClose}>
-          <UserMessageSelectorModal runtime={runtime} onClose={onClose} />
+          <UserMessageSelectorModal runtime={runtime} onClose={onClose} onForkResult={onForkResult} />
         </Modal>
       );
 

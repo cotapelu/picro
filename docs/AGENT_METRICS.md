@@ -6,7 +6,7 @@ Track agent performance and reliability across iterations.
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 131 |
+| Total Iterations | 132 |
 | Tasks Completed | 295+
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
@@ -21,6 +21,7 @@ Track agent performance and reliability across iterations.
 
 ## History
 
+| 2026-06-07 | 132 | 1 | ✅ | **Fix: Fork result integration** – Added missing onForkResult prop wiring and consumption that was previously documented but not committed. No new tests. All 1632 tests passing, no regressions. Coverage unchanged.
 | 2026-06-07 | 131 | 1 | ✅ | **Phase 7 Services Factory Tests** – Added comprehensive unit tests for `createAgentSessionServices` covering defaults, custom overrides, resourceLoaderOptions propagation, extension discovery errors, flag parsing, and error propagation. 12 new tests; all 1632 tests passing, no regressions. Coverage increased.
 | 2026-06-07 | 130 | 1 | ✅ | **Phase 7 Telemetry Tests** – Added telemetry.extra.test.ts covering flush when disabled, listener error handling, and enabled flag toggling with queue. All 1620 tests passing, no regressions. Coverage increased slightly.
 | 2026-06-07 | 129 | 1 | ✅ | **Phase 7 Coverage Increment** – Added overflow edge case tests (image+text combinations, large message truncation, toolResult handling). Increased test coverage modestly. All 1617 tests passing, no regressions. Coverage ~69.5%.

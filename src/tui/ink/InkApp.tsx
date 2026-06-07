@@ -1524,6 +1524,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           onClose={() => setActiveModal(null)}
           setActiveModal={setActiveModal}
           addToast={addToast}
+          onForkResult={(text) => setInputValue(text)}
         />
       )}
       {/* Toast notifications */}

@@ -14,6 +14,7 @@ interface UserMessageItem {
 interface UserMessageSelectorModalProps {
   runtime: AgentSessionRuntimeInterface;
   onClose: () => void;
+  onForkResult?: (selectedText: string) => void;
 }
 
 export const UserMessageSelectorModal: React.FC<UserMessageSelectorModalProps> = ({ runtime, onClose }) => {
@@ -80,7 +81,10 @@ export const UserMessageSelectorModal: React.FC<UserMessageSelectorModalProps> =
           if (result.cancelled) {
             // Fork was cancelled
           } else {
-            // Fork succeeded
+            // Fork succeeded – notify parent with selectedText if available
+            if (result.selectedText && typeof onForkResult === 'function') {
+              onForkResult(result.selectedText);
+            }
           }
         }).catch((err: any) => {
           console.error('Fork failed:', err);

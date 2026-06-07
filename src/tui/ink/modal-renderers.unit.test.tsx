@@ -31,9 +31,7 @@ function getProps(activeModal: any, runtimeOverrides: any = {}) {
     authStorage: { setApiKey: vi.fn() },
     thinkingLevel: 'medium',
     setThinkingLevel: vi.fn(),
-    // For modals that need session or resourceLoader, provide minimal mocks
     session: {},
-    // Provide default empty resourceLoader; can override
     _resourceLoader: { getSkills: () => ({ skills: [] }), getPromptTemplates: () => [] },
     _extensionRunner: { getCommands: () => [] },
     ...runtimeOverrides,
@@ -44,6 +42,9 @@ function getProps(activeModal: any, runtimeOverrides: any = {}) {
     onSelectCommand: mockOnSelectCommand,
     onTreeSelect: mockOnTreeSelect,
     onClose: mockOnClose,
+    onForkResult: vi.fn(),
+    setActiveModal: vi.fn(),
+    addToast: vi.fn(),
   };
 }
 
