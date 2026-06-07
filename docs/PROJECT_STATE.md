@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-06 (Iteration 119)
+Last updated: 2026-06-07 (Iteration 120)
 
 ## Metrics
-- Total Iterations: 119
-- Tasks Completed: 268+
+- Total Iterations: 120
+- Tasks Completed: 275+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 120)
+
+- **Phase 1: Core State & Event Subscription** – Expanded `AgentSessionInterface` to expose all required session methods; extended `useRuntime` type with comprehensive capabilities; added missing state variables to `InkApp.tsx` for reference parity; enhanced signal handling (SIGCONT handler, stored unsubscribe for cleanup); refined event subscription cleanup. All 1612 tests passing, no regressions. Coverage remains ~69.0%.
 
 ## Completed Features (Iteration 116)
 

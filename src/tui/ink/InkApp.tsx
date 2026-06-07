@@ -76,6 +76,23 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
   const [retryEscapeHandler, setRetryEscapeHandler] = React.useState<(() => void) | null>(null);
   const [autoCompactionEscapeHandler, setAutoCompactionEscapeHandler] = React.useState<(() => void) | null>(null);
 
+  // Missing state for parity with InteractiveMode
+  const streamingComponent = React.useRef<any>(null);
+  const streamingMessage = React.useRef<any>(null);
+  const pendingTools = React.useRef<Map<string, any>>(new Map());
+  const [compactionQueuedMessages, setCompactionQueuedMessages] = React.useState<Array<{text: string, mode: 'steer'|'followUp'}>>([]);
+  const autoCompactionLoader = React.useRef<any>(null);
+  const retryLoader = React.useRef<any>(null);
+  const bashComponent = React.useRef<any>(null);
+  const pendingBashComponents = React.useRef<any[]>([]);
+  const [changelogMarkdown, setChangelogMarkdown] = React.useState<string | undefined>(undefined);
+  const [startupNoticesShown, setStartupNoticesShown] = React.useState<boolean>(false);
+  const [anthropicSubscriptionWarningShown, setAnthropicSubscriptionWarningShown] = React.useState<boolean>(false);
+  const lastStatusSpacer = React.useRef<any>(null);
+  const lastStatusText = React.useRef<any>(null);
+  const signalCleanupHandlers = React.useRef<Array<() => void>>([]);
+  const unsubscribeRef = React.useRef<(() => void) | null>(null);
+
   // Extension shortcuts registry
   const extensionShortcutsRef = React.useRef<Map<string, (input: string, key: any) => boolean | void>>(new Map());
 
@@ -205,7 +222,11 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           break;
       }
     });
-    return () => unsubscribe?.();
+    unsubscribeRef.current = unsubscribe;
+    return () => {
+      unsubscribe?.();
+      unsubscribeRef.current = null;
+    };
   }, [runtime, footerProvider]);
 
   // Command handler for slash commands (both manual and from palette)
@@ -999,9 +1020,14 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     };
     process.on('SIGTERM', () => handleSignal('SIGTERM'));
     process.on('SIGHUP', () => handleSignal('SIGHUP'));
+    const handleCont = () => {
+      console.log('Resumed from suspend');
+    };
+    process.on('SIGCONT', handleCont);
     return () => {
       process.off('SIGTERM', handleSignal);
       process.off('SIGHUP', handleSignal);
+      process.off('SIGCONT', handleCont);
     };
   }, [runtime]);
 

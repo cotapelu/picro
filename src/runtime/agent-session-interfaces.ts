@@ -5,7 +5,7 @@
  */
 
 /**
- * Agent session interface - minimal interface for UI to interact with runtime
+ * Agent session interface - full interface for UI to interact with session
  */
 export interface AgentSessionInterface {
   prompt(text: string, options?: { images?: unknown[] }): Promise<void>;
@@ -18,6 +18,55 @@ export interface AgentSessionInterface {
   setThinkingLevel(level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh"): void;
   // Performance metrics (if enabled)
   getPerformanceStats?(): { sampleCount: number; timeSpanMS: number; avgCpuUserMS: number; avgCpuSystemMS: number; avgRSSMB: number; avgHeapUsedMB: number; peakRSSMB: number; peakHeapUsedMB: number } | null;
+
+  // Queue management
+  getSteeringMessages(): readonly string[];
+  getFollowUpMessages(): readonly string[];
+  clearQueue(): { steering: string[]; followUp: string[] };
+
+  // Tool definitions
+  getToolDefinition(name: string): any;
+
+  // Model handling
+  cycleModel(direction?: "next" | "prev"): { model: any; thinkingLevel?: string } | undefined;
+  setModel(model: any): Promise<void>;
+  setAutoCompactionEnabled(enabled: boolean): void;
+  getContextUsage(): { tokens: number; contextWindow: number; percent: number } | undefined;
+
+  // Tree navigation and session branching
+  getTree(): SessionTreeNode[];
+  getLeafId(): string | null;
+  navigateTree(branchId: string, options?: { summarize?: boolean; customInstructions?: string }): Promise<{ cancelled: boolean; selectedText?: string }>;
+
+  // Session stats and forking
+  getSessionStats(): SessionStats;
+  getUserMessagesForForking(): Array<{ entryId: string; text: string }>;
+  getLastAssistantText(): string | undefined;
+
+  // Compaction
+  compact(customInstructions?: { customInstructions?: string }): Promise<void>;
+  abortCompaction(): void;
+
+  // Retry
+  abortRetry(): void;
+
+  // Bash execution
+  recordBashResult(command: string, output: string, exitCode: number, cancelled: boolean, truncated: boolean, fullOutputPath?: string, options?: { excludeFromContext?: boolean }): void;
+  abortBash(): void;
+
+  // Session name (via session manager)
+  sessionManager: {
+    getSessionName(): string | undefined;
+    getEntries(): any[];
+    getCwd(): string;
+    setSessionName(name: string): void;
+  };
+
+  // Reload resources
+  reload?(): Promise<void>;
+
+  // Extension runner reference (for binding extensions)
+  get _extensionRunner?(): any;
 }
 
 /**
@@ -48,13 +97,30 @@ export interface AgentSessionRuntimeInterface {
  * Agent session event types (subset for UI handling)
  */
 export type AgentSessionRuntimeEvent = 
+  // Agent lifecycle
   | { type: 'agent_start' }
   | { type: 'agent_end' }
+  // Messages
   | { type: 'message_start'; message: { role: string; id?: string } }
   | { type: 'message_update'; message: { role: string; content?: unknown[] } }
   | { type: 'message_end'; message: { role: string; stopReason?: string } }
+  // Tool execution
   | { type: 'tool_execution_start'; toolCallId: string; toolName: string; args: unknown }
   | { type: 'tool_execution_update'; toolCallId: string; partialResult?: unknown }
   | { type: 'tool_execution_end'; toolCallId: string; result: unknown; isError?: boolean }
+  // Queue
   | { type: 'queue_update'; steering: readonly string[]; followUp: readonly string[] }
+  // Compaction
+  | { type: 'compaction_start'; reason?: 'manual' | 'auto' | 'overflow' }
+  | { type: 'compaction_end'; reason?: 'manual' | 'auto' | 'overflow'; aborted?: boolean; willRetry?: boolean; errorMessage?: string; summary?: string; tokensBefore?: number }
+  // Retry
+  | { type: 'auto_retry_start'; attempt: number; delayMs?: number }
+  | { type: 'auto_retry_end'; success: boolean }
+  // Model change
+  | { type: 'model_change'; model: any }
+  // Session tree update
+  | { type: 'session_tree' }
+  // Session info changed
+  | { type: 'session_info_changed' }
+  // Errors
   | { type: 'error'; error: string };

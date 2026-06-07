@@ -2,18 +2,18 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-06, Iteration 119)
+## Current Metrics (as of 2026-06-07, Iteration 120)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 118 |
-| Tasks Completed | 268+ |
+| Total Iterations | 120 |
+| Tasks Completed | 275+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1610/1610 tests, 14 skipped, 1 todo) |
+| Test Pass Rate | 100% (1612/1612 tests, 14 skipped, 1 todo) |
 | Coverage (statements) | ~69.0% |
 | Coverage (branches) | ~60.5% |
 | Coverage (functions) | ~68.0% |
@@ -22,6 +22,7 @@ Track agent performance and reliability across iterations.
 ## History
 
 | Date | Iteration | Tasks | Build Status | Notes |
+| 2026-06-07 | 120 | 7 | ✅ | **Phase 1: Core State & Event Subscription** – Expanded `AgentSessionInterface` to expose all required session methods; extended `useRuntime` type with comprehensive capabilities; added missing state variables to `InkApp.tsx` for reference parity; enhanced signal handling (SIGCONT handler, stored unsubscribe for cleanup); refined event subscription cleanup. All 1612 tests passing, no regressions. Coverage remains ~69.0%. |
 | 2026-06-06 | 119 | 2 | ✅ | **Event handling corrections & UI threading:** Fixed streaming message event types to match AgentEvent spec (`message_start`, `message_update`, `message_end`, `tool_execution_start/end`). Added `hiddenThinkingLabel` prop threading through MessageList → MessageItem → AssistantMessage. Updated tests to use correct event shapes. No regressions. |
 | 2026-06-06 | 118 | 3 | ✅ | **Missing AgentSession methods & UI improvements:** Added missing session methods to align with reference (`getUserMessagesForForking`, `getLastAssistantText`, `getSessionStats`, `getContextUsage`, `abortBranchSummary`, `autoCompactionEnabled` getter/setter, `getTree`, `getLeafId`, `setSessionName`). Integrated `isBashRunning` check into Escape handler for aborting bash commands. Fixed `useInkApp` hook tests by improving argument parsing and using `runtime.session.messages` directly; all tests now passing. No regressions. |
 | 2026-06-06 | 117 | 2 | ✅ | **Double-escape feature & hook unit tests:** Implemented double‑tap Escape detection to open tree selector or fork selector based on runtime setting `doubleEscapeAction`. Added comprehensive unit tests for `useTheme` hook (4 tests, >90% coverage) and `useExtensionUIState` hook (14 tests, >97% coverage). Refactored `useExtensionUIState` with type alias for clarity. Overall test suite: 1578 tests passing (+29 new), no regressions. Coverage increased to 69.01% statements (+0.41%), 60.49% branches (+0.09%), 67.99% functions (+0.39%), 69.81% lines (+0.51%). |

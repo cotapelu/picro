@@ -10,19 +10,39 @@ type ExtendedRuntime = import('../../../runtime/index.js').AgentSessionRuntimeIn
     messages: any[];
     isStreaming: boolean;
     thinkingLevel: string;
+    // Event subscription
+    subscribe(listener: (event: AgentSessionRuntimeEvent) => void): () => void;
     // Methods
     prompt(text: string, options?: any): Promise<void>;
     abort(): void;
     getSteeringMessages(): readonly string[];
     getFollowUpMessages(): readonly string[];
+    clearQueue(): { steering: string[]; followUp: string[] };
     getToolDefinition(name: string): any;
     cycleThinkingLevel(): string | undefined;
     setModel(model: any): Promise<void>;
+    cycleModel(direction?: 'next' | 'prev'): { model: any; thinkingLevel?: string } | undefined;
+    setAutoCompactionEnabled(enabled: boolean): void;
+    getContextUsage(): { tokens: number; contextWindow: number; percent: number } | undefined;
+    getTree(): any[];
+    getLeafId(): string | null;
+    navigateTree(branchId: string, options?: { summarize?: boolean; customInstructions?: string }): Promise<{ cancelled: boolean; selectedText?: string }>;
+    getSessionStats(): any;
+    getUserMessagesForForking(): Array<{ entryId: string; text: string }>;
+    getLastAssistantText(): string | undefined;
+    compact(customInstructions?: { customInstructions?: string }): Promise<void>;
+    abortCompaction(): void;
+    abortRetry(): void;
+    recordBashResult(command: string, output: string, exitCode: number, cancelled: boolean, truncated: boolean, fullOutputPath?: string, options?: { excludeFromContext?: boolean }): void;
+    abortBash(): void;
     sessionManager: {
       getSessionName(): string | undefined;
       getEntries(): any[];
       getCwd(): string;
+      setSessionName(name: string): void;
     };
+    reload?(): Promise<void>;
+    _extensionRunner?: any;
   };
   settings?: { get?(key: string): any; set?(key: string, value: any): void; save?(): Promise<void> };
 };
