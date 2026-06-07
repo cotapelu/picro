@@ -75,4 +75,47 @@ describe('AssistantMessage', () => {
     const { lastFrame } = renderWithTheme(<AssistantMessage content={special} />);
     expect(lastFrame()).toContain(special);
   });
+
+  it('renders tool calls when present (collapsed by default)', () => {
+    const toolCall = {
+      id: 'tool-1',
+      name: 'read_file',
+      arguments: { path: '/test.txt' },
+      status: 'done' as const,
+      result: 'file content',
+    };
+    const { lastFrame } = renderWithTheme(
+      <AssistantMessage content="Here is the file:" toolCalls={[toolCall]} />
+    );
+    // Should show tool name and status
+    expect(lastFrame()).toContain('read_file');
+    expect(lastFrame()).toContain('done');
+    // Collapsed: arguments should NOT appear
+    expect(lastFrame()).not.toContain('/test.txt');
+    // Should show result when collapsed? ToolExecution collapsed does not show result? In collapsed view, result may be hidden. Let's check ToolExecution: collapsed shows status but not result. So no result.
+    expect(lastFrame()).not.toContain('file content');
+  });
+
+  it('expands tool call when in expandedTools set', () => {
+    const toolCall = {
+      id: 'tool-expand',
+      name: 'expand_me',
+      arguments: { arg: 'value' },
+      status: 'done' as const,
+      result: 'output data',
+    };
+    const expandedTools = new Set<string>(['tool-expand']);
+    const { lastFrame } = renderWithTheme(
+      <AssistantMessage
+        content="Expanded tool:"
+        toolCalls={[toolCall]}
+        expandedTools={expandedTools}
+        onToolToggle={() => {}}
+      />
+    );
+    // Expanded should show arguments and result
+    expect(lastFrame()).toContain('"arg": "value"'); // arguments JSON
+    expect(lastFrame()).toContain('output data');
+    expect(lastFrame()).toContain('Output:');
+  });
 });

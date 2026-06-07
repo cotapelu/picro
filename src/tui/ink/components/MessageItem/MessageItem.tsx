@@ -2,10 +2,9 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import { useTheme } from '../../hooks/useTheme.js';
-import type { Message, ToolCall } from '../../types.js';
+import type { Message } from '../../types.js';
 import { AssistantMessage } from './AssistantMessage.js';
 import { UserMessage } from './UserMessage.js';
-import { ToolExecution } from './ToolExecution.js';
 import { BashExecution } from './BashExecution.js';
 import { CompactionSummaryMessage } from './CompactionSummaryMessage.js';
 import { BranchSummaryMessage } from './BranchSummaryMessage.js';
@@ -17,6 +16,7 @@ interface MessageItemProps {
   onToolToggle?: (toolId: string) => void;
   expandedTools?: Set<string>;
   hideThinkingBlock?: boolean;
+  hiddenThinkingLabel?: string;
   showImages?: boolean;
   imageWidthCells?: number;
 }
@@ -26,6 +26,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   onToolToggle,
   expandedTools = new Set(),
   hideThinkingBlock = false,
+  hiddenThinkingLabel = 'Thinking...',
   showImages = true,
   imageWidthCells = 60,
 }) => {
@@ -50,22 +51,6 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     return lines.map((line, i) => (
       <Text key={i}>{line}</Text>
     ));
-  };
-
-  const renderToolCalls = (toolCalls: ToolCall[]) => {
-    return toolCalls.map((tool) => {
-      const isExpanded = expandedTools.has(tool.id);
-      return (
-        <ToolExecution
-          key={tool.id}
-          toolCall={tool}
-          expanded={isExpanded}
-          onToggle={() => onToolToggle?.(tool.id)}
-          showImages={showImages}
-          imageWidthCells={imageWidthCells}
-        />
-      );
-    });
   };
 
   // Don't show role label for user and self-labeling message types
@@ -96,7 +81,13 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             content={message.content}
             thinkingBlocks={message.thinkingBlocks}
             hideThinkingBlock={hideThinkingBlock}
+            hiddenThinkingLabel={hiddenThinkingLabel}
             streaming={message.streaming}
+            toolCalls={message.toolCalls}
+            expandedTools={expandedTools}
+            onToolToggle={onToolToggle}
+            showImages={showImages}
+            imageWidthCells={imageWidthCells}
           />
         )}
         {message.role === 'bashExecution' && (
@@ -119,11 +110,6 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         )}
         {message.role === 'tool' && (
           <Text>{message.content}</Text>
-        )}
-        {message.toolCalls && message.toolCalls.length > 0 && (
-          <Box flexDirection="column">
-            {renderToolCalls(message.toolCalls)}
-          </Box>
         )}
         {message.error && (
           <Text color={theme.error}>Error: {message.error}</Text>

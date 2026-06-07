@@ -2,6 +2,8 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import { useTheme } from '../../hooks/useTheme.js';
+import { ToolExecution } from './ToolExecution.js';
+import type { ToolCall } from '../../types.js';
 
 interface AssistantMessageProps {
   content: string;
@@ -9,6 +11,11 @@ interface AssistantMessageProps {
   hideThinkingBlock?: boolean;
   hiddenThinkingLabel?: string;
   streaming?: boolean;
+  toolCalls?: ToolCall[];
+  expandedTools?: Set<string>;
+  onToolToggle?: (toolId: string) => void;
+  showImages?: boolean;
+  imageWidthCells?: number;
 }
 
 export const AssistantMessage: React.FC<AssistantMessageProps> = ({
@@ -17,6 +24,11 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
   hideThinkingBlock = false,
   hiddenThinkingLabel = 'Thinking...',
   streaming = false,
+  toolCalls,
+  expandedTools,
+  onToolToggle,
+  showImages = true,
+  imageWidthCells = 60,
 }) => {
   const { theme } = useTheme();
 
@@ -42,6 +54,27 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
     );
   };
 
+  const renderToolCalls = () => {
+    if (!toolCalls || toolCalls.length === 0) return null;
+    return (
+      <Box flexDirection="column">
+        {toolCalls.map((tool) => {
+          const isExpanded = expandedTools?.has(tool.id) || false;
+          return (
+            <ToolExecution
+              key={tool.id}
+              toolCall={tool}
+              expanded={isExpanded}
+              onToggle={() => onToolToggle?.(tool.id)}
+              showImages={showImages}
+              imageWidthCells={imageWidthCells}
+            />
+          );
+        })}
+      </Box>
+    );
+  };
+
   return (
     <Box flexDirection="column">
       {renderThinking()}
@@ -50,6 +83,7 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
       ) : (
         <Text>{content}</Text>
       )}
+      {renderToolCalls()}
     </Box>
   );
 };
