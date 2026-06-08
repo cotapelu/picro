@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 151)
+## Current Metrics (as of 2026-06-09, Iteration 152)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 151 |
+| Total Iterations | 152 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1802/1802 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~70.8% |
-| Coverage (branches) | ~62.0% |
-| Coverage (functions) | ~69.5% |
-| Coverage (lines) | ~71.3% |
+| Test Pass Rate | 100% (~1804/1804 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~70.9% |
+| Coverage (branches) | ~62.1% |
+| Coverage (functions) | ~69.6% |
+| Coverage (lines) | ~71.4% |
 
 ## History
+
+| 2026-06-09 | 152 | 0 | ✅ | **AgentSession performance and thinking level getters** – Added unit tests for `thinkingLevel` getter and `getPerformanceStats` (null/stats). 2 new tests; all ~1804 tests passing. Coverage increased to ~70.9% statements. |
 
 | 2026-06-09 | 151 | 0 | ✅ | **AgentSession bash handling tests** – Added unit tests for `recordBashResult` (history vs queue), `abortBash`, and `isBashRunning`. 3 new tests; all ~1802 tests passing. Coverage increased to ~70.8% statements. |
 

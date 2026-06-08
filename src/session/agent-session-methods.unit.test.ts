@@ -407,4 +407,44 @@ describe('AgentSession methods', () => {
     (agentSession as any)._bashAbortController = { abort: vi.fn() };
     expect(agentSession.isBashRunning).toBe(true);
   });
+
+  it('thinkingLevel getter returns _thinkingLevel', () => {
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._thinkingLevel = 'high';
+    expect(agentSession.thinkingLevel).toBe('high');
+  });
+
+  it('getPerformanceStats returns tracker stats when available', () => {
+    const tracker = { getStats: vi.fn().mockReturnValue({ sampleCount: 5 }) };
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._performanceTracker = tracker;
+    const stats = agentSession.getPerformanceStats();
+    expect(stats).toEqual({ sampleCount: 5 });
+  });
+
+  it('getPerformanceStats returns null when no tracker', () => {
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    expect(agentSession.getPerformanceStats()).toBeNull();
+  });
 });

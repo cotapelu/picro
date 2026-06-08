@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 152: AgentSession performance and thinking level getters
+
+- **Direction**: Testing & Coverage
+- **Change**: Added unit tests for `AgentSession` covering `thinkingLevel` getter and `getPerformanceStats` (returns null when no tracker, returns stats when available). 2 new tests.
+- **Rationale**: These getters provide runtime info to the UI; testing ensures correct behavior.
+- **Impact**: All ~1804 tests passing (100% pass rate). No regressions. Coverage increased to ~70.9% statements.
+
 ### Iteration 151: AgentSession bash handling tests
 
 - **Direction**: Testing & Coverage

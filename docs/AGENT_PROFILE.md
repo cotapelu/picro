@@ -46,6 +46,7 @@ Track strengths, weaknesses, and improvement areas.
 - **Iteration 149: AgentSession queue and tool tests** – Added tests for `getSteeringMessages`, `getFollowUpMessages`, `clearQueue`, `getToolDefinition`, `setModel`. 5 new tests; coverage increased to ~70.6% statements.
 - **Iteration 150: AgentSession tool and thinking level tests** – Added tests for `getActiveToolNames`, `getAllTools`, `getAvailableThinkingLevels`, `setThinkingLevel`. 5 new tests; coverage increased to ~70.7% statements.
 - **Iteration 151: AgentSession bash handling tests** – Added tests for `recordBashResult` (history vs queue), `abortBash`, and `isBashRunning`. 3 new tests; coverage increased to ~70.8% statements.
+- **Iteration 152: AgentSession performance and thinking level getters** – Added tests for `thinkingLevel` getter and `getPerformanceStats`. 2 new tests; coverage increased to ~70.9% statements.
 
 ## Next Priorities
 - Maintain >60% coverage and 100% test pass rate.

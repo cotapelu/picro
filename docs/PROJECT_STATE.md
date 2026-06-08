@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 151)
+Last updated: 2026-06-09 (Iteration 152)
 
 ## Metrics
-- Total Iterations: 151
+- Total Iterations: 152
 - Tasks Completed: 297+
-- Coverage: ~70.8% statements (branches 62.0%, functions 69.5%, lines 71.3%)
+- Coverage: ~70.9% statements (branches 62.1%, functions 69.6%, lines 71.4%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 152)
+
+- **AgentSession performance and thinking level getters** – Added unit tests for `thinkingLevel` getter and `getPerformanceStats` (returns null when no tracker, returns stats when present). 2 new tests; all ~1804 tests passing (100% pass rate). Coverage increased to ~70.9% statements.
 
 ## Completed Features (Iteration 151)
 
