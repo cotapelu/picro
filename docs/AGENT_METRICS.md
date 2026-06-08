@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 145)
+## Current Metrics (as of 2026-06-09, Iteration 146)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 145 |
+| Total Iterations | 146 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1780/1780 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~70.0% |
-| Coverage (branches) | ~61.3% |
-| Coverage (functions) | ~68.8% |
-| Coverage (lines) | ~70.6% |
+| Test Pass Rate | 100% (~1785/1785 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~70.3% |
+| Coverage (branches) | ~61.5% |
+| Coverage (functions) | ~69.0% |
+| Coverage (lines) | ~70.8% |
 
 ## History
+
+| 2026-06-09 | 146 | 0 | ✅ | **AgentSession methods unit tests** – Added unit tests for `sessionName`, `getTree`, `getUserMessagesForForking`, `getLastAssistantText`, and `abortBranchSummary`. 5 new tests; all ~1785 tests passing. Coverage increased to ~70.3% statements. |
 
 | 2026-06-09 | 145 | 0 | ✅ | **Compaction LLM path tests** – Added unit tests for `compact` function covering successful LLM summarization, fallback on LLM error, and empty messages handling. Verified prompt construction with file ops and result shaping. 3 new tests; all ~1780 tests passing. Coverage increased to ~70.0% statements. |
 

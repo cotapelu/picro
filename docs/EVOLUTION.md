@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 146: AgentSession methods unit tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added unit tests for several `AgentSession` methods: `sessionName` getter, `getTree()` delegation, `getUserMessagesForForking` (filters user messages with entry IDs), `getLastAssistantText` (skips aborted, extracts text), and `abortBranchSummary` (calls abort controller). 5 new tests introduced.
+- **Rationale**: These methods are used in various UI flows (tree selector, forking, status display). Testing them ensures correct behavior and increases coverage of the core session class.
+- **Impact**: All ~1785 tests passing (100% pass rate). No regressions. Coverage increased to ~70.3% statements, with branches and functions also improving.
+
 ### Iteration 145: Compaction LLM path tests
 
 - **Direction**: Testing & Coverage

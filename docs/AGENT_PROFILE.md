@@ -40,6 +40,7 @@ Track strengths, weaknesses, and improvement areas.
 - **Iteration 143: Compaction unit tests** – Added 31 unit tests for `src/session/compaction.ts` covering token estimation, cut point detection, compaction decision, usage extraction, and file ops tracking. Significantly increased coverage of compaction subsystem.
 - **Iteration 144: Compaction coverage expansion** – Added unit tests for `prepareCompaction` and `compactSession`, covering cut point detection, previous summary extraction, file ops aggregation, and the compaction flow. 7 new tests; coverage increased to ~69.8% statements.
 - **Iteration 145: Compaction LLM path tests** – Added unit tests for `compact` function covering LLM summarization success, fallback on error, and empty messages. Verified prompt construction and result shaping. 3 new tests; coverage increased to ~70.0% statements.
+- **Iteration 146: AgentSession methods unit tests** – Added unit tests for `sessionName`, `getTree`, `getUserMessagesForForking`, `getLastAssistantText`, and `abortBranchSummary`. 5 new tests; coverage increased to ~70.3% statements.
 
 ## Next Priorities
 - Maintain >60% coverage and 100% test pass rate.

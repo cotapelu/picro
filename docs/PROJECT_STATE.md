@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 145)
+Last updated: 2026-06-09 (Iteration 146)
 
 ## Metrics
-- Total Iterations: 145
+- Total Iterations: 146
 - Tasks Completed: 297+
-- Coverage: ~70.0% statements (branches 61.3%, functions 68.8%, lines 70.6%)
+- Coverage: ~70.3% statements (branches 61.5%, functions 69.0%, lines 70.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 146)
+
+- **AgentSession methods unit tests** – Added unit tests for `AgentSession` covering `sessionName` getter, `getTree` delegation, `getUserMessagesForForking` (filtering user messages with entry IDs), `getLastAssistantText` (skipping aborted, extracting text), and `abortBranchSummary` (abort controller call). 5 new tests; all ~1785 tests passing (100% pass rate). Coverage increased to ~70.3% statements.
 
 ## Completed Features (Iteration 145)
 
