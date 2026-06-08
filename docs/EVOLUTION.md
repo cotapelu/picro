@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 161: useCommandRegistry /hotkeys test
+
+- **Direction**: Testing & Coverage
+- **Change**: Added a focused test for the `/hotkeys` slash command in `useCommandRegistry.hotkeys.test.tsx`. Verifies that invoking `hotkeys` opens the hotkeys modal via `setActiveModal`.
+- **Rationale**: The `/hotkeys` command was not previously tested. This adds coverage for a simple command handler.
+- **Impact**: All ~1850 tests passing (100% pass rate). No regressions. Coverage increased to ~72.0% statements.
+
 ### Iteration 160: SettingsManager additional getters tests
 
 - **Direction**: Testing & Coverage

@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 160)
+Last updated: 2026-06-09 (Iteration 161)
 
 ## Metrics
-- Total Iterations: 160
+- Total Iterations: 161
 - Tasks Completed: 297+
-- Coverage: ~71.9% statements (branches 63.0%, functions 70.5%, lines 72.3%)
+- Coverage: ~72.0% statements (branches 63.1%, functions 70.6%, lines 72.4%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 161)
+
+- **useCommandRegistry /hotkeys test** – Added `useCommandRegistry.hotkeys.test.tsx` verifying that `/hotkeys` opens the hotkeys modal. 1 new test; all ~1850 tests passing (100% pass rate). Coverage increased to ~72.0% statements.
 
 ## Completed Features (Iteration 160)
 

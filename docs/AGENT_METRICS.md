@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 160)
+## Current Metrics (as of 2026-06-09, Iteration 161)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 160 |
+| Total Iterations | 161 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1849/1849 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~71.9% |
-| Coverage (branches) | ~63.0% |
-| Coverage (functions) | ~70.5% |
-| Coverage (lines) | ~72.3% |
+| Test Pass Rate | 100% (~1850/1850 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~72.0% |
+| Coverage (branches) | ~63.1% |
+| Coverage (functions) | ~70.6% |
+| Coverage (lines) | ~72.4% |
 
 ## History
+
+| 2026-06-09 | 161 | 0 | ✅ | **useCommandRegistry /hotkeys test** – Added test for `/hotkeys` command opening hotkeys modal. 1 new test; all ~1850 tests passing. Coverage increased to ~72.0% statements. |
 
 | 2026-06-09 | 160 | 0 | ✅ | **SettingsManager additional getters tests** – Added 16 unit tests for various getters: `getBranchSummarySettings`, `getRetryEnabled`, `getRetrySettings`, `getHideThinkingBlock`, `getQuietStartup`, `getShellPath`, `getTheme`, `getSessionDir`. All ~1849 tests passing. Coverage increased to ~71.9% statements. |
 

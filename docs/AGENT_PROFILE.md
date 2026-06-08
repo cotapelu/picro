@@ -55,6 +55,7 @@ Track strengths, weaknesses, and improvement areas.
 - **Iteration 158: AgentSession getLastAssistantText edge cases** – Added tests for all aborted empty and no assistant messages. 2 new tests; coverage increased to ~71.6% statements.
 - **Iteration 159: AgentSession getter edge cases** – Added tests for `getTree` empty, `getLeafId` null, `sessionName` undefined. 3 new tests; coverage increased to ~71.7% statements.
 - **Iteration 160: SettingsManager additional getters tests** – Added 16 unit tests for multiple getters (branchSummary, retry, shell, theme, sessionDir). Coverage increased to ~71.9% statements.
+- **Iteration 161: useCommandRegistry /hotkeys test** – Added test for `/hotkeys` command. Coverage increased to ~72.0% statements.
 
 ## Next Priorities
 - Maintain >60% coverage and 100% test pass rate.
