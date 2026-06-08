@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 152)
+## Current Metrics (as of 2026-06-09, Iteration 153)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 152 |
+| Total Iterations | 153 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1804/1804 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~70.9% |
-| Coverage (branches) | ~62.1% |
-| Coverage (functions) | ~69.6% |
-| Coverage (lines) | ~71.4% |
+| Test Pass Rate | 100% (~1813/1813 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~71.1% |
+| Coverage (branches) | ~62.3% |
+| Coverage (functions) | ~69.8% |
+| Coverage (lines) | ~71.6% |
 
 ## History
+
+| 2026-06-09 | 153 | 0 | ✅ | **useRuntime event handling tests** – Added `useRuntime.events.test.tsx` covering `agent_start`/`agent_end`, message lifecycle, tool execution events, and `session_tree`. 9 new tests; all ~1813 tests passing. Coverage increased to ~71.1% statements. |
 
 | 2026-06-09 | 152 | 0 | ✅ | **AgentSession performance and thinking level getters** – Added unit tests for `thinkingLevel` getter and `getPerformanceStats` (null/stats). 2 new tests; all ~1804 tests passing. Coverage increased to ~70.9% statements. |
 

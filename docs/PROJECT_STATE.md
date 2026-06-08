@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 152)
+Last updated: 2026-06-09 (Iteration 153)
 
 ## Metrics
-- Total Iterations: 152
+- Total Iterations: 153
 - Tasks Completed: 297+
-- Coverage: ~70.9% statements (branches 62.1%, functions 69.6%, lines 71.4%)
+- Coverage: ~71.1% statements (branches 62.3%, functions 69.8%, lines 71.6%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 153)
+
+- **useRuntime event handling tests** – Added new test file `useRuntime.events.test.tsx` covering event handling: `agent_start`/`agent_end` (streaming/status), `message_start`/`message_update`/`message_end` (streaming lifecycle), `tool_execution_start`/`tool_execution_end` (tool call status), and `session_tree` (rebuild messages). 9 new tests; all ~1813 tests passing (100% pass rate). Coverage increased to ~71.1% statements.
 
 ## Completed Features (Iteration 152)
 

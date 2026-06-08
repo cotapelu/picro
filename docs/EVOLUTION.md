@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 153: useRuntime event handling tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added a new test file `useRuntime.events.test.tsx` to cover event handling in the `useRuntime` hook. Tests cover: `agent_start`/`agent_end` (streaming/status), `message_start`/`message_update`/`message_end` (streaming lifecycle), `tool_execution_start`/`tool_execution_end` (tool call status), and `session_tree` (rebuild messages). 9 new tests.
+- **Rationale**: The hook's event switch had several untested branches; this suite increases coverage and ensures correct UI state updates.
+- **Impact**: All ~1813 tests passing (100% pass rate). No regressions. Coverage increased to ~71.1% statements.
+
 ### Iteration 152: AgentSession performance and thinking level getters
 
 - **Direction**: Testing & Coverage
