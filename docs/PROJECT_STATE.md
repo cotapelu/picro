@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-08 (Iteration 137)
+Last updated: 2026-06-08 (Iteration 138)
 
 ## Metrics
-- Total Iterations: 137
+- Total Iterations: 138
 - Tasks Completed: 295+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 138)
+
+- **Version check integration test** – Added integration test for InkApp's version check effect, verifying that when the app mounts it fetches the latest npm version and shows an info toast if newer. Coverage increased.
 
 ## Completed Features (Iteration 137)
 

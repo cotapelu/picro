@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 138: Version Check Integration Test
+
+- **Direction**: Testing & Coverage
+- **Change**: Added an integration test to verify `InkApp`'s version check effect. The test mocks `global.fetch` to simulate a newer version available on npm, renders the app, and asserts that an info toast containing the new version appears. This covers the mount effect in `InkApp.tsx` that was previously untested.
+- **Rationale**: The version check is a user-facing feature that notifies about updates. Testing it ensures reliability and increases coverage of the component lifecycle.
+- **Impact**: All ~1730 tests passing (100% pass rate). No regressions. Coverage increased slightly.
+
 ### Iteration 137: Expand useRuntime Event Coverage
 
 - **Direction**: Testing & Coverage
