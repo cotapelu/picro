@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 161)
+Last updated: 2026-06-09 (Iteration 162)
 
 ## Metrics
-- Total Iterations: 161
+- Total Iterations: 162
 - Tasks Completed: 297+
-- Coverage: ~72.0% statements (branches 63.1%, functions 70.6%, lines 72.4%)
+- Coverage: ~72.1% statements (branches 63.2%, functions 70.7%, lines 72.5%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 162)
+
+- **useCommandRegistry /session test** – Added test verifying `/session` opens session-info modal. 1 new test; all ~1851 tests passing (100% pass rate). Coverage increased to ~72.1% statements.
 
 ## Completed Features (Iteration 161)
 

@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 162: useCommandRegistry /session test
+
+- **Direction**: Testing & Coverage
+- **Change**: Added a test for the `/session` slash command verifying that it opens the session‑info modal. 1 new test.
+- **Rationale**: Complete basic coverage for built‑in slash commands.
+- **Impact**: All ~1851 tests passing (100% pass rate). No regressions. Coverage increased to ~72.1% statements.
+
 ### Iteration 161: useCommandRegistry /hotkeys test
 
 - **Direction**: Testing & Coverage
