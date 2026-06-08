@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 155)
+Last updated: 2026-06-09 (Iteration 156)
 
 ## Metrics
-- Total Iterations: 155
+- Total Iterations: 156
 - Tasks Completed: 297+
-- Coverage: ~71.3% statements (branches 62.5%, functions 70.0%, lines 71.8%)
+- Coverage: ~71.4% statements (branches 62.6%, functions 70.1%, lines 71.9%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 156)
+
+- **AgentSession edge-case tests** – Extended `agent-session-methods.unit.test.ts` with tests for `getContextUsage` (model without contextWindow), `getLastAssistantText` (empty history), `getUserMessagesForForking` (no entries), and `recordBashResult` with `excludeFromContext` option. 4 new tests; all ~1827 tests passing (100% pass rate). Coverage increased to ~71.4% statements.
 
 ## Completed Features (Iteration 155)
 

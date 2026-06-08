@@ -447,4 +447,68 @@ describe('AgentSession methods', () => {
     });
     expect(agentSession.getPerformanceStats()).toBeNull();
   });
+
+  it('getContextUsage returns undefined when model has no contextWindow', () => {
+    const agent = { subscribe: () => () => {}, state: { history: [] } };
+    const agentSession = new AgentSession({
+      agent,
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._model = { contextWindow: 0 };
+    expect(agentSession.getContextUsage()).toBeUndefined();
+  });
+
+  it('getLastAssistantText returns undefined when history empty', () => {
+    const agent = { subscribe: () => () => {}, state: { history: [] } };
+    const agentSession = new AgentSession({
+      agent,
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    expect(agentSession.getLastAssistantText()).toBeUndefined();
+  });
+
+  it('getUserMessagesForForking returns empty array when no entries', () => {
+    const sessionManager = {
+      getLeafId: vi.fn(),
+      getEntries: vi.fn().mockReturnValue([]),
+    };
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager,
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    expect(agentSession.getUserMessagesForForking()).toEqual([]);
+  });
+
+
+  it('recordBashResult respects excludeFromContext option', () => {
+    const sessionManager = {
+      getLeafId: vi.fn(),
+      appendMessage: vi.fn(),
+    };
+    const agent = { subscribe: () => () => {} } as any;
+    const agentSession = new AgentSession({
+      agent,
+      sessionManager,
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._agentState = { isStreaming: false, history: [] };
+    agentSession.recordBashResult('ls', 'output', 0, false, false, undefined, { excludeFromContext: true });
+    const recorded = (agentSession as any)._agentState.history[0];
+    expect(recorded.excludeFromContext).toBe(true);
+  });
 });

@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 155)
+## Current Metrics (as of 2026-06-09, Iteration 156)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 155 |
+| Total Iterations | 156 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1823/1823 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~71.3% |
-| Coverage (branches) | ~62.5% |
-| Coverage (functions) | ~70.0% |
-| Coverage (lines) | ~71.8% |
+| Test Pass Rate | 100% (~1827/1827 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~71.4% |
+| Coverage (branches) | ~62.6% |
+| Coverage (functions) | ~70.1% |
+| Coverage (lines) | ~71.9% |
 
 ## History
+
+| 2026-06-09 | 156 | 0 | ✅ | **AgentSession edge-case tests** – Extended `agent-session-methods.unit.test.ts` with tests for `getContextUsage` (no contextWindow), `getLastAssistantText` (empty), `getUserMessagesForForking` (empty), and `recordBashResult` (excludeFromContext). 4 new tests; all ~1827 tests passing. Coverage increased to ~71.4% statements. |
 
 | 2026-06-09 | 155 | 0 | ✅ | **useRuntime setters tests** – Added `useRuntime.setters.test.tsx` covering `setToolOutputExpanded`, `setHideThinkingBlock`, `setHiddenThinkingLabel`, `setMessages`. 4 new tests; all ~1823 tests passing. Coverage increased to ~71.3% statements. |
 

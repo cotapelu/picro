@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 156: AgentSession edge-case tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added edge-case tests in `agent-session-methods.unit.test.ts`: `getContextUsage` returns undefined when model has no contextWindow, `getLastAssistantText` with empty history, `getUserMessagesForForking` with no entries, and `recordBashResult` respecting `excludeFromContext` option. 4 new tests.
+- **Rationale**: These edge cases ensure robust behavior in uncommon scenarios.
+- **Impact**: All ~1827 tests passing (100% pass rate). No regressions. Coverage increased to ~71.4% statements.
+
 ### Iteration 155: useRuntime setters tests
 
 - **Direction**: Testing & Coverage
