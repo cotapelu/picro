@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 146)
+## Current Metrics (as of 2026-06-09, Iteration 147)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 146 |
+| Total Iterations | 147 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1785/1785 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~70.3% |
-| Coverage (branches) | ~61.5% |
-| Coverage (functions) | ~69.0% |
-| Coverage (lines) | ~70.8% |
+| Test Pass Rate | 100% (~1788/1788 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~70.5% |
+| Coverage (branches) | ~61.7% |
+| Coverage (functions) | ~69.2% |
+| Coverage (lines) | ~71.0% |
 
 ## History
+
+| 2026-06-09 | 147 | 0 | ✅ | **AgentSession stats and context usage tests** – Extended `agent-session-methods.unit.test.ts` with tests for `getSessionStats` (session file, ID, message counts, token accumulation, cost) and `getContextUsage` (model-aware usage calculation, edge cases). 3 new tests; all ~1788 tests passing. Coverage increased to ~70.5% statements.
 
 | 2026-06-09 | 146 | 0 | ✅ | **AgentSession methods unit tests** – Added unit tests for `sessionName`, `getTree`, `getUserMessagesForForking`, `getLastAssistantText`, and `abortBranchSummary`. 5 new tests; all ~1785 tests passing. Coverage increased to ~70.3% statements. |
 

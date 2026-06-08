@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 146)
+Last updated: 2026-06-09 (Iteration 147)
 
 ## Metrics
-- Total Iterations: 146
+- Total Iterations: 147
 - Tasks Completed: 297+
-- Coverage: ~70.3% statements (branches 61.5%, functions 69.0%, lines 70.8%)
+- Coverage: ~70.5% statements (branches 61.7%, functions 69.2%, lines 71.0%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 147)
+
+- **AgentSession stats and context usage tests** – Extended `agent-session-methods.unit.test.ts` with tests for `getSessionStats` (session file, ID, message counts, token accumulation, cost) and `getContextUsage` (model-aware usage calculation, including edge cases when no model). 3 new tests; all ~1788 tests passing (100% pass rate). Coverage increased to ~70.5% statements.
 
 ## Completed Features (Iteration 146)
 

@@ -41,6 +41,7 @@ Track strengths, weaknesses, and improvement areas.
 - **Iteration 144: Compaction coverage expansion** – Added unit tests for `prepareCompaction` and `compactSession`, covering cut point detection, previous summary extraction, file ops aggregation, and the compaction flow. 7 new tests; coverage increased to ~69.8% statements.
 - **Iteration 145: Compaction LLM path tests** – Added unit tests for `compact` function covering LLM summarization success, fallback on error, and empty messages. Verified prompt construction and result shaping. 3 new tests; coverage increased to ~70.0% statements.
 - **Iteration 146: AgentSession methods unit tests** – Added unit tests for `sessionName`, `getTree`, `getUserMessagesForForking`, `getLastAssistantText`, and `abortBranchSummary`. 5 new tests; coverage increased to ~70.3% statements.
+- **Iteration 147: AgentSession stats and context usage tests** – Extended tests for `getSessionStats` and `getContextUsage`, covering token accumulation, cost, and model handling. 3 new tests; coverage increased to ~70.5% statements.
 
 ## Next Priorities
 - Maintain >60% coverage and 100% test pass rate.

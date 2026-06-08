@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 147: AgentSession stats and context usage tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Extended `agent-session-methods.unit.test.ts` with tests for `getSessionStats` (covers session file, ID, message counts, token accumulation, cost) and `getContextUsage` (model-aware usage calculation, returns undefined when no model). 3 new tests.
+- **Rationale**: These statistics are used in status displays and diagnostics. Testing ensures correct aggregation and proper handling of model context.
+- **Impact**: All ~1788 tests passing (100% pass rate). No regressions. Coverage increased to ~70.5% statements.
+
 ### Iteration 146: AgentSession methods unit tests
 
 - **Direction**: Testing & Coverage
