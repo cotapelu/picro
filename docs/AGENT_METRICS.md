@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 147)
+## Current Metrics (as of 2026-06-09, Iteration 148)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 147 |
+| Total Iterations | 148 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1788/1788 tests, 14 skipped, 1 todo) |
+| Test Pass Rate | 100% (~1789/1789 tests, 14 skipped, 1 todo) |
 | Coverage (statements) | ~70.5% |
 | Coverage (branches) | ~61.7% |
 | Coverage (functions) | ~69.2% |
 | Coverage (lines) | ~71.0% |
 
 ## History
+
+| 2026-06-09 | 148 | 0 | ✅ | **AgentSession model getter test** – Added unit test for `model` getter to return `_model`. 1 new test; all ~1789 tests passing. Coverage remains ~70.5% statements. |
 
 | 2026-06-09 | 147 | 0 | ✅ | **AgentSession stats and context usage tests** – Extended `agent-session-methods.unit.test.ts` with tests for `getSessionStats` (session file, ID, message counts, token accumulation, cost) and `getContextUsage` (model-aware usage calculation, edge cases). 3 new tests; all ~1788 tests passing. Coverage increased to ~70.5% statements.
 

@@ -156,4 +156,17 @@ describe('AgentSession methods', () => {
     });
     expect(agentSession.getContextUsage()).toBeUndefined();
   });
+
+  it('model getter returns _model', () => {
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._model = { id: 'test-model', provider: 'test' };
+    expect(agentSession.model).toEqual({ id: 'test-model', provider: 'test' });
+  });
 });

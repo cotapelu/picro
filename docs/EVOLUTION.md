@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 148: AgentSession model getter test
+
+- **Direction**: Testing & Coverage
+- **Change**: Added a simple unit test for the `model` getter on `AgentSession` to ensure it returns the internal `_model` property correctly. 1 new test.
+- **Rationale**: The `model` getter is used to access the current model; verifying its behavior ensures correctness for any feature relying on it.
+- **Impact**: All ~1789 tests passing (100% pass rate). No regressions. Coverage unchanged (~70.5%).
+
 ### Iteration 147: AgentSession stats and context usage tests
 
 - **Direction**: Testing & Coverage
