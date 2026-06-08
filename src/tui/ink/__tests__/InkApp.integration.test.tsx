@@ -76,6 +76,8 @@ describe('InkApp Integration', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock fetch to prevent network calls and modal openings from version check
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ version: '1.0.0' }) }) as any;
     runtime = createMockRuntime();
   });
 
