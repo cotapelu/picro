@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 149)
+Last updated: 2026-06-09 (Iteration 150)
 
 ## Metrics
-- Total Iterations: 149
+- Total Iterations: 150
 - Tasks Completed: 297+
-- Coverage: ~70.6% statements (branches 61.8%, functions 69.3%, lines 71.1%)
+- Coverage: ~70.7% statements (branches 61.9%, functions 69.4%, lines 71.2%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 150)
+
+- **AgentSession tool and thinking level tests** – Added unit tests for `getActiveToolNames`, `getAllTools`, `getAvailableThinkingLevels` (with/without reasoning), and `setThinkingLevel`. 5 new tests; all ~1799 tests passing (100% pass rate). Coverage increased to ~70.7% statements.
 
 ## Completed Features (Iteration 149)
 

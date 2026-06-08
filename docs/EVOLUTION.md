@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 150: AgentSession tool and thinking level tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added unit tests for `AgentSession` covering `getActiveToolNames`, `getAllTools`, `getAvailableThinkingLevels` (with/without reasoning), and `setThinkingLevel`. 5 new tests.
+- **Rationale**: These methods provide tool and thinking level information to the UI and runtime. Testing ensures correct behavior for tool listing and thinking level availability based on model capabilities.
+- **Impact**: All ~1799 tests passing (100% pass rate). No regressions. Coverage increased to ~70.7% statements.
+
 ### Iteration 149: AgentSession queue and tool tests
 
 - **Direction**: Testing & Coverage

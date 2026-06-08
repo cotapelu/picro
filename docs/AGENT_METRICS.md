@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 149)
+## Current Metrics (as of 2026-06-09, Iteration 150)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 149 |
+| Total Iterations | 150 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1794/1794 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~70.6% |
-| Coverage (branches) | ~61.8% |
-| Coverage (functions) | ~69.3% |
-| Coverage (lines) | ~71.1% |
+| Test Pass Rate | 100% (~1799/1799 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~70.7% |
+| Coverage (branches) | ~61.9% |
+| Coverage (functions) | ~69.4% |
+| Coverage (lines) | ~71.2% |
 
 ## History
+
+| 2026-06-09 | 150 | 0 | ✅ | **AgentSession tool and thinking level tests** – Added unit tests for `getActiveToolNames`, `getAllTools`, `getAvailableThinkingLevels` (with/without reasoning), and `setThinkingLevel`. 5 new tests; all ~1799 tests passing. Coverage increased to ~70.7% statements. |
 
 | 2026-06-09 | 149 | 0 | ✅ | **AgentSession queue and tool tests** – Added unit tests for `getSteeringMessages`, `getFollowUpMessages`, `clearQueue`, `getToolDefinition`, and `setModel`. 5 new tests; all ~1794 tests passing. Coverage increased to ~70.6% statements. |
 

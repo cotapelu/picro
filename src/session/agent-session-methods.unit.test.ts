@@ -265,5 +265,81 @@ describe('AgentSession methods', () => {
     expect(settingsManager.setDefaultModel).toHaveBeenCalledWith('m1');
   });
 
-  // More tests can be added here
+  // Additional tests for thinking level and tool info
+
+  it('getActiveToolNames returns agent.getToolNames()', () => {
+    const agent = { getToolNames: vi.fn().mockReturnValue(['tool1', 'tool2']), subscribe: () => () => {} } as any;
+    const agentSession = new AgentSession({
+      agent,
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    expect(agentSession.getActiveToolNames()).toEqual(['tool1', 'tool2']);
+  });
+
+  it('getAllTools returns mapped _toolDefinitions', () => {
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._toolDefinitions.set('t1', { name: 't1', description: 'desc1' } as any);
+    (agentSession as any)._toolDefinitions.set('t2', { name: 't2', description: 'desc2', parameters: {} } as any);
+    const tools = agentSession.getAllTools();
+    expect(tools).toHaveLength(2);
+    expect(tools[0]).toEqual({ name: 't1', description: 'desc1' });
+    expect(tools[1]).toEqual({ name: 't2', description: 'desc2', parameters: {} });
+  });
+
+  it('getAvailableThinkingLevels includes xhigh when model has reasoning', () => {
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._model = { reasoning: true };
+    const levels = agentSession.getAvailableThinkingLevels();
+    expect(levels).toContain('xhigh');
+  });
+
+  it('getAvailableThinkingLevels excludes xhigh when model lacks reasoning', () => {
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._model = { reasoning: false };
+    const levels = agentSession.getAvailableThinkingLevels();
+    expect(levels).not.toContain('xhigh');
+  });
+
+  it('setThinkingLevel updates _thinkingLevel and appends entry', () => {
+    const sessionManager = {
+      getLeafId: vi.fn(),
+      appendThinkingLevelChange: vi.fn(),
+    };
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager,
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    agentSession.setThinkingLevel('low');
+    expect((agentSession as any)._thinkingLevel).toBe('low');
+    expect(sessionManager.appendThinkingLevelChange).toHaveBeenCalledWith('low');
+  });
 });

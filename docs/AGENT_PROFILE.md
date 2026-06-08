@@ -44,6 +44,7 @@ Track strengths, weaknesses, and improvement areas.
 - **Iteration 147: AgentSession stats and context usage tests** – Extended tests for `getSessionStats` and `getContextUsage`, covering token accumulation, cost, and model handling. 3 new tests; coverage increased to ~70.5% statements.
 - **Iteration 148: AgentSession model getter test** – Added unit test for `model` getter. 1 new test; coverage unchanged.
 - **Iteration 149: AgentSession queue and tool tests** – Added tests for `getSteeringMessages`, `getFollowUpMessages`, `clearQueue`, `getToolDefinition`, `setModel`. 5 new tests; coverage increased to ~70.6% statements.
+- **Iteration 150: AgentSession tool and thinking level tests** – Added tests for `getActiveToolNames`, `getAllTools`, `getAvailableThinkingLevels`, `setThinkingLevel`. 5 new tests; coverage increased to ~70.7% statements.
 
 ## Next Priorities
 - Maintain >60% coverage and 100% test pass rate.
