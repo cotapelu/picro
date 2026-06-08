@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 148)
+## Current Metrics (as of 2026-06-09, Iteration 149)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 148 |
+| Total Iterations | 149 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1789/1789 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~70.5% |
-| Coverage (branches) | ~61.7% |
-| Coverage (functions) | ~69.2% |
-| Coverage (lines) | ~71.0% |
+| Test Pass Rate | 100% (~1794/1794 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~70.6% |
+| Coverage (branches) | ~61.8% |
+| Coverage (functions) | ~69.3% |
+| Coverage (lines) | ~71.1% |
 
 ## History
+
+| 2026-06-09 | 149 | 0 | ✅ | **AgentSession queue and tool tests** – Added unit tests for `getSteeringMessages`, `getFollowUpMessages`, `clearQueue`, `getToolDefinition`, and `setModel`. 5 new tests; all ~1794 tests passing. Coverage increased to ~70.6% statements. |
 
 | 2026-06-09 | 148 | 0 | ✅ | **AgentSession model getter test** – Added unit test for `model` getter to return `_model`. 1 new test; all ~1789 tests passing. Coverage remains ~70.5% statements. |
 

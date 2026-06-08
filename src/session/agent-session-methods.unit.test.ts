@@ -169,4 +169,101 @@ describe('AgentSession methods', () => {
     (agentSession as any)._model = { id: 'test-model', provider: 'test' };
     expect(agentSession.model).toEqual({ id: 'test-model', provider: 'test' });
   });
+
+  it('getSteeringMessages returns _steeringMessages', () => {
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._steeringMessages = ['m1', 'm2'];
+    expect(agentSession.getSteeringMessages()).toEqual(['m1', 'm2']);
+  });
+
+  it('getFollowUpMessages returns _followUpMessages', () => {
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._followUpMessages = ['f1', 'f2'];
+    expect(agentSession.getFollowUpMessages()).toEqual(['f1', 'f2']);
+  });
+
+  it('clearQueue returns copies and clears queues, calls agent.clearAllQueues', () => {
+    const agent = {
+      subscribe: () => () => {},
+      clearAllQueues: vi.fn(),
+    } as any;
+    const agentSession = new AgentSession({
+      agent,
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._steeringMessages = ['s'];
+    (agentSession as any)._followUpMessages = ['f'];
+    const result = agentSession.clearQueue();
+    expect(result).toEqual({ steering: ['s'], followUp: ['f'] });
+    expect((agentSession as any)._steeringMessages).toEqual([]);
+    expect((agentSession as any)._followUpMessages).toEqual([]);
+    expect(agent.clearAllQueues).toHaveBeenCalled();
+  });
+
+  it('getToolDefinition returns from _toolDefinitions map', () => {
+    const def = { name: 'test', description: 'desc' };
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._toolDefinitions.set('test', def);
+    expect(agentSession.getToolDefinition('test')).toBe(def);
+    expect(agentSession.getToolDefinition('other')).toBeUndefined();
+  });
+
+  it('setModel updates _model and settings, emits event', async () => {
+    const model = { id: 'm1', provider: 'p1', contextWindow: 1000 };
+    const sessionManager = {
+      getLeafId: vi.fn(),
+      appendModelChange: vi.fn(),
+    };
+    const settingsManager = {
+      getCompactionEnabled: vi.fn(),
+      setCompactionEnabled: vi.fn(),
+      setDefaultProvider: vi.fn(),
+      setDefaultModel: vi.fn(),
+    };
+    const agent = { setModel: vi.fn(), subscribe: () => () => {} } as any;
+    const modelRegistry = {
+      hasConfiguredAuth: vi.fn().mockReturnValue(true),
+    } as any;
+    const agentSession = new AgentSession({
+      agent,
+      sessionManager,
+      settingsManager,
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry,
+    });
+    await agentSession.setModel(model);
+    expect((agentSession as any)._model).toBe(model);
+    expect(agent.setModel).toHaveBeenCalledWith(model);
+    expect(sessionManager.appendModelChange).toHaveBeenCalledWith('p1', 'm1');
+    expect(settingsManager.setDefaultProvider).toHaveBeenCalledWith('p1');
+    expect(settingsManager.setDefaultModel).toHaveBeenCalledWith('m1');
+  });
+
+  // More tests can be added here
 });

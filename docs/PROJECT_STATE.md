@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 148)
+Last updated: 2026-06-09 (Iteration 149)
 
 ## Metrics
-- Total Iterations: 148
+- Total Iterations: 149
 - Tasks Completed: 297+
-- Coverage: ~70.5% statements (branches 61.7%, functions 69.2%, lines 71.0%)
+- Coverage: ~70.6% statements (branches 61.8%, functions 69.3%, lines 71.1%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 149)
+
+- **AgentSession queue and tool tests** – Added unit tests for `getSteeringMessages`, `getFollowUpMessages`, `clearQueue`, `getToolDefinition`, and `setModel` (async with auth and settings updates). 5 new tests; all ~1794 tests passing (100% pass rate). Coverage increased to ~70.6% statements.
 
 ## Completed Features (Iteration 148)
 

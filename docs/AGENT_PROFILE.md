@@ -43,6 +43,7 @@ Track strengths, weaknesses, and improvement areas.
 - **Iteration 146: AgentSession methods unit tests** – Added unit tests for `sessionName`, `getTree`, `getUserMessagesForForking`, `getLastAssistantText`, and `abortBranchSummary`. 5 new tests; coverage increased to ~70.3% statements.
 - **Iteration 147: AgentSession stats and context usage tests** – Extended tests for `getSessionStats` and `getContextUsage`, covering token accumulation, cost, and model handling. 3 new tests; coverage increased to ~70.5% statements.
 - **Iteration 148: AgentSession model getter test** – Added unit test for `model` getter. 1 new test; coverage unchanged.
+- **Iteration 149: AgentSession queue and tool tests** – Added tests for `getSteeringMessages`, `getFollowUpMessages`, `clearQueue`, `getToolDefinition`, `setModel`. 5 new tests; coverage increased to ~70.6% statements.
 
 ## Next Priorities
 - Maintain >60% coverage and 100% test pass rate.

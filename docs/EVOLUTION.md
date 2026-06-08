@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 149: AgentSession queue and tool tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added unit tests for `AgentSession` covering queue access (`getSteeringMessages`, `getFollowUpMessages`), `clearQueue` (returns copies, clears arrays, calls `agent.clearAllQueues`), `getToolDefinition` (lookup by name), and `setModel` (updates model, settings, and emits event). 5 new tests.
+- **Rationale**: These methods are used by the TUI and runtime for status display, tool lookups, and model switching. Testing them increases coverage of core session functionality.
+- **Impact**: All ~1794 tests passing (100% pass rate). No regressions. Coverage increased to ~70.6% statements.
+
 ### Iteration 148: AgentSession model getter test
 
 - **Direction**: Testing & Coverage
