@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 142)
+## Current Metrics (as of 2026-06-09, Iteration 143)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 142 |
+| Total Iterations | 143 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1738/1738 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~69.2% |
-| Coverage (branches) | ~60.7% |
-| Coverage (functions) | ~68.2% |
-| Coverage (lines) | ~70.0% |
+| Test Pass Rate | 100% (~1769/1769 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~69.6% |
+| Coverage (branches) | ~61.0% |
+| Coverage (functions) | ~68.5% |
+| Coverage (lines) | ~70.3% |
 
 ## History
+
+| 2026-06-09 | 143 | 0 | ✅ | **Compaction unit tests** – Added 31 unit tests for `src/session/compaction.ts` covering token estimation (`estimateTokens`, `estimateContextTokens`), cut point detection (`findCutPoint`), compaction decision (`shouldCompact`), usage extraction (`getAssistantUsage`, `estimateContextUsage`), and file operations tracking (`createFileOps`, `extractFileOpsFromMessage`, `computeFileLists`, `formatFileOperations`). All ~1769 tests passing (100% pass rate). Coverage increased to ~69.6% statements. |
 
 | 2026-06-09 | 142 | 0 | ✅ | **Expanded AgentSession unit tests** – Added unit tests for `sessionId` getter, `retryAttempt` initial value, and `isCompacting` initial state. All ~1738 tests passing, no regressions. Coverage increased modestly. |
 | 2026-06-09 | 141 | 0 | ✅ | **useRuntime session_tree null safety** – Added unit test to verify that when `session.messages` is `null`, a `session_tree` event does not modify the current message list. Covers guard clause in `useRuntime`. All ~1735 tests passing, no regressions. Coverage increased slightly. |

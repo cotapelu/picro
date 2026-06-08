@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 143: Compaction unit tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added 31 unit tests for `src/session/compaction.ts`, covering pure utility functions: token estimation (`estimateTokens`, `estimateContextTokens`), cut point detection (`findCutPoint`), compaction decision (`shouldCompact`), usage extraction (`getAssistantUsage`, `estimateContextUsage`), and file operations tracking (`createFileOps`, `extractFileOpsFromMessage`, `computeFileLists`, `formatFileOperations`). Increased coverage of the compaction subsystem.
+- **Rationale**: Compaction utilities are core to context window management. Testing them ensures correct token estimation, compaction triggers, and file operation tracking. The module had partial coverage from earlier tests; this expansion brings it to high coverage with low-risk unit tests.
+- **Impact**: All ~1769 tests passing (100% pass rate). No regressions. Coverage increased to ~69.6% statements. Branches and functions also increased modestly.
+
 ### Iteration 142: Expanded AgentSession unit tests
 
 - **Direction**: Testing & Coverage

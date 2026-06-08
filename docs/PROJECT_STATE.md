@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 142)
+Last updated: 2026-06-09 (Iteration 143)
 
 ## Metrics
-- Total Iterations: 142
+- Total Iterations: 143
 - Tasks Completed: 297+
-- Coverage: ~69.2% statements (branches 60.7%, functions 68.2%, lines 70.0%)
+- Coverage: ~69.6% statements (branches 61.0%, functions 68.5%, lines 70.3%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 143)
+
+- **Compaction unit tests** – Added comprehensive unit tests for `src/session/compaction.ts`, covering token estimation (`estimateTokens`, `estimateContextTokens`), cut point detection (`findCutPoint`), compaction decision (`shouldCompact`), usage extraction (`getAssistantUsage`, `estimateContextUsage`), file operations tracking (`createFileOps`, `extractFileOpsFromMessage`, `computeFileLists`, `formatFileOperations`). 31 new tests, all passing. Increased coverage of the compaction subsystem significantly. All ~1769 tests passing (100% pass rate). No regressions. Coverage increased to ~69.6%.
 
 ## Completed Features (Iteration 142)
 
