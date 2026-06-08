@@ -190,4 +190,34 @@ describe('InkApp Integration', () => {
     // Retry status should no longer be present
     expect(output).not.toContain('Retrying');
   });
+
+  // Save original fetch
+  const originalFetch = global.fetch;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    global.fetch = originalFetch;
+  });
+
+  it('checks for new version on mount and shows info toast with changelog', async () => {
+    // Mock fetch to return a newer version
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ version: '2.0.0' }),
+    });
+    global.fetch = mockFetch as any;
+
+    const { rerender, lastFrame } = render(<InkApp runtime={runtime} />);
+
+    // Wait for the effect to run (fetch resolves in next tick)
+    await act(async () => {
+      await Promise.resolve();
+    });
+    // Force re-render to capture state updates
+    rerender(<InkApp runtime={runtime} />);
+
+    const output = lastFrame();
+    // Should show toast with new version info
+    expect(output).toContain('New version available: 2.0.0');
+  });
 });
