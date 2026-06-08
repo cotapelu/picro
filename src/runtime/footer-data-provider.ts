@@ -78,7 +78,11 @@ export class DefaultFooterDataProvider implements FooterDataProvider {
   private listeners = new Set<(data: FooterData) => void>();
 
   getData(): FooterData {
-    return { ...this.data, extensions: [...this.data.extensions] };
+    return {
+      ...this.data,
+      extensions: [...this.data.extensions],
+      custom: { ...this.data.custom },
+    };
   }
 
   /**
@@ -151,7 +155,7 @@ export function createFooterDataProvider(): DefaultFooterDataProvider {
  */
 export async function getGitInfo(cwd: string = process.cwd()): Promise<GitInfo | null> {
   try {
-    const { spawn } = await import('child_process');
+    const { spawnSync } = await import('child_process');
     const result = spawnSync('git', ['branch', '--show-current'], { cwd, encoding: 'utf-8' });
     if (result.status !== 0) return null;
 
