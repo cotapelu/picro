@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 137: Expand useRuntime Event Coverage
+
+- **Direction**: Testing & Coverage
+- **Change**: Added two unit tests for the `model_change` event to `useRuntime.test.ts`. The tests verify that when the event is emitted, the hook updates `currentModel` and `thinkingLevel` correctly (the latter by setting `runtime.thinkingLevel` before the event). This fills a gap in the event subscription coverage and ensures the model change handling works as expected.
+- **Rationale**: The `model_change` event is critical for dynamic model switching in the TUI. Ensuring it is properly handled by `useRuntime` maintains reliability of this feature.
+- **Impact**: All 1759 tests now pass (100% pass rate). Coverage increased modestly. No regressions.
+
 ### Iteration 136: Fix useInkApp Tests
 
 - **Direction**: Testing & Reliability

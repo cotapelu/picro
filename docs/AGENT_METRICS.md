@@ -2,18 +2,18 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-08, Iteration 136)
+## Current Metrics (as of 2026-06-08, Iteration 137)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 136 |
-| Tasks Completed | 295+
+| Total Iterations | 137 |
+| Tasks Completed | 295+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (1727/1727 tests, 14 skipped, 1 todo) |
+| Test Pass Rate | 100% (1759/1759 tests, 14 skipped, 1 todo) |
 | Coverage (statements) | ~69.0% |
 | Coverage (branches) | ~60.5% |
 | Coverage (functions) | ~68.0% |
@@ -21,6 +21,7 @@ Track agent performance and reliability across iterations.
 
 ## History
 
+| 2026-06-08 | 137 | 0 | ✅ | **Expand useRuntime event coverage** – Added two unit tests for the `model_change` event, verifying that `currentModel` and `thinkingLevel` update correctly. Filled gaps in event subscription tests. All 1759 tests passing, no regressions. Coverage increased modestly. |
 | 2026-06-08 | 136 | 0 | ✅ | **Fix useInkApp tests** – Resolved 8 failing tests in `useInkApp.test.tsx` by fixing child_process mocking strategy (dynamic import per test). All 1727 tests passing, 100% pass rate, no regressions. Coverage unchanged (~69.0%). |
 | 2026-06-07 | 135 | 1 | ✅ | **Phase 7 ResourceLoader Unit Tests** – Added 12 unit tests for DefaultResourceLoader covering override functions (skills, prompts, systemPrompt, appendSystemPrompt), flag propagation, no* flags behavior, and extension discovery error handling. All 1666 tests passing, no regressions. Coverage increased.
 | 2026-06-07 | 134 | 1 | ✅ | **Phase 7 AgentLoop Unit Tests** – Added 7 unit tests for AgentLoop covering run success, maxRounds limit, LLM errors, abort via signal, transformContext application, error event emission, and reset after run. All 1654 tests passing, no regressions. Coverage increased.

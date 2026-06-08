@@ -1,19 +1,19 @@
 # Project State
 
-Last updated: 2026-06-08 (Iteration 136)
+Last updated: 2026-06-08 (Iteration 137)
 
 ## Metrics
-- Total Iterations: 136
+- Total Iterations: 137
 - Tasks Completed: 295+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
 
+## Completed Features (Iteration 137)
+
+- **Expand useRuntime event coverage** – Added two unit tests for the `model_change` event, verifying that `currentModel` and `thinkingLevel` update correctly. This fills gaps in the event subscription tests and improves coverage of the `useRuntime` hook. All 1727+32=1759 tests (including the new ones) passing, no regressions. Coverage increased modestly.
+
 ## Completed Features (Iteration 136)
-
-- **Fix failing tests in useInkApp.test.tsx** – Resolved test isolation issues caused by module caching and `vi.resetModules()`. Updated tests for import and paste commands to use dynamic import of child_process per test, ensuring fresh mocked modules. Adjusted paste error test to use synchronous mock implementation for proper error handling. All 1727 tests now pass (100% pass rate). No regressions. Coverage remains ~69.0%.
-
-## Completed Features (Iteration 135)
 
 - **Phase 7 ResourceLoader Unit Tests** – Added 12 unit tests for DefaultResourceLoader covering override functions (skills, prompts, systemPrompt, appendSystemPrompt), flag propagation, no* flags behavior, and extension discovery error handling. All 1666 tests passing, no regressions. Coverage increased.
 

@@ -295,6 +295,37 @@ describe('useRuntime', () => {
       expect(result.current.status).toBe('Error: API failure');
     });
 
+    it('should update currentModel on model_change event', () => {
+      const { result } = renderHook(() => useRuntime(runtime));
+      const session = runtime.session as any;
+
+      act(() => {
+        session.subscribe.mock.calls[0][0]({
+          type: 'model_change',
+          model: { id: 'new-model', provider: 'anthropic' }
+        });
+      });
+
+      expect(result.current.currentModel).toEqual({ id: 'new-model', provider: 'anthropic' });
+    });
+
+    it('should update thinkingLevel on model_change event when runtime.thinkingLevel is set', () => {
+      const { result } = renderHook(() => useRuntime(runtime));
+      const session = runtime.session as any;
+
+      // Change runtime's thinkingLevel before event
+      runtime.thinkingLevel = 'high';
+
+      act(() => {
+        session.subscribe.mock.calls[0][0]({
+          type: 'model_change',
+          model: { id: 'new-model', provider: 'anthropic' }
+        });
+      });
+
+      expect(result.current.thinkingLevel).toBe('high');
+    });
+
     it('should rebuild messages on session_tree event', () => {
       runtime.session.messages = [
         { role: 'user', content: 'Old msg', id: '1' },
