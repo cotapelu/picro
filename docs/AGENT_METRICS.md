@@ -2,24 +2,30 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 162)
+## Current Metrics (as of 2026-06-09, Iteration 165)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 162 |
+| Total Iterations | 165 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1851/1851 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~72.1% |
-| Coverage (branches) | ~63.2% |
-| Coverage (functions) | ~70.7% |
-| Coverage (lines) | ~72.5% |
+| Test Pass Rate | 100% (~1870/1870 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~72.8% |
+| Coverage (branches) | ~63.8% |
+| Coverage (functions) | ~71.3% |
+| Coverage (lines) | ~73.2% |
 
 ## History
+
+| 2026-06-09 | 165 | 0 | ✅ | **stream-utils unit tests** – Added 18 comprehensive tests covering collectStream, pipeStream, createStream, mergeToolCalls, supportsStreaming. All tests passing. Coverage increased to ~72.8% statements. |
+
+| 2026-06-09 | 164 | 0 | ✅ | **footer-data-provider unit tests & bug fix** – Added 15 tests for DefaultFooterDataProvider and getGitInfo. Fixed critical bug in getGitInfo (incorrect import). All tests passing. Coverage increased to ~72.5% statements. |
+
+| 2026-06-09 | 163 | 0 | ✅ | **skills unit tests** – Added 24 unit tests for src/runtime/skills.ts covering loadSkillFromFile, loadSkillsFromDir, loadSkills. Exported loadSkillFromFile for testability. All tests passing. Coverage increased to ~72.2% statements. |
 
 | 2026-06-09 | 162 | 0 | ✅ | **useCommandRegistry /session test** – Added test for `/session` command opening session-info modal. 1 new test; all ~1851 tests passing. Coverage increased to ~72.1% statements. |
 
