@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 156)
+## Current Metrics (as of 2026-06-09, Iteration 157)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 156 |
+| Total Iterations | 157 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1827/1827 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~71.4% |
-| Coverage (branches) | ~62.6% |
-| Coverage (functions) | ~70.1% |
-| Coverage (lines) | ~71.9% |
+| Test Pass Rate | 100% (~1828/1828 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~71.5% |
+| Coverage (branches) | ~62.7% |
+| Coverage (functions) | ~70.2% |
+| Coverage (lines) | ~72.0% |
 
 ## History
+
+| 2026-06-09 | 157 | 0 | ✅ | **AgentSession getSessionStats toolCalls counting** – Added unit test for toolCall counting in `getSessionStats`. 1 new test; all ~1828 tests passing. Coverage increased to ~71.5% statements. |
 
 | 2026-06-09 | 156 | 0 | ✅ | **AgentSession edge-case tests** – Extended `agent-session-methods.unit.test.ts` with tests for `getContextUsage` (no contextWindow), `getLastAssistantText` (empty), `getUserMessagesForForking` (empty), and `recordBashResult` (excludeFromContext). 4 new tests; all ~1827 tests passing. Coverage increased to ~71.4% statements. |
 

@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 156)
+Last updated: 2026-06-09 (Iteration 157)
 
 ## Metrics
-- Total Iterations: 156
+- Total Iterations: 157
 - Tasks Completed: 297+
-- Coverage: ~71.4% statements (branches 62.6%, functions 70.1%, lines 71.9%)
+- Coverage: ~71.5% statements (branches 62.7%, functions 70.2%, lines 72.0%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 157)
+
+- **AgentSession getSessionStats toolCalls counting** – Added unit test verifying that `getSessionStats` correctly counts toolCalls from assistant message content. 1 new test; all ~1828 tests passing (100% pass rate). Coverage increased to ~71.5% statements.
 
 ## Completed Features (Iteration 156)
 

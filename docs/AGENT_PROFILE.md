@@ -51,6 +51,7 @@ Track strengths, weaknesses, and improvement areas.
 - **Iteration 154: AgentSessionRuntime additional tests** – Added tests for setBeforeSessionInvalidate, setRebindSession, diagnostics, dispose idempotency, modelFallbackMessage. 6 new tests; coverage increased to ~71.2% statements.
 - **Iteration 155: useRuntime setters tests** – Added tests for `setToolOutputExpanded`, `setHideThinkingBlock`, `setHiddenThinkingLabel`, `setMessages`. 4 new tests; coverage increased to ~71.3% statements.
 - **Iteration 156: AgentSession edge-case tests** – Added tests for `getContextUsage` (no contextWindow), `getLastAssistantText` (empty), `getUserMessagesForForking` (empty), `recordBashResult` excludeFromContext. 4 new tests; coverage increased to ~71.4% statements.
+- **Iteration 157: AgentSession getSessionStats toolCalls counting** – Added test for toolCall counting in `getSessionStats`. 1 new test; coverage increased to ~71.5% statements.
 
 ## Next Priorities
 - Maintain >60% coverage and 100% test pass rate.

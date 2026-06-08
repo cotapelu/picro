@@ -511,4 +511,26 @@ describe('AgentSession methods', () => {
     const recorded = (agentSession as any)._agentState.history[0];
     expect(recorded.excludeFromContext).toBe(true);
   });
+
+  it('getSessionStats counts toolCalls from assistant content', () => {
+    const history = [
+      { role: 'assistant', content: [{ type: 'toolCall', name: 'read', arguments: {} }] } as any,
+      { role: 'assistant', content: [{ type: 'toolCall', name: 'write', arguments: {} }] } as any,
+    ];
+    const agent = { subscribe: () => () => {}, state: { history } };
+    const agentSession = new AgentSession({
+      agent,
+      sessionManager: {
+        getLeafId: vi.fn(),
+        getSessionFile: vi.fn().mockReturnValue({}),
+        getSessionId: vi.fn().mockReturnValue('sid'),
+      },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    const stats = agentSession.getSessionStats();
+    expect(stats.toolCalls).toBe(2);
+  });
 });

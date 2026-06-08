@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 157: AgentSession getSessionStats toolCalls counting
+
+- **Direction**: Testing & Coverage
+- **Change**: Added a unit test for `getSessionStats` to verify correct counting of toolCalls from assistant message content. 1 new test.
+- **Rationale**: Tool call counting is used in status display; ensure accuracy.
+- **Impact**: All ~1828 tests passing (100% pass rate). No regressions. Coverage increased to ~71.5% statements.
+
 ### Iteration 156: AgentSession edge-case tests
 
 - **Direction**: Testing & Coverage
