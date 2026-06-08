@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-07 (Iteration 133)
+Last updated: 2026-06-07 (Iteration 134)
 
 ## Metrics
-- Total Iterations: 133
+- Total Iterations: 134
 - Tasks Completed: 295+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 134)
+
+- **Phase 7 AgentLoop Unit Tests** – Added 7 unit tests for AgentLoop covering run success, maxRounds limit, LLM errors, abort via signal, transformContext application, error event emission, and reset after run. All 1654 tests passing, no regressions. Coverage increased.
 
 ## Completed Features (Iteration 133)
 
