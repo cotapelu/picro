@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-07 (Iteration 135)
+Last updated: 2026-06-08 (Iteration 136)
 
 ## Metrics
-- Total Iterations: 135
+- Total Iterations: 136
 - Tasks Completed: 295+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 136)
+
+- **Fix failing tests in useInkApp.test.tsx** – Resolved test isolation issues caused by module caching and `vi.resetModules()`. Updated tests for import and paste commands to use dynamic import of child_process per test, ensuring fresh mocked modules. Adjusted paste error test to use synchronous mock implementation for proper error handling. All 1727 tests now pass (100% pass rate). No regressions. Coverage remains ~69.0%.
 
 ## Completed Features (Iteration 135)
 

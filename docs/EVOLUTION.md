@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 136: Fix useInkApp Tests
+
+- **Direction**: Testing & Reliability
+- **Change**: Fixed 8 failing tests in `useInkApp.test.tsx` by addressing module mocking issues with `node:child_process`. Due to `vi.resetModules()` in beforeEach, the previously used top-level `import * as cp` became stale. Updated tests to import the mocked module per test using `await import('node:child_process')`, ensuring fresh mock instances after module cache reset. Also corrected the `paste` command error test to use synchronous throwing mock rather than `mockRejectedValue` to accurately simulate both clipboard tools failing and trigger the correct error toast.
+- **Rationale**: The failing tests prevented 100% test pass rate and indicated a fundamental misunderstanding of Vitest's module mocking lifecycle. The fix ensures test isolation and correct behavior regardless of test order.
+- **Impact**: All 1727 tests now pass (100% pass rate). Coverage remains ~69.0%. No regressions.
+
 ## Trajectory Changes
 
 ### Iteration 119: Event Handling Corrections & UI Threading
