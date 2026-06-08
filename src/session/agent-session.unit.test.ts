@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { AgentSession } from './agent-session';
+import { AgentSession } from './agent-session.js';
 
 describe('AgentSession unit', () => {
   it('getLeafId returns sessionManager.getLeafId()', () => {

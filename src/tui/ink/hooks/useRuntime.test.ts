@@ -347,6 +347,19 @@ describe('useRuntime', () => {
       expect(result.current.messages[0].content).toBe('New msg1');
     });
 
+    it('does not change messages on session_tree when session.messages is null', () => {
+      runtime.session.messages = null;
+      const { result, rerender } = renderHook(() => useRuntime(runtime));
+      const session = runtime.session as any;
+
+      act(() => {
+        session.subscribe.mock.calls[0][0]({ type: 'session_tree' });
+      });
+      rerender();
+
+      expect(result.current.messages).toEqual([]);
+    });
+
     it('should ignore unknown event types', () => {
       const { result } = renderHook(() => useRuntime(runtime));
       const session = runtime.session as any;

@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 141: useRuntime session_tree null safety
+
+- **Direction**: Testing & Coverage
+- **Change**: Added a unit test to `useRuntime` hook to verify that when `session.messages` is `null`, a `session_tree` event does not modify the current message list. This covers the guard clause `Array.isArray(sessionMsgs)`.
+- **Rationale**: The `session_tree` event rebuilds the UI message list after branch navigation; ensuring it safely handles null prevents potential crashes.
+- **Impact**: All ~1735 tests passing (100% pass rate). No regressions. Coverage increased slightly.
+
 ### Iteration 140: AgentSession Unit Tests & Integration Cleanup
 
 - **Direction**: Testing & Coverage
