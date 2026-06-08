@@ -2,25 +2,27 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 140)
+## Current Metrics (as of 2026-06-09, Iteration 142)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 140 |
-| Tasks Completed | 295+ |
+| Total Iterations | 142 |
+| Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1734/1734 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~69.0% |
-| Coverage (branches) | ~60.5% |
-| Coverage (functions) | ~68.0% |
-| Coverage (lines) | ~69.8% |
+| Test Pass Rate | 100% (~1738/1738 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~69.2% |
+| Coverage (branches) | ~60.7% |
+| Coverage (functions) | ~68.2% |
+| Coverage (lines) | ~70.0% |
 
 ## History
 
+| 2026-06-09 | 142 | 0 | ✅ | **Expanded AgentSession unit tests** – Added unit tests for `sessionId` getter, `retryAttempt` initial value, and `isCompacting` initial state. All ~1738 tests passing, no regressions. Coverage increased modestly. |
+| 2026-06-09 | 141 | 0 | ✅ | **useRuntime session_tree null safety** – Added unit test to verify that when `session.messages` is `null`, a `session_tree` event does not modify the current message list. Covers guard clause in `useRuntime`. All ~1735 tests passing, no regressions. Coverage increased slightly. |
 | 2026-06-09 | 140 | 0 | ✅ | **AgentSession unit tests & cleanup** – Added basic unit tests for AgentSession (getLeafId, autoCompactionEnabled). Cleaned up integration tests: removed flaky queue flush tests, added global fetch mock. All ~1734 tests passing, no regressions. Coverage increased modestly. |
 | 2026-06-09 | 139 | 0 | ✅ | **InkApp compaction status integration tests** – Added two integration tests verifying that the app displays "Compacting... (Esc to cancel)" when `compaction_start` event occurs and clears that status after `compaction_end`. This covers the status rendering path in `InkApp.tsx`. All ~1732 tests passing, no regressions. Coverage increased slightly. |
 | 2026-06-08 | 138 | 0 | ✅ | **Version check integration test** – Added integration test for InkApp's version check effect, verifying that when the app mounts it fetches the latest npm version and shows an info toast if newer. All ~1730 tests passing, no regressions. Coverage increased modestly. |

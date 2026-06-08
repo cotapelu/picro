@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 142: Expanded AgentSession unit tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added unit tests for `AgentSession` covering `sessionId` (delegates to sessionManager), `retryAttempt` (initially 0), and `isCompacting` (initially false). Created a new test file to increase coverage of basic session state.
+- **Rationale**: These basic getters are frequently used in UI status displays. Covering them ensures correct defaults and prevents regressions.
+- **Impact**: All ~1738 tests passing (100% pass rate). Coverage increased modestly.
+
 ### Iteration 141: useRuntime session_tree null safety
 
 - **Direction**: Testing & Coverage

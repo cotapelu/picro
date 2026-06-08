@@ -1,13 +1,21 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 141)
+Last updated: 2026-06-09 (Iteration 142)
 
 ## Metrics
-- Total Iterations: 141
-- Tasks Completed: 295+
-- Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
+- Total Iterations: 142
+- Tasks Completed: 297+
+- Coverage: ~69.2% statements (branches 60.7%, functions 68.2%, lines 70.0%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 142)
+
+- **Expanded AgentSession unit tests** – Added unit tests for `sessionId` getter, `retryAttempt` initial value, and `isCompacting` initial state. All ~1738 tests passing, no regressions. Coverage increased modestly.
+
+## Completed Features (Iteration 141)
+
+- **useRuntime session_tree null safety** – Added unit test to verify that when `session.messages` is `null`, a `session_tree` event does not modify the current message list. Covers the guard clause in `useRuntime`. All ~1735 tests passing, no regressions. Coverage increased slightly.
 
 ## Completed Features (Iteration 140)
 
