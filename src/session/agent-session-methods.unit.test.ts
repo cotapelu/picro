@@ -265,8 +265,6 @@ describe('AgentSession methods', () => {
     expect(settingsManager.setDefaultModel).toHaveBeenCalledWith('m1');
   });
 
-  // Additional tests for thinking level and tool info
-
   it('getActiveToolNames returns agent.getToolNames()', () => {
     const agent = { getToolNames: vi.fn().mockReturnValue(['tool1', 'tool2']), subscribe: () => () => {} } as any;
     const agentSession = new AgentSession({
@@ -341,5 +339,72 @@ describe('AgentSession methods', () => {
     agentSession.setThinkingLevel('low');
     expect((agentSession as any)._thinkingLevel).toBe('low');
     expect(sessionManager.appendThinkingLevelChange).toHaveBeenCalledWith('low');
+  });
+
+  it('recordBashResult adds to history when not streaming', () => {
+    const sessionManager = {
+      getLeafId: vi.fn(),
+      appendMessage: vi.fn(),
+    };
+    const agent = { subscribe: () => () => {} } as any;
+    const agentSession = new AgentSession({
+      agent,
+      sessionManager,
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    // Simulate not streaming
+    (agentSession as any)._agentState = { isStreaming: false, history: [] };
+    agentSession.recordBashResult('ls', 'output', 0, false, false);
+    expect((agentSession as any)._agentState.history).toHaveLength(1);
+    expect(sessionManager.appendMessage).toHaveBeenCalled();
+  });
+
+  it('recordBashResult queues when streaming', () => {
+    const sessionManager = { getLeafId: vi.fn(), appendMessage: vi.fn() };
+    const agent = { subscribe: () => () => {} } as any;
+    const agentSession = new AgentSession({
+      agent,
+      sessionManager,
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._agentState = { isStreaming: true, history: [] };
+    agentSession.recordBashResult('ls', 'output', 0, false, false);
+    expect((agentSession as any)._pendingBashMessages).toHaveLength(1);
+    expect(sessionManager.appendMessage).not.toHaveBeenCalled();
+  });
+
+  it('abortBash calls abort controller if present', () => {
+    const abort = vi.fn();
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    (agentSession as any)._bashAbortController = { abort };
+    agentSession.abortBash();
+    expect(abort).toHaveBeenCalled();
+  });
+
+  it('isBashRunning returns true when abort controller exists', () => {
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    expect(agentSession.isBashRunning).toBe(false);
+    (agentSession as any)._bashAbortController = { abort: vi.fn() };
+    expect(agentSession.isBashRunning).toBe(true);
   });
 });

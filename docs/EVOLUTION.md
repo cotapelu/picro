@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 151: AgentSession bash handling tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added unit tests for `AgentSession` covering `recordBashResult` (adds to history when not streaming, queues when streaming), `abortBash` (calls `_bashAbortController.abort`), and `isBashRunning` getter. 3 new tests.
+- **Rationale**: Bash execution is a core feature; these tests ensure correct handling of bash results and abort behavior.
+- **Impact**: All ~1802 tests passing (100% pass rate). No regressions. Coverage increased to ~70.8% statements.
+
 ### Iteration 150: AgentSession tool and thinking level tests
 
 - **Direction**: Testing & Coverage

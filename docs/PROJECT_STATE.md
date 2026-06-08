@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 150)
+Last updated: 2026-06-09 (Iteration 151)
 
 ## Metrics
-- Total Iterations: 150
+- Total Iterations: 151
 - Tasks Completed: 297+
-- Coverage: ~70.7% statements (branches 61.9%, functions 69.4%, lines 71.2%)
+- Coverage: ~70.8% statements (branches 62.0%, functions 69.5%, lines 71.3%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 151)
+
+- **AgentSession bash handling tests** – Added unit tests for `recordBashResult` (adds to history vs queues), `abortBash` (calls abort controller), and `isBashRunning` getter. 3 new tests; all ~1802 tests passing (100% pass rate). Coverage increased to ~70.8% statements.
 
 ## Completed Features (Iteration 150)
 
