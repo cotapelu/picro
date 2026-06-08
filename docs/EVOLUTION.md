@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 159: AgentSession getter edge cases
+
+- **Direction**: Testing & Coverage
+- **Change**: Added unit tests for edge cases of `AgentSession` getters: `getTree` returns empty array when no tree, `getLeafId` returns null when sessionManager returns null, and `sessionName` returns undefined when sessionManager.getSessionName returns undefined. 3 new tests.
+- **Rationale**: These edge cases ensure correct behavior for uninitialized or empty session states.
+- **Impact**: All ~1833 tests passing (100% pass rate). No regressions. Coverage increased to ~71.7% statements.
+
 ### Iteration 158: AgentSession getLastAssistantText edge cases
 
 - **Direction**: Testing & Coverage

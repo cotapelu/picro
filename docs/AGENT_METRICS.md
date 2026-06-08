@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 158)
+## Current Metrics (as of 2026-06-09, Iteration 159)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 158 |
+| Total Iterations | 159 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1830/1830 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~71.6% |
-| Coverage (branches) | ~62.8% |
-| Coverage (functions) | ~70.3% |
-| Coverage (lines) | ~72.1% |
+| Test Pass Rate | 100% (~1833/1833 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~71.7% |
+| Coverage (branches) | ~62.9% |
+| Coverage (functions) | ~70.4% |
+| Coverage (lines) | ~72.2% |
 
 ## History
+
+| 2026-06-09 | 159 | 0 | ✅ | **AgentSession getter edge cases** – Added tests for `getTree` empty, `getLeafId` null, `sessionName` undefined. 3 new tests; all ~1833 tests passing. Coverage increased to ~71.7% statements. |
 
 | 2026-06-09 | 158 | 0 | ✅ | **AgentSession getLastAssistantText edge cases** – Added tests for all aborted empty and no assistant messages. 2 new tests; all ~1830 tests passing. Coverage increased to ~71.6% statements. |
 

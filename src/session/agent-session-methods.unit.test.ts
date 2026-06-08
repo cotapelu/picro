@@ -35,6 +35,53 @@ describe('AgentSession methods', () => {
     expect(agentSession.getTree()).toBe(tree);
   });
 
+  it('getTree returns empty array when no tree', () => {
+    const sessionManager = {
+      getLeafId: vi.fn(),
+      getTree: vi.fn().mockReturnValue([]),
+    };
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager,
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    expect(agentSession.getTree()).toEqual([]);
+  });
+
+  it('getLeafId returns null when sessionManager returns null', () => {
+    const sessionManager = {
+      getLeafId: vi.fn().mockReturnValue(null),
+    };
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager,
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    expect(agentSession.getLeafId()).toBeNull();
+  });
+
+  it('sessionName returns undefined when sessionManager.getSessionName returns undefined', () => {
+    const sessionManager = {
+      getLeafId: vi.fn(),
+      getSessionName: vi.fn().mockReturnValue(undefined),
+    };
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager,
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    expect(agentSession.sessionName).toBeUndefined();
+  });
+
   it('getUserMessagesForForking returns correct user message entries', () => {
     const entries = [
       { id: 'e1', type: 'message', message: { role: 'user', content: 'Hello' } },

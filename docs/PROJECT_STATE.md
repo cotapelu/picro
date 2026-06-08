@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 158)
+Last updated: 2026-06-09 (Iteration 159)
 
 ## Metrics
-- Total Iterations: 158
+- Total Iterations: 159
 - Tasks Completed: 297+
-- Coverage: ~71.6% statements (branches 62.8%, functions 70.3%, lines 72.1%)
+- Coverage: ~71.7% statements (branches 62.9%, functions 70.4%, lines 72.2%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 159)
+
+- **AgentSession edge cases for getters** – Added tests for `getTree` empty array, `getLeafId` null, and `sessionName` undefined. 3 new tests; all ~1833 tests passing (100% pass rate). Coverage increased to ~71.7% statements.
 
 ## Completed Features (Iteration 158)
 

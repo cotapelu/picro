@@ -53,6 +53,7 @@ Track strengths, weaknesses, and improvement areas.
 - **Iteration 156: AgentSession edge-case tests** – Added tests for `getContextUsage` (no contextWindow), `getLastAssistantText` (empty), `getUserMessagesForForking` (empty), `recordBashResult` excludeFromContext. 4 new tests; coverage increased to ~71.4% statements.
 - **Iteration 157: AgentSession getSessionStats toolCalls counting** – Added test for toolCall counting in `getSessionStats`. 1 new test; coverage increased to ~71.5% statements.
 - **Iteration 158: AgentSession getLastAssistantText edge cases** – Added tests for all aborted empty and no assistant messages. 2 new tests; coverage increased to ~71.6% statements.
+- **Iteration 159: AgentSession getter edge cases** – Added tests for `getTree` empty, `getLeafId` null, `sessionName` undefined. 3 new tests; coverage increased to ~71.7% statements.
 
 ## Next Priorities
 - Maintain >60% coverage and 100% test pass rate.
