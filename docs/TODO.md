@@ -177,8 +177,8 @@
 | Truncation utilities | Có | OK |
 | Output guards | Có | OK |
 | **J. Tests** |
-| Unit tests for hooks | Có | Thêm测试 cho tất cả custom hooks |
-| Integration tests (Ink) | Đang có | Thêm tests cho các luồng phức tạp: compaction, retry, extension UI, modals |
+| Unit tests for hooks | Có (đã test nhiều hooks) | Đã test: useRuntime, useInkApp, useVersionCheck, useAppActions, useEditorState, useExtensionUIState, useTheme, useResourceInfo, useModal. Còn một số ít chưa coverage. |
+| Integration tests (Ink) | Có (đã có nhiều) | Integration tests cho version check, compaction status, retry, streaming, tool execution. Còn thiếu extension UI và một số modals phức tạp. |
 | Component tests | Đang có | Hoàn thiện tin cho AssistantMessage, ToolExecution (expanded), etc. |
 
 ---
