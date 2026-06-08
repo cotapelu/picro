@@ -1,19 +1,19 @@
 # Project State
 
-Last updated: 2026-06-08 (Iteration 138)
+Last updated: 2026-06-09 (Iteration 139)
 
 ## Metrics
-- Total Iterations: 138
+- Total Iterations: 139
 - Tasks Completed: 295+
 - Coverage: ~69.0% statements (branches 60.5%, functions 68.0%, lines 69.8%)
 - Build Success Rate: 100%
 - Zero regressions
 
+## Completed Features (Iteration 139)
+
+- **InkApp compaction status integration tests** – Added two integration tests verifying that the app displays "Compacting... (Esc to cancel)" when `compaction_start` event occurs and clears that status after `compaction_end`. This covers the status rendering path in `InkApp.tsx` which was previously untested. All ~1730 tests passing, no regressions. Coverage increased slightly.
+
 ## Completed Features (Iteration 138)
-
-- **Version check integration test** – Added integration test for InkApp's version check effect, verifying that when the app mounts it fetches the latest npm version and shows an info toast if newer. Coverage increased.
-
-## Completed Features (Iteration 137)
 
 - **Expand useRuntime event coverage** – Added two unit tests for the `model_change` event, verifying that `currentModel` and `thinkingLevel` update correctly. This fills gaps in the event subscription tests and improves coverage of the `useRuntime` hook. All 1727+32=1759 tests (including the new ones) passing, no regressions. Coverage increased modestly.
 

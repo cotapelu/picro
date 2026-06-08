@@ -220,4 +220,50 @@ describe('InkApp Integration', () => {
     // Should show toast with new version info
     expect(output).toContain('New version available: 2.0.0');
   });
+
+  it('displays compacting status when compaction_start occurs', () => {
+    const { rerender, lastFrame } = render(<InkApp runtime={runtime} />);
+    const subscribe = runtime.session.subscribe as any;
+    const handlers = subscribe.mock.calls.map(call => call[0]);
+
+    // Emit compaction_start
+    act(() => {
+      for (const h of handlers) {
+        h({ type: 'compaction_start' });
+      }
+    });
+    rerender(<InkApp runtime={runtime} />);
+    const output = lastFrame();
+    expect(output).toContain('Compacting...');
+    expect(output).toContain('Esc to cancel');
+  });
+
+  it('clears compacting status after compaction_end', () => {
+    const { rerender, lastFrame } = render(<InkApp runtime={runtime} />);
+    const subscribe = runtime.session.subscribe as any;
+    const handlers = subscribe.mock.calls.map(call => call[0]);
+
+    // Start compaction
+    act(() => {
+      for (const h of handlers) {
+        h({ type: 'compaction_start' });
+      }
+    });
+    rerender(<InkApp runtime={runtime} />);
+    let output = lastFrame();
+    expect(output).toContain('Compacting...');
+
+    // End compaction
+    act(() => {
+      for (const h of handlers) {
+        h({ type: 'compaction_end' });
+      }
+    });
+    rerender(<InkApp runtime={runtime} />);
+    output = lastFrame();
+    // Should no longer show compacting status
+    expect(output).not.toContain('Compacting...');
+    // Status should return to default (Ready) or empty/inactive
+    // Accept any non-compacting output
+  });
 });

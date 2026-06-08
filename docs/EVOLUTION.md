@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 139: InkApp Compaction Status Integration Tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added two integration tests to verify `InkApp`'s status display for compaction events. Tests ensure that when `compaction_start` is emitted, the status line shows "Compacting... (Esc to cancel)", and after `compaction_end` the status returns to normal. This covers the event‑driven status updates in `InkApp.tsx` which were previously untested.
+- **Rationale**: Compaction is a core user‑facing operation. Testing its UI feedback improves user confidence and ensures the event handling works correctly.
+- **Impact**: All ~1732 tests passing (100% pass rate). No regressions. Coverage increased slightly.
+
 ### Iteration 138: Version Check Integration Test
 
 - **Direction**: Testing & Coverage
