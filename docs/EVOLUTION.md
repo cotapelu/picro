@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 154: AgentSessionRuntime additional tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added `agent-session-runtime.more.test.ts` covering `setBeforeSessionInvalidate`, `setRebindSession`, `diagnostics` getter, `dispose` idempotency, and `modelFallbackMessage`. 6 new tests.
+- **Rationale**: These runtime methods are used for lifecycle management and diagnostics; testing increases coverage of the runtime layer.
+- **Impact**: All ~1819 tests passing (100% pass rate). No regressions. Coverage increased to ~71.2% statements.
+
 ### Iteration 153: useRuntime event handling tests
 
 - **Direction**: Testing & Coverage

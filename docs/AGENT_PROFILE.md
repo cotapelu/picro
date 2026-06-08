@@ -47,7 +47,8 @@ Track strengths, weaknesses, and improvement areas.
 - **Iteration 150: AgentSession tool and thinking level tests** – Added tests for `getActiveToolNames`, `getAllTools`, `getAvailableThinkingLevels`, `setThinkingLevel`. 5 new tests; coverage increased to ~70.7% statements.
 - **Iteration 151: AgentSession bash handling tests** – Added tests for `recordBashResult` (history vs queue), `abortBash`, and `isBashRunning`. 3 new tests; coverage increased to ~70.8% statements.
 - **Iteration 152: AgentSession performance and thinking level getters** – Added tests for `thinkingLevel` getter and `getPerformanceStats`. 2 new tests; coverage increased to ~70.9% statements.
-- **Iteration 153: useRuntime event handling tests** – Added new test file covering `agent_start`/`agent_end`, message lifecycle, tool execution events, and `session_tree`. 9 new tests; coverage increased to ~71.1% statements.
+- **Iteration 153: useRuntime event handling tests** – Added new test file covering agent_start/end, message lifecycle, tool execution events, session_tree. 9 new tests; coverage increased to ~71.1% statements.
+- **Iteration 154: AgentSessionRuntime additional tests** – Added tests for setBeforeSessionInvalidate, setRebindSession, diagnostics, dispose idempotency, modelFallbackMessage. 6 new tests; coverage increased to ~71.2% statements.
 
 ## Next Priorities
 - Maintain >60% coverage and 100% test pass rate.

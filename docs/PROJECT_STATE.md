@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 153)
+Last updated: 2026-06-09 (Iteration 154)
 
 ## Metrics
-- Total Iterations: 153
+- Total Iterations: 154
 - Tasks Completed: 297+
-- Coverage: ~71.1% statements (branches 62.3%, functions 69.8%, lines 71.6%)
+- Coverage: ~71.2% statements (branches 62.4%, functions 69.9%, lines 71.7%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 154)
+
+- **AgentSessionRuntime additional tests** – Added `agent-session-runtime.more.test.ts` covering `setBeforeSessionInvalidate`, `setRebindSession`, `diagnostics` getter, `dispose` idempotency, and `modelFallbackMessage`. 6 new tests; all ~1819 tests passing (100% pass rate). Coverage increased to ~71.2% statements.
 
 ## Completed Features (Iteration 153)
 

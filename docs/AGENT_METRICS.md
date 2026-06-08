@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 153)
+## Current Metrics (as of 2026-06-09, Iteration 154)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 153 |
+| Total Iterations | 154 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1813/1813 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~71.1% |
-| Coverage (branches) | ~62.3% |
-| Coverage (functions) | ~69.8% |
-| Coverage (lines) | ~71.6% |
+| Test Pass Rate | 100% (~1819/1819 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~71.2% |
+| Coverage (branches) | ~62.4% |
+| Coverage (functions) | ~69.9% |
+| Coverage (lines) | ~71.7% |
 
 ## History
+
+| 2026-06-09 | 154 | 0 | ✅ | **AgentSessionRuntime additional tests** – Added tests for `setBeforeSessionInvalidate`, `setRebindSession`, `diagnostics`, `dispose` idempotency, `modelFallbackMessage`. 6 new tests; all ~1819 tests passing. Coverage increased to ~71.2% statements. |
 
 | 2026-06-09 | 153 | 0 | ✅ | **useRuntime event handling tests** – Added `useRuntime.events.test.tsx` covering `agent_start`/`agent_end`, message lifecycle, tool execution events, and `session_tree`. 9 new tests; all ~1813 tests passing. Coverage increased to ~71.1% statements. |
 
