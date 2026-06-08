@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 159)
+## Current Metrics (as of 2026-06-09, Iteration 160)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 159 |
+| Total Iterations | 160 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1833/1833 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~71.7% |
-| Coverage (branches) | ~62.9% |
-| Coverage (functions) | ~70.4% |
-| Coverage (lines) | ~72.2% |
+| Test Pass Rate | 100% (~1849/1849 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~71.9% |
+| Coverage (branches) | ~63.0% |
+| Coverage (functions) | ~70.5% |
+| Coverage (lines) | ~72.3% |
 
 ## History
+
+| 2026-06-09 | 160 | 0 | ✅ | **SettingsManager additional getters tests** – Added 16 unit tests for various getters: `getBranchSummarySettings`, `getRetryEnabled`, `getRetrySettings`, `getHideThinkingBlock`, `getQuietStartup`, `getShellPath`, `getTheme`, `getSessionDir`. All ~1849 tests passing. Coverage increased to ~71.9% statements. |
 
 | 2026-06-09 | 159 | 0 | ✅ | **AgentSession getter edge cases** – Added tests for `getTree` empty, `getLeafId` null, `sessionName` undefined. 3 new tests; all ~1833 tests passing. Coverage increased to ~71.7% statements. |
 

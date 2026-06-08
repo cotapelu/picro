@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 160: SettingsManager additional getters tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added `settings-manager.extra.test.ts` with 16 unit tests covering various getter methods: `getBranchSummarySettings` (defaults and overrides), `getRetryEnabled` (default and custom), `getRetrySettings` (default values and overrides), `getHideThinkingBlock`, `getQuietStartup`, `getShellPath`, `getTheme`, `getSessionDir`.
+- **Rationale**: These getters provide important configuration values; testing ensures correct retrieval from storage and proper defaults.
+- **Impact**: All ~1849 tests passing (100% pass rate). No regressions. Coverage increased to ~71.9% statements.
+
 ### Iteration 159: AgentSession getter edge cases
 
 - **Direction**: Testing & Coverage

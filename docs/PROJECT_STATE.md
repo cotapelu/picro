@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 159)
+Last updated: 2026-06-09 (Iteration 160)
 
 ## Metrics
-- Total Iterations: 159
+- Total Iterations: 160
 - Tasks Completed: 297+
-- Coverage: ~71.7% statements (branches 62.9%, functions 70.4%, lines 72.2%)
+- Coverage: ~71.9% statements (branches 63.0%, functions 70.5%, lines 72.3%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 160)
+
+- **SettingsManager additional getters tests** – Added `settings-manager.extra.test.ts` covering `getBranchSummarySettings`, `getRetryEnabled`, `getRetrySettings`, `getHideThinkingBlock`, `getQuietStartup`, `getShellPath`, `getTheme`, `getSessionDir`. 16 new tests; all ~1849 tests passing (100% pass rate). Coverage increased to ~71.9% statements.
 
 ## Completed Features (Iteration 159)
 
