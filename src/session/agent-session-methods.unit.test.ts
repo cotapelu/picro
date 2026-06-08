@@ -78,6 +78,41 @@ describe('AgentSession methods', () => {
     expect(agentSession.getLastAssistantText()).toBe('Third');
   });
 
+  it('getLastAssistantText returns undefined when all aborted with empty content', () => {
+    const history = [
+      { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
+      { role: 'assistant', content: [], stopReason: 'aborted' },
+      { role: 'assistant', content: undefined, stopReason: 'aborted' },
+    ];
+    const agent = { subscribe: () => () => {}, state: { history } };
+    const agentSession = new AgentSession({
+      agent,
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    expect(agentSession.getLastAssistantText()).toBeUndefined();
+  });
+
+  it('getLastAssistantText returns undefined when no assistant messages', () => {
+    const history = [
+      { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
+    ];
+    const agent = { subscribe: () => () => {}, state: { history } };
+    const agentSession = new AgentSession({
+      agent,
+      sessionManager: { getLeafId: vi.fn() },
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    expect(agentSession.getLastAssistantText()).toBeUndefined();
+  });
+
+
   it('abortBranchSummary calls the abort controller if present', () => {
     const abort = vi.fn();
     const agentSession = new AgentSession({

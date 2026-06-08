@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 158: AgentSession getLastAssistantText edge cases
+
+- **Direction**: Testing & Coverage
+- **Change**: Added two unit tests for `getLastAssistantText`: one where all assistant messages are aborted with empty content, and one with no assistant messages. Both should return `undefined`. 2 new tests.
+- **Rationale**: Ensure correct handling of edge cases in retrieving the last assistant message.
+- **Impact**: All ~1830 tests passing (100% pass rate). No regressions. Coverage increased to ~71.6% statements.
+
 ### Iteration 157: AgentSession getSessionStats toolCalls counting
 
 - **Direction**: Testing & Coverage

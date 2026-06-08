@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 157)
+## Current Metrics (as of 2026-06-09, Iteration 158)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 157 |
+| Total Iterations | 158 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1828/1828 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~71.5% |
-| Coverage (branches) | ~62.7% |
-| Coverage (functions) | ~70.2% |
-| Coverage (lines) | ~72.0% |
+| Test Pass Rate | 100% (~1830/1830 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~71.6% |
+| Coverage (branches) | ~62.8% |
+| Coverage (functions) | ~70.3% |
+| Coverage (lines) | ~72.1% |
 
 ## History
+
+| 2026-06-09 | 158 | 0 | ✅ | **AgentSession getLastAssistantText edge cases** – Added tests for all aborted empty and no assistant messages. 2 new tests; all ~1830 tests passing. Coverage increased to ~71.6% statements. |
 
 | 2026-06-09 | 157 | 0 | ✅ | **AgentSession getSessionStats toolCalls counting** – Added unit test for toolCall counting in `getSessionStats`. 1 new test; all ~1828 tests passing. Coverage increased to ~71.5% statements. |
 

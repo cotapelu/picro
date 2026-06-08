@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 157)
+Last updated: 2026-06-09 (Iteration 158)
 
 ## Metrics
-- Total Iterations: 157
+- Total Iterations: 158
 - Tasks Completed: 297+
-- Coverage: ~71.5% statements (branches 62.7%, functions 70.2%, lines 72.0%)
+- Coverage: ~71.6% statements (branches 62.8%, functions 70.3%, lines 72.1%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 158)
+
+- **AgentSession getLastAssistantText edge cases** – Added tests for scenarios: all assistant messages aborted with empty content, and no assistant messages present. 2 new tests; all ~1830 tests passing (100% pass rate). Coverage increased to ~71.6% statements.
 
 ## Completed Features (Iteration 157)
 
