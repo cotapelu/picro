@@ -41,4 +41,20 @@ describe('AgentSession more unit', () => {
     });
     expect(agentSession.isCompacting).toBe(false);
   });
+
+  it('sessionName returns sessionManager.getSessionName()', () => {
+    const sessionManager = {
+      getLeafId: vi.fn(),
+      getSessionName: vi.fn().mockReturnValue('My Session'),
+    };
+    const agentSession = new AgentSession({
+      agent: { subscribe: () => () => {} },
+      sessionManager,
+      settingsManager: { getCompactionEnabled: vi.fn(), setCompactionEnabled: vi.fn() },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    });
+    expect(agentSession.sessionName).toBe('My Session');
+  });
 });
