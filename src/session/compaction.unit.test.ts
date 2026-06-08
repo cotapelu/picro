@@ -12,8 +12,10 @@ import {
   formatFileOperations,
   prepareCompaction,
   compactSession,
+  compact,
 } from './compaction.js';
 import type { AgentMessage, AssistantMessage } from './agent-types.js';
+import * as llm from '../llm/index.js';
 
 describe('Compaction unit', () => {
   describe('estimateTokens', () => {
@@ -390,6 +392,94 @@ describe('Compaction unit', () => {
       expect(result.keptMessages).toEqual([]);
       expect(result.discardedMessages).toEqual([]);
       expect(result.summary).toBe('');
+    });
+  });
+
+  describe('compact (LLM summarization)', () => {
+    const model = { name: 'test-model' } as any;
+    const apiKey = 'test-key';
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('calls LLM with correct prompt and returns summary', async () => {
+      const spy = vi.spyOn(llm, 'complete').mockResolvedValue({ content: 'LLM Summary' });
+
+      const prep = {
+        firstKeptEntryId: 'entry-1',
+        messagesToSummarize: [
+          { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
+          { role: 'assistant', content: [{ type: 'text', text: 'Hi' }] },
+        ],
+        turnPrefixMessages: [],
+        isSplitTurn: false,
+        tokensBefore: 500,
+        previousSummary: undefined,
+        fileOps: (() => {
+          const ops = createFileOps();
+          ops.read.add('/a');
+          ops.written.add('/b');
+          ops.edited.add('/c');
+          return ops;
+        })(),
+        settings: { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 } as any,
+      };
+
+      const result = await compact(prep, model, apiKey);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      const [, context] = spy.mock.calls[0];
+      // System prompt should contain file ops
+      expect(context.systemPrompt).toContain('/a');
+      expect(context.systemPrompt).toContain('/b');
+      expect(context.systemPrompt).toContain('/c');
+      // User prompt contains serialized conversation
+      const userMsgContent = context.messages[0].content;
+      expect(userMsgContent).toContain('Hello');
+      expect(userMsgContent).toContain('Hi');
+      // Result fields
+      expect(result.summary).toBe('LLM Summary');
+      expect(result.firstKeptEntryId).toBe('entry-1');
+      expect(result.tokensBefore).toBe(500);
+      expect(result.details?.readFiles).toEqual(['/a']);
+      expect(result.details?.modifiedFiles).toEqual(['/b', '/c']);
+    });
+
+    it('falls back to stub summary when LLM throws', async () => {
+      vi.spyOn(llm, 'complete').mockRejectedValue(new Error('LLM error'));
+
+      const prep = {
+        firstKeptEntryId: 'entry-2',
+        messagesToSummarize: [{ role: 'user', content: [{ type: 'text', text: 'Test' }] }],
+        turnPrefixMessages: [],
+        isSplitTurn: false,
+        tokensBefore: 100,
+        previousSummary: undefined,
+        fileOps: createFileOps(),
+        settings: { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 } as any,
+      };
+
+      const result = await compact(prep, {}, '');
+      expect(result.summary).toBe('[Stub] Summarized 1 messages');
+    });
+
+    it('returns [No messages to summarize] when no messages', async () => {
+      vi.spyOn(llm, 'complete').mockRejectedValue(new Error('LLM error'));
+
+      const prep = {
+        firstKeptEntryId: 'entry-3',
+        messagesToSummarize: [],
+        turnPrefixMessages: [],
+        isSplitTurn: false,
+        tokensBefore: 0,
+        previousSummary: undefined,
+        fileOps: createFileOps(),
+        settings: { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 } as any,
+      };
+
+      const result = await compact(prep, {}, '');
+      expect(result.summary).toBe('[No messages to summarize]');
     });
   });
 

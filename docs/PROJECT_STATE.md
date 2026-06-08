@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 144)
+Last updated: 2026-06-09 (Iteration 145)
 
 ## Metrics
-- Total Iterations: 144
+- Total Iterations: 145
 - Tasks Completed: 297+
-- Coverage: ~69.8% statements (branches 61.2%, functions 68.7%, lines 70.5%)
+- Coverage: ~70.0% statements (branches 61.3%, functions 68.8%, lines 70.6%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 145)
+
+- **Compaction LLM path tests** – Added unit tests for the `compact` function covering successful LLM summarization, fallback on LLM error, and handling of empty message sets. Verified correct prompt construction with file operations and proper result shaping. 3 new tests; all ~1780 tests passing (100% pass rate). Coverage increased to ~70.0% statements.
 
 ## Completed Features (Iteration 144)
 

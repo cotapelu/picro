@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 145: Compaction LLM path tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added unit tests for the `compact` function, covering successful LLM summarization, fallback on LLM error, and empty messages handling. Verified correct prompt construction (system prompt with file operations, user prompt with serialized conversation) and proper result shaping (summary, details).
+- **Rationale**: The `compact` function performs the actual LLM summarization call. Testing it ensures correct prompt assembly, error handling, and integration with file operation tracking.
+- **Impact**: All ~1780 tests passing (100% pass rate). No regressions. Coverage increased to ~70.0% statements.
+
 ### Iteration 144: Compaction coverage expansion
 
 - **Direction**: Testing & Coverage

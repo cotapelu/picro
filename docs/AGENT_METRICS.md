@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 144)
+## Current Metrics (as of 2026-06-09, Iteration 145)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 144 |
+| Total Iterations | 145 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1777/1777 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~69.8% |
-| Coverage (branches) | ~61.2% |
-| Coverage (functions) | ~68.7% |
-| Coverage (lines) | ~70.5% |
+| Test Pass Rate | 100% (~1780/1780 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~70.0% |
+| Coverage (branches) | ~61.3% |
+| Coverage (functions) | ~68.8% |
+| Coverage (lines) | ~70.6% |
 
 ## History
+
+| 2026-06-09 | 145 | 0 | ✅ | **Compaction LLM path tests** – Added unit tests for `compact` function covering successful LLM summarization, fallback on LLM error, and empty messages handling. Verified prompt construction with file ops and result shaping. 3 new tests; all ~1780 tests passing. Coverage increased to ~70.0% statements. |
 
 | 2026-06-09 | 144 | 0 | ✅ | **Compaction coverage expansion** – Added unit tests for `prepareCompaction` and `compactSession` in `src/session/compaction.ts`, covering cut point detection, previous summary extraction, file operations aggregation, and the compaction flow. 7 new tests; all ~1777 tests passing (100% pass rate). Coverage increased to ~69.8% statements. |
 
