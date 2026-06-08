@@ -10,6 +10,8 @@ import {
   extractFileOpsFromMessage,
   computeFileLists,
   formatFileOperations,
+  prepareCompaction,
+  compactSession,
 } from './compaction.js';
 import type { AgentMessage, AssistantMessage } from './agent-types.js';
 
@@ -286,6 +288,108 @@ describe('Compaction unit', () => {
 
     it('returns empty string when no files', () => {
       expect(formatFileOperations([], [])).toBe('');
+    });
+  });
+
+  describe('prepareCompaction', () => {
+    it('returns null when no valid messages', () => {
+      const entries = [{ id: 'e1', type: 'branch_summary', summary: 'x' } as any];
+      const settings = { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 };
+      expect(prepareCompaction(entries, settings)).toBeNull();
+    });
+
+    it('keeps all entries when keepRecentTokens large', () => {
+      const longContent = 'x'.repeat(400);
+      const entries = [
+        { id: 'e0', type: 'message', message: { role: 'user', content: longContent } } as any,
+        { id: 'e1', type: 'message', message: { role: 'user', content: longContent } } as any,
+      ];
+      const settings = { enabled: true, reserveTokens: 1000, keepRecentTokens: 10000 };
+      const prep = prepareCompaction(entries, settings);
+      expect(prep).not.toBeNull();
+      expect(prep!.firstKeptEntryId).toBe('e0');
+      expect(prep!.messagesToSummarize).toHaveLength(0);
+      expect(prep!.isSplitTurn).toBe(false);
+    });
+
+    it('identifies correct cut point and summarization set', () => {
+      const longContent = 'x'.repeat(400); // 100 tokens
+      const shortAssistant = { role: 'assistant', content: [{ type: 'toolCall', name: 'write', arguments: { path: '/tmp' } }] } as any;
+      const entries = [
+        { id: 'e0', type: 'message', message: { role: 'user', content: longContent } } as any,
+        { id: 'e1', type: 'compaction', details: { readFiles: [], modifiedFiles: [] } } as any,
+        { id: 'e2', type: 'message', message: shortAssistant } as any,
+        { id: 'e3', type: 'message', message: shortAssistant } as any,
+        { id: 'e4', type: 'message', message: { role: 'user', content: longContent } } as any,
+      ];
+      const settings = { enabled: true, reserveTokens: 1000, keepRecentTokens: 107 };
+      const prep = prepareCompaction(entries, settings);
+      expect(prep).not.toBeNull();
+      expect(prep!.firstKeptEntryId).toBe('e2');
+      expect(prep!.messagesToSummarize).toHaveLength(1);
+      expect(prep!.messagesToSummarize[0]).toBe(entries[0].message);
+      expect(prep!.isSplitTurn).toBe(true);
+    });
+
+    it('captures previous summary from nearest prior compaction entry', () => {
+      const longContent = 'x'.repeat(400);
+      const entries = [
+        { id: 'e0', type: 'message', message: { role: 'user', content: longContent } } as any,
+        { id: 'e1', type: 'compaction', summary: 'Prev summary', details: { readFiles: [], modifiedFiles: [] } } as any,
+        { id: 'e2', type: 'message', message: { role: 'user', content: longContent } } as any,
+        { id: 'e3', type: 'message', message: { role: 'user', content: longContent } } as any,
+      ];
+      const settings = { enabled: true, reserveTokens: 1000, keepRecentTokens: 150 };
+      const prep = prepareCompaction(entries, settings);
+      expect(prep).not.toBeNull();
+      expect(prep!.firstKeptEntryId).toBe('e2');
+      expect(prep!.previousSummary).toBe('Prev summary');
+    });
+
+    it('aggregates file operations from messages and prior compaction entries', () => {
+      const longContent = 'x'.repeat(400);
+      const msgRead = { role: 'assistant', content: [{ type: 'toolCall', name: 'read', arguments: { path: '/a' } }] } as any;
+      const msgWrite = { role: 'assistant', content: [{ type: 'toolCall', name: 'write', arguments: { path: '/b' } }] } as any;
+      const msgEdit = { role: 'assistant', content: [{ type: 'toolCall', name: 'edit', arguments: { path: '/c' } }] } as any;
+      const entries = [
+        { id: 'e0', type: 'message', message: msgRead } as any,
+        { id: 'e1', type: 'compaction', summary: 'C', details: { readFiles: ['/c'], modifiedFiles: ['/d'] } } as any,
+        { id: 'e2', type: 'message', message: msgWrite } as any,
+        { id: 'e3', type: 'message', message: msgEdit } as any,
+        { id: 'e4', type: 'message', message: { role: 'user', content: longContent } } as any,
+      ];
+      const settings = { enabled: true, reserveTokens: 1000, keepRecentTokens: 100 };
+      const prep = prepareCompaction(entries, settings);
+      expect(prep).not.toBeNull();
+      expect(prep!.firstKeptEntryId).toBe('e4');
+      const ops = prep!.fileOps;
+      expect(ops.read.has('/a')).toBe(true);
+      expect(ops.read.has('/c')).toBe(true);
+      expect(ops.written.has('/b')).toBe(true);
+      expect(ops.edited.has('/c')).toBe(true);
+      expect(ops.written.has('/d')).toBe(true);
+      expect(ops.edited.has('/d')).toBe(true);
+    });
+  });
+
+  describe('compactSession', () => {
+    it('returns original messages when context under threshold', async () => {
+      const msgs: AgentMessage[] = [
+        { role: 'user', content: 'Hello' },
+        { role: 'assistant', content: [{ type: 'text', text: 'Hi' }] },
+      ];
+      const settings = { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 };
+      const result = await compactSession(msgs, settings);
+      expect(result.keptMessages).toBe(msgs);
+      expect(result.discardedMessages).toEqual([]);
+      expect(result.summary).toBe('');
+    });
+
+    it('handles empty messages', async () => {
+      const result = await compactSession([], { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 });
+      expect(result.keptMessages).toEqual([]);
+      expect(result.discardedMessages).toEqual([]);
+      expect(result.summary).toBe('');
     });
   });
 

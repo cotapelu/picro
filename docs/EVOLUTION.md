@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 144: Compaction coverage expansion
+
+- **Direction**: Testing & Coverage
+- **Change**: Added unit tests for `prepareCompaction` and `compactSession` in `src/session/compaction.ts`. Tests cover cut point detection, previous summary extraction, file operations aggregation, and the overall compaction flow. 7 new tests introduced.
+- **Rationale**: The compaction module is core to context window management. Testing the higher-level coordination functions (`prepareCompaction`, `compactSession`) ensures correct interaction between token estimation, cut point detection, and file tracking.
+- **Impact**: All ~1777 tests passing (100% pass rate). No regressions. Coverage increased to ~69.8% statements. Branches and functions also improved.
+
 ### Iteration 143: Compaction unit tests
 
 - **Direction**: Testing & Coverage

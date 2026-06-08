@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 143)
+Last updated: 2026-06-09 (Iteration 144)
 
 ## Metrics
-- Total Iterations: 143
+- Total Iterations: 144
 - Tasks Completed: 297+
-- Coverage: ~69.6% statements (branches 61.0%, functions 68.5%, lines 70.3%)
+- Coverage: ~69.8% statements (branches 61.2%, functions 68.7%, lines 70.5%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 144)
+
+- **Compaction coverage expansion** – Added unit tests for `prepareCompaction` and `compactSession` in `src/session/compaction.ts`. Tests cover cut point detection, previous summary extraction, file operations aggregation, and the session compaction flow. 7 new tests; all ~1777 tests passing (100% pass rate). Coverage increased to ~69.8% statements.
 
 ## Completed Features (Iteration 143)
 

@@ -38,6 +38,7 @@ Track strengths, weaknesses, and improvement areas.
 - Iteration 141: Added useRuntime session_tree null safety test
 - Iteration 142: Expanded AgentSession unit tests (sessionId, retryAttempt, isCompacting)
 - **Iteration 143: Compaction unit tests** – Added 31 unit tests for `src/session/compaction.ts` covering token estimation, cut point detection, compaction decision, usage extraction, and file ops tracking. Significantly increased coverage of compaction subsystem.
+- **Iteration 144: Compaction coverage expansion** – Added unit tests for `prepareCompaction` and `compactSession`, covering cut point detection, previous summary extraction, file operations aggregation, and the overall compaction flow. 7 new tests; coverage increased to ~69.8% statements.
 
 ## Next Priorities
 - Maintain >60% coverage and 100% test pass rate.

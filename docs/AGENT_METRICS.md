@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 143)
+## Current Metrics (as of 2026-06-09, Iteration 144)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 143 |
+| Total Iterations | 144 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1769/1769 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~69.6% |
-| Coverage (branches) | ~61.0% |
-| Coverage (functions) | ~68.5% |
-| Coverage (lines) | ~70.3% |
+| Test Pass Rate | 100% (~1777/1777 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~69.8% |
+| Coverage (branches) | ~61.2% |
+| Coverage (functions) | ~68.7% |
+| Coverage (lines) | ~70.5% |
 
 ## History
+
+| 2026-06-09 | 144 | 0 | ✅ | **Compaction coverage expansion** – Added unit tests for `prepareCompaction` and `compactSession` in `src/session/compaction.ts`, covering cut point detection, previous summary extraction, file operations aggregation, and the compaction flow. 7 new tests; all ~1777 tests passing (100% pass rate). Coverage increased to ~69.8% statements. |
 
 | 2026-06-09 | 143 | 0 | ✅ | **Compaction unit tests** – Added 31 unit tests for `src/session/compaction.ts` covering token estimation (`estimateTokens`, `estimateContextTokens`), cut point detection (`findCutPoint`), compaction decision (`shouldCompact`), usage extraction (`getAssistantUsage`, `estimateContextUsage`), and file operations tracking (`createFileOps`, `extractFileOpsFromMessage`, `computeFileLists`, `formatFileOperations`). All ~1769 tests passing (100% pass rate). Coverage increased to ~69.6% statements. |
 
