@@ -2,6 +2,13 @@
 
 Track trajectory changes, planned refactors, and anticipated debt.
 
+### Iteration 155: useRuntime setters tests
+
+- **Direction**: Testing & Coverage
+- **Change**: Added `useRuntime.setters.test.tsx` covering state setter functions: `setToolOutputExpanded`, `setHideThinkingBlock`, `setHiddenThinkingLabel`, and `setMessages`. 4 new tests.
+- **Rationale**: These setters are used by UI controls to modify rendering state; testing ensures correct updates.
+- **Impact**: All ~1823 tests passing (100% pass rate). No regressions. Coverage increased to ~71.3% statements.
+
 ### Iteration 154: AgentSessionRuntime additional tests
 
 - **Direction**: Testing & Coverage

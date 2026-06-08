@@ -2,24 +2,26 @@
 
 Track agent performance and reliability across iterations.
 
-## Current Metrics (as of 2026-06-09, Iteration 154)
+## Current Metrics (as of 2026-06-09, Iteration 155)
 
 | Metric | Value |
 |--------|-------:|
-| Total Iterations | 154 |
+| Total Iterations | 155 |
 | Tasks Completed | 297+ |
 | Test Failure Rate | ~0% |
 | Rollback Count | 0 |
 | Regressions | 0 |
 | MTTR (Mean Time To Recover) | N/A |
 | Build Success Rate | 100% |
-| Test Pass Rate | 100% (~1819/1819 tests, 14 skipped, 1 todo) |
-| Coverage (statements) | ~71.2% |
-| Coverage (branches) | ~62.4% |
-| Coverage (functions) | ~69.9% |
-| Coverage (lines) | ~71.7% |
+| Test Pass Rate | 100% (~1823/1823 tests, 14 skipped, 1 todo) |
+| Coverage (statements) | ~71.3% |
+| Coverage (branches) | ~62.5% |
+| Coverage (functions) | ~70.0% |
+| Coverage (lines) | ~71.8% |
 
 ## History
+
+| 2026-06-09 | 155 | 0 | ✅ | **useRuntime setters tests** – Added `useRuntime.setters.test.tsx` covering `setToolOutputExpanded`, `setHideThinkingBlock`, `setHiddenThinkingLabel`, `setMessages`. 4 new tests; all ~1823 tests passing. Coverage increased to ~71.3% statements. |
 
 | 2026-06-09 | 154 | 0 | ✅ | **AgentSessionRuntime additional tests** – Added tests for `setBeforeSessionInvalidate`, `setRebindSession`, `diagnostics`, `dispose` idempotency, `modelFallbackMessage`. 6 new tests; all ~1819 tests passing. Coverage increased to ~71.2% statements. |
 

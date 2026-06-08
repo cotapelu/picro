@@ -1,13 +1,17 @@
 # Project State
 
-Last updated: 2026-06-09 (Iteration 154)
+Last updated: 2026-06-09 (Iteration 155)
 
 ## Metrics
-- Total Iterations: 154
+- Total Iterations: 155
 - Tasks Completed: 297+
-- Coverage: ~71.2% statements (branches 62.4%, functions 69.9%, lines 71.7%)
+- Coverage: ~71.3% statements (branches 62.5%, functions 70.0%, lines 71.8%)
 - Build Success Rate: 100%
 - Zero regressions
+
+## Completed Features (Iteration 155)
+
+- **useRuntime setters tests** – Added `useRuntime.setters.test.tsx` covering `setToolOutputExpanded`, `setHideThinkingBlock`, `setHiddenThinkingLabel`, and `setMessages`. 4 new tests; all ~1823 tests passing (100% pass rate). Coverage increased to ~71.3% statements.
 
 ## Completed Features (Iteration 154)
 
