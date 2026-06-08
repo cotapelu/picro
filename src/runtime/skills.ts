@@ -44,7 +44,7 @@ function parseFrontmatter<T>(content: string): { frontmatter: T; content: string
   return { frontmatter: frontmatter as T, content: body };
 }
 
-function loadSkillFromFile(filePath: string): Skill | null {
+export function loadSkillFromFile(filePath: string): Skill | null {
   try {
     const rawContent = readFileSync(filePath, "utf-8");
     const { frontmatter } = parseFrontmatter<{
