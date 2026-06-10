@@ -126,10 +126,13 @@ export class AgentLoop {
         };
       } else if (turn.role === 'tool') {
         return {
-          role: 'tool',
-          content: turn.content.map(c => c.text).join(''),
+          role: 'toolResult',
+          content: [{ type: 'text', text: turn.content.map(c => c.text).join('') }],
           toolCallId: turn.toolCallId,
-        };
+          toolName: turn.toolName,
+          isError: turn.isError,
+          timestamp: turn.timestamp,
+        } as any;
       }
       return null;
     }).filter(Boolean);
