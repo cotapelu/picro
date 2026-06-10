@@ -24,7 +24,9 @@ export type KnownProvider =
   | "nvidia"
   | "kilo"
   | "opencode"
-  | "opencode-go";
+  | "opencode-go"
+  | "google"
+  | "github-copilot";
 
 
 export type StopReason = 'stop' | 'length' | 'toolUse' | 'error' | 'aborted';

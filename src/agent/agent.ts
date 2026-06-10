@@ -67,7 +67,7 @@ export class Agent {
     this.model = model;
     this.tools = tools;
     this.config = this._resolveConfig(config);
-    this.emitter = this.config.enableLogging ? this.createLogger(this.config.verbose) : new EventEmitter();
+    this.emitter = this.config.enableLogging ? this.createLogger(this.config.verbose ?? false) : new EventEmitter();
 
     // Tool executor with registry
     this.toolExecutor = new ToolExecutor(this.toolRegistry);

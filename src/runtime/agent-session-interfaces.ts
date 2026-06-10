@@ -4,6 +4,9 @@
  * Used by both agent runtime and TUI components
  */
 
+import type { SessionTreeNode } from "../session/session-manager.js";
+import type { SessionStats } from "../session/agent-session-types.js";
+
 /**
  * Agent session interface - full interface for UI to interact with session
  */
@@ -66,7 +69,7 @@ export interface AgentSessionInterface {
   reload?(): Promise<void>;
 
   // Extension runner reference (for binding extensions)
-  get _extensionRunner?(): any;
+  _extensionRunner?: any;
 }
 
 /**

@@ -544,11 +544,11 @@ export class AgentLoop {
             type: 'llm:response',
             timestamp: Date.now(),
             round: this.state.round,
-            tokensUsed: response.usage?.totalTokens ?? 0,
-            toolCallsCount: response.toolCalls?.length ?? 0,
+            tokensUsed: response!.usage?.totalTokens ?? 0,
+            toolCallsCount: response!.toolCalls?.length ?? 0,
           } as any);
 
-          this.state.history.push(this.createAssistantTurn(response));
+          this.state.history.push(this.createAssistantTurn(response!));
         }
 
         // Determine tool calls and response for strategy
@@ -566,8 +566,8 @@ export class AgentLoop {
             errorMessage: finalMessage.errorMessage,
           };
         } else {
-          toolCalls = (response as LLMResponse).toolCalls || [];
-          shouldContinueResponse = response as LLMResponse;
+          toolCalls = response!.toolCalls || [];
+          shouldContinueResponse = response!;
         }
 
         if (toolCalls.length > 0) {
@@ -596,7 +596,7 @@ export class AgentLoop {
             if (isStreaming) {
               await this.autoSaveMemory(currentPrompt, finalMessage, toolResults);
             } else {
-              await this.autoSaveMemory(currentPrompt, response as LLMResponse, toolResults);
+              await this.autoSaveMemory(currentPrompt, response!, toolResults);
             }
           }
 
@@ -650,7 +650,7 @@ export class AgentLoop {
               ? contentBlocks.filter((c: any) => c.type === 'text').map((c: any) => c.text).join('')
               : String(contentBlocks);
           } else {
-            finalAnswer = (response as LLMResponse).content || '';
+            finalAnswer = response!.content || '';
           }
 
           const finalResult: AgentRunResult = {
@@ -660,8 +660,8 @@ export class AgentLoop {
             totalTokens: this.state.totalTokens,
             toolResults: this.state.toolResults,
             success: true,
-            stopReason: isStreaming ? finalMessage.stopReason : (response as LLMResponse).stopReason || 'stop',
-            error: isStreaming ? finalMessage.errorMessage : (response as LLMResponse).errorMessage,
+            stopReason: isStreaming ? finalMessage.stopReason : response!.stopReason || 'stop',
+            error: isStreaming ? finalMessage.errorMessage : response!.errorMessage,
             finalState: { ...this.state },
           };
 
