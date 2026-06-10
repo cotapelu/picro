@@ -1,4 +1,0 @@
-
-> @picro/picro@0.0.1 test
-> vitest run --reporter=json
-
