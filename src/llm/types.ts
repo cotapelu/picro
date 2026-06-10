@@ -1,6 +1,31 @@
 /**
  * Minimal types
+ *
+ * KnownProvider: Danh sách providers được hỗ trợ (có thể mở rộng sau)
+ *
+ * Hiện tại chỉ support OpenAI-compatible providers với API types:
+ * - openai-completions
+ * - openai-responses (openai-codex)
  */
+
+export type KnownApi =
+  | "openai-completions"
+  | "openai-codex-responses"
+  | (string & {});
+
+export type Api = KnownApi | (string & {});
+
+/**
+ * Core OpenAI-compatible providers (chỉ 4 hiện tại)
+ *
+ * Mở rộng sau: thêm vào union type
+ */
+export type KnownProvider =
+  | "nvidia"
+  | "kilo"
+  | "opencode"
+  | "opencode-go";
+
 
 export type StopReason = 'stop' | 'length' | 'toolUse' | 'error' | 'aborted';
 
@@ -36,8 +61,8 @@ export interface UserMessage {
 export interface AssistantMessage {
   role: 'assistant';
   content: (TextContent | ThinkingContent | ToolCall)[];
-  api: string;
-  provider: string;
+  api: Api;
+  provider: KnownProvider;
   model: string;
   usage: Usage;
   stopReason: StopReason;
@@ -84,11 +109,11 @@ export interface AssistantMessageEvent {
   message?: AssistantMessage; // for 'done'
 }
 
-export interface Model {
+export interface Model<TApi extends Api = Api> {
   id: string;
   name: string;
-  api: string;
-  provider: string;
+  api: TApi;
+  provider: KnownProvider;
   baseUrl: string;
   reasoning: boolean;
   input: ('text' | 'image')[];

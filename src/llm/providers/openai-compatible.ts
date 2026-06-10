@@ -30,10 +30,10 @@ export function buildParams(
   options: OpenAICompatOptions,
   compat: Required<CompatSettings>
 ): any {
-  const reservedTokens = options.maxTokens || Math.min(model.maxTokens, 4096);
-  const adjustedCtx = truncateContext(context, model.contextWindow, reservedTokens);
+  const maxTokensToUse = options.maxTokens ?? Math.min(model.maxTokens, 4096);
+  const adjustedCtx = truncateContext(context, model.contextWindow, maxTokensToUse);
 
-  let messages = transformMessages(adjustedCtx.messages);
+  let messages = transformMessages(adjustedCtx.messages, model);
   messages = messages.map(msg => {
     if (msg.role !== 'assistant') return msg;
     const asst = msg as any;
@@ -51,6 +51,9 @@ export function buildParams(
   });
 
   const params: any = { model: model.id, messages: [], stream: true };
+  // Add max tokens param based on compat setting
+  const maxTokensParam = compat.maxTokensParam || 'max_tokens';
+  params[maxTokensParam] = maxTokensToUse;
 
   if (adjustedCtx.systemPrompt) {
     const role = model.reasoning && compat.supportsDeveloperRole ? 'developer' : 'system';
@@ -121,7 +124,7 @@ export function buildParams(
   }
 
   // OpenRouter cache control
-  if (model.provider === 'openrouter' && model.id.startsWith('anthropic/')) {
+  if ((model.provider as any) === 'openrouter' && model.id.startsWith('anthropic/')) {
     for (let i = params.messages.length - 1; i >= 0; i--) {
       const msg = params.messages[i];
       if (msg.role === 'user' || msg.role === 'assistant') {

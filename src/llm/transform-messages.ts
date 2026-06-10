@@ -1,115 +1,205 @@
-import type { Message, AssistantMessage, ToolCall, ToolResultMessage } from './types.js';
+import type { Message, AssistantMessage, ImageContent, TextContent, ToolCall, ToolResultMessage, Tool } from './types.js';
+import type { Model } from './types.js';
 
-/**
- * Chuẩn hóa tool call ID để tương thích với provider yêu cầu định dạng ID đặc biệt.
- */
+const NON_VISION_USER_IMAGE_PLACEHOLDER = "(image omitted: model does not support images)";
+const NON_VISION_TOOL_IMAGE_PLACEHOLDER = "(tool image omitted: model does not support images)";
+
+function replaceImagesWithPlaceholder(content: any[], placeholder: string): any[] {
+  const result: TextContent[] = [];
+  let previousWasPlaceholder = false;
+
+  for (const block of content) {
+    if (block.type === "image") {
+      if (!previousWasPlaceholder) {
+        result.push({ type: "text", text: placeholder });
+      }
+      previousWasPlaceholder = true;
+      continue;
+    }
+
+    result.push(block);
+    previousWasPlaceholder = block.text === placeholder;
+  }
+
+  return result;
+}
+
+function downgradeUnsupportedImages(messages: Message[], model: Model): Message[] {
+  if (model.input.includes("image")) {
+    return messages;
+  }
+
+  return messages.map((msg) => {
+    if (msg.role === "user" && Array.isArray(msg.content)) {
+      return {
+        ...msg,
+        content: replaceImagesWithPlaceholder(msg.content, NON_VISION_USER_IMAGE_PLACEHOLDER),
+      } as any;
+    }
+
+    if (msg.role === "toolResult" && Array.isArray(msg.content)) {
+      return {
+        ...msg,
+        content: replaceImagesWithPlaceholder(msg.content, NON_VISION_TOOL_IMAGE_PLACEHOLDER),
+      } as any;
+    }
+
+    return msg;
+  });
+}
+
 function normalizeToolId(rawId: string): string {
   const baseId = rawId.split('|')[0];
   return baseId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64);
 }
 
 /**
- * Kiểm tra xem assistant message có nên bỏ qua (lỗi hoặc bị hủy)
+ * Chuẩn hóa tin nhắn cho provider OpenAI-compatible.
+ * - Downgrade images nếu provider không hỗ trợ
+ * - Normalize tool call IDs (dài quá, có ký tự đặc biệt)
+ * - Xử lý thinking blocks (giữ nguyên cho cùng model, chuyển sang text cho khác model)
+ * - Chèn synthetic tool results cho tool calls không có kết quả
  */
-function shouldSkipMessage(msg: Message): boolean {
-  if (msg.role !== 'assistant') return false;
-  const assistant = msg as AssistantMessage;
-  return assistant.stopReason === 'error' || assistant.stopReason === 'aborted';
-}
+export function transformMessages(messages: Message[], model: Model): Message[] {
+  const toolCallIdMap = new Map<string, string>();
+  const imageAwareMessages = downgradeUnsupportedImages(messages, model);
 
-/**
- * Biến đổi lịch sử tin nhắn để tương thích provider.
- */
-export function transformMessages(messages: Message[]): Message[] {
-  const transformed: Message[] = [];
-  let pendingToolCalls: ToolCall[] = [];
-  const seenToolResultIds = new Set<string>();
-
-  for (const msg of messages) {
-    if (shouldSkipMessage(msg)) {
-      pendingToolCalls = [];
-      continue;
+  // First pass: transform messages
+  const transformed = imageAwareMessages.map((msg) => {
+    if (msg.role === "user") {
+      return msg;
     }
 
-    if (msg.role === 'assistant') {
-      const assistant = msg as AssistantMessage;
-
-      // Chèn synthetic tool results cho pending tool calls chưa có kết quả
-      for (const tc of pendingToolCalls) {
-        if (!seenToolResultIds.has(tc.id)) {
-          transformed.push({
-            role: 'toolResult',
-            toolCallId: tc.id,
-            toolName: tc.name,
-            content: [{ type: 'text', text: 'No result provided' }],
-            isError: true,
-            timestamp: Date.now(),
-          } as ToolResultMessage);
-        }
+    if (msg.role === "toolResult") {
+      const normalizedId = toolCallIdMap.get(msg.toolCallId);
+      if (normalizedId && normalizedId !== msg.toolCallId) {
+        return { ...msg, toolCallId: normalizedId } as any;
       }
-      pendingToolCalls = [];
-      seenToolResultIds.clear();
+      return msg;
+    }
 
-      // Theo dõi tool calls từ assistant message hiện tại
-      const currentToolCalls = assistant.content.filter((b): b is ToolCall => b.type === 'toolCall');
-      pendingToolCalls = currentToolCalls;
+    if (msg.role === "assistant") {
+      const assistantMsg = msg as AssistantMessage;
+      const isSameModel =
+        assistantMsg.provider === model.provider &&
+        assistantMsg.api === model.api &&
+        assistantMsg.model === model.id;
 
-      // Biến đổi content blocks
-      const updatedContent = assistant.content.map(block => {
-        if (block.type === 'toolCall' && block.id.includes('|')) {
-          return { ...block, id: normalizeToolId(block.id) };
+      const transformedContent = assistantMsg.content.flatMap((block) => {
+        if (block.type === "thinking") {
+          // Redacted thinking (encrypted) only valid for same model; drop for cross-model
+          if ((block as any).redacted) {
+            return isSameModel ? block : [];
+          }
+          // For same model: keep thinking blocks with signatures (needed for replay)
+          if (isSameModel && (block as any).thinkingSignature) return block;
+          // Skip empty thinking blocks, convert others to plain text
+          const thinking = (block as any).thinking;
+          if (!thinking || thinking.trim() === "") return [];
+          if (isSameModel) return block;
+          return { type: "text" as const, text: thinking };
         }
-        if (block.type === 'thinking') {
-          return { type: 'text' as const, text: `[Thinking: ${block.thinking.slice(0, 200)}...]` };
+
+        if (block.type === "text") {
+          if (isSameModel) return block;
+          return { type: "text" as const, text: (block as any).text };
         }
+
+        if (block.type === "toolCall") {
+          const toolCall = block as ToolCall;
+          let normalizedToolCall: ToolCall = toolCall;
+
+          // Remove thoughtSignature for cross-model
+          if (!isSameModel && (toolCall as any).thoughtSignature) {
+            normalizedToolCall = { ...toolCall };
+            delete (normalizedToolCall as any).thoughtSignature;
+          }
+
+          // Normalize tool call ID
+          if (!isSameModel && (toolCall.id.includes('|') || toolCall.id.length > 64)) {
+            const normalizedId = normalizeToolId(toolCall.id);
+            if (normalizedId !== toolCall.id) {
+              toolCallIdMap.set(toolCall.id, normalizedId);
+              normalizedToolCall = { ...normalizedToolCall, id: normalizedId };
+            }
+          }
+
+          return normalizedToolCall;
+        }
+
         return block;
       });
 
-      transformed.push({ ...assistant, content: updatedContent });
-    } else if (msg.role === 'toolResult') {
-      seenToolResultIds.add(msg.toolCallId);
-      transformed.push(msg);
-    } else if (msg.role === 'user') {
-      // Chèn synthetic results cho pending tool calls trước tin nhắn user
+      return {
+        ...assistantMsg,
+        content: transformedContent,
+      } as AssistantMessage;
+    }
+
+    return msg;
+  });
+
+  // Second pass: insert synthetic empty tool results for orphaned tool calls
+  const result: Message[] = [];
+  let pendingToolCalls: ToolCall[] = [];
+  let existingToolResultIds = new Set<string>();
+
+  const insertSyntheticToolResults = () => {
+    if (pendingToolCalls.length > 0) {
       for (const tc of pendingToolCalls) {
-        if (!seenToolResultIds.has(tc.id)) {
-          transformed.push({
-            role: 'toolResult',
+        if (!existingToolResultIds.has(tc.id)) {
+          result.push({
+            role: "toolResult",
             toolCallId: tc.id,
             toolName: tc.name,
-            content: [{ type: 'text', text: 'No result provided' }],
+            content: [{ type: "text", text: "No result provided" }],
             isError: true,
             timestamp: Date.now(),
           } as ToolResultMessage);
         }
       }
       pendingToolCalls = [];
-      seenToolResultIds.clear();
-      transformed.push(msg);
+      existingToolResultIds = new Set();
+    }
+  };
+
+  for (let i = 0; i < transformed.length; i++) {
+    const msg = transformed[i];
+
+    if (msg.role === "assistant") {
+      insertSyntheticToolResults();
+
+      const assistantMsg = msg as AssistantMessage;
+      // Skip errored/aborted assistant messages
+      if (assistantMsg.stopReason === "error" || assistantMsg.stopReason === "aborted") {
+        continue;
+      }
+
+      const toolCalls = assistantMsg.content.filter((b) => b.type === "toolCall") as ToolCall[];
+      if (toolCalls.length > 0) {
+        pendingToolCalls = toolCalls;
+        existingToolResultIds = new Set();
+      }
+
+      result.push(msg);
+    } else if (msg.role === "toolResult") {
+      existingToolResultIds.add(msg.toolCallId);
+      result.push(msg);
+    } else if (msg.role === "user") {
+      insertSyntheticToolResults();
+      result.push(msg);
     } else {
-      transformed.push(msg);
+      result.push(msg);
     }
   }
 
-  // Xử lý các pending tool calls còn lại sau vòng lặp
-  for (const tc of pendingToolCalls) {
-    if (!seenToolResultIds.has(tc.id)) {
-      transformed.push({
-        role: 'toolResult',
-        toolCallId: tc.id,
-        toolName: tc.name,
-        content: [{ type: 'text', text: 'No result provided' }],
-        isError: true,
-        timestamp: Date.now(),
-      } as ToolResultMessage);
-    }
-  }
+  insertSyntheticToolResults();
 
-  return transformed;
+  return result;
 }
 
 /**
- * Loại bỏ các assistant message rỗng khỏi lịch sử.
+ * Loại bỏ assistant message rỗng (không có content nào có nghĩa)
  */
 export function transformAssistantMessages(messages: Message[]): Message[] {
   return messages.filter(msg => {
@@ -117,7 +207,7 @@ export function transformAssistantMessages(messages: Message[]): Message[] {
     return msg.content.some(block => {
       if (block.type === 'text') return (block as any).text?.trim().length > 0;
       if (block.type === 'thinking') return (block as any).thinking?.trim().length > 0;
-      return true;
+      return true; // toolCall
     });
   });
 }

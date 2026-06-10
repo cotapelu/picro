@@ -12,7 +12,10 @@
     "jsx": "react-jsx",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "downlevelIteration": true,
+    "lib": ["ES2022"]
+    "lib": ["ES2022"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "src/tui/**/*", "**/*.test.ts"]

@@ -11,7 +11,9 @@
     "build:tui": "node scripts/build-tui.js",
     "dev": "VERBOSE=1 picro",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage:each": "bash scripts/test-coverage-each.sh",
+    "test:coverage:single": "vitest run --coverage --reporter=json"
   },
   "keywords": [
     "picro",

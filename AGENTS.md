@@ -10,7 +10,8 @@ bạn phải đọc code tham khảo và đối chiếu với code đang làm. n
  mà không được copy code vì vi phạm bản quyền. bạn phải đọc code tham khảo và đối chiếu với code đang làm.
 
 
-- đối với app tổng, nó nằm trong thư mục src ở root của dự án, trong đó hàm main.ts là hàm chính, ngoài ra còn có cli.ts. tham khảo mọi dòng code ở thư mục src/llm-context/coding-agent
+- đối với app tổng, nó nằm trong thư mục src ở root của dự án, trong đó hàm main.ts là hàm chính, ngoài ra còn có cli.ts.
+ tham khảo mọi dòng code ở thư mục src/llm-context/coding-agent
 mà không được copy code vì vi phạm bản quyền. phải đọc code tham khảo vào đối chiếu với code đang làm.
 
 

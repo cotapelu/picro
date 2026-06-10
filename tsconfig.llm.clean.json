@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "downlevelIteration": true,
+    "lib": ["ES2022"],
+    "noEmit": true
+  },
+  "include": ["src/llm/**/*.ts"],
+  "exclude": ["node_modules", "src/llm/**/*.test.ts", "src/llm/**/*.extra.test.ts", "src/llm/scripts"]
+}

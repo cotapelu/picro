@@ -2,7 +2,7 @@
  * Context Window Overflow Handler
  *
  * Automatically truncates conversation history to fit within model's context window.
- * Preserves system prompt and most recent messages.
+ * Strategy: remove oldest messages entirely (no partial truncation) to preserve structure.
  */
 
 import type { Message, Tool } from './types.js';
@@ -16,6 +16,29 @@ function estimateTokens(text: string): number {
 }
 
 /**
+ * Estimate tokens for a single message
+ */
+function estimateMessageTokens(msg: Message): number {
+  let tokens = 0;
+  if (typeof msg.content === 'string') {
+    tokens += estimateTokens(msg.content);
+  } else {
+    for (const block of msg.content) {
+      if (block.type === 'text') {
+        tokens += estimateTokens(block.text);
+      } else if (block.type === 'image') {
+        tokens += 85; // Approx base64 image token cost
+      } else if (block.type === 'thinking') {
+        tokens += estimateTokens(block.thinking);
+      }
+    }
+  }
+  // Add overhead for role and formatting (roughly 5 tokens)
+  tokens += 5;
+  return tokens;
+}
+
+/**
  * Estimate total tokens in context
  */
 export function estimateContextTokens(context: {
@@ -23,28 +46,10 @@ export function estimateContextTokens(context: {
   messages: Message[];
 }): number {
   let total = 0;
-
-  if (context.systemPrompt) {
-    total += estimateTokens(context.systemPrompt);
-  }
-
+  if (context.systemPrompt) total += estimateTokens(context.systemPrompt);
   for (const msg of context.messages) {
-    if (typeof msg.content === 'string') {
-      total += estimateTokens(msg.content);
-    } else {
-      for (const block of msg.content) {
-        if (block.type === 'text') {
-          total += estimateTokens(block.text);
-        } else if (block.type === 'image') {
-          // Image: roughly 85 tokens per image (base64 overhead)
-          total += 85;
-        } else if (block.type === 'thinking') {
-          total += estimateTokens(block.thinking);
-        }
-      }
-    }
+    total += estimateMessageTokens(msg);
   }
-
   return total;
 }
 
@@ -52,10 +57,11 @@ export function estimateContextTokens(context: {
  * Truncate context to fit within maxTokens
  *
  * Strategy:
- * 1. Keep system prompt intact (if any)
- * 2. Remove oldest messages first (FIFO)
- * 3. Always keep the most recent user message
- * 4. If even single message is too large, truncate it
+ * 1. Keep system prompt intact
+ * 2. Remove oldest messages one by one (FIFO) until we fit
+ * 3. Always keep at least the most recent user message
+ * 4. Never partially truncate a message (to preserve structure for transformMessages)
+ * 5. If a single message is too large, we still keep it (caller must handle)
  *
  * @returns Truncated context (or original if already fits)
  */
@@ -79,67 +85,59 @@ export function truncateContext(
   let availableForMessages = availableTokens - systemPromptTokens;
 
   if (availableForMessages <= 0) {
-    // System prompt alone exceeds context - must truncate it
-    const truncated = context.systemPrompt?.slice(-availableTokens * 4) || '';
+    // System prompt alone exceeds context - must truncate it to a snippet
+    const maxChars = Math.max(0, availableTokens * 4);
+    const truncated = context.systemPrompt?.slice(-maxChars) || '';
     return {
       systemPrompt: truncated,
       messages: [],
+      tools: context.tools,
     };
   }
 
-  // Remove oldest messages until we fit
-  // Keep at least 1 message (the most recent user message)
-  while (messages.length > 1 && estimateContextTokens({ messages }) > availableForMessages) {
-    // Don't remove the last message
-    if (messages.length === 1) break;
-    messages.shift(); // Remove oldest
-  }
+  // Build array of token counts for each message for quick recalc
+  const messageTokens = messages.map(estimateMessageTokens);
 
-  // If still too large, truncate the oldest remaining message content
-  while (messages.length > 0 && estimateContextTokens({ messages }) > availableForMessages) {
-    const oldest = messages[0];
-    if (typeof oldest.content === 'string') {
-      const maxChars = (availableForMessages - (messages.length - 1) * 100) * 4; // rough
-      if (oldest.content.length > maxChars) {
-        oldest.content = oldest.content.slice(-maxChars);
-      }
-    }
-    // Re-check
-    if (estimateContextTokens({ messages }) <= availableForMessages) break;
-
-    // Still too big? Remove this message
-    if (messages.length > 1) {
-      messages.shift();
+  // Remove oldest messages until we fit, but keep at least 1 message (the most recent)
+  let startIdx = 0;
+  while (startIdx < messages.length - 1) {
+    const tokensIfRemoved = currentTokens - messageTokens[startIdx];
+    if (tokensIfRemoved <= availableForMessages) {
+      // Removing this message gets us under limit
+      currentTokens = tokensIfRemoved;
+      startIdx++;
     } else {
-      // Last message, must truncate content significantly
-      if (typeof oldest.content === 'string') {
-        oldest.content = oldest.content.slice(-Math.floor(availableForMessages * 2));
-      }
       break;
     }
   }
 
+  // If still too large, we need to drop more messages even if it leaves only one
+  while (startIdx < messages.length && currentTokens > availableForMessages) {
+    if (messages.length - startIdx <= 1) break; // Keep at least one message
+    currentTokens -= messageTokens[startIdx];
+    startIdx++;
+  }
+
+  // Final check: if the remaining message(s) still exceed limit, we have to keep them anyway
+  // (can't partially truncate). In practice, models have large context windows so this is rare.
+
+  const truncatedMessages = messages.slice(startIdx);
+
   return {
     systemPrompt: context.systemPrompt,
-    messages,
+    messages: truncatedMessages,
     tools: context.tools,
   };
 }
 
 /**
- * Smart truncation that tries to preserve conversation structure
+ * Smart truncation that preserves conversation structure.
+ * This is a thin wrapper; complex preservation is handled by transformMessages.
  */
 export function smartTruncate(
-  context: { systemPrompt?: string; messages: Message[] },
+  context: { systemPrompt?: string; messages: Message[]; tools?: Tool[] },
   maxTokens: number,
   reservedOutputTokens: number = 4096
-): { systemPrompt?: string; messages: Message[] } {
-  const result = truncateContext(context, maxTokens, reservedOutputTokens);
-
-  // Additional logic could:
-  // - Preserve tool call/result pairs
-  // - Keep conversation turns intact
-  // - Summarize old messages (future)
-
-  return result;
+): { systemPrompt?: string; messages: Message[]; tools?: Tool[] } {
+  return truncateContext(context, maxTokens, reservedOutputTokens);
 }
