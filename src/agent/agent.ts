@@ -565,8 +565,8 @@ export class Agent {
        thinkingBudgets: config?.thinkingBudgets,
        reasoningLevel: config?.reasoningLevel,
        transformContext: config?.transformContext,
-       steeringMode: config?.steeringMode ?? 'dequeue-one',
-       followUpMode: config?.followUpMode ?? 'dequeue-one',
+       steeringMode: config?.steeringMode ?? 'one-at-a-time',
+       followUpMode: config?.followUpMode ?? 'one-at-a-time',
        autoSaveMemories: config?.autoSaveMemories,
        debug: config?.debug ?? false,
        compaction: config?.compaction ?? { enabled: true, autoCompact: true },
@@ -581,18 +581,18 @@ export class Agent {
         const time = new Date(event.timestamp).toISOString();
         const round = `[R${event.round}]`;
         switch (event.type) {
-          case 'agent_start':
+          case 'agent:start':
             console.log(`${time} ${round} 🚀 Agent started`);
             break;
-          case 'agent_end':
+          case 'agent:end':
             console.log(`${time} ${round} ✅ Agent finished`);
             break;
-          case 'turn_end': {
+          case 'turn:end': {
             const tc = (event as any).toolCallsExecuted;
             console.log(`${time} ${round} ⏹️ Turn (${tc} tools)`);
             break;
           }
-          case 'tool_error':
+          case 'tool:error':
             console.error(`${time} ${round} 💥 Tool error: ${(event as any).toolName}`);
             break;
           case 'error':

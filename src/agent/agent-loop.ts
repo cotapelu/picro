@@ -191,8 +191,8 @@ export class AgentLoop {
        initialPrompt,
        steeringQueue,
        followUpQueue,
-       signal,
        false,
+       signal,
        initialTurns
      )[Symbol.asyncIterator]();
 
@@ -219,8 +219,8 @@ export class AgentLoop {
        initialPrompt,
        steeringQueue,
        followUpQueue,
-       signal,
        true,
+       signal,
        initialTurns
      )[Symbol.asyncIterator]();
 
