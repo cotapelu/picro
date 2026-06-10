@@ -15,6 +15,8 @@ import type {
   LLMResponse,
   ToolHandler,
   ToolRegistry,
+  QueueMode,
+  ToolDefinition,
 } from './types.js';
 import { EventEmitter } from '../events/event-emitter.js';
 import { ToolExecutor } from './tool-executor.js';
@@ -60,7 +62,7 @@ export class Agent {
   constructor(
     model?: Model,
     tools: AgentTool[] = [],
-    config: AgentConfig = {}
+    config: AgentConfig = { maxRounds: 10 }
   ) {
     this.model = model;
     this.tools = tools;
@@ -73,7 +75,12 @@ export class Agent {
     if (this.config.executor?.handlers) {
       for (const [name, handler] of Object.entries(this.config.executor.handlers)) {
         this.toolRegistry[name] = handler as ToolHandler;
-        this.toolExecutor.register(name, handler as ToolHandler);
+        this.toolExecutor.register({
+          name,
+          description: '',
+          parameters: {},
+          handler: handler as ToolHandler,
+        } as ToolDefinition);
       }
     }
 
@@ -107,23 +114,22 @@ export class Agent {
       this.memoryStore = this.config.memoryStore;
     }
 
-    // Runner – pass required dependencies including llm functions (set later if model provided)
+    // Runner – pass required dependencies including llm functions (will be set by setModel if model provided)
     this.runner = new AgentLoop(
       this.config,
       this.emitter,
       this.toolExecutor,
       this.contextBuilder ?? null,
       this.strategy,
-      this.memoryStore,
-      this.tools,
       this._llmComplete.bind(this),
-      this._llmStream.bind(this)
+      this._llmStream.bind(this),
+      this.memoryStore,
+      this.tools
     );
 
-    // Auto-set LLM functions if model provided
+    // Set model if provided
     if (model) {
-      this.llmComplete = this._createLlmProvider(model);
-      this.llmStream = this._createStreamProvider(model);
+      this.setModel(model);
     }
   }
 
@@ -163,7 +169,7 @@ export class Agent {
     return stream(this.model, context, llmOptions);
   };
 
-  private _resolveConfig(input: AgentConfig): AgentConfig {
+  private _resolveConfig(input: Partial<AgentConfig>): AgentConfig {
     return {
       maxRounds: input.maxRounds ?? 10,
       toolTimeout: input.toolTimeout ?? 30000,
@@ -171,7 +177,7 @@ export class Agent {
       enableLogging: input.enableLogging ?? false,
       verbose: input.verbose ?? false,
       toolExecutionMode: input.toolExecutionMode ?? input.toolExecutionStrategy ?? 'sequential',
-      queueMode: input.queueMode ?? (input.steeringMode === 'drain-all' ? 'all' : input.steeringMode === 'dequeue-one' ? 'one-at-a-time' : 'all'),
+      queueMode: input.queueMode ?? (input.steeringMode === 'all' ? 'all' : input.steeringMode === 'one-at-a-time' ? 'one-at-a-time' : 'all'),
       followUpMode: input.followUpMode ?? input.queueMode ?? 'all',
       convertToLlm: input.convertToLlm,
       getApiKey: input.getApiKey,
@@ -273,22 +279,26 @@ export class Agent {
     return this.toolExecutor.has(name);
   }
 
-  /**
-   * Set the LLM provider for non-streaming calls.
-   */
+  /** (legacy) Set LLM provider using old signature; wraps into llmComplete */
   setLLMProvider(
     provider: (prompt: string, tools: any[], options?: any) => Promise<LLMResponse>
   ): void {
-    this.llmProvider = provider;
+    this.llmComplete = async (context: Context, options?: any) => {
+      const prompt = context.messages.map(m => (m as any).content).join(''); // simplistic
+      const toolDefs = context.tools || [];
+      return provider(prompt, toolDefs, options);
+    };
   }
 
-  /**
-   * Set the stream provider for streaming calls.
-   */
+  /** (legacy) Set stream provider using old signature; wraps into llmStream */
   setStreamProvider(
     provider: (prompt: string, tools: any[], options?: any) => AsyncIterable<any> | Promise<AsyncIterable<any>>
   ): void {
-    this.streamProvider = provider;
+    this.llmStream = async (context: Context, options?: any) => {
+      const prompt = context.messages.map(m => (m as any).content).join('');
+      const toolDefs = context.tools || [];
+      return provider(prompt, toolDefs, options);
+    };
   }
 
   /**
@@ -303,8 +313,8 @@ export class Agent {
       throw new Error('Agent is already running');
     }
 
-    if (!this.llmProvider) {
-      throw new Error('LLM provider not set. Call setLLMProvider() first.');
+    if (!this.llmComplete) {
+      throw new Error('LLM provider not set. Provide a model or setModel() first.');
     }
 
     const userTurn: ConversationTurn = {
@@ -334,8 +344,8 @@ export class Agent {
       throw new Error('Agent is already running');
     }
 
-    if (!this.llmProvider) {
-      throw new Error('LLM provider not set. Call setLLMProvider() first.');
+    if (!this.llmComplete) {
+      throw new Error('LLM provider not set. Provide a model or setModel() first.');
     }
 
     const state = this.runner.getState();
@@ -386,8 +396,8 @@ export class Agent {
       throw new Error('Agent is already running');
     }
 
-    if (!this.streamProvider) {
-      throw new Error('Stream provider not set. Call setStreamProvider() first.');
+    if (!this.llmStream) {
+      throw new Error('LLM stream provider not set. Provide a model or setModel() first.');
     }
 
     const userTurn: ConversationTurn = {

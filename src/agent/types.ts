@@ -5,7 +5,7 @@
  */
 
 import type { EventEmitter } from '../events/event-emitter.js';
-import type { Model, Usage } from '../llm/index.js';
+import type { Model, Usage, Message as LlmMessage } from '../llm/index.js';
 
 // ============================================================================
 // Basic Types
@@ -16,8 +16,6 @@ export type Role = 'system' | 'user' | 'assistant' | 'tool';
 export type StopReason = 'stop' | 'length' | 'toolUse' | 'aborted' | 'error' | 'max_rounds';
 
 export type ThinkingLevel = 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
-
-export type QueueMode = 'drain-all' | 'dequeue-one';
 
 export type ToolExecutionStrategy = 'sequential' | 'parallel';
 
@@ -100,6 +98,17 @@ export type Tool = {
   parameters?: any;
 };
 
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  parameters?: any;
+  handler: ToolHandler;
+  prepareArguments?: (args: Record<string, unknown>, context: ToolContext) => Promise<Record<string, unknown>>;
+}
+
+export type AgentTool = Tool;
+export type AgentMessage = LlmMessage;
+
 export type ToolHandler = (
   args: Record<string, unknown>,
   context: ToolContext,
@@ -152,7 +161,7 @@ export interface ShouldStopAfterTurnContext {
 
 export type GetApiKeyFn = (provider: string) => Promise<string | undefined> | string | undefined;
 
-export type ConvertToLlmFn = (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
+export type ConvertToLlmFn = (turns: ConversationTurn[], signal?: AbortSignal) => Promise<LlmMessage[]>;
 
 export type ShouldStopAfterTurnFn = (ctx: ShouldStopAfterTurnContext) => boolean | Promise<boolean>;
 
@@ -173,12 +182,6 @@ export interface ToolProgressUpdate {
   partialResult?: string;
   details?: Record<string, unknown>;
 }
-
-export type ToolHandler = (
-  args: Record<string, unknown>,
-  context: ToolContext,
-  onProgress?: (update: ToolProgressUpdate) => void | Promise<void>
-) => string | Promise<string> | void | Promise<void>;
 
 export interface ToolExecutionMetadata {
   toolName: string;
@@ -392,6 +395,7 @@ export interface ToolExecutorConfig {
    afterToolCall?: AfterToolHook;
    /** Whether to emit progress updates during tool execution */
    emitProgressUpdates?: boolean;
+   handlers?: ToolRegistry;
  }
 
 export interface BeforeToolHook {

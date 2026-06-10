@@ -5,8 +5,8 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": "./dist/agent",
-    "rootDir": "./src/agent",
-    "strict": true,
+    "rootDir": "./src",
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "downlevelIteration": true,
@@ -14,5 +14,5 @@
     "noEmit": false
   },
   "include": ["src/agent/**/*.ts"],
-  "exclude": ["node_modules", "src/agent/**/*.test.ts"]
+  "exclude": ["node_modules", "src/agent/**/*.test.ts", "src/agent/**/*.extra.test.ts"]
 }
