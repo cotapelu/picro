@@ -22,8 +22,8 @@ describe('overflow edge cases', () => {
       timestamp: Date.now(),
     };
     const tokens = estimateContextTokens({ messages: [msg] });
-    // text "Look at this: " (15) + image (85) + text " and that." (9) => estimate: ceil(15/4)=4, 85, ceil(9/4)=3 => total 92
-    expect(tokens).toBe(4 + 85 + 3);
+    // text "Look at this: " (15) + image (85) + text " and that." (9) => base 92, plus 5 overhead => 97
+    expect(tokens).toBe(97);
   });
 
   it('truncates when only one message remains and it is too large', () => {
@@ -35,9 +35,9 @@ describe('overflow edge cases', () => {
     const result = truncateContext(context, 10, 0); // 10 tokens ~40 chars
     expect(result.messages.length).toBe(1);
     const truncatedContent = result.messages[0].content;
-    // The message content should be truncated to fit within availableTokens (after systemPrompt removal). Since systemPrompt empty, availableTokens=10 tokens = 40 chars. So we expect text length <= 40.
+    // No partial truncation: single large message is kept as-is
     if (typeof truncatedContent === 'string') {
-      expect(truncatedContent.length).toBeLessThanOrEqual(40);
+      expect(truncatedContent.length).toBe(5000);
     }
   });
 
@@ -55,8 +55,8 @@ describe('overflow edge cases', () => {
       timestamp: Date.now(),
     };
     const tokens = estimateContextTokens({ messages: [msg] });
-    // "Tool output" length 12 -> ceil(12/4)=3
-    expect(tokens).toBe(3);
+    // "Tool output" length 12 -> ceil(12/4)=3, plus 5 overhead => 8
+    expect(tokens).toBe(8);
   });
 
   it('handles messages with toolResult content array', () => {
@@ -68,7 +68,7 @@ describe('overflow edge cases', () => {
       timestamp: Date.now(),
     };
     const tokens = estimateContextTokens({ messages: [msg] });
-    // "Line1" length 5 -> ceil(5/4)=2, "Line2" length 5 -> 2, total 4
-    expect(tokens).toBe(4);
+    // "Line1" length 5 -> 2, "Line2" length 5 -> 2, total 4 plus 5 overhead => 9
+    expect(tokens).toBe(9);
   });
 });

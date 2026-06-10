@@ -44,7 +44,7 @@ describe('Agent (extra)', () => {
     it('throws on missing stream provider', async () => {
       const agent = new Agent(undefined as any, [], createTestConfig());
       const gen = agent.stream('test');
-      await expect(gen.next()).rejects.toThrow('Stream provider not set');
+      await expect(gen.next()).rejects.toThrow('LLM stream provider not set');
     });
   });
 
@@ -178,8 +178,8 @@ describe('Agent (extra)', () => {
         maxTokens: 100,
       } as any;
       const agent = new Agent(model, [], createTestConfig());
-      expect((agent as any).llmProvider).toBeDefined();
-      expect((agent as any).streamProvider).toBeDefined();
+      expect((agent as any).llmComplete).toBeDefined();
+      expect((agent as any).llmStream).toBeDefined();
     });
   });
 

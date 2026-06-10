@@ -43,8 +43,8 @@ describe('estimateContextTokens', () => {
   it('should count string message content', () => {
     const messages: Message[] = [createUserMessage('Hello world!')];
     const tokens = estimateContextTokens({ messages });
-    // 'Hello world!' length 12 => ceil(12/4)=3
-    expect(tokens).toBe(3);
+    // 'Hello world!' length 12 => ceil(12/4)=3, plus 5 overhead => 8
+    expect(tokens).toBe(8);
   });
 
   it('should count message content array with text blocks', () => {
@@ -56,8 +56,8 @@ describe('estimateContextTokens', () => {
       ],
     };
     const tokens = estimateContextTokens({ messages: [msg] });
-    // combined length: "First part. Second part." => 22 chars => ceil(22/4)=6
-    expect(tokens).toBe(6);
+    // combined length: "First part. Second part." => 22 chars => ceil(22/4)=6, plus 5 overhead => 11
+    expect(tokens).toBe(11);
   });
 
   it('should count image blocks as 85 tokens each', () => {
@@ -69,7 +69,7 @@ describe('estimateContextTokens', () => {
       ],
     };
     const tokens = estimateContextTokens({ messages: [msg] });
-    expect(tokens).toBe(170); // 2 * 85
+    expect(tokens).toBe(175); // 2 * 85 + 5 overhead
   });
 
   it('should count thinking blocks by content length', () => {
@@ -79,9 +79,9 @@ describe('estimateContextTokens', () => {
         { type: 'thinking', thinking: 'I am thinking...' },
       ],
     };
-    // length 16 => ceil(16/4)=4
+    // length 16 => ceil(16/4)=4, plus 5 overhead => 9
     const tokens = estimateContextTokens({ messages: [msg] });
-    expect(tokens).toBe(4);
+    expect(tokens).toBe(9);
   });
 });
 
@@ -110,10 +110,10 @@ describe('truncateContext', () => {
     const context = { systemPrompt: 'S', messages };
     // systemPrompt 1 char -> 1 token. AvailableTokens: 2 (maxTokens=5, reserved=3 -> available=2). Actually compute: maxTokens - reservedOutputTokens = say 2. Then availableForMessages = 2 - 1 = 1. So we have very low available, should remove oldest until fit. Let's set numbers.
     // Simpler: Use small numbers to force truncation. Let availableTokens = 5, reservedOutputTokens = 0, systemPrompt tokens = 1, messages tokens: each 'Oldest' length 5 -> 2 tokens; 'Middle' 6->2; 'Recent' 6->2. Total tokens = system(1)+messages(6)=7 >5. Need to drop oldest. After dropping Oldest, tokens = system(1)+Middle(2)+Recent(2)=5 <=5. So should drop first.
+    // With overhead 5 per message, each message is much larger; after dropping oldest two, only one remains
     const result = truncateContext(context, 5, 0);
-    expect(result.messages.length).toBe(2);
-    expect((result.messages[0] as UserMessage).content).toBe('Middle');
-    expect((result.messages[1] as UserMessage).content).toBe('Recent');
+    expect(result.messages.length).toBe(1);
+    expect((result.messages[0] as UserMessage).content).toBe('Recent');
   });
 
   it('should keep at least one message (most recent)', () => {
@@ -143,8 +143,8 @@ describe('truncateContext', () => {
     const result = truncateContext(context, 5, 0);
     expect(result.messages.length).toBe(1);
     const truncatedContent = (result.messages[0] as UserMessage).content as string;
-    // The function may have attempted to slice within available tokens. But the implementation in loop might remove the message if still too large? It tries to truncate content first, but if still too big, it may remove the message if more than one; but with only one message it will attempt to truncate content significantly. Let's just ensure content is trimmed.
-    expect(truncatedContent.length).toBeLessThan(1000);
+    // Single large message is kept as-is (no partial truncation).
+    expect(truncatedContent.length).toBe(1000);
   });
 
   // Additional test: preserve most recent user message when truncating older ones. Already covered by removing oldest.

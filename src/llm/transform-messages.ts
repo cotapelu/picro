@@ -31,6 +31,8 @@ function downgradeUnsupportedImages(messages: Message[], model: Model): Message[
 
   return messages.map((msg) => {
     if (msg.role === "user" && Array.isArray(msg.content)) {
+      const hasImage = msg.content.some((block: any) => block.type === "image");
+      if (!hasImage) return msg;
       return {
         ...msg,
         content: replaceImagesWithPlaceholder(msg.content, NON_VISION_USER_IMAGE_PLACEHOLDER),
@@ -38,6 +40,8 @@ function downgradeUnsupportedImages(messages: Message[], model: Model): Message[
     }
 
     if (msg.role === "toolResult" && Array.isArray(msg.content)) {
+      const hasImage = msg.content.some((block: any) => block.type === "image");
+      if (!hasImage) return msg;
       return {
         ...msg,
         content: replaceImagesWithPlaceholder(msg.content, NON_VISION_TOOL_IMAGE_PLACEHOLDER),
@@ -60,7 +64,21 @@ function normalizeToolId(rawId: string): string {
  * - Xử lý thinking blocks (giữ nguyên cho cùng model, chuyển sang text cho khác model)
  * - Chèn synthetic tool results cho tool calls không có kết quả
  */
-export function transformMessages(messages: Message[], model: Model): Message[] {
+export function transformMessages(messages: Message[], model?: Model): Message[] {
+  if (!model) {
+    model = {
+      id: '',
+      name: '',
+      api: 'openai' as any,
+      provider: 'openai' as any,
+      baseUrl: '',
+      reasoning: false,
+      input: ['text'],
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      contextWindow: 0,
+      maxTokens: 0,
+    } as Model;
+  };
   const toolCallIdMap = new Map<string, string>();
   const imageAwareMessages = downgradeUnsupportedImages(messages, model);
 
@@ -97,7 +115,9 @@ export function transformMessages(messages: Message[], model: Model): Message[] 
           const thinking = (block as any).thinking;
           if (!thinking || thinking.trim() === "") return [];
           if (isSameModel) return block;
-          return { type: "text" as const, text: thinking };
+          const maxPreview = 200;
+          const preview = thinking.length > maxPreview ? thinking.slice(0, maxPreview) + '...' : thinking;
+          return { type: "text" as const, text: `[Thinking: ${preview}]` };
         }
 
         if (block.type === "text") {

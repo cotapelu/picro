@@ -232,6 +232,7 @@ export async function executeBash(
       exitCode,
       cancelled: false,
       truncated: true,
+      console.log('DEBUG existsSync:', typeof existsSync, existsSync);
       fullOutputPath: existsSync(tempFilePath) ? tempFilePath : undefined,
     };
   }

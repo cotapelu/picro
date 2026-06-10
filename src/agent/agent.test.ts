@@ -202,7 +202,7 @@ describe('Agent', () => {
       const agent = new Agent(undefined as any, [], config);
 
       // Check initial state
-      expect((agent as any).llmProvider).toBeUndefined();
+      expect((agent as any).llmComplete).toBeUndefined();
       expect((agent as any).model).toBeUndefined();
 
       // Create a mock model
@@ -225,8 +225,8 @@ describe('Agent', () => {
       // Verify model is set
       expect((agent as any).model).toBe(mockModel);
       // Verify providers are created
-      expect((agent as any).llmProvider).toBeDefined();
-      expect((agent as any).streamProvider).toBeDefined();
+      expect((agent as any).llmComplete).toBeDefined();
+      expect((agent as any).llmStream).toBeDefined();
     });
 
     it('should clear providers when setModel(undefined)', async () => {
@@ -234,14 +234,14 @@ describe('Agent', () => {
       const agent = new Agent(undefined as any, [], config);
       agent.setLLMProvider(mockLLMProvider);
 
-      expect((agent as any).llmProvider).toBeDefined();
+      expect((agent as any).llmComplete).toBeDefined();
 
       // Set model to undefined
       agent.setModel(undefined);
 
       expect((agent as any).model).toBeUndefined();
-      expect((agent as any).llmProvider).toBeUndefined();
-      expect((agent as any).streamProvider).toBeUndefined();
+      expect((agent as any).llmComplete).toBeUndefined();
+      expect((agent as any).llmStream).toBeUndefined();
     });
   });
 });

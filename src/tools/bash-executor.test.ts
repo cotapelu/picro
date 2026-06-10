@@ -4,7 +4,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest';
-import { executeBash, executeBashLocal, BashResult, BashExecutorOptions } from './bash-executor.js';
 
 // Mock process.kill globally to prevent system-wide signals during tests
 beforeAll(() => {
@@ -20,36 +19,28 @@ vi.mock('child_process', async () => {
 });
 
 // Mock fs, os, path used internally
-vi.mock('fs', async () => {
-  const actualFs = await vi.importActual<typeof import('fs')>('fs');
+vi.mock('fs', () => {
+  console.log('FS MOCK FACTORY CALLED');
+  const tempFiles = new Set<string>();
+  const tempFilesContent = new Map<string, string>();
   return {
-    ...actualFs,
-    existsSync: vi.fn((path: string) => {
-      // Track created temp files; for test isolation, use a Set
-      return (globalThis as any)._tempFiles?.has(path) ?? false;
-    }),
+    default: {},
+    existsSync: vi.fn((path: string) => tempFiles.has(path)),
     mkdirSync: vi.fn(),
     writeFileSync: vi.fn((path: string, data: string, opts?: any) => {
       if (opts?.flag === 'a' || opts?.flag === 'append') {
-        // Append to a file in our in-memory tracking
-        const files = (globalThis as any)._tempFilesContent ||= new Map();
-        const existing = files.get(path) || '';
-        files.set(path, existing + data);
+        const existing = tempFilesContent.get(path) || '';
+        tempFilesContent.set(path, existing + data);
       } else {
-        const files = (globalThis as any)._tempFilesContent ||= new Map();
-        files.set(path, data);
+        tempFilesContent.set(path, data);
       }
-      // Track existence
-      (globalThis as any)._tempFiles ??= new Set();
-      (globalThis as any)._tempFiles.add(path);
+      tempFiles.add(path);
     }),
     unlinkSync: vi.fn((path: string) => {
-      (globalThis as any)._tempFiles?.delete(path);
-      (globalThis as any)._tempFilesContent?.delete(path);
+      tempFiles.delete(path);
+      tempFilesContent.delete(path);
     }),
-    readFileSync: vi.fn((path: string) => {
-      return (globalThis as any)._tempFilesContent?.get(path) ?? '';
-    }),
+    readFileSync: vi.fn((path: string) => tempFilesContent.get(path) ?? ''),
   };
 });
 
@@ -68,6 +59,8 @@ vi.mock('path', async () => {
     join: vi.fn((dir: string, ...parts: string[]) => `${dir}/${parts.join('/')}`),
   };
 });
+import { executeBash, executeBashLocal, BashResult, BashExecutorOptions } from './bash-executor.js';
+
 
 describe('executeBash', () => {
   let mockSpawn: any;
@@ -114,7 +107,7 @@ describe('executeBash', () => {
       expect(result.fullOutputPath).toBeUndefined();
       expect(mockSpawn).toHaveBeenCalledWith(
         expect.stringMatching(/^(bash|cmd\.exe)$/),
-        expect.arrayContaining(expect.stringMatching('echo hello')),
+        expect.arrayContaining([expect.stringMatching('echo hello')]),
         expect.objectContaining({ stdio: ['ignore', 'pipe', 'pipe'], cwd: expect.any(String), env: expect.any(Object) })
       );
     });
@@ -257,14 +250,14 @@ describe('executeBash', () => {
   describe('streaming and onChunk', () => {
     it('calls onChunk for each stdout chunk', async () => {
       const chunks: Buffer[] = [Buffer.from('chunk1'), Buffer.from('chunk2'), Buffer.from('chunk3')];
-      let chunkIndex = 0;
       const child = {
         pid: 1,
         stdout: {
           on: vi.fn((event, cb) => {
             if (event === 'data') {
-              cb(chunks[chunkIndex]);
-              chunkIndex++;
+              for (const chunk of chunks) {
+                cb(chunk);
+              }
             }
           }),
         },
@@ -482,18 +475,16 @@ describe('executeBash', () => {
       };
       mockSpawn.mockReturnValue(child);
 
-      // Temporarily set platform to non-win32
-      const original = process.platform;
-      // @ts-ignore
-      process.platform = 'linux';
+      // Temporarily override process.platform using defineProperty
+      const originalDescriptor = Object.getOwnPropertyDescriptor(process, 'platform')!;
+      Object.defineProperty(process, 'platform', { value: 'linux', writable: true });
 
       await executeBash('echo hi');
 
       expect(mockSpawn).toHaveBeenCalledWith('bash', expect.arrayContaining(['-c', 'echo hi']), expect.anything());
 
       // restore
-      // @ts-ignore
-      process.platform = original;
+      Object.defineProperty(process, 'platform', originalDescriptor);
     });
 
     it('uses cmd.exe on Windows', async () => {
@@ -506,17 +497,15 @@ describe('executeBash', () => {
       };
       mockSpawn.mockReturnValue(child);
 
-      const original = process.platform;
-      // @ts-ignore
-      process.platform = 'win32';
+      const originalDescriptor = Object.getOwnPropertyDescriptor(process, 'platform')!;
+      Object.defineProperty(process, 'platform', { value: 'win32', writable: true });
 
       await executeBash('echo hi');
 
       expect(mockSpawn).toHaveBeenCalledWith('cmd.exe', expect.arrayContaining(['/c', 'echo hi']), expect.anything());
 
       // restore
-      // @ts-ignore
-      process.platform = original;
+      Object.defineProperty(process, 'platform', originalDescriptor);
     });
   });
 

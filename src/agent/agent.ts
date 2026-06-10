@@ -114,15 +114,22 @@ export class Agent {
       this.memoryStore = this.config.memoryStore;
     }
 
-    // Runner – pass required dependencies including llm functions (will be set by setModel if model provided)
+    // Runner – pass wrappers that forward to the current llmComplete/llmStream providers.
     this.runner = new AgentLoop(
       this.config,
       this.emitter,
       this.toolExecutor,
       this.contextBuilder ?? null,
       this.strategy,
-      this._llmComplete.bind(this),
-      this._llmStream.bind(this),
+      async (context: Context, options?: any): Promise<LLMResponse> => {
+        if (!this.llmComplete) throw new Error('LLM provider not set');
+        return this.llmComplete(context, options);
+      },
+      async (context: Context, options?: any): Promise<AsyncIterable<any>> => {
+        if (!this.llmStream) throw new Error('LLM stream provider not set');
+        // llmStream may return AsyncIterable directly or a Promise of it.
+        return this.llmStream(context, options) as Promise<AsyncIterable<any>>;
+      },
       this.memoryStore,
       this.tools
     );

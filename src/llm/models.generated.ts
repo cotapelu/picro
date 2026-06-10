@@ -4692,4 +4692,18 @@ export const MODELS = {
 			maxTokens: 65536
 		} satisfies Model<"openai-completions">,
 	},
+	"302ai": {
+		"claude-opus-4-7": {
+			id: "claude-opus-4-7",
+			name: "Claude Opus 4.7",
+			api: "openai-completions",
+			provider: "302ai",
+			baseUrl: "https://api.302.ai/v1",
+			reasoning: false,
+			input: ["text"],
+			cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+			contextWindow: 200000,
+			maxTokens: 4096,
+		} satisfies Model<"openai-completions">,
+	},
 } as const;
