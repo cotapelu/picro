@@ -11,6 +11,7 @@ import { EventEmitter } from '../events/event-emitter.js';
 import { LoopStrategy, ReActLoopStrategy } from './loop-strategy.js';
 import { MessageQueue } from './message-queue.js';
 import type { AgentConfig, LLMResponse } from './types.js';
+import type { Context } from '../llm/index.js';
 
 // Mock LLM provider
 const mockLLMProvider = async (prompt: string, tools: any[], options?: any): Promise<LLMResponse> => {
@@ -23,6 +24,33 @@ const mockLLMProvider = async (prompt: string, tools: any[], options?: any): Pro
     toolCalls: [],
   };
 };
+// Helper to create mock LLM complete function (new signature)
+const createMockLLMComplete = (response: LLMResponse) => {
+  return async (context: Context, options?: any): Promise<LLMResponse> => {
+    // Simulate some work
+    await new Promise(resolve => setTimeout(resolve, 50));
+    return response;
+  };
+};
+
+const defaultLLMComplete = createMockLLMComplete({
+  content: 'Mock response',
+  stopReason: 'stop',
+  usage: { input: 10, output: 20, totalTokens: 30, cost: { input: 0, output: 0, total: 0 } },
+  toolCalls: [],
+});
+
+const createMockLLMStream = (chunks: string[]) => {
+  return async function* (context: Context, options?: any): AsyncGenerator<any> {
+    for (const chunk of chunks) {
+      yield { type: 'text_delta', delta: chunk };
+    }
+    yield { type: 'done' };
+  };
+};
+
+const defaultLLMStream = createMockLLMStream(['Hello', ' World']);
+
 
 // Simple loop strategy that does nothing special
 class SimpleStrategy implements LoopStrategy {
@@ -77,7 +105,7 @@ describe('AgentLoop', () => {
 
   describe('state management', () => {
     it('should initialize with clean state', () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
       const state = loop.getState();
       expect(state.isRunning).toBe(false);
       expect(state.round).toBe(0);
@@ -86,8 +114,8 @@ describe('AgentLoop', () => {
     });
 
     it('should set isRunning during execution', async () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
-      const runPromise = loop.run('test', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
+      const runPromise = loop.run('test', new MessageQueue(), new MessageQueue());
       // State should be running
       expect(loop.getState().isRunning).toBe(true);
       await runPromise;
@@ -97,8 +125,8 @@ describe('AgentLoop', () => {
 
   describe('run', () => {
     it('should execute to completion and return result', async () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
-      const result = await loop.run('Hello', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
+      const result = await loop.run('Hello', new MessageQueue(), new MessageQueue());
 
       expect(result.success).toBe(true);
       expect(result.finalAnswer).toBe('Mock response');
@@ -107,26 +135,26 @@ describe('AgentLoop', () => {
     });
 
     it('should include history in state', async () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
-      const result = await loop.run('Test', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
+      const result = await loop.run('Test', new MessageQueue(), new MessageQueue());
 
       const finalState = loop.getState();
       expect(finalState.history.length).toBeGreaterThan(0);
     });
 
     it('should respect maxRounds', async () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
-      const result = await loop.run('Test', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
+      const result = await loop.run('Test', new MessageQueue(), new MessageQueue());
 
       expect(result.totalRounds).toBeLessThanOrEqual(config.maxRounds);
     });
 
     it('should abort when abort() is called', async () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
       // Abort quickly
       setTimeout(() => loop.abort(), 10);
 
-      const result = await loop.run('Hello', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      const result = await loop.run('Hello', new MessageQueue(), new MessageQueue());
 
       // The flag should be set
       expect(loop.getState().isCancelled).toBe(true);
@@ -138,7 +166,7 @@ describe('AgentLoop', () => {
 
   describe('stream', () => {
     it('should stream events and return final result', async () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
 
       const mockStreamProvider = async function* (prompt: string, tools: any[], options?: any) {
         yield { type: 'text_delta', delta: 'Hello' };
@@ -147,7 +175,7 @@ describe('AgentLoop', () => {
       };
 
       const events: any[] = [];
-      const result = await loop.stream('test', new MessageQueue(), new MessageQueue(), mockStreamProvider as any);
+      const result = await loop.stream('test', new MessageQueue(), new MessageQueue());
 
       // Should have completed and returned result
       expect(result).toBeDefined();
@@ -156,7 +184,7 @@ describe('AgentLoop', () => {
 
   describe('abort', () => {
     it('should set isCancelled flag', () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
       expect(loop.getState().isCancelled).toBe(false);
       loop.abort();
       expect(loop.getState().isCancelled).toBe(true);
@@ -170,8 +198,8 @@ describe('AgentLoop', () => {
       emitter.on('agent:start', startSpy as any);
       emitter.on('agent:end', endSpy as any);
 
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
-      await loop.run('test', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
+      await loop.run('test', new MessageQueue(), new MessageQueue());
 
       expect(startSpy).toHaveBeenCalled();
       expect(endSpy).toHaveBeenCalled();
@@ -197,13 +225,9 @@ describe('AgentLoop', () => {
       };
       toolExecutor.registerTool(echoTool as any);
 
-      // Use ReActLoopStrategy to continue after tool calls
-      const reactStrategy = new ReActLoopStrategy();
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, reactStrategy);
-
       // Mock LLM: first call returns toolCall, second returns final answer
       let callCount = 0;
-      const llmProvider = async (prompt: string, tools: any[], options?: any): Promise<LLMResponse> => {
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => {
         callCount++;
         if (callCount === 1) {
           return {
@@ -224,7 +248,11 @@ describe('AgentLoop', () => {
         }
       };
 
-      const result = await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+      // Use ReActLoopStrategy to continue after tool calls
+      const reactStrategy = new ReActLoopStrategy();
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, reactStrategy, customLLMComplete, defaultLLMStream, undefined, []);
+
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
 
       expect(result.success).toBe(true);
       expect(result.finalAnswer).toBe('Final answer after tool');
@@ -249,11 +277,8 @@ describe('AgentLoop', () => {
       };
       toolExecutor.registerTool(badTool as any);
 
-      // Use simple strategy to avoid multiple rounds
-      const simple = new SimpleStrategy();
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, simple);
-
-      const llmProvider = async (): Promise<LLMResponse> => ({
+      // Custom LLM that triggers tool error
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => ({
         content: '',
         stopReason: 'toolUse',
         usage: { input: 10, output: 0, totalTokens: 10, cost: { input: 0, output: 0, total: 0 } },
@@ -261,7 +286,11 @@ describe('AgentLoop', () => {
         raw: {}
       });
 
-      const result = await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+      // Use simple strategy to avoid multiple rounds
+      const simple = new SimpleStrategy();
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, simple, customLLMComplete, defaultLLMStream, undefined, []);
+
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
 
       const finalState = loop.getState();
       const toolTurns = finalState.history.filter(t => t.role === 'tool');
@@ -275,13 +304,12 @@ describe('AgentLoop', () => {
 
   describe('run with LLM error', () => {
     it('records error and returns failure', async () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
-
-      const llmProvider = async (): Promise<LLMResponse> => {
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => {
         throw new Error('Network failure');
       };
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, customLLMComplete, defaultLLMStream, undefined, []);
 
-      const result = await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Network failure');
@@ -291,11 +319,10 @@ describe('AgentLoop', () => {
 
   describe('abort during long run', () => {
     it('cancels execution promptly', async () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
       let abortSignal: AbortSignal | undefined;
 
       // Provider that waits for abort
-      const llmProvider = async (prompt: string, tools: any[], options?: any): Promise<LLMResponse> => {
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => {
         abortSignal = options?.signal;
         await new Promise((resolve, reject) => {
           const onAbort = () => reject(new Error('aborted'));
@@ -317,7 +344,8 @@ describe('AgentLoop', () => {
         };
       };
 
-      const runPromise = loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, customLLMComplete, defaultLLMStream, undefined, []);
+      const runPromise = loop.run('test', new MessageQueue(), new MessageQueue());
 
       // Wait a bit then abort
       await new Promise(r => setTimeout(r, 100));
@@ -338,8 +366,8 @@ describe('AgentLoop', () => {
 
   describe('reset', () => {
     it('resets state to initial values', async () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
-      await loop.run('test', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
+      await loop.run('test', new MessageQueue(), new MessageQueue());
       const state1 = loop.getState();
       expect(state1.round).toBeGreaterThan(0);
 
@@ -357,9 +385,10 @@ describe('AgentLoop', () => {
     it('applies transformContext to history', async () => {
       loop = new AgentLoop(
         { ...config, transformContext: async (turns) => turns.map(t => ({ ...t, content: [{ type: 'text', text: 'transformed' }] })) },
-        emitter, toolExecutor, contextBuilder, strategy
+        emitter, toolExecutor, contextBuilder, strategy,
+        defaultLLMComplete, defaultLLMStream, undefined, []
       );
-      const result = await loop.run('hello', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      const result = await loop.run('hello', new MessageQueue(), new MessageQueue());
       expect(result.success).toBe(true);
     });
   });
@@ -367,10 +396,10 @@ describe('AgentLoop', () => {
   describe('run with memoryStore', () => {
     it('emits memory:retrieve on successful recall', async () => {
       const memoryStore = { recall: async () => ({ memories: [{ content: 'mem1', relevance: 1, timestamp: Date.now(), metadata: {} }], scores: [0.9] }) };
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, memoryStore as any);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, memoryStore as any, []);
       const memorySpy = vi.fn();
       emitter.on('memory:retrieve', memorySpy as any);
-      await loop.run('test', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      await loop.run('test', new MessageQueue(), new MessageQueue());
       expect(memorySpy).toHaveBeenCalled();
       const event = memorySpy.mock.calls[0][0];
       expect(event.memories.length).toBe(1);
@@ -378,9 +407,9 @@ describe('AgentLoop', () => {
 
     it('handles memory recall failure gracefully', async () => {
       const memoryStore = { recall: async () => { throw new Error('db down'); } };
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, memoryStore as any);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, memoryStore as any, []);
       const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      const result = await loop.run('test', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
       expect(result.success).toBe(true);
       expect(consoleWarn).toHaveBeenCalledWith('Memory retrieval failed:', expect.any(Error));
       consoleWarn.mockRestore();
@@ -391,8 +420,8 @@ describe('AgentLoop', () => {
     it('drains steering queue into history', async () => {
       const steeringQueue = new MessageQueue();
       steeringQueue.enqueue({ role: 'user', content: [{ type: 'text', text: 'steering' }], timestamp: Date.now() } as any);
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
-      await loop.run('test', steeringQueue, new MessageQueue(), mockLLMProvider);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
+      await loop.run('test', steeringQueue, new MessageQueue());
       const state = loop.getState();
       const steeringTurns = state.history.filter(t => t.role === 'user' && (t as any).content?.[0]?.text === 'steering');
       expect(steeringTurns.length).toBeGreaterThanOrEqual(1);
@@ -405,8 +434,8 @@ describe('AgentLoop', () => {
         { role: 'user', content: [{ type: 'text', text: 'prev' }], timestamp: Date.now() } as any,
         { role: 'assistant', content: [{ type: 'text', text: 'prev resp' }], timestamp: Date.now() } as any
       ];
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
-      await loop.run('new', new MessageQueue(), new MessageQueue(), mockLLMProvider, undefined, initialTurns);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
+      await loop.run('new', new MessageQueue(), new MessageQueue(), undefined, initialTurns);
       const state = loop.getState();
       expect(state.history.length).toBeGreaterThanOrEqual(2);
     });
@@ -415,7 +444,7 @@ describe('AgentLoop', () => {
   describe('autoSaveMemory', () => {
     it('saves user input, assistant response, and tool results', async () => {
       const memoryStore = { remember: vi.fn().mockResolvedValue(undefined) } as any;
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, memoryStore);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, memoryStore, []);
       const response: LLMResponse = { content: 'Assistant says', stopReason: 'stop', usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [], raw: {} };
       const toolResults: any[] = [{ toolName: 'test', result: 'ok', toolCallId: '123', metadata: {} }];
       await (loop as any).autoSaveMemory('prompt', response, toolResults);
@@ -424,7 +453,7 @@ describe('AgentLoop', () => {
 
     it('handles errors without crashing', async () => {
       const memoryStore = { remember: vi.fn().mockRejectedValue(new Error('fail')) } as any;
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, memoryStore);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, memoryStore, []);
       const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const response: LLMResponse = { content: 'hi', stopReason: 'stop', usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [], raw: {} };
       await (loop as any).autoSaveMemory('p', response, []);
@@ -435,7 +464,7 @@ describe('AgentLoop', () => {
 
   describe('createAssistantTurn', () => {
     it('creates turn with content string', () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
       const response: LLMResponse = { content: 'text only', stopReason: 'stop', usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [], raw: {} };
       const turn = (loop as any).createAssistantTurn(response);
       expect(turn.role).toBe('assistant');
@@ -445,7 +474,7 @@ describe('AgentLoop', () => {
 
   describe('createToolTurn', () => {
     it('creates error turn', () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
       const result: any = { toolName: 'bad', error: 'boom', toolCallId: '123' };
       const turn = (loop as any).createToolTurn(result);
       expect(turn.role).toBe('tool');
@@ -455,7 +484,7 @@ describe('AgentLoop', () => {
     });
 
     it('creates success turn with details', () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
       const result: any = { toolName: 'ok', result: 'good', toolCallId: '123', metadata: { details: 'info' } };
       const turn = (loop as any).createToolTurn(result);
       expect(turn.isError).toBe(false);
@@ -465,7 +494,7 @@ describe('AgentLoop', () => {
 
   describe('drainQueue', () => {
     it('drains all messages from queue', () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
       const queue = new MessageQueue();
       queue.enqueue({ role: 'user', content: [{ type: 'text', text: 'a' }], timestamp: Date.now() } as any);
       queue.enqueue({ role: 'user', content: [{ type: 'text', text: 'b' }], timestamp: Date.now() } as any);
@@ -477,7 +506,7 @@ describe('AgentLoop', () => {
 
   describe('combineSignals', () => {
     it('combines signals and triggers when all abort', async () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
       const ctrl1 = new AbortController();
       const ctrl2 = new AbortController();
       const combined = (loop as any).combineSignals(ctrl1.signal, ctrl2.signal);
@@ -490,7 +519,7 @@ describe('AgentLoop', () => {
     });
 
     it('immediate abort if any signal already aborted', () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
       const ctrl = new AbortController();
       ctrl.abort();
       const combined = (loop as any).combineSignals(ctrl.signal, undefined);
@@ -501,10 +530,10 @@ describe('AgentLoop', () => {
   describe('run: transformPrompt', () => {
     it('applies strategy.transformPrompt', async () => {
       const strategyWithTransform: LoopStrategy = { shouldContinue: () => false, formatResults: () => '', transformPrompt: (p) => p + ' [transformed]' } as any;
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategyWithTransform as any);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategyWithTransform as any, defaultLLMComplete, defaultLLMStream, undefined, []);
       const spy = vi.fn();
       emitter.on('llm:request', spy as any);
-      await loop.run('hello', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      await loop.run('hello', new MessageQueue(), new MessageQueue());
       const call = spy.mock.calls[0][0];
       expect(call.promptLength).toBeGreaterThan(0);
     });
@@ -514,11 +543,11 @@ describe('AgentLoop', () => {
     it('stops after maxRounds and returns max_rounds error', async () => {
       const infiniteStrategy: LoopStrategy = { shouldContinue: () => true, formatResults: () => '' } as any;
       toolExecutor.registerTool({ name: 'echo', description: 'e', parameters: { type: 'object', properties: {} }, handler: async () => 'done' } as any);
-      loop = new AgentLoop({ ...config, maxRounds: 2 }, emitter, toolExecutor, contextBuilder, infiniteStrategy as any);
-      const llmProvider = async (): Promise<LLMResponse> => ({
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => ({
         content: '', stopReason: 'toolUse', usage: { input: 10, output: 0, totalTokens: 10, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [{ id: '1', name: 'echo', arguments: {} }], raw: {}
       });
-      const result = await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+      loop = new AgentLoop({ ...config, maxRounds: 2 }, emitter, toolExecutor, contextBuilder, infiniteStrategy as any, customLLMComplete, defaultLLMStream, undefined, []);
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
       expect(result.success).toBe(false);
       expect(result.stopReason).toBe('max_rounds');
       expect(result.totalRounds).toBe(2);
@@ -527,11 +556,11 @@ describe('AgentLoop', () => {
 
   describe('debug emissions', () => {
     it('emits debug:run:timing on error', async () => {
-      loop = new AgentLoop({ ...config, debug: true }, emitter, toolExecutor, contextBuilder, strategy);
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => { throw new Error('fail'); };
+      loop = new AgentLoop({ ...config, debug: true }, emitter, toolExecutor, contextBuilder, strategy, customLLMComplete, defaultLLMStream, undefined, []);
       const debugSpy = vi.fn();
       emitter.on('debug:run:timing', debugSpy as any);
-      const llmProvider = async (): Promise<LLMResponse> => { throw new Error('fail'); };
-      await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+      await loop.run('test', new MessageQueue(), new MessageQueue());
       expect(debugSpy).toHaveBeenCalled();
       const timing = debugSpy.mock.calls[0][0];
       // totalRunTime can be 0 if error thrown instantly; accept >=0
@@ -541,18 +570,18 @@ describe('AgentLoop', () => {
     it('emits debug:round:timing during tool calls', async () => {
       toolExecutor.registerTool({ name: 't', description: 't', parameters: { type: 'object', properties: {} }, handler: async () => 'ok' } as any);
       const reactStrategy = new ReActLoopStrategy();
-      loop = new AgentLoop({ ...config, debug: true }, emitter, toolExecutor, contextBuilder, reactStrategy);
-      const debugSpy = vi.fn();
-      emitter.on('debug:round:timing', debugSpy as any);
       let count = 0;
-      const llmProvider = async (): Promise<LLMResponse> => {
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => {
         count++;
         if (count === 1) {
-          return { content: 'Call', stopReason: 'toolUse', usage: { input: 10, output: 5, totalTokens: 15, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [{ id: 't1', name: 't', arguments: {} }], raw: {} };
+          return { content: 'Call', stopReason: 'toolUse', usage: { input: 10, output: 5, totalTokens: 15, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [{ id: 't1', name: 't', arguments: {} }], raw: { } };
         }
         return { content: 'Done', stopReason: 'stop', usage: { input: 20, output: 10, totalTokens: 30, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [], raw: {} };
       };
-      await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+      loop = new AgentLoop({ ...config, debug: true }, emitter, toolExecutor, contextBuilder, reactStrategy, customLLMComplete, defaultLLMStream, undefined, []);
+      const debugSpy = vi.fn();
+      emitter.on('debug:round:timing', debugSpy as any);
+      await loop.run('test', new MessageQueue(), new MessageQueue());
       expect(debugSpy).toHaveBeenCalled();
     });
   });
@@ -561,9 +590,9 @@ describe('AgentLoop', () => {
     it('breaks after tools when shouldContinue false', async () => {
       toolExecutor.registerTool({ name: 'e', description: 'e', parameters: { type: 'object', properties: {} }, handler: async () => 'ok' } as any);
       const strategyFalse: LoopStrategy = { shouldContinue: () => false, formatResults: () => '' } as any;
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategyFalse);
-      const llmProvider = async (): Promise<LLMResponse> => ({ content: 'Call', stopReason: 'toolUse', usage: { input: 10, output: 0, totalTokens: 10, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [{ id: 'c1', name: 'e', arguments: {} }], raw: {} });
-      const result = await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => ({ content: 'Call', stopReason: 'toolUse', usage: { input: 10, output: 0, totalTokens: 10, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [{ id: 'c1', name: 'e', arguments: {} }], raw: {} });
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategyFalse, customLLMComplete, defaultLLMStream, undefined, []);
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
       // Since shouldContinue false with tool calls, loop breaks and returns max_rounds failure
       expect(result.success).toBe(false);
       expect(result.stopReason).toBe('max_rounds');
@@ -572,9 +601,9 @@ describe('AgentLoop', () => {
     it('continues when shouldContinue true until max rounds', async () => {
       toolExecutor.registerTool({ name: 'e', description: 'e', parameters: { type: 'object', properties: {} }, handler: async () => 'ok' } as any);
       const strategyTrue: LoopStrategy = { shouldContinue: () => true, formatResults: () => '' } as any;
-      loop = new AgentLoop({ ...config, maxRounds: 2 }, emitter, toolExecutor, contextBuilder, strategyTrue);
-      const llmProvider = async (): Promise<LLMResponse> => ({ content: 'Call', stopReason: 'toolUse', usage: { input: 10, output: 0, totalTokens: 10, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [{ id: 'c2', name: 'e', arguments: {} }], raw: {} });
-      const result = await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => ({ content: 'Call', stopReason: 'toolUse', usage: { input: 10, output: 0, totalTokens: 10, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [{ id: 'c2', name: 'e', arguments: {} }], raw: {} });
+      loop = new AgentLoop({ ...config, maxRounds: 2 }, emitter, toolExecutor, contextBuilder, strategyTrue, customLLMComplete, defaultLLMStream, undefined, []);
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
       expect(result.success).toBe(false);
       expect(result.stopReason).toBe('max_rounds');
     });
@@ -583,10 +612,19 @@ describe('AgentLoop', () => {
   describe('signal integration', () => {
     it('passes combined signal to llm provider', async () => {
       let capturedOptions: any;
-      const llmProvider = async (prompt: string, tools: any[], options?: any) => { capturedOptions = options; return mockLLMProvider(prompt, tools, options); };
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      // Custom LLM complete that captures options
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => {
+        capturedOptions = options;
+        return {
+          content: 'ok',
+          stopReason: 'stop',
+          usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+          toolCalls: [],
+        } as LLMResponse;
+      };
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, customLLMComplete, defaultLLMStream, undefined, []);
       const externalSignal = new AbortController().signal;
-      await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider, externalSignal);
+      await loop.run('test', new MessageQueue(), new MessageQueue(), externalSignal);
       expect(capturedOptions?.signal).toBeDefined();
     });
   });
@@ -594,11 +632,11 @@ describe('AgentLoop', () => {
   describe('tool call with toolCallId preservation', () => {
     it('preserves toolCallId in tool turn', async () => {
       toolExecutor.registerTool({ name: 'g', description: 'g', parameters: { type: 'object', properties: {} }, handler: async () => 'val' } as any);
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, new ReActLoopStrategy());
-      const llmProvider = async (): Promise<LLMResponse> => ({
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => ({
         content: 'Call', stopReason: 'toolUse', usage: { input: 10, output: 5, totalTokens: 15, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [{ id: 'callABC', name: 'g', arguments: {} }], raw: {}
       });
-      await loop.run('test', new MessageQueue(), new MessageQueue(), llmProvider);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, new ReActLoopStrategy(), customLLMComplete, defaultLLMStream, undefined, []);
+      await loop.run('test', new MessageQueue(), new MessageQueue());
       const state = loop.getState();
       const toolTurn = state.history.find(t => t.role === 'tool');
       expect((toolTurn as any).toolCallId).toBe('callABC');
@@ -607,19 +645,19 @@ describe('AgentLoop', () => {
 
   describe('consecutive runs after reset', () => {
     it('allows multiple runs after reset', async () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
-      await loop.run('first', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
+      await loop.run('first', new MessageQueue(), new MessageQueue());
       expect(loop.getState().round).toBeGreaterThan(0);
       loop.reset();
       expect(loop.getState().round).toBe(0);
-      await loop.run('second', new MessageQueue(), new MessageQueue(), mockLLMProvider);
+      await loop.run('second', new MessageQueue(), new MessageQueue());
       expect(loop.getState().round).toBeGreaterThan(0);
     });
   });
 
   describe('getState snapshot immutability', () => {
     it('returns a copy of state, not the internal reference', () => {
-      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, undefined, []);
       const state1 = loop.getState();
       (state1 as any).round = 999;
       const state2 = loop.getState();
