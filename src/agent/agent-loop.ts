@@ -5,26 +5,27 @@
  */
 
 import type {
-   ConversationTurn,
-   AgentRuntimeState,
-   AgentConfig,
-   AgentRunResult,
-   LLMResponse,
-   ToolCallData,
-   ToolResult,
-   ToolContext,
-   LLMStreamEvent,
-   MemoryEntry,
-   MemoryStore,
-   LoopStrategy,
-   ToolDefinition,
- } from './types.js';
-import type { Model } from '../llm/index.js';
+  ConversationTurn,
+  AgentRuntimeState,
+  AgentConfig,
+  AgentRunResult,
+  LLMResponse,
+  ToolCallData,
+  ToolResult,
+  ToolContext,
+  LLMStreamEvent,
+  MemoryEntry,
+  MemoryStore,
+  LoopStrategy,
+  AgentTool,
+  ConvertToLlmFn,
+} from './types.js';
+import type { Context, Message as LlmMessage, Tool as LlmTool } from '../llm/index.js';
 import type { AgentEvent } from '../events/events.js';
- import { EventEmitter } from '../events/event-emitter.js';
- import { ToolExecutor } from './tool-executor.js';
- import { ContextBuilder } from './context-manager.js';
- import { MessageQueue } from './message-queue.js';
+import { EventEmitter } from '../events/event-emitter.js';
+import { ToolExecutor } from './tool-executor.js';
+import { ContextBuilder } from './context-manager.js';
+import { MessageQueue } from './message-queue.js';
 
 /**
  * Manages the agent execution loop.
@@ -35,18 +36,24 @@ export class AgentLoop {
   private config: AgentConfig;
   private emitter: EventEmitter;
   private toolExecutor: ToolExecutor;
-  private contextBuilder: ContextBuilder;
+  private contextBuilder?: ContextBuilder | null;
   private strategy: LoopStrategy;
   private abortController: AbortController | null = null;
   private memoryStore?: MemoryStore;
+  private tools: AgentTool[];
+  private llmComplete: (context: Context, options?: any) => Promise<LLMResponse>;
+  private llmStream: (context: Context, options?: any) => AsyncIterable<any>;
 
   constructor(
     config: AgentConfig,
     emitter: EventEmitter,
     toolExecutor: ToolExecutor,
-    contextBuilder: ContextBuilder,
+    contextBuilder: ContextBuilder | null,
     strategy: LoopStrategy,
-    memoryStore?: MemoryStore
+    memoryStore?: MemoryStore,
+    tools: AgentTool[] = [],
+    llmComplete: (context: Context, options?: any) => Promise<LLMResponse>,
+    llmStream: (context: Context, options?: any) => AsyncIterable<any>,
   ) {
     this.config = config;
     this.emitter = emitter;
@@ -54,7 +61,9 @@ export class AgentLoop {
     this.contextBuilder = contextBuilder;
     this.strategy = strategy;
     this.memoryStore = memoryStore;
-
+    this.tools = tools;
+    this.llmComplete = llmComplete;
+    this.llmStream = llmStream;
     this.state = this.createInitialState();
   }
 
@@ -91,6 +100,86 @@ export class AgentLoop {
     return state;
   }
 
+  // Convert tools to LLM tool format
+  private _convertToolsToLlm(tools: AgentTool[]): LlmTool[] {
+    return tools.map(t => ({
+      type: 'function',
+      function: {
+        name: t.name,
+        description: t.description || '',
+        parameters: t.parameters || { type: 'object', properties: {}, required: [] },
+      },
+    }));
+  }
+
+  // Convert ConversationTurn[] to LlmMessage[]
+  private convertTurnsToMessages(turns: ConversationTurn[]): LlmMessage[] {
+    return turns.map(turn => {
+      if (turn.role === 'system') {
+        const texts = (turn as any).content
+          .filter((c: any) => c.type === 'text')
+          .map((c: any) => c.text)
+          .join('');
+        return { role: 'system', content: texts } as LlmMessage;
+      } else if (turn.role === 'user') {
+        const content = (turn as any).content.map((c: any) => {
+          if (c.type === 'text') return { type: 'text', text: c.text } as any;
+          if (c.type === 'image') return { type: 'image_url', image_url: { url: `data:${c.mimeType};base64,${c.data}` } } as any;
+          return null;
+        }).filter(Boolean);
+        return { role: 'user', content } as LlmMessage;
+      } else if (turn.role === 'assistant') {
+        const content = (turn as any).content.map((c: any) => {
+          if (c.type === 'text') return { type: 'text', text: c.text } as any;
+          if (c.type === 'thinking') return { type: 'thinking', thinking: c.thinking } as any;
+          if (c.type === 'toolCall') return { type: 'toolCall', id: c.id, name: c.name, arguments: c.arguments } as any;
+          return null;
+        }).filter(Boolean);
+        return { role: 'assistant', content, stopReason: turn.stopReason, usage: turn.usage } as LlmMessage;
+      } else if (turn.role === 'tool') {
+        const text = (turn as any).content
+          .filter((c: any) => c.type === 'text')
+          .map((c: any) => c.text)
+          .join('');
+        return { role: 'tool', content: text, toolCallId: turn.toolCallId } as LlmMessage;
+      }
+      return null;
+    }).filter(Boolean) as LlmMessage[];
+  }
+
+  // Build LLM Context from turns
+  private async buildLlmContext(
+    turns: ConversationTurn[],
+    signal?: AbortSignal
+  ): Promise<Context> {
+    let processed = turns;
+    if (this.config.transformContext) {
+      processed = await this.config.transformContext(turns, signal);
+    }
+
+    let llmMessages: LlmMessage[];
+    if (this.config.convertToLlm) {
+      llmMessages = await this.config.convertToLlm(processed);
+    } else {
+      llmMessages = this.convertTurnsToMessages(processed);
+    }
+
+    const systemTurn = processed.find(t => t.role === 'system');
+    let systemPrompt: string | undefined;
+    if (systemTurn) {
+      systemPrompt = (systemTurn as any).content
+        .filter((c: any) => c.type === 'text')
+        .map((c: any) => c.text)
+        .join('');
+    }
+
+    return {
+      messages: llmMessages,
+      systemPrompt,
+      tools: this._convertToolsToLlm(this.tools),
+    };
+  }
+
    /**
     * Run agent to completion (non-streaming).
     */
@@ -98,7 +187,6 @@ export class AgentLoop {
      initialPrompt: string,
      steeringQueue: MessageQueue,
      followUpQueue: MessageQueue,
-     llmProvider: (prompt: string, tools: any[], options?: any) => Promise<LLMResponse>,
      signal?: AbortSignal,
      initialTurns: ConversationTurn[] = []
    ): Promise<AgentRunResult> {
@@ -106,10 +194,9 @@ export class AgentLoop {
        initialPrompt,
        steeringQueue,
        followUpQueue,
-       llmProvider,
-       false,
        signal,
        initialTurns,
+       false
      )[Symbol.asyncIterator]();
 
      while (true) {
@@ -117,7 +204,6 @@ export class AgentLoop {
        if (done) {
          return value;
        }
-       // No yields expected in non-streaming mode; ignore.
      }
    }
 
@@ -129,28 +215,26 @@ export class AgentLoop {
      initialPrompt: string,
      steeringQueue: MessageQueue,
      followUpQueue: MessageQueue,
-     streamProvider: (prompt: string, tools: any[], options?: any) => AsyncIterable<any> | Promise<AsyncIterable<any>>,
      signal?: AbortSignal,
      initialTurns: ConversationTurn[] = []
    ): AsyncGenerator<any, AgentRunResult> {
      const iterator = this.executeLoop(
-      initialPrompt,
-      steeringQueue,
-      followUpQueue,
-      streamProvider,
-      true,
-      signal,
-      initialTurns,
-    )[Symbol.asyncIterator]();
+       initialPrompt,
+       steeringQueue,
+       followUpQueue,
+       signal,
+       initialTurns,
+       true
+     )[Symbol.asyncIterator]();
 
-    while (true) {
-      const { value, done } = await iterator.next();
-      if (done) {
-        return value;
-      } else {
-        yield value;
-      }
-    }
+     while (true) {
+       const { value, done } = await iterator.next();
+       if (done) {
+         return value;
+       } else {
+         yield value;
+       }
+     }
    }
 
   /**
@@ -214,63 +298,15 @@ export class AgentLoop {
 
         currentPrompt = this.strategy.transformPrompt?.(currentPrompt, this.state) ?? currentPrompt;
 
-        // Context building timing
-        const contextBuildStart = Date.now();
-        let contextTurns = this.state.history;
-        if (this.config.transformContext) {
-          contextTurns = await this.config.transformContext(contextTurns, combinedSignal);
-        }
-        const contextBuildEnd = Date.now();
-        totalContextBuildingTime += (contextBuildEnd - contextBuildStart);
-
-        // Memory retrieval timing
-        let memories: MemoryEntry[] = [];
-        let memoryRetrievalTime = 0;
-        if (this.memoryStore) {
-          const memoryStart = Date.now();
-          try {
-            const retrieval = await this.memoryStore.recall(currentPrompt);
-            memories = retrieval.memories;
-            memoryRetrievalTime = Date.now() - memoryStart;
-            totalMemoryRetrievalTime += memoryRetrievalTime;
-            await this.emitter.emit({
-              type: 'memory:retrieve',
-              timestamp: Date.now(),
-              round: this.state.round,
-              query: currentPrompt,
-              memoriesRetrieved: memories.length,
-              scores: retrieval.scores,
-              memories: memories.map((mem, index) => ({
-                content: mem.content,
-                relevance: mem.relevance,
-                index,
-              })),
-            } as any);
-          } catch (e) {
-            console.warn('Memory retrieval failed:', e);
-          }
-        }
-
-        // Context building
-        const { prompt: fullPrompt, tokenCount } = this.contextBuilder.build(
-          currentPrompt,
-          contextTurns,
-          memories
-        );
-        this.state.promptLength = fullPrompt.length;
-        this.state.totalTokens += tokenCount;
-
-        const toolDefs = this.toolExecutor.getNames().map((name) => {
-          const def = this.toolExecutor.getDefinition(name);
-          return {
-            type: 'function',
-            function: {
-              name: def!.name,
-              description: def!.description,
-              parameters: def!.parameters || { type: 'object', properties: {}, required: [] },
-            },
-          };
-        });
+        // Build LLM context (combine history + current user prompt)
+        const userTurn: ConversationTurn = {
+          role: 'user',
+          content: [{ type: 'text', text: currentPrompt }],
+          timestamp: Date.now(),
+        };
+        const allTurns = [...this.state.history, userTurn];
+        const llmContext = await this.buildLlmContext(allTurns, combinedSignal);
+        const toolDefs = this._convertToolsToLlm(this.tools);
 
         // LLM request timing
         const llmStartTime = Date.now();
@@ -278,7 +314,7 @@ export class AgentLoop {
           type: 'llm:request',
           timestamp: Date.now(),
           round: this.state.round,
-          promptLength: fullPrompt.length,
+          promptLength: llmContext.messages.length,
           toolsAvailable: toolDefs.length,
         } as any);
 
@@ -298,8 +334,8 @@ export class AgentLoop {
           let streamError: string | null = null;
 
           try {
-            const rawStream = llmOrStreamProvider(fullPrompt, toolDefs, streamOptions);
-            for await (const event of (rawStream as any)) {
+            const rawStream = await this.llmStream(llmContext, streamOptions);
+            for await (const event of rawStream) {
               yield event;
 
               switch (event.type) {
@@ -467,12 +503,13 @@ export class AgentLoop {
 
           this.state.history.push(this.createAssistantTurn(finalMessage));
         } else {
-          response = await llmOrStreamProvider(fullPrompt, toolDefs, {
+          const llmResponse = await this.llmComplete(llmContext, {
             signal: combinedSignal,
             sessionId: this.config.sessionId,
             reasoning: this.config.reasoningLevel,
             thinkingBudget: this.config.thinkingBudgets?.[this.config.reasoningLevel ?? 'off'],
-          }) as LLMResponse;
+          });
+          response = llmResponse as any;
           const llmEndTime = Date.now();
           llmRequestTime = llmEndTime - llmStartTime;
           totalLLMRequestTime += llmRequestTime;

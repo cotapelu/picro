@@ -1,8 +1,11 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "target": "ES2022",
     "module": "CommonJS",
     "moduleResolution": "node",
+    "outDir": "./dist/agent",
+    "rootDir": "./src/agent",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -10,6 +13,6 @@
     "lib": ["ES2022"],
     "noEmit": false
   },
-  "include": ["src/llm/**/*.ts"],
-  "exclude": ["node_modules", "src/llm/**/*.test.ts", "src/llm/**/*.extra.test.ts", "src/llm/scripts"]
+  "include": ["src/agent/**/*.ts"],
+  "exclude": ["node_modules", "src/agent/**/*.test.ts"]
 }

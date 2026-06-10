@@ -9,10 +9,12 @@ import type {
   AgentConfig,
   AgentRuntimeState,
   AgentRunResult,
-  ToolDefinition,
+  AgentTool,
   LoopStrategy,
   MemoryStore,
   LLMResponse,
+  ToolHandler,
+  ToolRegistry,
 } from './types.js';
 import { EventEmitter } from '../events/event-emitter.js';
 import { ToolExecutor } from './tool-executor.js';
@@ -36,16 +38,18 @@ export class Agent {
   private readonly config: AgentConfig;
   private readonly emitter: EventEmitter;
   private readonly toolExecutor: ToolExecutor;
-  private readonly contextBuilder: ContextBuilder;
+  private readonly contextBuilder?: ContextBuilder | null;
   private readonly strategy: LoopStrategy;
   private readonly runner: AgentLoop;
   private readonly steeringQueue: MessageQueue;
   private readonly followUpQueue: MessageQueue;
   private memoryStore?: MemoryStore;
   private model?: Model;
-  private llmProvider?: (prompt: string, tools: any[], options?: any) => Promise<LLMResponse>;
-  private streamProvider?: (prompt: string, tools: any[], options?: any) => AsyncIterable<any> | Promise<AsyncIterable<any>>;
+  private llmComplete?: (context: Context, options?: any) => Promise<LLMResponse>;
+  private llmStream?: (context: Context, options?: any) => AsyncIterable<any> | Promise<AsyncIterable<any>>;
   private _currentRunIdlePromise: Promise<void> | null = null;
+  private toolRegistry: ToolRegistry = {};
+  private tools: AgentTool[];
 
   /**
    * Constructs a new Agent instance.
@@ -55,79 +59,138 @@ export class Agent {
    */
   constructor(
     model?: Model,
-    tools: ToolDefinition[] = [],
-    config?: Partial<AgentConfig>
+    tools: AgentTool[] = [],
+    config: AgentConfig = {}
   ) {
     this.model = model;
-    this.config = this.resolveConfig(config);
-    this.emitter = this.config.enableLogging
-      ? this.createLogger(this.config.verbose)
-      : new EventEmitter();
+    this.tools = tools;
+    this.config = this._resolveConfig(config);
+    this.emitter = this.config.enableLogging ? this.createLogger(this.config.verbose) : new EventEmitter();
 
-     this.toolExecutor = new ToolExecutor({
-       timeout: this.config.toolTimeout,
-       cacheEnabled: this.config.cacheResults,
-       toolExecutionStrategy: this.config.toolExecutionStrategy,
-       emitter: this.emitter,
-       beforeToolCall: this.config.executor.beforeToolCall,
-       afterToolCall: this.config.executor.afterToolCall,
-       emitProgressUpdates: this.config.debug, // Emit progress updates in debug mode
-     });
+    // Tool executor with registry
+    this.toolExecutor = new ToolExecutor(this.toolRegistry);
+    // Register any handlers from legacy executor config
+    if (this.config.executor?.handlers) {
+      for (const [name, handler] of Object.entries(this.config.executor.handlers)) {
+        this.toolRegistry[name] = handler as ToolHandler;
+        this.toolExecutor.register(name, handler as ToolHandler);
+      }
+    }
 
-    this.contextBuilder = new ContextBuilder({
-      maxTokens: this.config.contextBuilder.maxTokens,
-      reservedTokens: this.config.contextBuilder.reservedTokens,
-      minMessages: this.config.contextBuilder.minMessages,
-      enableMemoryInjection: this.config.contextBuilder.enableMemoryInjection,
-    });
-
-    // Determine loop strategy: explicit loopStrategy takes precedence, else fallback to toolExecutionStrategy heuristic
-    let strategyName: 'react' | 'plan-solve' | 'reflection' | 'simple' | 'self-refine';
-    if (config?.loopStrategy) {
-      strategyName = config.loopStrategy;
+    // Context builder if no custom convertToLlm
+    if (!this.config.convertToLlm) {
+      this.contextBuilder = new ContextBuilder({
+        maxTokens: this.config.contextBuilder?.maxTokens ?? 128000,
+        reservedTokens: this.config.contextBuilder?.reservedTokens ?? 4096,
+        minMessages: this.config.contextBuilder?.minMessages ?? 1,
+        enableMemoryInjection: this.config.contextBuilder?.enableMemoryInjection ?? true,
+      });
     } else {
-      strategyName = config?.toolExecutionStrategy === 'sequential' ? 'simple' : 'react';
+      this.contextBuilder = undefined;
+    }
+
+    // Loop strategy
+    let strategyName: 'react' | 'plan-solve' | 'reflection' | 'simple' | 'self-refine';
+    if (this.config.loopStrategy) {
+      strategyName = this.config.loopStrategy;
+    } else {
+      strategyName = this.config.toolExecutionMode === 'sequential' ? 'simple' : 'react';
     }
     this.strategy = LoopStrategyFactory.create(strategyName);
 
-    this.steeringQueue = new MessageQueue(
-      this.config.steeringMode === 'drain-all' ? 'drain-all' : 'dequeue-one'
-    );
-    this.followUpQueue = new MessageQueue(
-      this.config.followUpMode === 'drain-all' ? 'drain-all' : 'dequeue-one'
-    );
+    // Queues: map queueMode to internal MessageQueue modes
+    const mapQueue = (mode: QueueMode) => mode === 'all' ? 'drain-all' : 'dequeue-one';
+    this.steeringQueue = new MessageQueue(mapQueue(this.config.queueMode ?? 'all'));
+    this.followUpQueue = new MessageQueue(mapQueue(this.config.followUpMode ?? 'all'));
 
-    if (config?.memoryStore) {
-      this.memoryStore = config.memoryStore;
+    if (this.config.memoryStore) {
+      this.memoryStore = this.config.memoryStore;
     }
 
+    // Runner – pass required dependencies including llm functions (set later if model provided)
     this.runner = new AgentLoop(
       this.config,
       this.emitter,
       this.toolExecutor,
-      this.contextBuilder,
+      this.contextBuilder ?? null,
       this.strategy,
-      this.memoryStore
+      this.memoryStore,
+      this.tools,
+      this._llmComplete.bind(this),
+      this._llmStream.bind(this)
     );
 
-    this.toolExecutor.registerAll(tools);
-
-    // Auto-set LLM provider using llm if model provided
+    // Auto-set LLM functions if model provided
     if (model) {
-      this.llmProvider = this._createLlmProvider(model);
-      this.streamProvider = this._createStreamProvider(model);
+      this.llmComplete = this._createLlmProvider(model);
+      this.llmStream = this._createStreamProvider(model);
     }
   }
 
   /**
-   * Convert agent's ToolDefinition to llm's Tool format
+   * Convert agent's Tool metadata to llm's Tool format
    */
-  private _convertToolsToLlm(tools: ToolDefinition[]): Tool[] {
+  private _convertToolsToLlm(tools: AgentTool[]): Tool[] {
     return tools.map(tool => ({
       name: tool.name,
       description: tool.description || '',
       parameters: tool.parameters || {},
     }));
+  }
+
+  // LLM call implementations using src/llm
+  private _llmComplete = async (context: Context, options?: any): Promise<LLMResponse> => {
+    if (!this.model) throw new Error('Model not set');
+    const llmOptions: any = { ...options };
+    if (this.config.getApiKey) {
+      const apiKey = await this.config.getApiKey(this.model.provider);
+      if (apiKey) llmOptions.apiKey = apiKey;
+    }
+    const result = await complete(this.model, context, llmOptions);
+    const content = Array.isArray(result.content)
+      ? result.content.map((c: any) => (c as any).text || (c as any).thinking || '').join('')
+      : (result.content as string) || '';
+    return { content, stopReason: result.stopReason ?? 'stop', usage: result.usage, toolCalls: [] };
+  };
+
+  private _llmStream = async (context: Context, options?: any): Promise<AsyncIterable<any>> => {
+    if (!this.model) throw new Error('Model not set');
+    const llmOptions: any = { ...options };
+    if (this.config.getApiKey) {
+      const apiKey = await this.config.getApiKey(this.model.provider);
+      if (apiKey) llmOptions.apiKey = apiKey;
+    }
+    return stream(this.model, context, llmOptions);
+  };
+
+  private _resolveConfig(input: AgentConfig): AgentConfig {
+    return {
+      maxRounds: input.maxRounds ?? 10,
+      toolTimeout: input.toolTimeout ?? 30000,
+      cacheResults: input.cacheResults ?? true,
+      enableLogging: input.enableLogging ?? false,
+      verbose: input.verbose ?? false,
+      toolExecutionMode: input.toolExecutionMode ?? input.toolExecutionStrategy ?? 'sequential',
+      queueMode: input.queueMode ?? (input.steeringMode === 'drain-all' ? 'all' : input.steeringMode === 'dequeue-one' ? 'one-at-a-time' : 'all'),
+      followUpMode: input.followUpMode ?? input.queueMode ?? 'all',
+      convertToLlm: input.convertToLlm,
+      getApiKey: input.getApiKey,
+      shouldStopAfterTurn: input.shouldStopAfterTurn,
+      onBeforeToolCall: input.onBeforeToolCall,
+      onAfterToolCall: input.onAfterToolCall,
+      onTurnEnd: input.onTurnEnd,
+      reasoningLevel: input.reasoningLevel,
+      thinkingBudgets: input.thinkingBudgets,
+      transformContext: input.transformContext,
+      memoryStore: input.memoryStore,
+      compaction: input.compaction,
+      contextBuilder: input.contextBuilder,
+      executor: input.executor,
+      loopStrategy: input.loopStrategy,
+      debug: input.debug,
+      sessionId: input.sessionId,
+      autoSaveMemories: input.autoSaveMemories,
+    };
   }
 
   /** Prepare model for llm functions */
@@ -146,72 +209,7 @@ export class Agent {
     };
   }
 
-  /**
-   * Create LLM provider using llm's complete function
-   */
-  private _createLlmProvider(model: Model) {
-    const llmModel: Model = this._prepareModel(model);
 
-    return async (prompt: string, tools: ToolDefinition[], options?: any): Promise<LLMResponse> => {
-      const context: Context = {
-        messages: [
-          { role: 'user', content: prompt, timestamp: Date.now() }
-        ] as Message[],
-        tools: tools.length > 0 ? this._convertToolsToLlm(tools) : undefined,
-      };
-
-      const llmOptions: StreamOptions = {
-        ...options,
-        temperature: options?.temperature,
-        maxTokens: options?.maxTokens,
-        signal: options?.signal,
-      };
-
-      const result = await complete(llmModel, context, llmOptions);
-
-      // Convert llm result to LLMResponse format
-      const content = Array.isArray(result.content) 
-        ? result.content.map((c: any) => c.text || c.thinking || '').join('')
-        : result.content || '';
-
-      return {
-        content,
-        stopReason: result.stopReason || 'stop',
-        usage: result.usage,
-        toolCalls: [],
-      };
-    };
-  }
-
-  /**
-   * Create stream provider using llm's stream function
-   */
-  private _createStreamProvider(model: Model) {
-    const llmModel: Model = this._prepareModel(model);
-    const convert = this._convertToolsToLlm.bind(this);
-
-    return async function* (prompt: string, tools: ToolDefinition[], options?: any): AsyncIterable<any> {
-      const context: Context = {
-        messages: [
-          { role: 'user', content: prompt, timestamp: Date.now() }
-        ] as Message[],
-        tools: tools.length > 0 ? convert(tools) : undefined,
-      };
-
-      const llmOptions: StreamOptions = {
-        ...options,
-        temperature: options?.temperature,
-        maxTokens: options?.maxTokens,
-        signal: options?.signal,
-      };
-
-      const eventStream = await stream(llmModel, context, llmOptions);
-
-      for await (const event of eventStream) {
-        yield event;
-      }
-    };
-  }
 
   // ============================================================================
   // Public API
@@ -491,11 +489,11 @@ export class Agent {
   setModel(model: Model | undefined): void {
     this.model = model;
     if (model) {
-      this.llmProvider = this._createLlmProvider(model);
-      this.streamProvider = this._createStreamProvider(model);
+      this.llmComplete = this._llmComplete;
+      this.llmStream = this._llmStream;
     } else {
-      this.llmProvider = undefined;
-      this.streamProvider = undefined;
+      this.llmComplete = undefined;
+      this.llmStream = undefined;
     }
   }
 
@@ -511,7 +509,6 @@ export class Agent {
       '',
       this.steeringQueue,
       this.followUpQueue,
-      this.llmProvider!,
       signal,
       initialTurns
     );
@@ -525,8 +522,8 @@ export class Agent {
       '',
       this.steeringQueue,
       this.followUpQueue,
-      this.streamProvider!,
-      signal
+      signal,
+      initialTurns
     );
     return result;
   }
@@ -574,18 +571,18 @@ export class Agent {
         const time = new Date(event.timestamp).toISOString();
         const round = `[R${event.round}]`;
         switch (event.type) {
-          case 'agent:start':
+          case 'agent_start':
             console.log(`${time} ${round} 🚀 Agent started`);
             break;
-          case 'agent:end':
+          case 'agent_end':
             console.log(`${time} ${round} ✅ Agent finished`);
             break;
-          case 'turn:end': {
+          case 'turn_end': {
             const tc = (event as any).toolCallsExecuted;
             console.log(`${time} ${round} ⏹️ Turn (${tc} tools)`);
             break;
           }
-          case 'tool:error':
+          case 'tool_error':
             console.error(`${time} ${round} 💥 Tool error: ${(event as any).toolName}`);
             break;
           case 'error':

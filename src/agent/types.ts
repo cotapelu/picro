@@ -90,33 +90,77 @@ export const isToolTurn = (turn: ConversationTurn): turn is ToolTurn => turn.rol
 // Tool Types
 // ============================================================================
 
-export interface ToolParameter {
-  type: string;
-  description?: string;
-  items?: ToolParameter;
-  properties?: Record<string, ToolParameter>;
-  required?: string[];
-  enum?: unknown[];
-  default?: unknown;
-  additionalProperties?: boolean;
-}
+// Tool metadata only – no handler (compatible with llm-context/ai)
+// Handler is registered separately in ToolExecutor
+// import type { Tool as LlmTool } from '../llm';
 
-export interface ToolDefinition {
+export type Tool = {
   name: string;
   description: string;
-  parameters?: {
-    type: 'object';
-    properties: Record<string, ToolParameter>;
-    required?: string[];
-  };
-  handler: ToolHandler;
-  /**
-   * Optional hook to transform or validate arguments before they are passed to the handler.
-   * This runs AFTER schema validation (if parameters present) but BEFORE execution.
-   * Return the processed arguments object. Throw to reject the tool call.
-   */
-  prepareArguments?: (args: Record<string, unknown>, context: ToolContext) => Record<string, unknown> | Promise<Record<string, unknown>>;
+  parameters?: any;
+};
+
+export type ToolHandler = (
+  args: Record<string, unknown>,
+  context: ToolContext,
+  onProgress?: (update: ToolProgressUpdate) => void | Promise<void>
+) => string | Promise<string> | void | Promise<void>;
+
+export type ToolRegistry = Record<string, ToolHandler>;
+
+// ============================================================================
+// Hooks and event contexts (compatible with llm-context/agent)
+// ============================================================================
+
+export type ToolExecutionMode = "sequential" | "parallel";
+export type QueueMode = "all" | "one-at-a-time"; // "drain-all" -> "all", "dequeue-one" -> "one-at-a-time"
+
+export interface BeforeToolCallContext {
+  assistantMessage: AssistantTurn;
+  toolCall: ToolCallBlock;
+  args: Record<string, unknown>;
+  context: AgentRuntimeState;
 }
+
+export interface BeforeToolCallResult {
+  block?: boolean;
+  reason?: string;
+}
+
+export interface AfterToolCallContext {
+  assistantMessage: AssistantTurn;
+  toolCall: ToolCallBlock;
+  args: Record<string, unknown>;
+  result: ToolTurn;
+  isError: boolean;
+  context: AgentRuntimeState;
+}
+
+export interface AfterToolCallResult {
+  content?: TextBlock[];
+  details?: unknown;
+  isError?: boolean;
+  terminate?: boolean;
+}
+
+export interface ShouldStopAfterTurnContext {
+  message: AssistantTurn;
+  toolResults: ToolTurn[];
+  context: AgentRuntimeState;
+  newMessages: ConversationTurn[];
+}
+
+export type GetApiKeyFn = (provider: string) => Promise<string | undefined> | string | undefined;
+
+export type ConvertToLlmFn = (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
+
+export type ShouldStopAfterTurnFn = (ctx: ShouldStopAfterTurnContext) => boolean | Promise<boolean>;
+
+export type BeforeToolCallHook = (ctx: BeforeToolCallContext) => Promise<BeforeToolCallResult>;
+
+export type AfterToolCallHook = (ctx: AfterToolCallContext) => Promise<AfterToolCallResult>;
+
+export type TurnEndHook = (ctx: { context: AgentRuntimeState; newMessages: AgentMessage[] }) => Promise<void>;
 
 export interface ToolContext {
   round: number;
@@ -430,29 +474,44 @@ export interface LoopStrategy {
 }
 
 export interface AgentConfig {
-   maxRounds: number;
-   verbose: boolean;
-   toolTimeout: number;
-   cacheResults: boolean;
-   toolExecutionStrategy: ToolExecutionStrategy;
-   contextBuilder: ContextBuilderConfig;
-   executor: ToolExecutorConfig;
-   enableLogging: boolean;
-   sessionId?: string;
-   thinkingBudgets?: Record<ThinkingLevel, number>;
-   reasoningLevel?: ThinkingLevel;
-   transformContext?: (turns: ConversationTurn[], signal?: AbortSignal) => Promise<ConversationTurn[]>;
-   steeringMode: QueueMode;
-   followUpMode: QueueMode;
-   autoSaveMemories?: boolean;
-   memoryStore?: MemoryStore;
-   /** Loop strategy to use (react, plan-solve, reflection, simple, self-refine) */
-   loopStrategy?: 'react' | 'plan-solve' | 'reflection' | 'simple' | 'self-refine';
-   /** Enable debug mode with detailed timing and metrics */
-   debug?: boolean;
-   /** Compaction configuration */
-   compaction?: CompactionConfig;
- }
+  // Core
+  maxRounds: number;
+  // Optional booleans
+  verbose?: boolean;
+  enableLogging?: boolean;
+  cacheResults?: boolean;
+  autoSaveMemories?: boolean;
+  debug?: boolean;
+  sessionId?: string;
+  // Tool execution
+  toolTimeout?: number;
+  // Compatibility: both old and new names
+  toolExecutionStrategy?: ToolExecutionStrategy; // old: 'sequential'|'parallel'
+  toolExecutionMode?: ToolExecutionMode; // new
+  // Queue modes (steering = user interjections; followUp = post-turn)
+  steeringMode?: QueueMode; // old: 'drain-all'|'dequeue-one'
+  followUpMode?: QueueMode; // old
+  queueMode?: QueueMode; // new unified: 'all'|'one-at-a-time' (maps steeringMode)
+  // Thinking / reasoning
+  reasoningLevel?: ThinkingLevel;
+  thinkingBudgets?: Record<ThinkingLevel, number>;
+  // Context & memory
+  transformContext?: (turns: ConversationTurn[], signal?: AbortSignal) => Promise<ConversationTurn[]>;
+  memoryStore?: MemoryStore;
+  compaction?: CompactionConfig;
+  contextBuilder?: ContextBuilderConfig; // legacy – still supported
+  // Loop strategy
+  loopStrategy?: 'react' | 'plan-solve' | 'reflection' | 'simple' | 'self-refine';
+  // LLM integration hooks (llm-context/agent compatibility)
+  convertToLlm?: ConvertToLlmFn;
+  getApiKey?: GetApiKeyFn;
+  shouldStopAfterTurn?: ShouldStopAfterTurnFn;
+  onBeforeToolCall?: BeforeToolCallHook;
+  onAfterToolCall?: AfterToolCallHook;
+  onTurnEnd?: TurnEndHook;
+  // Tool executor options (legacy)
+  executor?: ToolExecutorConfig;
+}
 
 export interface StreamOptions {
   temperature?: number;

@@ -34,6 +34,10 @@ export type {
 // Provider APIs  
 export { stream, complete } from './providers/openai-compatible.js';
 
+// Utilities
+export { transformMessages, transformAssistantMessages } from './transform-messages.js';
+export { estimateContextTokens, truncateContext, smartTruncate } from './overflow.js';
+
 // Stream optimization
 export { StreamBuffer, getProviderBufferConfig, createStreamBuffer, providerBufferConfigs } from './utils/stream-buffer.js';
 export type { BufferConfig } from './utils/stream-buffer.js';
