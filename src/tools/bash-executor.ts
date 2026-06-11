@@ -11,7 +11,7 @@
  */
 
 import { spawn } from 'child_process';
-import { existsSync, mkdirSync, writeFileSync, unlinkSync } from 'fs';
+import * as fs from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import type { EventEmitter } from '../events/event-emitter.js';
@@ -112,7 +112,7 @@ export async function executeBash(
     tempFileStream = {
       write: (data: string) => {
         try {
-          writeFileSync(tempFilePath!, data, { flag: 'a' });
+          fs.writeFileSync(tempFilePath!, data, { flag: 'a' });
         } catch {}
       },
       end: () => {},
@@ -232,15 +232,14 @@ export async function executeBash(
       exitCode,
       cancelled: false,
       truncated: true,
-      console.log('DEBUG existsSync:', typeof existsSync, existsSync);
-      fullOutputPath: existsSync(tempFilePath) ? tempFilePath : undefined,
+      fullOutputPath: fs.existsSync(tempFilePath) ? tempFilePath : undefined,
     };
   }
 
   // Cleanup temp file if not needed
-  if (tempFilePath && existsSync(tempFilePath)) {
+  if (tempFilePath && fs.existsSync(tempFilePath)) {
     try {
-      unlinkSync(tempFilePath);
+      fs.unlinkSync(tempFilePath);
     } catch {}
   }
 

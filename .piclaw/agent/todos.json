@@ -1,34 +1,54 @@
 {
   "version": 1,
-  "phases": [],
-  "nextTaskId": 1,
-  "nextPhaseId": 1,
-  "updatedAt": "2026-05-31T02:54:33.350Z"
-}tasks": [
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Refactor AgentLoop - Outer Loop & Follow-up Support",
+      "tasks": [
         {
           "id": "task-1",
-          "content": "Investigate why InputBox is not accepting keyboard input",
+          "content": "Analyze reference agent-loop outer loop structure and plan integration",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Check focus handling and disabled state",
+          "content": "Add outer loop to executeLoop to handle follow-up messages after agent stop condition",
           "status": "completed"
         },
         {
           "id": "task-3",
-          "content": "Verify useInput hook configuration",
-          "status": "completed"
+          "content": "Integrate getFollowUpMessages config hook into outer loop decision",
+          "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Test the fix",
+          "content": "Ensure proper event emissions for follow-up processing (turn_start/turn_end)",
           "status": "completed"
+        },
+        {
+          "id": "task-5",
+          "content": "Fix test failure: adjust final result handling to match expected behavior",
+          "status": "in_progress"
+        },
+        {
+          "id": "task-6",
+          "content": "Run full test suite to ensure no regressions",
+          "status": "pending"
+        },
+        {
+          "id": "task-7",
+          "content": "Update EVOLUTION.md, AGENT_METRICS.md, AGENT_PROFILE.md with changes",
+          "status": "pending"
+        },
+        {
+          "id": "task-8",
+          "content": "Git commit changes",
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 5,
+  "nextTaskId": 9,
   "nextPhaseId": 2,
-  "updatedAt": "2026-05-31T02:54:33.349Z"
+  "updatedAt": "2026-06-11T23:40:11.359Z"
 }

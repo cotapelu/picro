@@ -33,6 +33,8 @@ describe('AgentSession unit', () => {
     expect(agentSession.autoCompactionEnabled).toBe(true);
     agentSession.setAutoCompactionEnabled(false);
     expect(settingsManager.setCompactionEnabled).toHaveBeenCalledWith(false);
+  });
+
   it('sessionName returns sessionManager.getSessionName()', () => {
     const sessionManager = {
       getLeafId: vi.fn(),

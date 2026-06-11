@@ -19,6 +19,7 @@ import type {
   LoopStrategy,
   AgentTool,
   ConvertToLlmFn,
+  StopReason,
 } from './types.js';
 import type { Context, Message as LlmMessage, Tool as LlmTool } from '../llm/index.js';
 import type { AgentEvent } from '../events/events.js';
@@ -265,6 +266,7 @@ export class AgentLoop {
     let totalMemoryRetrievalTime = 0;
     let totalLLMRequestTime = 0;
     let totalToolExecutionTime = 0;
+    let pendingTurns: ConversationTurn[] = [];
 
     try {
       await this.emitter.emit({
@@ -280,6 +282,8 @@ export class AgentLoop {
       while (this.state.round < maxRounds && !this.state.isCancelled) {
         const roundStartTime = Date.now();
         this.state.round++;
+        let turnEnded = false;
+        let finalResultCandidate: AgentRunResult | null = null;
 
         if (isStreaming) {
           await this.emitter.emit({
@@ -292,7 +296,7 @@ export class AgentLoop {
 
         if (steeringQueue.hasPending) {
           const steering = this.drainQueue(steeringQueue);
-          this.state.history.push(...steering);
+          pendingTurns.push(...steering);
         }
 
         currentPrompt = this.strategy.transformPrompt?.(currentPrompt, this.state) ?? currentPrompt;
@@ -323,6 +327,12 @@ export class AgentLoop {
           } catch (e) {
             console.warn('Memory retrieval failed:', e);
           }
+        }
+
+        // Inject any pending turns into history
+        if (pendingTurns.length > 0) {
+          this.state.history.push(...pendingTurns);
+          pendingTurns = [];
         }
 
         // Build LLM context (combine history + current user prompt)
@@ -632,7 +642,17 @@ export class AgentLoop {
           } as any);
 
           if (!this.strategy.shouldContinue(shouldContinueResponse, this.state)) {
-            break;
+            // Check follow-up before breaking
+            const followUpTurns = await this.collectFollowUpTurns(followUpQueue);
+            if (followUpTurns.length > 0) {
+              // Have follow-up: inject and continue to next round
+              this.state.history.push(...followUpTurns);
+              currentPrompt = this.turnsToText(followUpTurns);
+              continue;
+            } else {
+              // No follow-up: break to exit loop (will result in max_rounds failure)
+              break;
+            }
           }
         } else {
           await this.emitter.emit({
@@ -643,50 +663,78 @@ export class AgentLoop {
             hasAssistantContent: true,
           } as any);
 
+          // No tool calls: prepare final result candidate
           let finalAnswer: string;
+          let stopReason: StopReason | undefined;
+          let errorMessage: string | undefined;
+
           if (isStreaming) {
             const contentBlocks = finalMessage.content || [];
             finalAnswer = Array.isArray(contentBlocks)
               ? contentBlocks.filter((c: any) => c.type === 'text').map((c: any) => c.text).join('')
               : String(contentBlocks);
+            stopReason = finalMessage.stopReason;
+            errorMessage = finalMessage.errorMessage;
           } else {
             finalAnswer = response!.content || '';
+            stopReason = response!.stopReason;
+            errorMessage = response!.errorMessage;
           }
 
-          const finalResult: AgentRunResult = {
+          finalResultCandidate = {
             finalAnswer,
             totalRounds: this.state.round,
             totalToolCalls: this.state.totalToolCalls,
             totalTokens: this.state.totalTokens,
             toolResults: this.state.toolResults,
             success: true,
-            stopReason: isStreaming ? finalMessage.stopReason : response!.stopReason || 'stop',
-            error: isStreaming ? finalMessage.errorMessage : response!.errorMessage,
+            stopReason: stopReason || 'stop',
+            error: errorMessage,
             finalState: { ...this.state },
           };
 
-          if (this.config.debug) {
-            const runEndTime = Date.now();
-            const totalRunTime = runEndTime - runStartTime;
-            await this.emitter.emit({
-              type: 'debug:run:timing',
-              timestamp: Date.now(),
-              totalRunTime,
-              totalContextBuildingTime,
-              totalMemoryRetrievalTime,
-              totalLLMRequestTime,
-              totalToolExecutionTime,
-            } as any);
+
+
+          turnEnded = true;
+        }
+
+        if (turnEnded) {
+          // Check follow-up messages
+          const followUpTurns = await this.collectFollowUpTurns(followUpQueue);
+          if (followUpTurns.length > 0) {
+            // Inject follow-up into history and update prompt for next round
+            this.state.history.push(...followUpTurns);
+            currentPrompt = this.turnsToText(followUpTurns);
+            // Continue to next round
+            continue;
+          } else {
+            // No follow-up: emit agent_end if needed and return final result
+            if (finalResultCandidate) {
+              if (this.config.debug) {
+                const runEndTime = Date.now();
+                const totalRunTime = runEndTime - roundStartTime;
+                await this.emitter.emit({
+                  type: 'debug:run:timing',
+                  timestamp: Date.now(),
+                  totalRunTime,
+                  totalContextBuildingTime,
+                  totalMemoryRetrievalTime,
+                  totalLLMRequestTime,
+                  totalToolExecutionTime,
+                } as any);
+              }
+              await this.emitter.emit({
+                type: 'agent:end',
+                timestamp: Date.now(),
+                round: this.state.round,
+                result: finalResultCandidate,
+              } as any);
+              return finalResultCandidate;
+            } else {
+              // No final result candidate? Should not happen, break to exit.
+              break;
+            }
           }
-
-          await this.emitter.emit({
-            type: 'agent:end',
-            timestamp: Date.now(),
-            round: this.state.round,
-            result: finalResult,
-          } as any);
-
-          return finalResult;
         }
       } // while
 
@@ -870,5 +918,27 @@ export class AgentLoop {
   private getResultText(result: ToolResult): string {
     if ('error' in result) return result.error;
     return result.result;
+  }
+
+  /**
+   * Collect follow-up turns from queue (can be extended with config hook)
+   */
+  private async collectFollowUpTurns(followUpQueue: MessageQueue): Promise<ConversationTurn[]> {
+    return followUpQueue.drainAll();
+  }
+
+  /**
+   * Convert turns to plain text for currentPrompt
+   */
+  private turnsToText(turns: ConversationTurn[]): string {
+    const parts: string[] = [];
+    for (const turn of turns) {
+      for (const block of turn.content) {
+        if (block.type === 'text') {
+          parts.push(block.text);
+        }
+      }
+    }
+    return parts.join('\n');
   }
 }
