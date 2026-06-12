@@ -168,4 +168,45 @@ describe('DefaultModelRegistry', () => {
       expect(reg).toBeInstanceOf(DefaultModelRegistry);
     });
   });
+
+  describe('AuthStorage integration', () => {
+    it('should include models when AuthStorage has API key', async () => {
+      const mockAuthStorage = {
+        getApiKey: vi.fn((provider: string) => {
+          if (provider === 'openai') return 'sk-test';
+          if (provider === '*') return 'wildcard-key';
+          return undefined;
+        }),
+      } as any;
+
+      const registry = new DefaultModelRegistry(mockAuthStorage);
+
+      vi.mocked(getProviders).mockReturnValue(['openai']);
+      vi.mocked(getModels).mockImplementation((p: string) => {
+        if (p === 'openai') return [mockModel('openai', 'gpt-4')];
+        return [];
+      });
+
+      const available = await registry.getAvailable();
+      expect(available).toHaveLength(1);
+      expect(available[0].id).toBe('gpt-4');
+      expect(mockAuthStorage.getApiKey).toHaveBeenCalledWith('openai');
+    });
+
+    it('should not include models when AuthStorage has no key', async () => {
+      const mockAuthStorage = {
+        getApiKey: vi.fn(() => undefined),
+      } as any;
+
+      const registry = new DefaultModelRegistry(mockAuthStorage);
+      vi.mocked(getProviders).mockReturnValue(['openai']);
+      vi.mocked(getModels).mockImplementation((p: string) => {
+        if (p === 'openai') return [mockModel('openai', 'gpt-4')];
+        return [];
+      });
+
+      const available = await registry.getAvailable();
+      expect(available).toHaveLength(0);
+    });
+  });
 });

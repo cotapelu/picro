@@ -9,6 +9,7 @@
 | 3      | 2026-06-11 | Terminate flag support         | 1919       | 0           | 0         |
 | 4      | 2026-06-12 | prepareNextTurn hook tests    | 1926       | 0           | 0         |
 | 5      | 2026-06-12 | getSteeringMessages hook support | 1930       | 0           | 0         |
+| 6      | 2026-06-12 | Auth-storage sync for model selection | 1932       | 0           | 0         |
 
 ## Quality Indicators
 

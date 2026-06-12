@@ -100,6 +100,29 @@
 
 ---
 
+### Round 5 (2026-06-12): Auth-Model Registry Synchronization
+
+**Problem**: The interactive mode's ModelSelectorModal displayed no models after user login because `DefaultModelRegistry.hasConfiguredAuth()` only checked custom in-memory keys and environment variables, not the `AuthStorage` where API keys from the UI were saved. This caused a deadlock: users needed to select a model to proceed but couldn't because no models were shown.
+
+**Solution**: Inject `AuthStorage` into `DefaultModelRegistry` during service creation. Updated `hasConfiguredAuth()` and `getApiKeyAndHeaders()` to prioritize `AuthStorage` for API key lookup. Now when a user enters an API key via LoginModal, it is saved to `AuthStorage` and immediately visible to the model registry.
+
+**Implementation**:
+- Modified `createAgentSessionServices` to pass `authStorage` into `DefaultModelRegistry` constructor.
+- Added `private authStorage?: AuthStorage` field to `DefaultModelRegistry`.
+- Updated `hasConfiguredAuth()` to check `this.authStorage?.getApiKey(provider)` and wildcard.
+- Updated `getApiKeyAndHeaders()` to query AuthStorage first before custom keys and env vars.
+- Added missing interface methods (`find`, `getAvailable`, `getAll`, `getProviders`) to `DefaultModelRegistry` to satisfy compile.
+- Added unit tests verifying auth-storage-aware availability.
+
+**Impact**:
+- Unblocks model selection in interactive mode.
+- Maintains backward compatibility: environment variables still work if AuthStorage absent.
+- Low risk: small, focused change with clear contract.
+
+**Tests**: Added 2 unit tests for auth integration. All existing tests pass (model-registry: 18 tests, agent-session.unit: 7, agent-session-methods: 36).
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
