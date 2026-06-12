@@ -579,7 +579,7 @@ export class AgentLoop {
 
           const assistantTurn = this.createAssistantTurn(finalMessage);
           this.state.history.push(assistantTurn);
-          this.lastTurnAssistant = assistantTurn;
+          this.lastTurnAssistant = assistantTurn as AssistantTurn;
           this.lastTurnNewMessages = [assistantTurn];
           this.lastTurnToolResults = [];
         } else {
@@ -604,7 +604,7 @@ export class AgentLoop {
 
           const assistantTurn = this.createAssistantTurn(response!);
           this.state.history.push(assistantTurn);
-          this.lastTurnAssistant = assistantTurn;
+          this.lastTurnAssistant = assistantTurn as AssistantTurn;
           this.lastTurnNewMessages = [assistantTurn];
           this.lastTurnToolResults = [];
         }
@@ -939,7 +939,7 @@ export class AgentLoop {
     } as any;
   }
 
-  private createToolTurn(result: ToolResult): ConversationTurn {
+  private createToolTurn(result: ToolResult): ToolTurn {
     const isError = 'error' in result;
     return {
       role: 'tool',

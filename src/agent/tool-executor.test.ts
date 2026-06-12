@@ -318,7 +318,7 @@ describe('ToolExecutor', () => {
     });
 
     it('should allow afterHook to modify result content', async () => {
-      const after = vi.fn().mockResolvedValue({ content: 'modified' });
+      const after = vi.fn().mockResolvedValue({ result: 'modified' });
       executor = new ToolExecutor({ afterToolCall: after });
       executor.register(createTool('echo', () => 'original'));
 

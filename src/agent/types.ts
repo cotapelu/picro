@@ -156,9 +156,10 @@ export interface AfterToolCallContext {
 }
 
 export interface AfterToolCallResult {
-  content?: TextBlock[];
-  details?: unknown;
+  result?: string;
+  errorMessage?: string;
   isError?: boolean;
+  details?: unknown;
   terminate?: boolean;
 }
 
@@ -448,7 +449,7 @@ export interface AfterToolHook {
     result: ToolResult;
     isError: boolean;
     round: number;
-  }, signal?: AbortSignal): Promise<HookResult | undefined>;
+  }, signal?: AbortSignal): Promise<AfterToolCallResult | undefined>;
 }
 
 export interface HookResult {

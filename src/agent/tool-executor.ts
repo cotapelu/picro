@@ -249,7 +249,7 @@ export class ToolExecutor {
            signal
          );
          if (after) {
-           if (after.content !== undefined) result.result = after.content;
+           if (after.result !== undefined) result.result = after.result;
            if (after.isError) {
              result = {
                ...result,
@@ -302,7 +302,7 @@ export class ToolExecutor {
            signal
          );
          if (after) {
-           if (after.content !== undefined) (result as any).result = after.content;
+           if (after.result !== undefined) (result as any).result = after.result;
            if (after.errorMessage !== undefined) (result as any).error = after.errorMessage;
            if (after.details) result.metadata = { ...metadata, ...after.details };
            if (after.terminate !== undefined) (result as any).terminate = after.terminate;
