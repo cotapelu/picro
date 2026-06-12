@@ -3,52 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Refactor AgentLoop - Outer Loop & Follow-up Support",
+      "name": "Add Per-Tool Execution Mode Override",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Analyze reference agent-loop outer loop structure and plan integration",
+          "content": "Add executionMode property to AgentTool type",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Add outer loop to executeLoop to handle follow-up messages after agent stop condition",
+          "content": "Update executeAll to check per-tool execution mode and force sequential if needed",
           "status": "completed"
         },
         {
           "id": "task-3",
-          "content": "Integrate getFollowUpMessages config hook into outer loop decision",
-          "status": "pending"
-        },
-        {
-          "id": "task-4",
-          "content": "Ensure proper event emissions for follow-up processing (turn_start/turn_end)",
-          "status": "completed"
-        },
-        {
-          "id": "task-5",
-          "content": "Fix test failure: adjust final result handling to match expected behavior",
+          "content": "Add unit tests for per-tool execution mode",
           "status": "in_progress"
         },
         {
-          "id": "task-6",
+          "id": "task-4",
           "content": "Run full test suite to ensure no regressions",
           "status": "pending"
         },
         {
-          "id": "task-7",
-          "content": "Update EVOLUTION.md, AGENT_METRICS.md, AGENT_PROFILE.md with changes",
+          "id": "task-5",
+          "content": "Update EVOLUTION.md with this change",
           "status": "pending"
         },
         {
-          "id": "task-8",
-          "content": "Git commit changes",
+          "id": "task-6",
+          "content": "Git commit",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 9,
+  "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-11T23:40:11.359Z"
+  "updatedAt": "2026-06-12T11:27:36.289Z"
 }

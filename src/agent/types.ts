@@ -104,9 +104,19 @@ export interface ToolDefinition {
   parameters?: any;
   handler: ToolHandler;
   prepareArguments?: (args: Record<string, unknown>, context: ToolContext) => Promise<Record<string, unknown>>;
+  /** Optional per-tool execution mode override */
+  executionMode?: ToolExecutionMode;
 }
 
-export type AgentTool = Tool;
+export type AgentTool = Tool & {
+  /**
+   * Optional per-tool execution mode override.
+   * - 'sequential': this tool must execute one at a time with other tool calls.
+   * - 'parallel': this tool can execute concurrently with other tool calls.
+   * If omitted, the agent's default tool execution strategy applies.
+   */
+  executionMode?: ToolExecutionMode;
+};
 export type AgentMessage = LlmMessage;
 
 export type ToolHandler = (

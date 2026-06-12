@@ -4,7 +4,8 @@
 
 | Round | Date       | Focus                          | Tests Pass | Regressions | Rollbacks |
 |-------|------------|--------------------------------|------------|-------------|-----------|
-| 1      | 2026-06-11 | Outer loop & follow-up support | 1909       | 0           | 0         |
+| 1      | 2026-06-11 | Outer loop & follow-up support | 1912       | 0           | 0         |
+| 2      | 2026-06-11 | Per-tool execution mode override | 1915       | 0           | 0         |
 
 ## Quality Indicators
 

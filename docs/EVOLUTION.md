@@ -13,14 +13,32 @@
 - Steering queue drained into `pendingTurns` each round (was directly into history).
 - Before LLM call, inject `pendingTurns` into history.
 - After a turn ends (in `else` branch for no tool calls, or after `shouldContinue` false for tool calls), check follow-up queue. If any, push to history and set `currentPrompt` to their text, then `continue` to next round.
-- Added helper methods `collectFollowUpTurns` and `turnsToText`.
+- Added helper methods `collectFollowUpTurns` (also supports `getFollowUpMessages` hook) and `turnsToText`.
 
 **Impact**:
 - Enables continuous operation without external resume.
 - Maintains backward compatibility (existing queues still work).
 - Slightly more complex loop structure but still maintainable.
 
-**Tests**: All existing tests pass; new tests added (TODO) to verify follow-up flow.
+**Tests**: All existing tests pass; new tests added for follow-up flow (2 tests + hook test).
+
+### Round 2 (2026-06-11): Per-Tool Execution Mode Override
+
+**Problem**: Tool execution strategy was global only. Some tools require sequential execution even when the default is parallel.
+
+**Solution**: Added `executionMode` property to `AgentTool` type and `ToolDefinition`. Updated `ToolExecutor.executeAll` to check per-tool mode: if any tool in the batch has `executionMode: 'sequential'`, the batch runs sequentially.
+
+**Implementation**:
+- Extended `AgentTool` type with optional `executionMode?: ToolExecutionMode`.
+- Extended `ToolDefinition` with optional `executionMode`.
+- Modified `executeAll`: compute `forceSequential` based on global config or per-tool overrides.
+
+**Impact**:
+- Fine-grained control over tool concurrency.
+- Backward compatible (existing tools with no executionMode use global default).
+- Low risk change.
+
+**Tests**: Added 3 unit tests for per-tool execution mode (parallel default, sequential override, global sequential).
 
 ## Planned Refactors (Next Rounds)
 

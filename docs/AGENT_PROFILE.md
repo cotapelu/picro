@@ -3,9 +3,10 @@
 ## Strengths
 
 - Robust loop control with support for steering and follow-up messages
-- Flexible tool execution (parallel/sequential)
+- Flexible tool execution (global or per-tool parallel/sequential)
 - Event-driven architecture with comprehensive logging
 - Memory integration
+- Continuous operation without manual resume
 
 ## Weaknesses / Known Issues
 

@@ -467,4 +467,50 @@ describe('ToolExecutor', () => {
       expect(afterArgs[0]).toEqual({ a: 'x', b: 'prepared' });
     });
   });
+
+  describe('per-tool execution mode', () => {
+    const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    it('uses parallel execution when global strategy is parallel and all tools default', async () => {
+      executor = new ToolExecutor({ toolExecutionStrategy: 'parallel' });
+      const order: number[] = [];
+      executor.register(createTool('a', async () => { order.push(1); await wait(50); return 'a'; }));
+      executor.register(createTool('b', async () => { order.push(2); await wait(50); return 'b'; }));
+      const start = Date.now();
+      await executor.executeAll([buildToolCall('a'), buildToolCall('b')], buildContext());
+      const elapsed = Date.now() - start;
+      // Parallel should take ~50ms, not 100ms
+      expect(elapsed).toBeLessThan(80);
+      // Order may not be deterministic but both should be present
+      expect(order).toContain(1);
+      expect(order).toContain(2);
+    });
+
+    it('forces sequential if any tool has executionMode sequential', async () => {
+      executor = new ToolExecutor({ toolExecutionStrategy: 'parallel' });
+      const order: string[] = [];
+      const seqTool = createTool('seq', async () => { order.push('seq'); await wait(30); return 'seq'; });
+      // Add executionMode to tool definition
+      (seqTool as any).executionMode = 'sequential';
+      executor.register(seqTool);
+      executor.register(createTool('par', async () => { order.push('par'); await wait(30); return 'par'; }));
+      const start = Date.now();
+      await executor.executeAll([buildToolCall('seq'), buildToolCall('par')], buildContext());
+      const elapsed = Date.now() - start;
+      // Sequential should take ~60ms
+      expect(elapsed).toBeGreaterThanOrEqual(60);
+      // Check that sequential executed before parallel (order preserved)
+      expect(order[0]).toBe('seq');
+      expect(order[1]).toBe('par');
+    });
+
+    it('respects global sequential strategy regardless of per-tool mode', async () => {
+      executor = new ToolExecutor({ toolExecutionStrategy: 'sequential' });
+      const order: number[] = [];
+      executor.register(createTool('a', async () => { order.push(1); await wait(20); return 'a'; }));
+      executor.register(createTool('b', async () => { order.push(2); await wait(20); return 'b'; }));
+      await executor.executeAll([buildToolCall('a'), buildToolCall('b')], buildContext());
+      expect(order).toEqual([1, 2]);
+    });
+  });
 });

@@ -323,7 +323,14 @@ export class ToolExecutor {
       return [];
     }
 
-    if (this.config.toolExecutionStrategy === 'sequential') {
+    // Determine execution mode: if global sequential OR any tool has executionMode 'sequential', use sequential
+    const forceSequential = this.config.toolExecutionStrategy === 'sequential' ||
+      toolCalls.some(call => {
+        const tool = this.tools.get(call.name);
+        return tool?.executionMode === 'sequential';
+      });
+
+    if (forceSequential) {
       const results: ToolResult[] = [];
       for (const call of toolCalls) {
         if (signal?.aborted) {
