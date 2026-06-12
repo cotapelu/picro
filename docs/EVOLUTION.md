@@ -59,21 +59,38 @@
 
 **Tests**: Added 2 tests for terminate flag behavior (all terminate vs mixed). All tests pass.
 
+### Round 4 (2026-06-12): prepareNextTurn Hook Testing
+
+**Problem**: The `prepareNextTurn` hook was implemented but lacked comprehensive test coverage, making it risky to use and difficult to trust.
+
+**Solution**: Added extensive unit tests covering hook invocation, reasoningLevel overrides, error handling, context correctness, multi-round modifications, and interaction with follow-up.
+
+**Implementation**:
+- Added `describe('prepareNextTurn hook')` suite with 6 test cases.
+- Verified hook behavior across various scenarios (tool calls, no-tool turns, errors).
+- Fixed subtle round numbering expectations (hook receives completed round number).
+- Ensured hook errors are caught and logged without crashing.
+
+**Impact**:
+- Increases confidence in hook functionality.
+- Improves overall test coverage (1926 passing tests).
+- No regressions introduced.
+
+**Tests**: All new tests pass; existing tests unchanged.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
    - Allows per-tool `executionMode` override; if any tool is sequential, batch runs sequential.
 
-2. **`prepareNextTurn` Hook** (Medium)
-   - Allows dynamic model/reasoning level changes mid-run.
-   - Useful for escalating to stronger model after initial pass.
+2. **`getSteeringMessages` Hook** (Low)
+   - Instead of direct queue access, use hook to supply steering messages dynamically.
 
 3. ~~`terminate` Flag Support~~ (Completed in Round 3)
    - Tool results can include `terminate: true` hint to stop early.
    - Implemented early exit from tool batch processing when all terminate.
-
-4. **`getSteeringMessages` Hook** (Low)
-   - Instead of direct queue access, use hook to supply steering messages dynamically.
 
 ## Anticipated Technical Debt
 

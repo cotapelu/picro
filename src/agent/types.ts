@@ -169,6 +169,21 @@ export interface ShouldStopAfterTurnContext {
   newMessages: ConversationTurn[];
 }
 
+/** Context passed to prepareNextTurn hook */
+export interface PrepareNextTurnContext {
+  lastAssistantMessage: AssistantTurn;
+  toolResults: ToolResult[]; // raw tool results (include metadata like terminate)
+  newMessages: ConversationTurn[]; // assistant + tool turns added this turn
+  round: number; // round number that just completed
+  state: AgentRuntimeState; // current agent state snapshot
+}
+
+/** Override values returned by prepareNextTurn hook */
+export interface PrepareNextTurnOverride {
+  reasoningLevel?: ThinkingLevel;
+  // Future: model?, thinkingBudget?, etc.
+}
+
 export type GetApiKeyFn = (provider: string) => Promise<string | undefined> | string | undefined;
 
 export type ConvertToLlmFn = (turns: ConversationTurn[], signal?: AbortSignal) => Promise<LlmMessage[]>;
@@ -536,6 +551,12 @@ export interface AgentConfig {
   // Follow-up & steering hooks (llm-context/agent compatibility)
   getFollowUpMessages?: () => Promise<ConversationTurn[]>;
   getSteeringMessages?: () => Promise<ConversationTurn[]>;
+  /**
+   * Called after a turn completes (assistant message and any tool results have been appended to history)
+   * and before the next LLM request is built. Allows dynamic adjustments to model/reasoning for the next turn.
+   * Return an object with optional overrides (e.g., reasoningLevel) to modify the agent config for subsequent turns.
+   */
+  prepareNextTurn?: (ctx: PrepareNextTurnContext) => Promise<PrepareNextTurnOverride | undefined>;
   // Tool executor options (legacy)
   executor?: ToolExecutorConfig;
 }

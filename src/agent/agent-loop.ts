@@ -20,6 +20,10 @@ import type {
   AgentTool,
   ConvertToLlmFn,
   StopReason,
+  ToolTurn,
+  AssistantTurn,
+  PrepareNextTurnContext,
+  PrepareNextTurnOverride,
 } from './types.js';
 import type { Context, Message as LlmMessage, Tool as LlmTool } from '../llm/index.js';
 import type { AgentEvent } from '../events/events.js';
@@ -44,6 +48,10 @@ export class AgentLoop {
   private tools: AgentTool[];
   private llmComplete: (context: Context, options?: any) => Promise<LLMResponse>;
   private llmStream: (context: Context, options?: any) => Promise<AsyncIterable<any>>;
+  // State for prepareNextTurn hook
+  private lastTurnAssistant: AssistantTurn | null = null;
+  private lastTurnToolResults: ToolResult[] = [];
+  private lastTurnNewMessages: ConversationTurn[] = [];
 
   constructor(
     config: AgentConfig,
@@ -282,6 +290,29 @@ export class AgentLoop {
       while (this.state.round < maxRounds && !this.state.isCancelled) {
         const roundStartTime = Date.now();
         this.state.round++;
+
+        // Invoke prepareNextTurn hook if configured and previous turn exists
+        if (this.config.prepareNextTurn && this.lastTurnAssistant) {
+          try {
+            const overrides = await this.config.prepareNextTurn({
+              lastAssistantMessage: this.lastTurnAssistant,
+              toolResults: this.lastTurnToolResults,
+              newMessages: this.lastTurnNewMessages,
+              round: this.state.round - 1,
+              state: { ...this.state } as any,
+            });
+            if (overrides?.reasoningLevel !== undefined) {
+              this.config.reasoningLevel = overrides.reasoningLevel;
+            }
+          } catch (e) {
+            if (this.config.debug) console.error('prepareNextTurn hook error:', e);
+          } finally {
+            // Reset after processing to avoid re-running
+            this.lastTurnAssistant = null;
+            this.lastTurnToolResults = [];
+            this.lastTurnNewMessages = [];
+          }
+        }
         let turnEnded = false;
         let finalResultCandidate: AgentRunResult | null = null;
 
@@ -537,7 +568,11 @@ export class AgentLoop {
             return errorResult;
           }
 
-          this.state.history.push(this.createAssistantTurn(finalMessage));
+          const assistantTurn = this.createAssistantTurn(finalMessage);
+          this.state.history.push(assistantTurn);
+          this.lastTurnAssistant = assistantTurn;
+          this.lastTurnNewMessages = [assistantTurn];
+          this.lastTurnToolResults = [];
         } else {
           const llmResponse = await this.llmComplete(llmContext, {
             signal: combinedSignal,
@@ -558,7 +593,11 @@ export class AgentLoop {
             toolCallsCount: response!.toolCalls?.length ?? 0,
           } as any);
 
-          this.state.history.push(this.createAssistantTurn(response!));
+          const assistantTurn = this.createAssistantTurn(response!);
+          this.state.history.push(assistantTurn);
+          this.lastTurnAssistant = assistantTurn;
+          this.lastTurnNewMessages = [assistantTurn];
+          this.lastTurnToolResults = [];
         }
 
         // Determine tool calls and response for strategy
@@ -613,9 +652,14 @@ export class AgentLoop {
           const resultsText = this.strategy.formatResults(toolResults);
           currentPrompt += `\n\n[Tool Results]\n${resultsText}`;
 
+          const toolTurns: ToolTurn[] = [];
           for (const result of toolResults) {
-            this.state.history.push(this.createToolTurn(result));
+            const toolTurn = this.createToolTurn(result);
+            this.state.history.push(toolTurn);
+            toolTurns.push(toolTurn);
+            this.lastTurnNewMessages.push(toolTurn);
           }
+          this.lastTurnToolResults = toolResults;
 
           // Emit round timing if debug mode is enabled (match original: only non-streaming)
           if (this.config.debug && !isStreaming) {

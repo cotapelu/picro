@@ -858,4 +858,281 @@ describe('AgentLoop', () => {
     });
   });
 
+  describe('prepareNextTurn hook', () => {
+    it('modifies reasoningLevel for next round', async () => {
+      let llmCallCount = 0;
+      let reasoningOptions1: any = null;
+      let reasoningOptions2: any = null;
+      const customLLM = async (context: Context, options?: any): Promise<LLMResponse> => {
+        llmCallCount++;
+        if (llmCallCount === 1) reasoningOptions1 = options;
+        if (llmCallCount === 2) reasoningOptions2 = options;
+        return {
+          content: llmCallCount === 1 ? 'use tool' : 'final',
+          stopReason: llmCallCount === 1 ? 'toolUse' : 'stop',
+          usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+          toolCalls: llmCallCount === 1 ? [{ id: 't1', name: 'testTool', arguments: {} }] : [],
+        };
+      };
+
+      toolExecutor.registerTool({
+        name: 'testTool',
+        description: 'tool',
+        parameters: { type: 'object', properties: {} },
+        handler: async () => 'ok',
+      } as any);
+
+      const config = createTestConfig({
+        reasoningLevel: 'low',
+        prepareNextTurn: async (ctx) => {
+          if (ctx.round === 1) {
+            return { reasoningLevel: 'high' };
+          }
+          return undefined;
+        },
+      });
+
+      loop = new AgentLoop(
+        config,
+        emitter,
+        toolExecutor,
+        contextBuilder,
+        new ReActLoopStrategy(),
+        customLLM,
+        defaultLLMStream,
+        undefined,
+        []
+      );
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
+      expect(result.success).toBe(true);
+      expect(result.totalRounds).toBe(2);
+      expect(reasoningOptions1?.reasoning).toBe('low');
+      expect(reasoningOptions2?.reasoning).toBe('high');
+    });
+
+    it('does nothing when hook returns undefined', async () => {
+      let llmCallCount = 0;
+      const customLLM = async (context: Context, options?: any): Promise<LLMResponse> => {
+        llmCallCount++;
+        return {
+          content: 'response',
+          stopReason: 'stop',
+          usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+          toolCalls: [],
+        };
+      };
+
+      const config = createTestConfig({
+        reasoningLevel: 'medium',
+        prepareNextTurn: async () => undefined,
+      });
+
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, simpleStrategy, customLLM, defaultLLMStream, undefined, []);
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
+      expect(result.success).toBe(true);
+      expect(result.totalRounds).toBe(1);
+    });
+
+    it('does not crash when hook throws error', async () => {
+      const hook = vi.fn().mockImplementation(async () => { throw new Error('hook error'); });
+      const config = createTestConfig({ prepareNextTurn: hook, debug: true });
+
+      toolExecutor.registerTool({
+        name: 'echo',
+        description: 'tool',
+        parameters: { type: 'object', properties: {} },
+        handler: async () => 'ok',
+      } as any);
+
+      let callCount = 0;
+      const customLLM = async (context: Context, options?: any): Promise<LLMResponse> => {
+        callCount++;
+        if (callCount <= 2) {
+          return {
+            content: `call ${callCount}`,
+            stopReason: 'toolUse',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [{ id: `c${callCount}`, name: 'echo', arguments: {} }],
+          };
+        } else {
+          return {
+            content: 'final',
+            stopReason: 'stop',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [],
+          };
+        }
+      };
+
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, new ReActLoopStrategy(), customLLM, defaultLLMStream, undefined, []);
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
+      expect(result.success).toBe(true);
+      expect(hook).toHaveBeenCalledTimes(2);
+      expect(consoleSpy).toHaveBeenCalledWith('prepareNextTurn hook error:', expect.any(Error));
+      consoleSpy.mockRestore();
+    });
+
+    it('not called before first round', async () => {
+      const hook = vi.fn();
+      const config = createTestConfig({ prepareNextTurn: hook });
+      const customLLM = async (context: Context, options?: any): Promise<LLMResponse> => ({
+        content: 'hi',
+        stopReason: 'stop',
+        usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+        toolCalls: [],
+      });
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, simpleStrategy, customLLM, defaultLLMStream, undefined, []);
+      await loop.run('test', new MessageQueue(), new MessageQueue());
+      expect(hook).not.toHaveBeenCalled();
+    });
+
+    it('receives correct context after tool call', async () => {
+      const hookCalls: any[] = [];
+      const config = createTestConfig({
+        prepareNextTurn: async (ctx) => {
+          hookCalls.push({
+            round: ctx.round,
+            assistant: ctx.lastAssistantMessage,
+            toolResults: ctx.toolResults,
+            newMessages: ctx.newMessages,
+          });
+        },
+      });
+
+      toolExecutor.registerTool({
+        name: 'echo',
+        description: 'test',
+        parameters: { type: 'object', properties: {} },
+        handler: async (args: any) => `echo: ${JSON.stringify(args)}`,
+      } as any);
+
+      let callCount = 0;
+      const customLLM = async (context: Context, options?: any): Promise<LLMResponse> => {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            content: 'use tool',
+            stopReason: 'toolUse',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [{ id: 'call1', name: 'echo', arguments: { msg: 'hello' } }],
+          };
+        } else {
+          return {
+            content: 'final answer',
+            stopReason: 'stop',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [],
+          };
+        }
+      };
+
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, new ReActLoopStrategy(), customLLM, defaultLLMStream, undefined, []);
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
+
+      expect(result.success).toBe(true);
+      expect(hookCalls.length).toBeGreaterThanOrEqual(1);
+      const call = hookCalls[0];
+      expect(call.round).toBe(1);
+      expect(call.assistant.role).toBe('assistant');
+      expect(call.assistant.content[0].type).toBe('text');
+      expect(call.assistant.content[0].text).toBe('use tool');
+      expect(call.toolResults.length).toBeGreaterThanOrEqual(1);
+      expect(call.toolResults[0].toolName).toBe('echo');
+      expect(call.toolResults[0].result).toContain('echo: {\"msg\":\"hello\"}');
+      expect(call.newMessages.length).toBeGreaterThanOrEqual(2);
+      const roles = call.newMessages.map((m: any) => m.role);
+      expect(roles).toContain('assistant');
+      expect(roles).toContain('tool');
+    });
+
+    it('can modify reasoningLevel multiple times across rounds', async () => {
+      const reasoningSeen: string[] = [];
+      let currentReasoning: any = 'low';
+      const config = createTestConfig({
+        reasoningLevel: currentReasoning, maxRounds: 5,
+        prepareNextTurn: async () => {
+          const next = currentReasoning === 'low' ? 'medium' : currentReasoning === 'medium' ? 'high' : 'low';
+          currentReasoning = next;
+          return { reasoningLevel: next };
+        },
+      });
+
+      toolExecutor.registerTool({
+        name: 'echo',
+        description: 'tool',
+        parameters: { type: 'object', properties: {} },
+        handler: async () => 'ok',
+      } as any);
+
+      let callCount = 0;
+      const customLLM = async (context: Context, options?: any): Promise<LLMResponse> => {
+        callCount++;
+        reasoningSeen.push(options?.reasoning);
+        if (callCount <= 3) {
+          return {
+            content: `call ${callCount}`,
+            stopReason: 'toolUse',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [{ id: `c${callCount}`, name: 'echo', arguments: {} }],
+          };
+        } else {
+          return {
+            content: 'final',
+            stopReason: 'stop',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [],
+          };
+        }
+      };
+
+      const continueStrategy: LoopStrategy = {
+        shouldContinue: (response) => !!(response.toolCalls && response.toolCalls.length > 0),
+        formatResults: () => '',
+      };
+
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, continueStrategy, customLLM, defaultLLMStream, undefined, []);
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
+
+      expect(result.success).toBe(true);
+      expect(reasoningSeen).toEqual(['low', 'medium', 'high', 'low']);
+    });
+
+    it('called after turn without tool calls when follow-up provided', async () => {
+      const hookCalls: number[] = [];
+      const config = createTestConfig({
+        maxRounds: 5,
+        prepareNextTurn: async (ctx) => {
+          hookCalls.push(ctx.round);
+        },
+      });
+
+      let callCount = 0;
+      const customLLM = async (context: Context, options?: any): Promise<LLMResponse> => {
+        callCount++;
+        return {
+          content: callCount === 1 ? 'first' : 'second',
+          stopReason: 'stop',
+          usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+          toolCalls: [],
+        };
+      };
+
+      const followUpQueue = new MessageQueue();
+      followUpQueue.enqueue({
+        role: 'user',
+        content: [{ type: 'text', text: 'follow-up' }],
+        timestamp: Date.now(),
+      } as any);
+
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, simpleStrategy, customLLM, defaultLLMStream, undefined, []);
+      const result = await loop.run('initial', new MessageQueue(), followUpQueue);
+
+      expect(result.success).toBe(true);
+      expect(hookCalls).toContain(1);
+      expect(hookCalls.length).toBe(1);
+    });
+
+  });
+
 });
