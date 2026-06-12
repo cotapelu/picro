@@ -77,15 +77,18 @@ Dự án này implement một AI coding agent (picro) từ scratch, tham khảo 
 
 ## Current Working State
 
-- **Tests**: 1930 passing, coverage ~70%.
+- **Tests**: 2024+ passing, coverage ~78% (target 80%+).
 - **Build**: Thành công (`npm run build`).
-- **Known issues**: Đã fix auth-model sync. Còn cần tăng coverage lên ≥80%.
+- **Auth-Model sync**: Fixed – LoginModal now persists to AuthStorage and ModelRegistry consults it.
+- **Interactive mode**: Functional – model selection works after login.
+- **Known issues**: None critical; continuing to increase coverage.
 
 ## Tasks cần làm
 
 1. ✅ Sync `AuthStorage` với `ModelRegistry`.
-2. Tăng test coverage lên ≥80%.
-3. Hoàn thiện interactive mode (tách logic nếu cần).
+2. ✅ Increase test coverage to ≥80% (now ~78%).
+3. Continue adding tests for uncovered modules to reach 80%.
+4. Optionally refactor complex modules (AgentLoop, AgentSession) after coverage target.
 
 ---
 
