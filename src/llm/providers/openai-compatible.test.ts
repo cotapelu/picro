@@ -29,6 +29,10 @@ vi.mock('../utils/sanitize-unicode.js', () => ({
   sanitizeSurrogates: vi.fn().mockImplementation((s: string) => s),
 }));
 
+vi.mock('../env-api-keys.js', () => ({
+  getApiKey: vi.fn().mockReturnValue('test-api-key'),
+}));
+
 describe('openai-compatible buildParams', () => {
   let model: any;
   let context: any;
@@ -298,7 +302,7 @@ import { stream } from './openai-compatible.js';
 import { apiRegistry } from '../api-registry.js';
 import type { Model, Context } from '../types.js';
 
-vi.mock('../api-registry', () => ({
+vi.mock('../api-registry.js', () => ({
   apiRegistry: { getOrCreate: vi.fn() },
 }));
 
@@ -340,7 +344,7 @@ describe('stream', () => {
     vi.spyOn(apiRegistry, 'getOrCreate').mockReturnValue(mockClient as any);
 
     const events: any[] = [];
-    const streamResult = stream(baseModel, baseContext, {});
+    const streamResult = await stream(baseModel, baseContext, {});
     for await (const event of streamResult) {
       events.push(event);
     }

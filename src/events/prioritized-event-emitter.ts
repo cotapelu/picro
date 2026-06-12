@@ -153,7 +153,8 @@ export class PrioritizedEventEmitter {
     queue.push({ event });
 
     if (!this.processing) {
-      this._processQueue();
+      // Defer processing to next microtask to allow batch enqueueing
+      queueMicrotask(() => this._processQueue());
     }
   }
 

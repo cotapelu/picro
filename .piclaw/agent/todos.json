@@ -3,41 +3,41 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Strengthen AgentLoop & ToolExecutor Tests",
+      "name": "Increase Coverage to ≥85% via Event System Tests",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Analyze current test coverage for agent-loop.ts and tool-executor.ts",
-          "status": "completed"
-        },
-        {
-          "id": "task-2",
-          "content": "Identify gaps in AgentLoop test scenarios (terminate flag, follow-up, steering hooks, error recovery)",
+          "content": "Analyze event system modules for untested lines and design test suites",
           "status": "in_progress"
         },
         {
+          "id": "task-2",
+          "content": "Write unit tests for event-bus.ts",
+          "status": "pending"
+        },
+        {
           "id": "task-3",
-          "content": "Identify gaps in ToolExecutor test scenarios (caching, timeout, per-tool sequential, afterToolCall hook)",
+          "content": "Write unit tests for event-guards.ts",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Write additional tests for AgentLoop to cover edge cases",
+          "content": "Write unit tests for event-recorder.ts",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Write additional tests for ToolExecutor to cover edge cases",
+          "content": "Write unit tests for prioritized-event-emitter.ts",
           "status": "pending"
         },
         {
           "id": "task-6",
-          "content": "Run tests and verify coverage improved (≥85% target)",
+          "content": "Run tests and verify coverage >=85%",
           "status": "pending"
         },
         {
           "id": "task-7",
-          "content": "Update evolution docs (PROJECT_STATE.md, AGENT_METRICS.md, EVOLUTION.md)",
+          "content": "Update PROJECT_STATE.md, AGENT_METRICS.md, EVOLUTION.md",
           "status": "pending"
         },
         {
@@ -50,5 +50,5 @@
   ],
   "nextTaskId": 9,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-12T17:03:10.153Z"
+  "updatedAt": "2026-06-12T17:29:39.807Z"
 }
