@@ -740,6 +740,42 @@ describe('AgentLoop', () => {
       expect(result.finalAnswer).toBe('Final after follow-up');
       expect(callCount).toBe(2);
     });
+
+    it('uses getFollowUpMessages hook to get follow-up turns', async () => {
+      let callCount = 0;
+      let hookCallCount = 0;
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => {
+        callCount++;
+        return {
+          content: 'Response',
+          stopReason: 'stop',
+          usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+          toolCalls: [],
+        } as LLMResponse;
+      };
+      const hook = vi.fn().mockImplementation(async () => {
+        hookCallCount++;
+        if (hookCallCount === 1) {
+          return [{
+            role: 'user',
+            content: [{ type: 'text', text: 'From hook' }],
+            timestamp: Date.now(),
+          }] as any;
+        }
+        return [];
+      });
+      const configWithHook = createTestConfig({
+        maxRounds: 5,
+        getFollowUpMessages: hook,
+      });
+      loop = new AgentLoop(configWithHook, emitter, toolExecutor, contextBuilder, simpleStrategy, customLLMComplete, defaultLLMStream, undefined, []);
+      const result = await loop.run('initial', new MessageQueue(), new MessageQueue());
+      expect(hook).toHaveBeenCalled();
+      expect(callCount).toBe(2); // initial + one follow-up round
+      expect(result.success).toBe(true);
+      expect(result.finalAnswer).toBe('Response');
+    });
+
   });
 
 });

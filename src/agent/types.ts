@@ -513,6 +513,9 @@ export interface AgentConfig {
   onBeforeToolCall?: BeforeToolCallHook;
   onAfterToolCall?: AfterToolCallHook;
   onTurnEnd?: TurnEndHook;
+  // Follow-up & steering hooks (llm-context/agent compatibility)
+  getFollowUpMessages?: () => Promise<ConversationTurn[]>;
+  getSteeringMessages?: () => Promise<ConversationTurn[]>;
   // Tool executor options (legacy)
   executor?: ToolExecutorConfig;
 }

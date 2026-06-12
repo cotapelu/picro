@@ -924,7 +924,17 @@ export class AgentLoop {
    * Collect follow-up turns from queue (can be extended with config hook)
    */
   private async collectFollowUpTurns(followUpQueue: MessageQueue): Promise<ConversationTurn[]> {
-    return followUpQueue.drainAll();
+    const queueTurns = followUpQueue.drainAll();
+    if (this.config.getFollowUpMessages) {
+      try {
+        const hookTurns = await this.config.getFollowUpMessages();
+        return [...queueTurns, ...hookTurns];
+      } catch (e) {
+        console.warn('getFollowUpMessages hook failed:', e);
+        return queueTurns;
+      }
+    }
+    return queueTurns;
   }
 
   /**

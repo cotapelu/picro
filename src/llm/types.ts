@@ -26,7 +26,8 @@ export type KnownProvider =
   | "opencode"
   | "opencode-go"
   | "google"
-  | "github-copilot";
+  | "github-copilot"
+  | "302ai";
 
 
 export type StopReason = 'stop' | 'length' | 'toolUse' | 'error' | 'aborted';
