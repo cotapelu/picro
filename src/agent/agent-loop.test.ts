@@ -665,4 +665,81 @@ describe('AgentLoop', () => {
     });
   });
 
+  describe('follow-up messages', () => {
+    it('processes follow-up after turn without tool calls', async () => {
+      const followUpQueue = new MessageQueue();
+      let callCount = 0;
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            content: 'First',
+            stopReason: 'stop',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [],
+          } as LLMResponse;
+        } else {
+          return {
+            content: 'Final',
+            stopReason: 'stop',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [],
+          } as LLMResponse;
+        }
+      };
+      loop = new AgentLoop(createTestConfig({ maxRounds: 5 }), emitter, toolExecutor, contextBuilder, simpleStrategy, customLLMComplete, defaultLLMStream, undefined, []);
+      // Enqueue follow-up turn
+      followUpQueue.enqueue({
+        role: 'user',
+        content: [{ type: 'text', text: 'Follow-up message' }],
+        timestamp: Date.now(),
+      } as any);
+      const result = await loop.run('initial prompt', new MessageQueue(), followUpQueue);
+      expect(result.success).toBe(true);
+      expect(result.finalAnswer).toBe('Final');
+      expect(callCount).toBe(2); // two LLM calls
+    });
+
+    it('processes follow-up after shouldContinue false with tool calls', async () => {
+      const followUpQueue = new MessageQueue();
+      followUpQueue.enqueue({
+        role: 'user',
+        content: [{ type: 'text', text: 'Follow-up after tools' }],
+        timestamp: Date.now(),
+      } as any);
+      let callCount = 0;
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            content: 'Calling tool',
+            stopReason: 'toolUse',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [{ id: 't1', name: 'testTool', arguments: {} }],
+          } as LLMResponse;
+        } else {
+          return {
+            content: 'Final after follow-up',
+            stopReason: 'stop',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [],
+          } as LLMResponse;
+        }
+      };
+      // Register a simple tool
+      toolExecutor.registerTool({
+        name: 'testTool',
+        description: 'test',
+        parameters: { type: 'object', properties: {} },
+        handler: async () => 'ok'
+      } as any);
+      const falseStrategy: LoopStrategy = { shouldContinue: () => false, formatResults: () => '' } as any;
+      loop = new AgentLoop(createTestConfig({ maxRounds: 5 }), emitter, toolExecutor, contextBuilder, falseStrategy, customLLMComplete, defaultLLMStream, undefined, []);
+      const result = await loop.run('initial', new MessageQueue(), followUpQueue);
+      expect(result.success).toBe(true);
+      expect(result.finalAnswer).toBe('Final after follow-up');
+      expect(callCount).toBe(2);
+    });
+  });
+
 });
