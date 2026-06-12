@@ -61,9 +61,8 @@
 
 ## Planned Refactors (Next Rounds)
 
-1. **Tool Execution Modes per Tool** (Medium priority)
-   - Reference supports `tool.executionMode` override.
-   - Will allow sequential tools to run in isolation within parallel batch.
+1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
+   - Allows per-tool `executionMode` override; if any tool is sequential, batch runs sequential.
 
 2. **`prepareNextTurn` Hook** (Medium)
    - Allows dynamic model/reasoning level changes mid-run.
