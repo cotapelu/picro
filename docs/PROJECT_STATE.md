@@ -8,8 +8,8 @@
 - Memory subsystem unit tests (storage, events, retrieval, engine, dedup, agent-app) and modes tests (print, rpc).
 - Event system fully tested (event-bus, event-guards, event-recorder, prioritized-event-emitter) with fixes for batching and dropping.
 - Added extensive unit tests for `Agent` class (34 new tests covering construction, tool registration, queue management, error handling, and internal methods).
-- Build passes; all 165 test files pass (2178 tests passing, 14 skipped, 1 todo).
-- Coverage improved: statements 74.39%, branches 64.43%, functions 78.24%, lines 75.18%.
+- Build passes; all 166 test files pass (2182 tests passing, 14 skipped, 1 todo).
+- Coverage improved: statements 75.32%, branches 65.41%, functions 78.57%, lines 76.16% (after adding AgentLoop streaming and autoSaveMemory tests).
 
 ### 🔄 In Progress
 - Increase branch coverage to reach ≥80% threshold.
