@@ -22,7 +22,7 @@
 
 ## Test Coverage
 
-- Unit tests: 2016+ passing
+- Unit tests: 2024+ passing
 - Integration: Moderate (TODO)
 - Stress/load: None
 

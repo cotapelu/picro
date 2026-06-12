@@ -181,6 +181,26 @@
 
 ---
 
+### Round 10 (2026-06-12): ApiRegistry Unit Tests
+
+**Problem**: The global API client registry (`ApiRegistry`) was untested, risking memory leaks, improper client reuse, and shutdown issues in production.
+
+**Solution**: Added comprehensive tests covering:
+- Client creation and caching
+- Different keys produce different clients
+- `closeAll()` correctly clears registry
+- Stats reporting accuracy
+- Private `makeKey` behavior
+
+**Impact**:
+- Ensures reliable OpenAI client management.
+- Increases test coverage for `llm/api-registry.ts`.
+- Low risk.
+
+**Tests**: +8 tests; all pass.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
