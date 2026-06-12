@@ -80,13 +80,30 @@
 
 ---
 
+### Round 5 (2026-06-12): getSteeringMessages Hook Support
+
+**Problem**: Agent used a fixed `steeringQueue` for user interjections with no dynamic hook, limiting flexibility. Reference implementation uses a `getSteeringMessages` hook to supply steering messages at runtime.
+
+**Solution**: Modified `AgentLoop.executeLoop` to check `config.getSteeringMessages` first: if present, call it to obtain steering turns; otherwise fall back to draining `steeringQueue`. Wrapped call in try-catch for resilience, logging errors only in debug mode.
+
+**Implementation**:
+- Replaced direct `steeringQueue` draining with conditional logic.
+- Added error handling mirroring `prepareNextTurn` pattern.
+- Added comprehensive tests covering hook usage, fallback behavior, hook priority, and error handling.
+
+**Impact**:
+- Enables dynamic steering message injection without queue management.
+- Maintains backward compatibility (existing queue-based usage unchanged).
+- Low risk change; isolated to turn-start logic.
+
+**Tests**: Added 4 new unit tests; all pass. Total passing tests: 1930.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
    - Allows per-tool `executionMode` override; if any tool is sequential, batch runs sequential.
-
-2. **`getSteeringMessages` Hook** (Low)
-   - Instead of direct queue access, use hook to supply steering messages dynamically.
 
 3. ~~`terminate` Flag Support~~ (Completed in Round 3)
    - Tool results can include `terminate: true` hint to stop early.

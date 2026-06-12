@@ -1135,4 +1135,80 @@ describe('AgentLoop', () => {
 
   });
 
+  describe('getSteeringMessages hook', () => {
+    it('injects steering turns from hook', async () => {
+      const hook = vi.fn().mockResolvedValue([
+        { role: 'user', content: [{ type: 'text', text: 'steering from hook' }], timestamp: Date.now() } as any,
+      ]);
+      const config = createTestConfig({ getSteeringMessages: hook });
+      const steeringQueue = new MessageQueue(); // empty
+      const followUpQueue = new MessageQueue();
+      const customLLM = async (context: Context, options?: any): Promise<LLMResponse> => ({
+        content: 'final answer', stopReason: 'stop', usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } }, toolCalls: []
+      });
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, simpleStrategy, customLLM, defaultLLMStream, undefined, []);
+      const result = await loop.run('prompt', steeringQueue, followUpQueue);
+      expect(result.success).toBe(true);
+      const state = loop.getState();
+      const steeringTurns = state.history.filter(t => t.role === 'user' && (t as any).content[0]?.text === 'steering from hook');
+      expect(steeringTurns.length).toBe(1);
+      expect(hook).toHaveBeenCalledTimes(1);
+    });
+
+    it('falls back to steeringQueue when hook not provided', async () => {
+      const steeringQueue = new MessageQueue();
+      steeringQueue.enqueue({ role: 'user', content: [{ type: 'text', text: 'queue steering' }], timestamp: Date.now() } as any);
+      const followUpQueue = new MessageQueue();
+      const customLLM = async (context: Context, options?: any): Promise<LLMResponse> => ({
+        content: 'ok', stopReason: 'stop', usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } }, toolCalls: []
+      });
+      const config = createTestConfig(); // no getSteeringMessages
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, simpleStrategy, customLLM, defaultLLMStream, undefined, []);
+      const result = await loop.run('prompt', steeringQueue, followUpQueue);
+      expect(result.success).toBe(true);
+      const state = loop.getState();
+      const queueTurns = state.history.filter(t => (t as any).content[0]?.text === 'queue steering');
+      expect(queueTurns.length).toBe(1);
+    });
+
+    it('ignores steeringQueue when hook provided', async () => {
+      const hook = vi.fn().mockResolvedValue([
+        { role: 'user', content: [{ type: 'text', text: 'hook turn' }], timestamp: Date.now() } as any,
+      ]);
+      const config = createTestConfig({ getSteeringMessages: hook });
+      const steeringQueue = new MessageQueue();
+      steeringQueue.enqueue({ role: 'user', content: [{ type: 'text', text: 'queue turn' }], timestamp: Date.now() } as any);
+      const followUpQueue = new MessageQueue();
+      const customLLM = async (context: Context, options?: any): Promise<LLMResponse> => ({
+        content: 'final', stopReason: 'stop', usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } }, toolCalls: []
+      });
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, simpleStrategy, customLLM, defaultLLMStream, undefined, []);
+      const result = await loop.run('prompt', steeringQueue, followUpQueue);
+      expect(result.success).toBe(true);
+      const state = loop.getState();
+      const hookTurn = state.history.find(t => (t as any).content[0]?.text === 'hook turn');
+      const queueTurn = state.history.find(t => (t as any).content[0]?.text === 'queue turn');
+      expect(hookTurn).toBeDefined();
+      expect(queueTurn).toBeUndefined();
+    });
+
+    it('does not crash when hook throws error', async () => {
+      const hook = vi.fn().mockImplementation(async () => { throw new Error('hook error'); });
+      const config = createTestConfig({ getSteeringMessages: hook, debug: true });
+      const steeringQueue = new MessageQueue();
+      const followUpQueue = new MessageQueue();
+      const customLLM = async (context: Context, options?: any): Promise<LLMResponse> => ({
+        content: 'final', stopReason: 'stop', usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } }, toolCalls: []
+      });
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, simpleStrategy, customLLM, defaultLLMStream, undefined, []);
+      const result = await loop.run('prompt', steeringQueue, followUpQueue);
+      expect(result.success).toBe(true);
+      expect(hook).toHaveBeenCalledTimes(1);
+      expect(consoleSpy).toHaveBeenCalledWith('getSteeringMessages hook error:', expect.any(Error));
+      consoleSpy.mockRestore();
+    });
+
+  });
+
 });

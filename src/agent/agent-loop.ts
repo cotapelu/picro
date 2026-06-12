@@ -325,10 +325,19 @@ export class AgentLoop {
           } as any);
         }
 
-        if (steeringQueue.hasPending) {
-          const steering = this.drainQueue(steeringQueue);
-          pendingTurns.push(...steering);
+        // Get steering turns via hook (if provided) or drain queue
+        let steeringTurns: ConversationTurn[] = [];
+        if (this.config.getSteeringMessages) {
+          try {
+            steeringTurns = await this.config.getSteeringMessages();
+          } catch (e) {
+            if (this.config.debug) console.error('getSteeringMessages hook error:', e);
+            steeringTurns = [];
+          }
+        } else if (steeringQueue.hasPending) {
+          steeringTurns = this.drainQueue(steeringQueue);
         }
+        pendingTurns.push(...steeringTurns);
 
         currentPrompt = this.strategy.transformPrompt?.(currentPrompt, this.state) ?? currentPrompt;
 

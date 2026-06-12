@@ -12,7 +12,6 @@
 
 ## Weaknesses / Known Issues
 
-- No `getSteeringMessages` hook (uses queue directly)
 
 ## Fragile Modules
 
@@ -21,7 +20,7 @@
 
 ## Test Coverage
 
-- Unit tests: 1926 passing
+- Unit tests: 1930 passing
 - Integration: Moderate (TODO)
 - Stress/load: None
 
