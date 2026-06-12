@@ -293,3 +293,63 @@ describe('openai-compatible buildParams', () => {
     });
   });
 });
+
+import { stream } from './openai-compatible.js';
+import { apiRegistry } from '../api-registry.js';
+import type { Model, Context } from '../types.js';
+
+vi.mock('../api-registry', () => ({
+  apiRegistry: { getOrCreate: vi.fn() },
+}));
+
+describe('stream', () => {
+  const baseModel: Model = {
+    provider: 'openai',
+    id: 'gpt-4',
+    baseUrl: 'https://api.openai.com/v1',
+    reasoning: false,
+    input: ['text'],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 4096,
+    maxTokens: 1024,
+  };
+  const baseContext: Context = {
+    messages: [{ role: 'user', content: [{ type: 'text', text: 'hi' }] }],
+    systemPrompt: 'You are a helpful assistant',
+    tools: undefined,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('streams simple text content', async () => {
+    const mockClient = {
+      chat: {
+        completions: {
+          create: vi.fn().mockReturnValue({
+            [Symbol.asyncIterator]: async function* () {
+              yield { choices: [{ delta: { content: 'Hello' }, index: 0 }] };
+              yield { choices: [{ delta: { content: ' World' }, index: 0 }] };
+              yield { choices: [{ finish_reason: 'stop', index: 0, usage: { total_tokens: 5 } }] };
+            },
+          }),
+        },
+      },
+    };
+    vi.spyOn(apiRegistry, 'getOrCreate').mockReturnValue(mockClient as any);
+
+    const events: any[] = [];
+    const streamResult = stream(baseModel, baseContext, {});
+    for await (const event of streamResult) {
+      events.push(event);
+    }
+
+    expect(events.some(e => e.type === 'text_start')).toBe(true);
+    expect(events.some(e => e.type === 'text_delta')).toBe(true);
+    expect(events.some(e => e.type === 'text_end')).toBe(true);
+    const done = events.find(e => e.type === 'done');
+    expect(done).toBeDefined();
+    expect(done.reason).toBe('stop');
+  });
+});

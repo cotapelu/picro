@@ -131,7 +131,7 @@ export async function createAgentSessionServices(
   }
 
   // Create model registry
-  const modelRegistry = options.modelRegistry ?? new DefaultModelRegistry();
+  const modelRegistry = options.modelRegistry ?? new DefaultModelRegistry(authStorage);
 
   // Create resource loader
   const resourceLoader = options.resourceLoader ?? new DefaultResourceLoader({

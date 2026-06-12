@@ -10,6 +10,10 @@ import { getModel, getProviders, getModels } from "../llm/index.js";
 import type { Model } from "../llm/index.js";
 
 import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { homedir } from "node:os";
+
+import { AuthStorage } from "./auth-storage.js";
 
 /** Model config from JSON */
 interface ModelConfig {
@@ -61,47 +65,11 @@ export class DefaultModelRegistry implements ModelRegistry {
   private customApiKeys: Map<string, string> = new Map();
   private customHeaders: Map<string, Record<string, string>> = new Map();
   private modelsPath?: string;
+  private authStorage?: AuthStorage;
 
-  constructor(modelsPath?: string) {
+  constructor(authStorage?: AuthStorage, modelsPath?: string) {
+    this.authStorage = authStorage;
     this.modelsPath = modelsPath;
-  }
-
-  find(provider: string, modelId: string): ModelEntry | undefined {
-    return getModel(provider, modelId);
-  }
-
-  async getAvailable(): Promise<ModelEntry[]> {
-    const available: ModelEntry[] = [];
-    
-    for (const provider of getProviders()) {
-      const models = getModels(provider);
-      for (const model of models) {
-        if (this.hasConfiguredAuth(model)) {
-          available.push(model);
-        }
-      }
-    }
-    
-    return available;
-  }
-
-  getAll(): ModelEntry[] {
-    const all: ModelEntry[] = [];
-    for (const provider of getProviders()) {
-      all.push(...getModels(provider));
-    }
-    return all;
-  }
-
-  getProviders(): string[] {
-    return getProviders();
-  }
-
-  hasConfiguredAuth(model: ModelEntry): boolean {
-    const key = this._getKey(model.provider, "*");
-    if (this.customApiKeys.has(key)) return true;
-    const envVar = PROVIDER_API_KEYS[model.provider];
-    return envVar ? !!process.env[envVar] : false;
   }
 
   isUsingOAuth(model: ModelEntry): boolean {
@@ -112,10 +80,19 @@ export class DefaultModelRegistry implements ModelRegistry {
     let apiKey: string | undefined;
     let modelHeaders: Record<string, string> | undefined;
 
-    const key = this._getKey(model.provider, "*");
-    apiKey = this.customApiKeys.get(key);
-    modelHeaders = this.customHeaders.get(key);
+    // 1. Check authStorage first (highest priority)
+    if (this.authStorage) {
+      apiKey = this.authStorage.getApiKey(model.provider) || this.authStorage.getApiKey("*");
+    }
 
+    // 2. Check custom api keys set via setApiKey
+    if (!apiKey) {
+      const key = this._getKey(model.provider, "*");
+      apiKey = this.customApiKeys.get(key);
+      modelHeaders = this.customHeaders.get(key);
+    }
+
+    // 3. Check environment variables
     if (!apiKey) {
       const envVar = PROVIDER_API_KEYS[model.provider];
       if (envVar) apiKey = process.env[envVar];
@@ -125,9 +102,10 @@ export class DefaultModelRegistry implements ModelRegistry {
       return { ok: false, error: `No API key found for ${model.provider}` };
     }
 
+    // Allow per-model headers override
     const modelKey = this._getKey(model.provider, model.id);
     const extraHeaders = this.customHeaders.get(modelKey);
-    const headers = extraHeaders ? { ...modelHeaders, ...extraHeaders } : modelHeaders;
+    const headers = extraHeaders ? { ...(modelHeaders ?? {}), ...extraHeaders } : modelHeaders;
 
     return { ok: true, apiKey, headers };
   }
@@ -160,8 +138,53 @@ export class DefaultModelRegistry implements ModelRegistry {
     if (headers) this.customHeaders.set(key, headers);
   }
 
+  hasConfiguredAuth(model: ModelEntry): boolean {
+    // Check authStorage first (in-memory from UI or loaded from file)
+    if (this.authStorage) {
+      const key = this.authStorage.getApiKey(model.provider);
+      if (key) return true;
+      const wildcard = this.authStorage.getApiKey("*");
+      if (wildcard) return true;
+    }
+    // Check custom api keys set via setApiKey
+    const key = this._getKey(model.provider, "*");
+    if (this.customApiKeys.has(key)) return true;
+    // Check environment variables
+    const envVar = PROVIDER_API_KEYS[model.provider];
+    return envVar ? !!process.env[envVar] : false;
+  }
+
   private _getKey(provider: string, modelId: string): string {
     return `${provider}:${modelId}`;
+  }
+
+  find(provider: string, modelId: string): ModelEntry | undefined {
+    return getModel(provider, modelId);
+  }
+
+  async getAvailable(): Promise<ModelEntry[]> {
+    const available: ModelEntry[] = [];
+    for (const provider of this.getProviders()) {
+      const models = getModels(provider);
+      for (const model of models) {
+        if (this.hasConfiguredAuth(model)) {
+          available.push(model);
+        }
+      }
+    }
+    return available;
+  }
+
+  getAll(): ModelEntry[] {
+    const all: ModelEntry[] = [];
+    for (const provider of this.getProviders()) {
+      all.push(...getModels(provider));
+    }
+    return all;
+  }
+
+  getProviders(): string[] {
+    return getProviders();
   }
 }
 
