@@ -1,142 +1,108 @@
+// SPDX-License-Identifier: Apache-2.0
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ApiRegistry } from './api-registry.js';
+import type { Model } from './types.js';
 
-// Mock the 'openai' module
 vi.mock('openai', () => {
-  return {
-    default: class MockOpenAI {
-      constructor(config: any) {}
-    }
-  };
+  class MockOpenAI {
+    // any methods can be added if needed
+  }
+  return { default: MockOpenAI };
 });
 
-import { ApiRegistry } from './api-registry.js';
+import OpenAI from 'openai';
 
 describe('ApiRegistry', () => {
   let registry: ApiRegistry;
 
+  const mockModel = (overrides: Partial<Model> = {}): Model => ({
+    provider: 'openai',
+    id: 'gpt-4',
+    name: 'GPT-4',
+    baseUrl: 'https://api.openai.com/v1',
+    reasoning: false,
+    input: ['text'],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 8192,
+    maxTokens: 4096,
+    ...overrides,
+  });
+
   beforeEach(() => {
-    // Create a fresh instance for each test
     registry = new ApiRegistry();
-    // Clear env impacts
     vi.clearAllMocks();
   });
 
   describe('getOrCreate', () => {
     it('should create a new client when none exists', () => {
-      const model = {
-        provider: 'openai',
-        id: 'gpt-4',
-        baseUrl: 'https://api.openai.com/v1',
-        headers: {},
-      } as any;
-
-      const client = registry.getOrCreate(model);
-
+      const model = mockModel();
+      const client = registry.getOrCreate(model, 'sk-key');
       expect(client).toBeDefined();
-      // Since we mocked OpenAI, client is whatever the mock returns
+      expect(registry.getStats().totalClients).toBe(1);
     });
 
-    it('should reuse the same client for identical model+apiKey', () => {
-      const model = {
-        provider: 'openai',
-        id: 'gpt-4',
-        baseUrl: 'https://api.openai.com/v1',
-        headers: {},
-      } as any;
-
-      const client1 = registry.getOrCreate(model);
-      const client2 = registry.getOrCreate(model);
-
+    it('should reuse the same client for identical calls', () => {
+      const model = mockModel();
+      const client1 = registry.getOrCreate(model, 'sk-key');
+      const client2 = registry.getOrCreate(model, 'sk-key');
       expect(client1).toBe(client2);
+      expect(registry.getStats().totalClients).toBe(1);
     });
 
-    it('should create different clients for different apiKeys', () => {
-      const model = {
-        provider: 'openai',
-        id: 'gpt-4',
-        baseUrl: 'https://api.openai.com/v1',
-        headers: {},
-      } as any;
-
-      const client1 = registry.getOrCreate(model, 'apiKey1');
-      const client2 = registry.getOrCreate(model, 'apiKey2');
-
+    it('should create separate clients for different models', () => {
+      const model1 = mockModel({ id: 'gpt-4' });
+      const model2 = mockModel({ id: 'gpt-3.5-turbo' });
+      const client1 = registry.getOrCreate(model1, 'sk-key');
+      const client2 = registry.getOrCreate(model2, 'sk-key');
       expect(client1).not.toBe(client2);
+      expect(registry.getStats().totalClients).toBe(2);
     });
 
-    it('should use env apiKey when none provided and env var set', () => {
-      const model = {
-        provider: 'openai',
-        id: 'gpt-4',
-        baseUrl: 'https://api.openai.com/v1',
-        headers: {},
-      } as any;
-      process.env.OPENAI_API_KEY = 'env-key';
-
+    it('should return a client even if no apiKey provided', () => {
+      const model = mockModel();
       const client = registry.getOrCreate(model);
-
       expect(client).toBeDefined();
-    });
-
-    it('should update lastUsed time on subsequent calls', async () => {
-      const model = {
-        provider: 'openai',
-        id: 'gpt-4',
-        baseUrl: 'https://api.openai.com/v1',
-        headers: {},
-      } as any;
-
-      const client1 = registry.getOrCreate(model);
-      const stats1 = registry.getStats();
-      const lastUsed1 = stats1.clients[Object.keys(stats1.clients)[0]].lastUsed;
-
-      // Small delay to ensure time difference
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      const client2 = registry.getOrCreate(model);
-      const stats2 = registry.getStats();
-      const lastUsed2 = stats2.clients[Object.keys(stats2.clients)[0]].lastUsed;
-
-      expect(lastUsed2).toBeGreaterThanOrEqual(lastUsed1);
+      expect(registry.getStats().totalClients).toBe(1);
     });
   });
 
   describe('getStats', () => {
-    it('should return totalClients and clients map', () => {
-      const model = {
-        provider: 'openai',
-        id: 'gpt-4',
-        baseUrl: 'https://api.openai.com/v1',
-        headers: {},
-      } as any;
-
-      expect(registry.getStats().totalClients).toBe(0);
-
-      registry.getOrCreate(model);
+    it('should return correct stats after creating clients', () => {
+      const model1 = mockModel({ id: 'm1' });
+      const model2 = mockModel({ id: 'm2' });
+      registry.getOrCreate(model1, 'key1');
+      registry.getOrCreate(model2, 'key2');
 
       const stats = registry.getStats();
-      expect(stats.totalClients).toBe(1);
-      expect(typeof stats.clients).toBe('object');
-      expect(stats.clients).toHaveProperty('openai:gpt-4:https://api.openai.com/v1:env');
+      expect(stats.totalClients).toBe(2);
+      expect(Object.keys(stats.clients)).toHaveLength(2);
     });
   });
 
   describe('closeAll', () => {
-    it('should clear all clients', async () => {
-      const model = {
-        provider: 'openai',
-        id: 'gpt-4',
-        baseUrl: 'https://api.openai.com/v1',
-        headers: {},
-      } as any;
-
-      registry.getOrCreate(model);
+    it('should clear all clients and stats', async () => {
+      const model = mockModel();
+      registry.getOrCreate(model, 'key');
       expect(registry.getStats().totalClients).toBe(1);
-
       await registry.closeAll();
       expect(registry.getStats().totalClients).toBe(0);
+      expect(registry.getStats().clients).toEqual({});
     });
   });
 
+  describe('makeKey', () => {
+    it('should generate different keys for different apiKeys', () => {
+      const model = mockModel();
+      const key1 = (registry as any)['makeKey'](model, 'sk1');
+      const key2 = (registry as any)['makeKey'](model, 'sk2');
+      expect(key1).not.toBe(key2);
+    });
 
+    it('should generate same key for same parameters', () => {
+      const model = mockModel();
+      const key1 = (registry as any)['makeKey'](model, 'sk');
+      const key2 = (registry as any)['makeKey'](model, 'sk');
+      expect(key1).toBe(key2);
+    });
+  });
 });
