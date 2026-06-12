@@ -4,6 +4,7 @@
 
 - Robust loop control with support for steering and follow-up messages
 - Flexible tool execution (global or per-tool parallel/sequential)
+- Per-tool execution mode override (sequential within parallel batch)
 - Tool result `terminate` flag for early agent loop termination
 - Event-driven architecture with comprehensive logging
 - Memory integration
@@ -11,7 +12,6 @@
 
 ## Weaknesses / Known Issues
 
-- No per-tool execution mode override (currently global only)
 - Missing `prepareNextTurn` hook support (mid-run model/reasoning changes)
 - No `getSteeringMessages` hook (uses queue directly)
 
