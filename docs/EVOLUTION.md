@@ -201,6 +201,21 @@
 
 ---
 
+### Round 11 (2026-06-12): Model Utilities Unit Tests
+
+**Problem**: The `llm/models.ts` module (cost calculation, xhigh support) lacked tests, leaving critical financial calculations unchecked.
+
+**Solution**: Added tests for `calculateCost` (math correctness) and `supportsXhigh` (provider blacklist).
+
+**Impact**:
+- Ensures accurate cost reporting.
+- Prevents regressions in reasoning effort support detection.
+- Coverage expanded to core LLM module.
+
+**Tests**: +5 tests; all pass.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

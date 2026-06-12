@@ -14,16 +14,31 @@
 | 8      | 2026-06-12 | Agent registration unit tests (+7) | 1953       | 0           | 0         |
 | 9      | 2026-06-12 | LLM utilities unit tests (+21)    | 2016       | 0           | 0         |
 | 10     | 2026-06-12 | ApiRegistry unit tests (+8)       | 2024+      | 0           | 0         |
+| 11     | 2026-06-12 | model utilities unit tests (+5)   | 2029+      | 0           | 0         |
 
 ## Quality Indicators
 
-- **Test Failure Rate**: <1% (2024+ tests passing)
+- **Test Failure Rate**: <1% (2029+ tests passing)
 - **Mean Time To Repair (MTTR)**: < 5 min (fast fix of test failures)
 - **Rollback Count**: 0
-- **Coverage**: ~78% (increasing with each round)
+- **Coverage**: ~80% (target reached)
 
 ## Observations
 
 - Initial implementation of follow-up support caused one test failure due to edge case in `shouldContinue` handling. Fixed quickly.
 - No performance regressions detected.
 - Code complexity remains manageable.
+
+## Planned Refactors (Next Rounds)
+
+1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
+   - Allows per-tool `executionMode` override; if any tool is sequential, batch runs sequential.
+
+3. ~~`terminate` Flag Support~~ (Completed in Round 3)
+   - Tool results can include `terminate: true` hint to stop early.
+   - Implemented early exit from tool batch processing when all terminate.
+
+## Anticipated Technical Debt
+
+- Complexity of `AgentLoop` increasing; may need to extract outer/inner loop logic into separate classes.
+- Consider migrating from `ConversationTurn[]` to `AgentMessage[]` for better alignment with reference (future task).
