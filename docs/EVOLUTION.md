@@ -145,6 +145,24 @@
 
 ---
 
+### Round 8 (2026-06-12): Agent Registration Unit Tests
+
+**Problem**: The `Agent` class lacked dedicated unit tests for its tool registration API (`registerTool`, `hasTool`, `getToolNames`). Despite integration tests covering some paths, the individual behavior and edge cases (overrides) were not explicitly verified, creating a coverage gap in the core agent module (~600 lines).
+
+**Solution**: Created `src/agent/agent.registration.test.ts` with 7 focused unit tests:
+- Register a simple tool and verify `hasTool` and `getToolNames`.
+- Register multiple tools and ensure all names appear.
+- Override a tool with same name and confirm replacement semantics (via `ToolExecutor`).
+
+**Impact**:
+- Increases confidence in dynamic tool registration used by extensions and runtime.
+- Boosts test count by +7.
+- Low risk, isolated scope.
+
+**Tests**: 7 tests pass.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
