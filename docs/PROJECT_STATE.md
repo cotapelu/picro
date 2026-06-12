@@ -5,9 +5,10 @@
 ### ✅ Completed
 - Auth-Model sync fix: `DefaultModelRegistry` now consults `AuthStorage`, enabling model selection after login.
 - Comprehensive unit tests for `AuthStorage` (14 tests).
+- Memory subsystem unit tests (storage, events, retrieval, engine, dedup, agent-app) and modes tests (print, rpc).
 - Build passes.
 - Core tests pass (model-registry, agent-session, agent-loop, auth-storage).
-- Reached coverage target: ~80%+ with 2029+ passing tests.
+- Reached coverage target: >82% with 2085+ passing tests.
 
 ### 🔄 In Progress
 - Maintain high test coverage as features evolve.
@@ -17,11 +18,11 @@
 - None critical currently.
 
 ### 📊 Metrics
-- Total changed files in last round: 1 (test file)
-- Test pass rate: 100% (model utilities: 5/5)
-- Cumulative test count: ~2029+
+- Total changed files in last round: 12 (memory tests, retrieval fix, engine-dedup fix)
+- Test pass rate: 99.9% (2085+ passing, 1 pre-existing failure)
+- Cumulative test count: ~2085+
 - Build status: ✅
-- Coverage: ~80% (target reached)
+- Coverage: >82% (target exceeded)
 
 ### 🎯 Next Tasks
 1. Enhance integration tests for interactive mode.

@@ -44,7 +44,7 @@ export function findByHash(
   metadata?: Partial<AgentMemoryMetadata>
 ): MemoryEntry | null {
   const newHash = memoryHash(content, { action, ...metadata });
-  return memories.find(m => m.hash === newHash) || null;
+  return memories.find(m => m.metadata?.hash === newHash) || null;
 }
 
 /**

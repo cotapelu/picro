@@ -3,42 +3,17 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Add Terminate Flag Support in Tool Results",
+      "name": "Increase Test Coverage to 80%+",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Add terminate property to ToolResult type",
+          "content": "Run tests and verify coverage >= 80%",
           "status": "in_progress"
-        },
-        {
-          "id": "task-2",
-          "content": "Set terminate=false by default in ToolExecutor.execute, preserve afterToolCall override",
-          "status": "pending"
-        },
-        {
-          "id": "task-3",
-          "content": "Check all terminate flags after tool batch in AgentLoop and exit early if all true",
-          "status": "pending"
-        },
-        {
-          "id": "task-4",
-          "content": "Add unit tests for terminate flag behavior",
-          "status": "pending"
-        },
-        {
-          "id": "task-5",
-          "content": "Run full test suite and build",
-          "status": "pending"
-        },
-        {
-          "id": "task-6",
-          "content": "Update EVOLUTION.md and commit",
-          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
+  "nextTaskId": 2,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-12T11:57:50.671Z"
+  "updatedAt": "2026-06-12T16:00:52.240Z"
 }

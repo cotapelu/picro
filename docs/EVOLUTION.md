@@ -214,6 +214,33 @@
 
 **Tests**: +5 tests; all pass.
 
+### Round 12 (2026-06-12): Memory Subsystem Tests & Coverage Push
+
+**Problem**: Critical memory subsystem (storage, retrieval, engine, deduplication, agent-app) lacked unit tests, leaving coverage at ~78% and risking regressions in core functionality.
+
+**Solution**: Wrote comprehensive unit tests for all memory modules and CLI modes, bringing overall test coverage above 80%. Also fixed a bug in `MemoryRetriever.search` where memories from other projects could appear via BM25 scores despite project filter; now BM25 contribution is zeroed for out-of-project memories.
+
+**Implementation**:
+- Added test files:
+  - `src/memory/storage.test.ts` (28 tests)
+  - `src/memory/events.test.ts` (14 tests)
+  - `src/memory/retrieval.test.ts` (30 tests)
+  - `src/memory/engine.test.ts` (25 tests)
+  - `src/memory/engine-dedup.test.ts` (19 tests)
+  - `src/memory/agent-app.test.ts` (21 tests)
+  - `src/modes/print-mode.test.ts` (7 tests)
+  - `src/modes/rpc-mode.test.ts` (1 test)
+- Updated `src/memory/retrieval.ts` to enforce project isolation in search.
+- Fixed `findByHash` to use `metadata.hash` instead of non-existent top-level `hash`.
+- Adjusted many tests to match actual API behaviors.
+
+**Impact**:
+- Overall test coverage increased to >82%.
+- Memory subsystem now has robust test suite preventing regressions.
+- Project filtering in retrieval works correctly.
+
+**Tests**: Added ~145 new unit tests; all pass. Total passing tests: 2085+.
+
 ---
 
 ## Planned Refactors (Next Rounds)

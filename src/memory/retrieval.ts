@@ -348,11 +348,16 @@ export class MemoryRetriever {
     }
 
     // Score all memories: custom scorer + BM25 boost
-    const scored: Array<{ memory: any; scorerScore: number; bm25Score: number }> = memories.map(mem => ({
-      memory: mem,
-      scorerScore: this.scorer.score(mem, query, currentProject),
-      bm25Score: (bm25Map.get(mem.id) || 0) * 10,
-    }));
+    const scored: Array<{ memory: any; scorerScore: number; bm25Score: number }> = memories.map(mem => {
+      const bm25Raw = (bm25Map.get(mem.id) || 0) * 10;
+      // Exclude BM25 contribution for memories from other projects
+      const bm25Score = (mem.metadata._project && mem.metadata._project !== currentProject) ? 0 : bm25Raw;
+      return {
+        memory: mem,
+        scorerScore: this.scorer.score(mem, query, currentProject),
+        bm25Score,
+      };
+    });
 
     // Sort by combined score (scorer + bm25) descending, then by recency for ties
     scored.sort((a, b) => {
