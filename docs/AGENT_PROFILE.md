@@ -9,6 +9,8 @@
 - Event-driven architecture with comprehensive logging
 - Memory integration
 - Continuous operation without manual resume
+- Dynamic reasoning adjustment via `prepareNextTurn` hook (tested)
+- Dynamic steering injection via `getSteeringMessages` hook (supported)
 
 ## Weaknesses / Known Issues
 
