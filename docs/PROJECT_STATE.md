@@ -4,25 +4,26 @@
 
 ### ✅ Completed
 - Auth-Model sync fix: `DefaultModelRegistry` now consults `AuthStorage`, enabling model selection after login.
+- Comprehensive unit tests for `AuthStorage` (14 tests covering persistence, OAuth, overrides, concurrency).
 - Build passes.
-- Core unit tests (model-registry) pass.
+- Core tests pass (model-registry, agent-session, agent-loop, auth-storage).
 
 ### 🔄 In Progress
-- Increase test coverage to ≥80%
-- Verify interactive mode full flow (model selection, prompting)
+- Increase test coverage to ≥80% (currently ~70%). Added AuthStorage tests (+14).
+- Verify interactive mode full flow (model selection, prompting).
 
 ### 🐛 Known Issues
 - None critical currently.
 
 ### 📊 Metrics
-- Total changed files in last commit: 4
-- Test pass rate: 100% (sample)
+- Total changed files in last commit: 1 (test file)
+- Test pass rate: 100% (sample 54 tests)
 - Build status: ✅
 
 ### 🎯 Next Tasks
-1. Add unit test for AuthStorage-ModelRegistry sync.
-2. Run full test suite to ensure no regressions.
-3. Update EVOLUTION.md with trajectory notes.
+1. Continue adding tests for uncovered modules (e.g., runtime, agent).
+2. Run full test suite with coverage report to identify gaps.
+3. Consider simplifying complex AgentLoop logic (refactor candidate).
 
 ---
 

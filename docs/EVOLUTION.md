@@ -123,6 +123,28 @@
 
 ---
 
+### Round 7 (2026-06-12): AuthStorage Unit Tests
+
+**Problem**: The `AuthStorage` module lacked any test coverage despite being critical for security (API key persistence). Any changes to auth logic could silently break credential storage.
+
+**Solution**: Wrote comprehensive unit tests covering:
+- File creation and persistence
+- Loading from existing file
+- `getApiKey` behavior for `api_key` and `oauth` types (including OAuth expiration)
+- Environment variable fallback
+- Custom fallback resolver
+- Runtime overrides
+- Concurrent access via `withLock`
+
+**Impact**:
+- Increases confidence in auth subsystem.
+- Raises overall test coverage.
+- Documents expected behavior for future maintainers.
+
+**Tests**: 14 new tests; all pass.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
