@@ -163,6 +163,24 @@
 
 ---
 
+### Round 9 (2026-06-12): LLM Utilities Unit Tests
+
+**Problem**: Core LLM utilities (`json-parse`, `sanitize-unicode`, `overflow`) lacked unit tests, posing risk for subtle bugs in streaming JSON parsing, Unicode handling, and context truncation.
+
+**Solution**: Added dedicated test suites:
+- `json-parse.test.ts`: 8 tests covering complete, incomplete, invalid JSON, arrays, nested objects.
+- `sanitize-unicode.test.ts`: 7 tests covering surrogate pair handling, edge cases.
+- `overflow.test.ts`: 6 tests for `truncateContext`, including system prompt truncation, message preservation, and token estimation behavior.
+
+**Impact**:
+- Significantly increases coverage for low-level LLM layer.
+- Documents expectations for unicode and truncation edge cases.
+- Low risk, high value.
+
+**Tests**: +21 tests; all pass.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

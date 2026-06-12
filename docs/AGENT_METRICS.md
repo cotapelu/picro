@@ -12,6 +12,7 @@
 | 6      | 2026-06-12 | Auth-storage sync for model selection | 1932       | 0           | 0         |
 | 7      | 2026-06-12 | AuthStorage unit tests (+14)  | 1946       | 0           | 0         |
 | 8      | 2026-06-12 | Agent registration unit tests (+7) | 1953       | 0           | 0         |
+| 9      | 2026-06-12 | LLM utilities unit tests (+21)    | 2016       | 0           | 0         |
 
 ## Quality Indicators
 
