@@ -3,17 +3,52 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Increase Test Coverage to 80%+",
+      "name": "Strengthen AgentLoop & ToolExecutor Tests",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Run tests and verify coverage >= 80%",
+          "content": "Analyze current test coverage for agent-loop.ts and tool-executor.ts",
+          "status": "completed"
+        },
+        {
+          "id": "task-2",
+          "content": "Identify gaps in AgentLoop test scenarios (terminate flag, follow-up, steering hooks, error recovery)",
           "status": "in_progress"
+        },
+        {
+          "id": "task-3",
+          "content": "Identify gaps in ToolExecutor test scenarios (caching, timeout, per-tool sequential, afterToolCall hook)",
+          "status": "pending"
+        },
+        {
+          "id": "task-4",
+          "content": "Write additional tests for AgentLoop to cover edge cases",
+          "status": "pending"
+        },
+        {
+          "id": "task-5",
+          "content": "Write additional tests for ToolExecutor to cover edge cases",
+          "status": "pending"
+        },
+        {
+          "id": "task-6",
+          "content": "Run tests and verify coverage improved (≥85% target)",
+          "status": "pending"
+        },
+        {
+          "id": "task-7",
+          "content": "Update evolution docs (PROJECT_STATE.md, AGENT_METRICS.md, EVOLUTION.md)",
+          "status": "pending"
+        },
+        {
+          "id": "task-8",
+          "content": "Git commit changes",
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 2,
+  "nextTaskId": 9,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-12T16:00:52.240Z"
+  "updatedAt": "2026-06-12T17:03:10.153Z"
 }

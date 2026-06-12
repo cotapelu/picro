@@ -241,6 +241,21 @@
 
 **Tests**: Added ~145 new unit tests; all pass. Total passing tests: 2085+.
 
+### Round 13 (2026-06-12): AgentLoop & ToolExecutor Edge Cases
+
+**Problem**: While the core agent modules had substantial test coverage, some edge cases remained unchecked, particularly interactions between the terminate flag and follow-up queue, and the guarantee that blocked tools skip handler and afterHook.
+
+**Solution**: Added targeted unit tests:
+- AgentLoop: Verified that when all tools signal `terminate`, follow-up messages are still processed before finalizing (ensuring no data loss).
+- ToolExecutor: Confirmed that when `beforeToolCall` returns `block: true`, neither the tool handler nor `afterToolCall` are invoked, and an error result is returned.
+
+**Impact**:
+- Increases confidence in error handling and termination semantics.
+- Improves overall robustness of agent core.
+- No regressions (all tests pass).
+
+**Tests**: +2 new unit tests. Total passing tests: 2087+.
+
 ---
 
 ## Planned Refactors (Next Rounds)

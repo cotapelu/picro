@@ -856,6 +856,52 @@ describe('AgentLoop', () => {
       expect(result.success).toBe(true);
       expect(result.finalAnswer).toBe('final answer');
     });
+
+    it('processes follow-up after all tools signal terminate', async () => {
+      // Register a tool that terminates
+      toolExecutor.registerTool({
+        name: 'term',
+        description: 'terminates',
+        parameters: { type: 'object', properties: {} },
+        handler: async () => 'done',
+      } as any);
+      toolExecutor.config.afterToolCall = async () => ({ terminate: true });
+
+      const followUpQueue = new MessageQueue();
+      followUpQueue.enqueue({
+        role: 'user',
+        content: [{ type: 'text', text: 'Follow-up after termination' }],
+        timestamp: Date.now(),
+      } as any);
+
+      let callCount = 0;
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            content: '',
+            stopReason: 'toolUse',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [{ id: 't1', name: 'term', arguments: {} }],
+          } as LLMResponse;
+        } else {
+          return {
+            content: 'Final after termination and follow-up',
+            stopReason: 'stop',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [],
+          } as LLMResponse;
+        }
+      };
+
+      const falseStrategy: LoopStrategy = { shouldContinue: () => false, formatResults: () => '' } as any;
+      loop = new AgentLoop(createTestConfig({ maxRounds: 5 }), emitter, toolExecutor, contextBuilder, falseStrategy, customLLMComplete, defaultLLMStream, undefined, []);
+      const result = await loop.run('initial', new MessageQueue(), followUpQueue);
+      expect(result.success).toBe(true);
+      expect(result.finalAnswer).toBe('Final after termination and follow-up');
+      expect(callCount).toBe(2);
+    });
+
   });
 
   describe('prepareNextTurn hook', () => {

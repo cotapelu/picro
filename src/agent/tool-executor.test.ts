@@ -337,6 +337,22 @@ describe('ToolExecutor', () => {
       expect(result.isError).toBe(true);
       expect((result as any).error).toBe('after error');
     });
+
+    it('should not call handler or afterHook when beforeHook blocks', async () => {
+      const before = vi.fn().mockResolvedValue({ block: true, reason: 'blocked by before' });
+      const handler = vi.fn();
+      const after = vi.fn().mockResolvedValue(undefined);
+      executor = new ToolExecutor({ beforeToolCall: before, afterToolCall: after });
+      executor.register(createTool('echo', handler));
+
+      const result = await executor.execute(buildToolCall('echo'), buildContext());
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(after).not.toHaveBeenCalled();
+      expect(result.isError).toBe(true);
+      expect((result as any).error).toContain('blocked');
+    });
+
   });
 
   describe('event emission', () => {
