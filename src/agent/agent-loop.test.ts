@@ -778,4 +778,84 @@ describe('AgentLoop', () => {
 
   });
 
+  describe('terminate flag', () => {
+    it('stops early when all tools signal terminate', async () => {
+      toolExecutor.registerTool({
+        name: 'term',
+        description: 'terminates',
+        parameters: { type: 'object', properties: {} },
+        handler: async () => 'done',
+      } as any);
+      const customLLMComplete = async (context: Context, options?: any): Promise<LLMResponse> => ({
+        content: 'use tool',
+        stopReason: 'toolUse',
+        usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+        toolCalls: [{ id: 't1', name: 'term', arguments: {} }],
+      });
+      toolExecutor.config.afterToolCall = async () => ({ terminate: true });
+      const continueStrategy: LoopStrategy = {
+        shouldContinue: (response) => !!(response.toolCalls && response.toolCalls.length > 0),
+        formatResults: () => '',
+        transformPrompt: (p) => p,
+      };
+      loop = new AgentLoop(createTestConfig({ maxRounds: 5 }), emitter, toolExecutor, contextBuilder, continueStrategy, customLLMComplete, defaultLLMStream, undefined, []);
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
+      expect(result.success).toBe(true);
+      expect(result.finalAnswer).toBe('');
+      expect(result.totalRounds).toBe(1);
+    });
+
+    it('continues when not all tools terminate', async () => {
+      toolExecutor.registerTool({
+        name: 'term',
+        description: 'terminates',
+        parameters: { type: 'object', properties: {} },
+        handler: async () => 'done',
+      } as any);
+      toolExecutor.registerTool({
+        name: 'cont',
+        description: 'continues',
+        parameters: { type: 'object', properties: {} },
+        handler: async () => 'ok',
+      } as any);
+      let callCount = 0;
+      const customLLM = async (context: Context, options?: any): Promise<LLMResponse> => {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            content: 'use both',
+            stopReason: 'toolUse',
+            usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+            toolCalls: [
+              { id: 'c1', name: 'term', arguments: {} },
+              { id: 'c2', name: 'cont', arguments: {} },
+            ],
+          };
+        }
+        return {
+          content: 'final answer',
+          stopReason: 'stop',
+          usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } },
+          toolCalls: [],
+        };
+      };
+      toolExecutor.config.afterToolCall = async (ctx: any) => {
+        if (ctx.toolCall.name === 'term') {
+          return { terminate: true };
+        }
+        return {};
+      };
+      const continueStrategy: LoopStrategy = {
+        shouldContinue: (response) => !!(response.toolCalls && response.toolCalls.length > 0),
+        formatResults: () => '',
+        transformPrompt: (p) => p,
+      };
+      loop = new AgentLoop(createTestConfig({ maxRounds: 5 }), emitter, toolExecutor, contextBuilder, continueStrategy, customLLM, defaultLLMStream, undefined, []);
+      const result = await loop.run('test', new MessageQueue(), new MessageQueue());
+      expect(callCount).toBe(2);
+      expect(result.success).toBe(true);
+      expect(result.finalAnswer).toBe('final answer');
+    });
+  });
+
 });

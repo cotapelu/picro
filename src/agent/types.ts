@@ -206,6 +206,11 @@ export interface SuccessfulToolResult {
   executionTime: number;
   isError: false;
   metadata: ToolExecutionMetadata;
+  /**
+   * Hint that the agent should stop after the current tool batch.
+   * Early termination only happens when every finalized tool result in the batch sets this to true.
+   */
+  terminate?: boolean;
 }
 
 export interface FailedToolResult {
@@ -215,6 +220,11 @@ export interface FailedToolResult {
   executionTime: number;
   isError: true;
   metadata: ToolExecutionMetadata;
+  /**
+   * Hint that the agent should stop after the current tool batch.
+   * Rarely used for errors, but included for completeness.
+   */
+  terminate?: boolean;
 }
 
 export type ToolResult = SuccessfulToolResult | FailedToolResult;

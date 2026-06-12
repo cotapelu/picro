@@ -40,6 +40,25 @@
 
 **Tests**: Added 3 unit tests for per-tool execution mode (parallel default, sequential override, global sequential).
 
+### Round 3 (2026-06-11): Terminate Flag Support
+
+**Problem**: Agent had no mechanism for tools to signal that the agent should stop after the current tool batch. Some workflows need to abort early (e.g., when tool indicates final decision or fatal condition).
+
+**Solution**: Introduced `terminate` flag on tool results. When all tools in a batch return `terminate: true`, the agent loop ends early (similar to `shouldContinue=false`), with an empty final answer. The `afterToolCall` hook can override the terminate flag.
+
+**Implementation**:
+- Added `terminate?: boolean` to `SuccessfulToolResult` and `FailedToolResult` in `types.ts`.
+- `ToolExecutor.execute` sets `terminate: false` by default; `afterToolCall` result can set `terminate: true`.
+- In `AgentLoop.run`, after a tool batch, compute `allTerminate`. If true, inject follow-up if present; else, set `turnEnded=true` and return empty final answer.
+- Unified turn-ending: `allTerminate` OR `!shouldContinue` both lead to follow-up check or break.
+
+**Impact**:
+- Enables early termination based on tool feedback.
+- Backward compatible (default `false`).
+- Low risk; minimal changes to existing flow.
+
+**Tests**: Added 2 tests for terminate flag behavior (all terminate vs mixed). All tests pass.
+
 ## Planned Refactors (Next Rounds)
 
 1. **Tool Execution Modes per Tool** (Medium priority)
@@ -50,9 +69,9 @@
    - Allows dynamic model/reasoning level changes mid-run.
    - Useful for escalating to stronger model after initial pass.
 
-3. **`terminate` Flag Support** (Low-Medium)
+3. ~~`terminate` Flag Support~~ (Completed in Round 3)
    - Tool results can include `terminate: true` hint to stop early.
-   - Implement early exit from tool batch processing when all terminate.
+   - Implemented early exit from tool batch processing when all terminate.
 
 4. **`getSteeringMessages` Hook** (Low)
    - Instead of direct queue access, use hook to supply steering messages dynamically.

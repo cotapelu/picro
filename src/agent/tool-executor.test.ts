@@ -513,4 +513,26 @@ describe('ToolExecutor', () => {
       expect(order).toEqual([1, 2]);
     });
   });
+
+  describe('terminate flag', () => {
+    it('allows afterToolCall to set terminate flag', async () => {
+      executor = new ToolExecutor();
+      executor.register(createTool('test', async () => 'ok'));
+      let capturedResult: any;
+      executor.config.afterToolCall = async (ctx) => {
+        capturedResult = ctx.result;
+        return { terminate: true };
+      };
+      const result = await executor.execute(buildToolCall('test'), buildContext());
+      expect(result.terminate).toBe(true);
+      expect(capturedResult).toBeDefined();
+    });
+
+    it('default terminate is false', async () => {
+      executor = new ToolExecutor();
+      executor.register(createTool('test', async () => 'ok'));
+      const result = await executor.execute(buildToolCall('test'), buildContext());
+      expect(result.terminate).toBe(false);
+    });
+  });
 });

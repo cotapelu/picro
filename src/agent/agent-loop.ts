@@ -641,16 +641,36 @@ export class AgentLoop {
             hasAssistantContent: true,
           } as any);
 
-          if (!this.strategy.shouldContinue(shouldContinueResponse, this.state)) {
-            // Check follow-up before breaking
+          // Check for early termination due to all tools signaling terminate
+          const allTerminate = toolResults.length > 0 && toolResults.every(r => (r as any).terminate === true);
+          if (allTerminate) {
             const followUpTurns = await this.collectFollowUpTurns(followUpQueue);
             if (followUpTurns.length > 0) {
-              // Have follow-up: inject and continue to next round
               this.state.history.push(...followUpTurns);
               currentPrompt = this.turnsToText(followUpTurns);
               continue;
             } else {
-              // No follow-up: break to exit loop (will result in max_rounds failure)
+              turnEnded = true;
+              finalResultCandidate = {
+                finalAnswer: '',
+                totalRounds: this.state.round,
+                totalToolCalls: this.state.totalToolCalls,
+                totalTokens: this.state.totalTokens,
+                toolResults: this.state.toolResults,
+                success: true,
+                stopReason: 'stop',
+                error: undefined,
+                finalState: { ...this.state },
+              };
+            }
+          } else if (!this.strategy.shouldContinue(shouldContinueResponse, this.state)) {
+            // Check follow-up before breaking
+            const followUpTurns = await this.collectFollowUpTurns(followUpQueue);
+            if (followUpTurns.length > 0) {
+              this.state.history.push(...followUpTurns);
+              currentPrompt = this.turnsToText(followUpTurns);
+              continue;
+            } else {
               break;
             }
           }

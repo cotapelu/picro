@@ -3,36 +3,36 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Add Per-Tool Execution Mode Override",
+      "name": "Add Terminate Flag Support in Tool Results",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Add executionMode property to AgentTool type",
-          "status": "completed"
-        },
-        {
-          "id": "task-2",
-          "content": "Update executeAll to check per-tool execution mode and force sequential if needed",
-          "status": "completed"
-        },
-        {
-          "id": "task-3",
-          "content": "Add unit tests for per-tool execution mode",
+          "content": "Add terminate property to ToolResult type",
           "status": "in_progress"
         },
         {
+          "id": "task-2",
+          "content": "Set terminate=false by default in ToolExecutor.execute, preserve afterToolCall override",
+          "status": "pending"
+        },
+        {
+          "id": "task-3",
+          "content": "Check all terminate flags after tool batch in AgentLoop and exit early if all true",
+          "status": "pending"
+        },
+        {
           "id": "task-4",
-          "content": "Run full test suite to ensure no regressions",
+          "content": "Add unit tests for terminate flag behavior",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Update EVOLUTION.md with this change",
+          "content": "Run full test suite and build",
           "status": "pending"
         },
         {
           "id": "task-6",
-          "content": "Git commit",
+          "content": "Update EVOLUTION.md and commit",
           "status": "pending"
         }
       ]
@@ -40,5 +40,5 @@
   ],
   "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-12T11:27:36.289Z"
+  "updatedAt": "2026-06-12T11:57:50.671Z"
 }

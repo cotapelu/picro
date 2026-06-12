@@ -233,6 +233,7 @@ export class ToolExecutor {
          executionTime: Date.now() - startTime,
          isError: false,
          metadata,
+         terminate: false,
        };
 
        // After hook (success)
@@ -257,6 +258,7 @@ export class ToolExecutor {
              } as any;
            }
            if (after.details) result.metadata = { ...metadata, ...after.details };
+           if (after.terminate !== undefined) (result as any).terminate = after.terminate;
          }
        }
 
@@ -303,6 +305,7 @@ export class ToolExecutor {
            if (after.content !== undefined) (result as any).result = after.content;
            if (after.errorMessage !== undefined) (result as any).error = after.errorMessage;
            if (after.details) result.metadata = { ...metadata, ...after.details };
+           if (after.terminate !== undefined) (result as any).terminate = after.terminate;
          }
        }
 

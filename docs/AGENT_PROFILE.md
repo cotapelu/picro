@@ -4,6 +4,7 @@
 
 - Robust loop control with support for steering and follow-up messages
 - Flexible tool execution (global or per-tool parallel/sequential)
+- Tool result `terminate` flag for early agent loop termination
 - Event-driven architecture with comprehensive logging
 - Memory integration
 - Continuous operation without manual resume
@@ -12,7 +13,6 @@
 
 - No per-tool execution mode override (currently global only)
 - Missing `prepareNextTurn` hook support (mid-run model/reasoning changes)
-- Missing `terminate` flag handling in tool results
 - No `getSteeringMessages` hook (uses queue directly)
 
 ## Fragile Modules
@@ -22,7 +22,7 @@
 
 ## Test Coverage
 
-- Unit tests: 1909 passing
+- Unit tests: 1919 passing
 - Integration: Moderate (TODO)
 - Stress/load: None
 
