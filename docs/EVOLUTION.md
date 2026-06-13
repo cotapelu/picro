@@ -369,20 +369,40 @@
 
 **Tests**: +19 new unit tests. Total passing tests: ~2300+.
 
-### Round 19 (2026-06-13): Final Coverage Validation & Documentation
+### Round 19 (2026-06-13): Coverage Validation & Gap Analysis
 
-**Problem**: After Rounds 15-18, branch coverage was approaching the 80% target. A final verification was needed to ensure all critical modules met thresholds and documentation was accurate.
+**Problem**: After Rounds 15-18, branch coverage was still below the 80% target. A detailed analysis was required to identify remaining gaps.
 
 **Solution**:
-- Ran coverage analysis and identified remaining uncovered branches in `AgentSession`, `SettingsManager`, and `ToolExecutor`.
-- Added targeted branch tests to close gaps (already counted in previous rounds).
-- Polished test suite, removed redundant/speculative tests, and ensured all tests pass without timeouts.
-- Updated evolution metrics to reflect cumulative progress.
+- Ran full coverage and enumerated uncovered branches per module.
+- Identified high-impact modules with many uncovered branches: `prompt-templates`, `cli-args`, `session-manager`, `openai-compatible`, `retrieval`, `auth-storage`, `branch-summarization`, etc.
+- Decided to continue branch test development in subsequent rounds.
 
 **Impact**:
-- **Coverage thresholds met**: statements >84%, branches >81%, functions >87%, lines >85% (all >=80%).
-- Documentation now accurately reflects current state.
-- No regressions; all 174 test files pass (~2310+ tests).
+- Branch coverage at ~70.38%, statements 79.05%, lines 79.92% – still below target.
+- No regressions; all tests passing.
+
+### Round 20 (2026-06-13): Branch Tests for Prompt Templates & CLI Args
+
+**Problem**: `prompt-templates.ts` and `cli-args.ts` together had ~59 uncovered branches. Both modules are relatively self-contained and good candidates for quick coverage gains.
+
+**Solution**:
+- Created `src/runtime/prompt-templates.branches.test.ts` with 24 tests covering:
+  - `parseCommandArgs` edge cases (unmatched quotes, trailing spaces, empty input).
+  - `substituteArgs` advanced patterns (out-of-range indices, empty args, length overflow).
+  - `expandPromptTemplate` behavior (missing template, arg handling).
+  - `loadPromptTemplates` integration (includeDefaults, explicit paths, errors, symlinks, malformed frontmatter).
+- Created `src/runtime/cli-args.branches.test.ts` with 30 tests covering:
+  - Unknown flag handling (short flags, `--flag=value`, standalone, with missing value).
+  - `--list-models` with/without value.
+  - `--tools`, `--models`, `--no-*` flags, extension/skill/prompt-template/theme flags, `--export`.
+  - Invalid `--thinking` level warning, invalid mode, missing value behaviors.
+  - File arguments heuristics, mixed messages.
+
+**Impact**:
+- Approximately +80 covered branches (est. based on branch count improvements).
+- Branch coverage increased from 68.37% to 70.38% overall.
+- All tests pass; no regressions.
 
 ---
 

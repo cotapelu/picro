@@ -329,48 +329,18 @@ export class AgentLoop {
         }
 
         // Get steering turns via hook (if provided) or drain queue
-        let steeringTurns: ConversationTurn[] = [];
-        if (this.config.getSteeringMessages) {
-          try {
-            steeringTurns = await this.config.getSteeringMessages();
-          } catch (e) {
-            if (this.config.debug) console.error('getSteeringMessages hook error:', e);
-            steeringTurns = [];
-          }
-        } else if (steeringQueue.hasPending) {
-          steeringTurns = this.drainQueue(steeringQueue);
-        }
+        const steeringTurns = await this._collectSteeringTurns(steeringQueue);
         pendingTurns.push(...steeringTurns);
 
         currentPrompt = this.strategy.transformPrompt?.(currentPrompt, this.state) ?? currentPrompt;
 
-        // Memory retrieval timing
+        // Memory retrieval
         let memories: MemoryEntry[] = [];
         let memoryRetrievalTime = 0;
-        if (this.memoryStore) {
-          const memoryStart = Date.now();
-          try {
-            const retrieval = await this.memoryStore.recall(currentPrompt);
-            memories = retrieval.memories;
-            memoryRetrievalTime = Date.now() - memoryStart;
-            totalMemoryRetrievalTime += memoryRetrievalTime;
-            await this.emitter.emit({
-              type: 'memory:retrieve',
-              timestamp: Date.now(),
-              round: this.state.round,
-              query: currentPrompt,
-              memoriesRetrieved: memories.length,
-              scores: retrieval.scores,
-              memories: memories.map((mem, index) => ({
-                content: mem.content,
-                relevance: mem.relevance,
-                index,
-              })),
-            } as any);
-          } catch (e) {
-            console.warn('Memory retrieval failed:', e);
-          }
-        }
+        const memResult = await this._retrieveMemories(currentPrompt);
+        memories = memResult.memories;
+        memoryRetrievalTime = memResult.retrievalTime;
+        totalMemoryRetrievalTime += memoryRetrievalTime;
 
         // Inject any pending turns into history
         if (pendingTurns.length > 0) {
@@ -904,6 +874,47 @@ export class AgentLoop {
 
   private drainQueue(queue: MessageQueue): ConversationTurn[] {
     return queue.drainAll();
+  }
+
+  private async _collectSteeringTurns(steeringQueue: MessageQueue): Promise<ConversationTurn[]> {
+    if (this.config.getSteeringMessages) {
+      try {
+        return await this.config.getSteeringMessages();
+      } catch (e) {
+        if (this.config.debug) console.error('getSteeringMessages hook error:', e);
+        return [];
+      }
+    } else if (steeringQueue.hasPending) {
+      return this.drainQueue(steeringQueue);
+    }
+    return [];
+  }
+
+  private async _retrieveMemories(currentPrompt: string): Promise<{ memories: MemoryEntry[]; retrievalTime: number }> {
+    const result: { memories: MemoryEntry[]; retrievalTime: number } = { memories: [], retrievalTime: 0 };
+    if (!this.memoryStore) return result;
+    const memoryStart = Date.now();
+    try {
+      const retrieval = await this.memoryStore.recall(currentPrompt);
+      result.memories = retrieval.memories;
+      result.retrievalTime = Date.now() - memoryStart;
+      await this.emitter.emit({
+        type: 'memory:retrieve',
+        timestamp: Date.now(),
+        round: this.state.round,
+        query: currentPrompt,
+        memoriesRetrieved: result.memories.length,
+        scores: retrieval.scores,
+        memories: result.memories.map((mem, index) => ({
+          content: mem.content,
+          relevance: mem.relevance,
+          index,
+        })),
+      } as any);
+    } catch (e) {
+      console.warn('Memory retrieval failed:', e);
+    }
+    return result;
   }
 
    private async autoSaveMemory(

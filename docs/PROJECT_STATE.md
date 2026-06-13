@@ -13,20 +13,20 @@
 - **Round 16**: Added 16 branch-coverage tests for `AgentSession` (extended `agent-session.unit.test.ts`) covering setModel auth, cycleModel edge cases, queue overflow, retryable error patterns, dispose safety, system prompt building, and custom message delivery.
 - **Round 17**: Added 12 branch-coverage tests for `SettingsManager` (`settings-manager.branches.test.ts`) covering deep merge, compaction/retry/branch summary settings, and edge cases.
 - **Round 18**: Added 19 branch-coverage tests for `ToolExecutor` (`tool-executor.branches.test.ts`) covering before/after hooks, caching, execution strategies, timeout, signal, and progress updates.
-- **Round 19**: Polished branch coverage across core modules; overall coverage now meets or exceeds 80% on statements and branches.
-- Build passes; all 174 test files pass (~2300+ tests passing, 14 skipped, 1 todo).
-- Coverage: statements ~84%+, branches ~81%+, functions ~87%+, lines ~85%+ (target reached).
+- **Round 19**: Coverage validation and gap analysis; identified modules with high uncovered branches.
+- **Round 20**: Added comprehensive branch tests for `prompt-templates` (24 tests) and `cli-args` (30 tests). Coverage improved but still below target.
+- Build passes; all 177 test files pass (~2361+ tests passing, 16 skipped, 1 todo).
+- Coverage (latest): statements 79.05%, branches 70.38%, functions 81.94%, lines 79.92% – target 80% not yet reached.
 
 ### 🔄 In Progress
-- Increase branch coverage to reach ≥80% threshold (currently ~68%).
-- Add missing tests for `AgentSession` edge cases (some attempted but deferred for better isolation).
+- Continue branch coverage push targeting: `openai-compatible`, `session-manager`, `retrieval`, `auth-storage`, `branch-summarization`, `env-api-keys`, `agent-loop`, `agent-session`.
 
 ### 🐛 Known Issues
-- Coverage (especially branch coverage) below target 80%.
+- Branch coverage at 70.38% is below target; actions underway.
 
 ### 📊 Metrics (latest run)
-- Test files: 169 passed
-- Tests: 2218 passed | 14 skipped | 1 todo
+- Test files: 177 passed
+- Tests: 2361 passed | 16 skipped | 1 todo
 - Build: ✅
 - Coverage: statements 75.32%+, branches 65.41%+, functions 78.57%+, lines 76.16%+ (after Agent config tests)
 
