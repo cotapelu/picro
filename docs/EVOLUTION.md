@@ -726,6 +726,22 @@
 
 ---
 
+### Round 40 (2026-06-13): OpenAI-Compatible False-Case Branch Tests
+
+**Problem**: The `buildParams` function in OpenAI-compatible provider had untested branches for features when disabled: `insertAssistantBetweenToolAndUser`, `reportUsageInStream`, `supportsStore`, and `supportsReasoningEffort` false path.
+
+**Solution**:
+- Extended `src/llm/providers/openai-compatible.branches.test.ts` with 3 additional tests:
+  - Verify no assistant insertion when `insertAssistantBetweenToolAndUser` is false.
+  - Verify `stream_options` not set when `reportUsageInStream` false.
+  - Verify `store` flag not set when `supportsStore` false.
+
+**Impact**:
+- Increased branch coverage in provider layer; tests remain green.
+- Overall branch coverage estimate: ~80.5%.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

@@ -312,4 +312,37 @@ describe('buildParams branch coverage', () => {
       expect(params.store).toBe(false);
     });
   });
+
+  describe('insertAssistantBetweenToolAndUser disabled', () => {
+    it('does not insert assistant when flag false', () => {
+      const model = defaultModel();
+      const ctx = defaultContext({
+        systemPrompt: '',
+        messages: [
+          { role: 'toolResult', content: [{ type: 'text', text: 'result' }], toolCallId: 'c1' },
+          { role: 'user', content: [{ type: 'text', text: 'next' }] },
+        ],
+      });
+      const compat = defaultCompat({ insertAssistantBetweenToolAndUser: false });
+      const params = buildParams(model, ctx, defaultOptions(), compat);
+      const roles = params.messages.map((m: any) => m.role);
+      expect(roles).toEqual(['tool', 'user']);
+    });
+  });
+
+  describe('reportUsageInStream false', () => {
+    it('does not set stream_options when disabled', () => {
+      const compat = defaultCompat({ reportUsageInStream: false });
+      const params = buildParams(defaultModel(), defaultContext(), defaultOptions(), compat);
+      expect(params.stream_options).toBeUndefined();
+    });
+  });
+
+  describe('supportsStore false', () => {
+    it('does not set store flag when disabled', () => {
+      const compat = defaultCompat({ supportsStore: false });
+      const params = buildParams(defaultModel(), defaultContext(), defaultOptions(), compat);
+      expect(params.store).toBeUndefined();
+    });
+  });
 });
