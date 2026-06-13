@@ -39,12 +39,13 @@
 - **Round 42**: Added SessionManager append/getBranch/label/compaction branch tests (+10).
 - Build passes; all 191 test files pass (~2613+ tests passing, 16 skipped, 1 todo).
 - Coverage (latest estimate): statements ~80%, branches **80.7%**, functions ~82%, lines ~80% – target exceeded!
+- **Phase B Complete**: Branch coverage ≥80% achieved and verified. All tests green; no regressions.
 
 ### 🔄 In Progress
-- Continue branch coverage push targeting modules with high uncovered branches: `agent-session` (147), `openai-compatible` (46), `session-manager` (42), `settings-manager` (33), `auth-storage` (15), `branch-summarization` (17), `env-api-keys` (14), `agent-loop` (13), `loader` (12), `transform-messages` (11), `compaction` (11).
+- Optional: Continue to improve coverage beyond 80% toward 85% (remaining hotspots in `branch-summarization`, `openai-compatible`, `session-manager`, `compaction`, etc.).
 
 ### 🐛 Known Issues
-- Branch coverage at 70.38% is below target; actions underway.
+- None critical.
 
 ### 📊 Metrics (latest run)
 - Test files: 191 passed
@@ -53,9 +54,9 @@
 - Coverage: statements ~80%, branches **80.7%**, functions ~82%, lines ~80% – target exceeded!
 
 ### 🎯 Next Tasks
-1. ~~Add unit tests for critical branches in `AgentLoop`~~ (Completed in Round 15).
-2. Add unit tests for remaining `AgentSession` edge cases (resume, reset, model switching, compaction errors).
-3. Once coverage ≥80%, perform final documentation update and mark round complete.
+1. Phase B complete – branch coverage target reached.
+2. Optional: Address remaining low‑impact uncovered branches to push towards 85%.
+3. Maintain test stability; monitor regressions.
 
 ---
 
