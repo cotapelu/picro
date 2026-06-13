@@ -742,6 +742,24 @@
 
 ---
 
+### Round 41 (2026-06-13): AgentSession Event Conversion & Flush Branches
+
+**Problem**: Several private methods in `AgentSession` lacked branch coverage: `_convertAgentEventToExtensionEvent` (event mapping), `_flushPendingBashMessages` (empty/non‑empty), `_getUserMessageText` (role/content variations), `_handleRetryableError` (retry logic), and `_resolveRetry` (promise resolution).
+
+**Solution**:
+- Created `src/session/agent-session-event-flush.branches.test.ts` with 23 tests covering:
+  - `_convertAgentEventToExtensionEvent` for all event types (agent:start/end, turn:start/end, message:start/end, tool:call:start/end, memory:retrieve) and unknown fallback.
+  - `_flushPendingBashMessages` for empty and non‑empty pending arrays.
+  - `_getUserMessageText` for non‑user roles, string content, block array (text+image), empty array.
+  - `_handleRetryableError`: when retry disabled, max retries reached, successful retry increments attempt and emits `auto_retry_start`.
+  - `_resolveRetry`: resolves existing promise and clears fields; noop when none.
+
+**Impact**:
+- Added significant branch coverage in AgentSession; tests pass.
+- Overall branch coverage estimate: **~80.6%**.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

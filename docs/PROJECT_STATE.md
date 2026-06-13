@@ -35,8 +35,9 @@
 - **Round 38**: Added AgentSession _runAutoCompaction branch tests (+4).
 - **Round 39**: Added Retrieval scoring branch tests (+15).
 - **Round 40**: Extended OpenAI-compatible false-case branch tests (+3).
-- Build passes; all 189 test files pass (~2580+ tests passing, 16 skipped, 1 todo).
-- Coverage (latest estimate): statements ~80%, branches **80.5%**, functions ~82%, lines ~80% – target exceeded!
+- **Round 41**: Added AgentSession event conversion & flush branch tests (+23).
+- Build passes; all 190 test files pass (~2603+ tests passing, 16 skipped, 1 todo).
+- Coverage (latest estimate): statements ~80%, branches **80.6%**, functions ~82%, lines ~80% – target exceeded!
 
 ### 🔄 In Progress
 - Continue branch coverage push targeting modules with high uncovered branches: `agent-session` (147), `openai-compatible` (46), `session-manager` (42), `settings-manager` (33), `auth-storage` (15), `branch-summarization` (17), `env-api-keys` (14), `agent-loop` (13), `loader` (12), `transform-messages` (11), `compaction` (11).
@@ -45,10 +46,10 @@
 - Branch coverage at 70.38% is below target; actions underway.
 
 ### 📊 Metrics (latest run)
-- Test files: 189 passed
-- Tests: ~2580 passed | 16 skipped | 1 todo
+- Test files: 190 passed
+- Tests: ~2603 passed | 16 skipped | 1 todo
 - Build: ✅
-- Coverage: statements ~80%, branches **80.5%**, functions ~82%, lines ~80% – target exceeded!
+- Coverage: statements ~80%, branches **80.6%**, functions ~82%, lines ~80% – target exceeded!
 
 ### 🎯 Next Tasks
 1. ~~Add unit tests for critical branches in `AgentLoop`~~ (Completed in Round 15).

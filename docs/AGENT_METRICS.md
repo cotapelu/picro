@@ -43,13 +43,14 @@
 | 38     | 2026-06-13 | AgentSession _runAutoCompaction branch tests (+4) | ~2562+     | 0           | 0         |
 | 39     | 2026-06-13 | Retrieval scoring branch tests (+15) | ~2577+     | 0           | 0         |
 | 40     | 2026-06-13 | OpenAI-compatible false-case branch tests (+3) | ~2580+     | 0           | 0         |
+| 41     | 2026-06-13 | AgentSession event conversion & flush branches (+23) | ~2603+     | 0           | 0         |
 
 ## Quality Indicators
 
 - **Test Failure Rate**: <1% (2361+ tests passing)
 - **Mean Time To Repair (MTTR)**: < 5 min (fast fix of test failures)
 - **Rollback Count**: 0
-- **Coverage**: ~80.5% branches (estimated), ~80% statements/lines (target exceeded!)
+- **Coverage**: ~80.6% branches (estimated), ~80% statements/lines (target exceeded!)
 
 ## Observations
 
