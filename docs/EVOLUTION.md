@@ -596,6 +596,23 @@
 
 ---
 
+### Round 33 (2026-06-13): SessionManager Query Method Tests
+
+**Problem**: Several query methods in `SessionManager` lacked dedicated branch tests, including `getChildren`, `findByLabel`, `findByTypes`, and `searchMessages`.
+
+**Solution**:
+- Created `src/session/session-manager-queries.branches.test.ts` with 4 tests covering:
+  - `getChildren` retrieving immediate children.
+  - `findByLabel` finding target entries with a specific label.
+  - `findByTypes` filtering by entry types.
+  - `searchMessages` text search in message content.
+
+**Impact**:
+- Additional branch coverage in SessionManager; tests passing.
+- Overall branch coverage estimate: ~78.4%.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
