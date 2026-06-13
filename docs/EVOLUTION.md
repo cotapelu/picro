@@ -533,6 +533,22 @@
 
 ---
 
+### Round 29 (2026-06-13): Compaction Utilities Branch Tests
+
+**Problem**: Compaction module had several uncovered branches in core utilities (`shouldCompact`, `findCutPoint`, `prepareCompaction`).
+
+**Solution**:
+- Created `src/session/compaction.branches.test.ts` with 8 tests covering:
+  - `shouldCompact` logic for enabled flag and token threshold.
+  - `findCutPoint` cut index detection and split-turn flag based on message roles and tokens.
+  - `prepareCompaction` early return for empty entries and basic single-message recipe.
+
+**Impact**:
+- Increased branch coverage for the compaction subsystem; tests remain green.
+- Overall branch coverage estimate: ~77.5%.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
