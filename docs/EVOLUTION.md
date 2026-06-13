@@ -786,6 +786,23 @@
 
 ---
 
+### Round 43 (2026-06-13): OpenAI-Compatible ReasoningEffort & ToolChoice Branches
+
+**Problem**: The `buildParams` function in `openai-compatible` provider still had untested branches for `reasoningEffort` conditions (false paths for `supportsReasoningEffort`, missing `reasoningEffort`, `model.reasoning` false) and absent `toolChoice`.
+
+**Solution**:
+- Extended `src/llm/providers/openai-compatible.branches.test.ts` with 4 new tests:
+  - No reasoning parameters when `model.reasoning` false even if `reasoningEffort` provided.
+  - No reasoning parameters when `options.reasoningEffort` is `undefined`.
+  - No reasoning parameters when `compat.supportsReasoningEffort` is false.
+  - `tool_choice` not set when option omitted.
+
+**Impact**:
+- Plugged remaining small branches in the provider; tests remain green.
+- Overall branch coverage estimate: **~80.8%**.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

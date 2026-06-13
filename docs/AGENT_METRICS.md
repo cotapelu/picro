@@ -45,13 +45,14 @@
 | 40     | 2026-06-13 | OpenAI-compatible false-case branch tests (+3) | ~2580+     | 0           | 0         |
 | 41     | 2026-06-13 | AgentSession event conversion & flush branches (+23) | ~2603+     | 0           | 0         |
 | 42     | 2026-06-13 | SessionManager append/getBranch/label/compaction branches (+10) | ~2613+     | 0           | 0         |
+| 43     | 2026-06-13 | OpenAI-compatible reasoningEffort/toolChoice branches (+4) | ~2617+     | 0           | 0         |
 
 ## Quality Indicators
 
 - **Test Failure Rate**: <1% (2361+ tests passing)
 - **Mean Time To Repair (MTTR)**: < 5 min (fast fix of test failures)
 - **Rollback Count**: 0
-- **Coverage**: ~80.7% branches (estimated), ~80% statements/lines (target exceeded!)
+- **Coverage**: ~80.8% branches (estimated), ~80% statements/lines (target exceeded!)
 
 ## Observations
 

@@ -345,4 +345,46 @@ describe('buildParams branch coverage', () => {
       expect(params.store).toBeUndefined();
     });
   });
+
+  describe('reasoningEffort conditions', () => {
+    it('does not set reasoning params when model.reasoning false even if reasoningEffort provided', () => {
+      const model = defaultModel({ reasoning: false });
+      const options = defaultOptions({ reasoningEffort: 'medium' });
+      const compat = defaultCompat({ supportsReasoningEffort: true, thinkingFormat: 'zai' });
+      const params = buildParams(model, defaultContext(), options, compat);
+      expect(params.enable_thinking).toBeUndefined();
+      expect(params.reasoning).toBeUndefined();
+      expect(params.reasoning_effort).toBeUndefined();
+    });
+
+    it('does not set reasoning params when reasoningEffort not provided', () => {
+      const model = defaultModel({ reasoning: true });
+      const options = defaultOptions({ reasoningEffort: undefined });
+      const compat = defaultCompat({ supportsReasoningEffort: true, thinkingFormat: 'zai' });
+      const params = buildParams(model, defaultContext(), options, compat);
+      expect(params.enable_thinking).toBeUndefined();
+      expect(params.reasoning).toBeUndefined();
+      expect(params.reasoning_effort).toBeUndefined();
+    });
+
+    it('does not set reasoning params when compat.supportsReasoningEffort false', () => {
+      const model = defaultModel({ reasoning: true });
+      const options = defaultOptions({ reasoningEffort: 'medium' });
+      const compat = defaultCompat({ supportsReasoningEffort: false, thinkingFormat: 'zai' });
+      const params = buildParams(model, defaultContext(), options, compat);
+      expect(params.enable_thinking).toBeUndefined();
+      expect(params.reasoning).toBeUndefined();
+      expect(params.reasoning_effort).toBeUndefined();
+    });
+  });
+
+  describe('toolChoice absent', () => {
+    it('does not set tool_choice when option omitted', () => {
+      const model = defaultModel();
+      const ctx = defaultContext();
+      const options = defaultOptions(); // no toolChoice
+      const params = buildParams(model, ctx, options, defaultCompat());
+      expect(params.tool_choice).toBeUndefined();
+    });
+  });
 });

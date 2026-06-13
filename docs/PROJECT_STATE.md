@@ -37,8 +37,9 @@
 - **Round 40**: Extended OpenAI-compatible false-case branch tests (+3).
 - **Round 41**: Added AgentSession event conversion & flush branch tests (+23).
 - **Round 42**: Added SessionManager append/getBranch/label/compaction branch tests (+10).
-- Build passes; all 191 test files pass (~2613+ tests passing, 16 skipped, 1 todo).
-- Coverage (latest estimate): statements ~80%, branches **80.7%**, functions ~82%, lines ~80% – target exceeded!
+- **Round 43**: Added OpenAI-compatible reasoningEffort/toolChoice branches (+4).
+- Build passes; all 191 test files pass (~2617+ tests passing, 16 skipped, 1 todo).
+- Coverage (latest estimate): statements ~80%, branches **80.8%**, functions ~82%, lines ~80% – target exceeded!
 - **Phase B Complete**: Branch coverage ≥80% achieved and verified. All tests green; no regressions.
 
 ### 🔄 In Progress
@@ -49,9 +50,9 @@
 
 ### 📊 Metrics (latest run)
 - Test files: 191 passed
-- Tests: ~2613 passed | 16 skipped | 1 todo
+- Tests: ~2617 passed | 16 skipped | 1 todo
 - Build: ✅
-- Coverage: statements ~80%, branches **80.7%**, functions ~82%, lines ~80% – target exceeded!
+- Coverage: statements ~80%, branches **80.8%**, functions ~82%, lines ~80% – target exceeded!
 
 ### 🎯 Next Tasks
 1. Phase B complete – branch coverage target reached.
