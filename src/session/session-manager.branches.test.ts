@@ -27,6 +27,16 @@ describe('SessionManager branch tests', () => {
       const manager = SessionManager.inMemory(tempDir);
       expect(() => manager.branch('non-existent')).toThrow('Entry non-existent not found');
     });
+
+    it('sets leaf to an existing entry without throwing', () => {
+      const manager = SessionManager.inMemory(tempDir);
+      manager.appendMessage({ role: 'user', content: 'test' } as any);
+      const existingLeaf = manager.getLeafId()!;
+      // Calling branch with a valid existing ID should succeed
+      expect(() => manager.branch(existingLeaf)).not.toThrow();
+      // Leaf should remain the same
+      expect(manager.getLeafId()).toBe(existingLeaf);
+    });
   });
 
   describe('getEntry()', () => {

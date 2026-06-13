@@ -293,4 +293,57 @@ describe('AgentSession branch coverage', () => {
       expect((session as any)._retryPromise).toBeUndefined();
     });
   });
+
+  describe('_checkCompaction', () => {
+    let session: any;
+    beforeEach(() => {
+      session = buildSession();
+      (session as any)._model = { provider: 'openai', id: 'gpt-4', contextWindow: 8000 };
+      (session as any)._agentState = { history: [] };
+      (session as any)._runAutoCompaction = vi.fn().mockResolvedValue(undefined);
+      (session as any)._performAutoCompaction = vi.fn().mockResolvedValue(undefined);
+      (session as any)._emit = vi.fn();
+      (session.sessionManager as any).getLatestCompactionEntry = vi.fn().mockReturnValue(null);
+    });
+
+    it('returns early when compaction disabled', async () => {
+      (session.settingsManager as any).getCompactionSettings = () => ({ enabled: false, reserveTokens: 1000, keepRecentTokens: 2000 });
+      const asstMsg = { role: 'assistant', content: [{ type: 'text', text: 'ok' }], stopReason: 'stop', provider: 'openai', model: 'gpt-4' };
+      await (session as any)._checkCompaction(asstMsg);
+      expect(session._performAutoCompaction).not.toHaveBeenCalled();
+      expect(session._runAutoCompaction).not.toHaveBeenCalled();
+    });
+
+    it('returns early when stopReason is aborted', async () => {
+      (session.settingsManager as any).getCompactionSettings = () => ({ enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 });
+      const asstMsg = { role: 'assistant', content: [{ type: 'text', text: '' }], stopReason: 'aborted', provider: 'openai', model: 'gpt-4' };
+      await (session as any)._checkCompaction(asstMsg);
+      expect(session._performAutoCompaction).not.toHaveBeenCalled();
+      expect(session._runAutoCompaction).not.toHaveBeenCalled();
+    });
+
+    it('triggers overflow compaction on context_overflow', async () => {
+      (session.settingsManager as any).getCompactionSettings = () => ({ enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 });
+      const asstMsg = { role: 'assistant', content: [{ type: 'text', text: '' }], stopReason: 'context_overflow', provider: 'openai', model: 'gpt-4', timestamp: Date.now() };
+      await (session as any)._checkCompaction(asstMsg);
+      expect(session._runAutoCompaction).toHaveBeenCalledWith('overflow', true);
+      expect((session as any)._overflowRecoveryAttempted).toBe(true);
+    });
+
+    it('emits compaction_end event on second overflow attempt', async () => {
+      (session as any)._overflowRecoveryAttempted = true;
+      (session.settingsManager as any).getCompactionSettings = () => ({ enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 });
+      const asstMsg = { role: 'assistant', content: [{ type: 'text', text: '' }], stopReason: 'context_overflow', provider: 'openai', model: 'gpt-4', timestamp: Date.now() };
+      await (session as any)._checkCompaction(asstMsg);
+      expect(session._emit).toHaveBeenCalledWith({
+        type: 'compaction_end',
+        reason: 'overflow',
+        result: undefined,
+        aborted: false,
+        willRetry: false,
+        errorMessage: expect.stringContaining('Context overflow'),
+      });
+      expect(session._runAutoCompaction).not.toHaveBeenCalled();
+    });
+  });
 });

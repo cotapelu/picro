@@ -549,6 +549,37 @@
 
 ---
 
+### Round 30 (2026-06-13): SessionManager Branch Success Test
+
+**Problem**: The `branch()` method’s success path (valid existing entry) was not explicitly tested.
+
+**Solution**:
+- Added a test to `src/session/session-manager.branches.test.ts` covering the non-error branch where `branch()` is called with a valid ID and completes without throwing.
+
+**Impact**:
+- Incremental branch coverage gain; maintains test suite health.
+- Overall branch coverage estimate: ~77.6%.
+
+---
+
+### Round 31 (2026-06-13): AgentSession _checkCompaction Branch Tests
+
+**Problem**: The private `_checkCompaction` method in `AgentSession` had several uncovered branches related to compaction enabling, aborted messages, overflow recovery, and error emission.
+
+**Solution**:
+- Extended `src/session/agent-session.unit.test.ts` with 4 new tests covering:
+  - Early return when compaction disabled.
+  - Early return when `stopReason` is `aborted`.
+  - Overflow recovery path triggers `_runAutoCompaction` and sets `_overflowRecoveryAttempted` flag.
+  - Second overflow attempt emits `compaction_end` event without further compaction.
+
+**Impact**:
+- Increased branch coverage in core agent session compaction logic.
+- All tests pass; no regressions.
+- Overall branch coverage estimate: ~78.0%.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
