@@ -427,6 +427,23 @@
 
 ---
 
+### Round 22 (2026-06-13): SessionManager Branch Tests
+
+**Problem**: SessionManager had several uncovered error-handling branches in `importSession`, `branch`, `branchWithSummary`, and `appendLabelChange`.
+
+**Solution**:
+- Created `src/session/session-manager.branches.test.ts` with 7 tests covering:
+  - `importSession` invalid JSON, missing password for encrypted, decryption failure.
+  - `branch` when parent entry not found.
+  - `branchWithSummary` with nonexistent parent.
+  - `appendLabelChange` target not found and success path.
+
+**Impact**:
+- Covered key error branches in SessionManager; branch coverage slightly improved.
+- All tests pass; no regressions.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

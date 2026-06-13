@@ -16,8 +16,9 @@
 - **Round 19**: Coverage validation and gap analysis; identified modules with high uncovered branches.
 - **Round 20**: Added comprehensive branch tests for `prompt-templates` (24 tests) and `cli-args` (30 tests). Coverage improved but still below target.
 - **Round 21**: Added AgentSession prompt branch tests (6) and MemoryRetriever branch tests (12) totaling +18 tests. Coverage improved but still below target.
-- Build passes; all 178 test files pass (~2379+ tests passing, 16 skipped, 1 todo).
-- Coverage (latest estimate): statements ~79-80%, branches ~71.0%, functions ~82%, lines ~80% – target 80% not yet reached.
+- **Round 22**: Added SessionManager branch tests (7) covering importSession errors and label/branch checks.
+- Build passes; all 179 test files pass (~2386+ tests passing, 16 skipped, 1 todo).
+- Coverage (latest estimate): statements ~79-80%, branches ~71.5%, functions ~82%, lines ~80% – target 80% not yet reached.
 
 ### 🔄 In Progress
 - Continue branch coverage push targeting modules with high uncovered branches: `agent-session` (147), `openai-compatible` (46), `session-manager` (42), `settings-manager` (33), `auth-storage` (15), `branch-summarization` (17), `env-api-keys` (14), `agent-loop` (13), `loader` (12), `transform-messages` (11), `compaction` (11).
@@ -26,10 +27,10 @@
 - Branch coverage at 70.38% is below target; actions underway.
 
 ### 📊 Metrics (latest run)
-- Test files: 177 passed
-- Tests: 2361 passed | 16 skipped | 1 todo
+- Test files: 179 passed
+- Tests: ~2386 passed | 16 skipped | 1 todo
 - Build: ✅
-- Coverage: statements 79.05%, branches 70.38%, functions 81.94%, lines 79.92% – target 80% not yet reached.
+- Coverage: statements ~79-80%, branches ~71.5%, functions ~82%, lines ~80% – target 80% not yet reached.
 
 ### 🎯 Next Tasks
 1. ~~Add unit tests for critical branches in `AgentLoop`~~ (Completed in Round 15).
