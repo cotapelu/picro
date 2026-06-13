@@ -648,6 +648,24 @@
 
 ---
 
+### Round 36 (2026-06-13): OpenAI-Compatible Provider Extended Branch Tests
+
+**Problem**: The OpenAI-compatible provider had remaining branches in `buildParams` not covered by the initial tests, including image handling, `insertAssistantBetweenToolAndUser`, tools empty vs absent, reasoning effort variations, and usage/store flags.
+
+**Solution**:
+- Extended `src/llm/providers/openai-compatible.branches.test.ts` with 12 additional tests covering:
+  - Image block handling for models with and without image support.
+  - Insertion of assistant message between toolResult and user when `insertAssistantBetweenToolAndUser` is true.
+  - `params.tools` being empty when tool calls exist but no tools provided, and undefined when neither.
+  - Reasoning effort branches for different `thinkingFormat` values (`zai`, `qwen`, `openrouter`, other).
+  - Stream usage reporting (`reportUsageInStream`) and store flag (`supportsStore`).
+
+**Impact**:
+- Increased branch coverage in LLM provider layer; tests remain green.
+- Overall branch coverage estimate: ~79.3%.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

@@ -195,4 +195,121 @@ describe('buildParams branch coverage', () => {
     expect(params.tools[0]).toEqual({ type: 'function', function: tools[0] });
     expect(params.tool_choice).toEqual({ type: 'function', function: { name: 'read' } });
   });
+
+  describe('image handling in user messages', () => {
+    it('keeps image block when model supports images', () => {
+      const model = defaultModel({ input: ['text', 'image'] });
+      const ctx = defaultContext({
+        messages: [{ role: 'user', content: [{ type: 'image', mimeType: 'image/png', data: 'abc' }] }],
+      });
+      const params = buildParams(model, ctx, defaultOptions(), defaultCompat());
+      const userMsg = params.messages.find((m: any) => m.role === 'user');
+      expect(userMsg?.content[0].type).toBe('image_url');
+      expect(userMsg?.content[0].image_url.url).toBe('data:image/png;base64,abc');
+    });
+
+    it('filters out image block when model lacks image support', () => {
+      const model = defaultModel({ input: ['text'] });
+      const ctx = defaultContext({
+        messages: [{ role: 'user', content: [{ type: 'image', mimeType: 'image/png', data: 'abc' }] }],
+      });
+      const params = buildParams(model, ctx, defaultOptions(), defaultCompat());
+      const userMsg = params.messages.find((m: any) => m.role === 'user');
+      // image block filtered, content array empty -> message not added (since length check)
+      expect(userMsg).toBeUndefined();
+    });
+  });
+
+  describe('insertAssistantBetweenToolAndUser', () => {
+    it('inserts assistant message when toolResult followed by user', () => {
+      const model = defaultModel();
+      const ctx = defaultContext({
+        systemPrompt: '', // no system message to simplify
+        messages: [
+          { role: 'toolResult', content: [{ type: 'text', text: 'result' }], toolCallId: 'c1' },
+          { role: 'user', content: [{ type: 'text', text: 'next' }] },
+        ],
+      });
+      const compat = defaultCompat({ insertAssistantBetweenToolAndUser: true });
+      const params = buildParams(model, ctx, defaultOptions(), compat);
+      // Expect three messages: tool, assistant placeholder, user (note: provider expects 'tool' role instead of toolResult)
+      const roles = params.messages.map((m: any) => m.role);
+      expect(roles).toEqual(['tool', 'assistant', 'user']);
+      const asstMsg = params.messages[1];
+      expect(asstMsg.content).toBe('Processed tool results.');
+    });
+  });
+
+  describe('tools parameter handling', () => {
+    it('sets params.tools = [] when no tools provided but tool calls present in history', () => {
+      const model = defaultModel();
+      const ctx = defaultContext({
+        messages: [{
+          role: 'assistant',
+          content: [{ type: 'toolCall', id: 'c1', name: 'bash', arguments: { cmd: 'ls' } }],
+        }],
+      });
+      const params = buildParams(model, ctx, defaultOptions(), defaultCompat());
+      expect(params.tools).toEqual([]);
+    });
+
+    it('leaves params.tools undefined when no tools and no tool calls', () => {
+      const model = defaultModel();
+      const ctx = defaultContext({ messages: [{ role: 'user', content: 'hi' }] });
+      const params = buildParams(model, ctx, defaultOptions(), defaultCompat());
+      expect(params.tools).toBeUndefined();
+    });
+  });
+
+  describe('reasoningEffort handling', () => {
+    const modelWithReasoning = defaultModel({ reasoning: true });
+    const optionsWithEffort = defaultOptions({ reasoningEffort: 'medium' });
+
+    it('enables thinking when thinkingFormat is zai', () => {
+      const compat = defaultCompat({ supportsReasoningEffort: true, thinkingFormat: 'zai' });
+      const params = buildParams(modelWithReasoning, defaultContext(), optionsWithEffort, compat);
+      expect(params.enable_thinking).toBe(true);
+    });
+
+    it('enables thinking when thinkingFormat is qwen', () => {
+      const compat = defaultCompat({ supportsReasoningEffort: true, thinkingFormat: 'qwen' });
+      const params = buildParams(modelWithReasoning, defaultContext(), optionsWithEffort, compat);
+      expect(params.enable_thinking).toBe(true);
+    });
+
+    it('sets reasoning object when thinkingFormat is openrouter', () => {
+      const compat = defaultCompat({ supportsReasoningEffort: true, thinkingFormat: 'openrouter' });
+      const params = buildParams(modelWithReasoning, defaultContext(), optionsWithEffort, compat);
+      expect(params.reasoning).toEqual({ effort: 'medium' });
+    });
+
+    it('sets reasoning_effort when thinkingFormat other', () => {
+      const compat = defaultCompat({ supportsReasoningEffort: true, thinkingFormat: 'anthropic' });
+      const params = buildParams(modelWithReasoning, defaultContext(), optionsWithEffort, compat);
+      expect(params.reasoning_effort).toBe('medium');
+    });
+
+    it('does not set any reasoning params when reasoning false', () => {
+      const model = defaultModel({ reasoning: false });
+      const compat = defaultCompat({ supportsReasoningEffort: true, thinkingFormat: 'openrouter' });
+      const params = buildParams(model, defaultContext(), optionsWithEffort, compat);
+      expect(params.enable_thinking).toBeUndefined();
+      expect(params.reasoning).toBeUndefined();
+      expect(params.reasoning_effort).toBeUndefined();
+    });
+  });
+
+  describe('usage streaming and store flags', () => {
+    it('sets stream_options when reportUsageInStream true', () => {
+      const compat = defaultCompat({ reportUsageInStream: true });
+      const params = buildParams(defaultModel(), defaultContext(), defaultOptions(), compat);
+      expect(params.stream_options).toEqual({ include_usage: true });
+    });
+
+    it('sets store false when supportsStore true', () => {
+      const compat = defaultCompat({ supportsStore: true });
+      const params = buildParams(defaultModel(), defaultContext(), defaultOptions(), compat);
+      expect(params.store).toBe(false);
+    });
+  });
 });
