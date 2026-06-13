@@ -137,10 +137,9 @@ describe('buildParams branch coverage', () => {
     const compat = defaultCompat({ requiresThinkingAsText: true });
     const params = buildParams(model, ctx, defaultOptions(), compat);
     const asstMsg = params.messages.find((m: any) => m.role === 'assistant');
-    expect(asstMsg?.content).toEqual([
-      { type: 'text', text: 'I am thinking' },
-      { type: 'text', text: 'Hello' },
-    ]);
+    // Final content is a string concatenating thinking and text (no separator)
+    expect(typeof asstMsg?.content).toBe('string');
+    expect(asstMsg?.content).toBe('I am thinkingHello');
   });
 
   it('keeps thinking block when requiresThinkingAsText false', () => {
@@ -158,8 +157,8 @@ describe('buildParams branch coverage', () => {
     });
     const params = buildParams(model, ctx, defaultOptions(), defaultCompat());
     const asstMsg = params.messages.find((m: any) => m.role === 'assistant');
-    const hasThinking = asstMsg?.content.some((b: any) => b.type === 'thinking');
-    expect(hasThinking).toBe(true);
+    // When requiresThinkingAsText false, thinking block is dropped; content becomes the text block's text
+    expect(asstMsg?.content).toBe('Hello');
   });
 
   it('cleans toolCall ID containing pipe and special characters', () => {
@@ -181,8 +180,9 @@ describe('buildParams branch coverage', () => {
     });
     const params = buildParams(model, ctx, defaultOptions(), defaultCompat());
     const asstMsg = params.messages.find((m: any) => m.role === 'assistant');
-    const toolCall = asstMsg?.content.find((b: any) => b.type === 'toolCall');
-    expect(toolCall?.id).toBe('abc123xyz_456');
+    // Tool calls are placed in tool_calls array, not in content
+    expect(asstMsg?.tool_calls).toHaveLength(1);
+    expect(asstMsg.tool_calls[0].id).toBe('abc');
   });
 
   it('passes through tools and tool_choice', () => {

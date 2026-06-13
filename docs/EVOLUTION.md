@@ -516,6 +516,23 @@
 
 ---
 
+### Round 28 (2026-06-13): OpenAI-Compatible Provider Branch Tests
+
+**Problem**: The OpenAI-compatible provider still had many uncovered branches in `buildParams` and related logic.
+
+**Solution**:
+- Created `src/llm/providers/openai-compatible.branches.test.ts` with 10 branch-focused tests.
+- Covered system message role selection (`system` vs `developer`), max tokens parameter name variations (`max_tokens`, `max_output_tokens`).
+- Addressed `requiresThinkingAsText` behavior: when true, thinking blocks are converted to text and concatenated; when false, thinking is dropped and only text blocks remain.
+- Verified toolCall ID normalization (splitting on pipe, removing special characters) via `tool_calls` array in final request.
+- Tested tools and tool_choice passthrough.
+
+**Impact**:
+- Covered additional branches in the provider; test suite remains fully passing.
+- Incremental branch coverage improvement continues toward 80% target.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
