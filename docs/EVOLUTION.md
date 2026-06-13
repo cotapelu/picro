@@ -336,6 +336,39 @@
 
 **Tests**: +16 new unit tests. Total passing tests: ~2249+.
 
+### Round 17 (2026-06-13): SettingsManager Branch Coverage
+
+**Problem**: SettingsManager had numerous conditional branches in deep merge, settings retrieval, and defaults that were untested.
+
+**Solution**: Added `src/runtime/settings-manager.branches.test.ts` with 12 tests covering:
+- `deepMergeSettings`: nested merging, top-level replacement, array replacement, null/undefined handling
+- `getCompactionSettings`: default values, overrides, partial merges, edge cases
+- `getRetrySettings`: default values, overrides, partial merges
+- `getBranchSummarySettings`: defaults and overrides
+- Mutator methods (`setCompactionEnabled`, `setRetryEnabled`) effect on settings
+
+**Impact**: Increases coverage for core runtime configuration module; ensures settings composition works correctly.
+
+**Tests**: +12 new unit tests. Total passing tests: ~2270+.
+
+### Round 18 (2026-06-13): ToolExecutor Branch Coverage
+
+**Problem**: ToolExecutor had complex branching for before/after hooks, caching, execution modes, progress updates, and error handling that needed dedicated tests.
+
+**Solution**: Created `src/agent/tool-executor.branches.test.ts` with 19 comprehensive tests covering:
+- `beforeToolCall` returning `block: true` skips tool and after hook; no-block proceeds normally; throwing error propagates
+- `afterToolCall` success override: result modification, `isError` conversion, metadata details, `terminate` flag
+- `afterToolCall` error override: error message override, converting error to success
+- Timeout handling
+- Caching: enabled/disabled, cache hits, LRU eviction when size exceeded
+- `executeAll`: parallel (default), sequential (global), sequential (per-tool override), abort propagation
+- Signal integration: abort passed to context
+- Progress updates: `emitProgressUpdates` true emits `tool:progress`; false suppresses it (still emits start/end)
+
+**Impact**: Substantially increases branch coverage for critical tool execution module; validates hook semantics and caching behavior.
+
+**Tests**: +19 new unit tests. Total passing tests: ~2300+.
+
 ---
 
 ## Planned Refactors (Next Rounds)

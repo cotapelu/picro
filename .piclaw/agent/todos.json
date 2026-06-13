@@ -3,37 +3,32 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Coverage Increase Round 15",
+      "name": "Coverage Push",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Add unit tests for AgentLoop missing branches (abort during LLM, streaming errors, prepareNextTurn failures)",
+          "content": "Add SettingsManager branch tests",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Add unit tests for AgentSession missing branches (model switching auth failures, queue overflow, compaction errors, retry edge cases)",
+          "content": "Add ToolExecutor branch tests",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Run tests and verify coverage increases to ≥80%",
+          "content": "Run full suite and verify coverage >=80%",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Update PROJECT_STATE.md, AGENT_METRICS.md, EVOLUTION.md with iteration results",
-          "status": "pending"
-        },
-        {
-          "id": "task-5",
-          "content": "Git commit with evolution round message",
+          "content": "Update evolution docs and commit",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 6,
+  "nextTaskId": 5,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-13T15:53:21.685Z"
+  "updatedAt": "2026-06-13T16:50:30.393Z"
 }
