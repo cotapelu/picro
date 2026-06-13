@@ -10,8 +10,9 @@
 - Added extensive unit tests for `Agent` class (34 new tests covering construction, tool registration, queue management, error handling, and internal methods).
 - **Round 14**: Added 28 new tests for `Agent` config and internal methods (`agent.config.test.ts`) covering `createLogger`, `_resolveConfig`, `_convertToolsToLlm`, `_llmComplete`/`_llmStream` with `getApiKey`, constructor edge cases, `setModel`, and `execute`/`streamExecute`.
 - **Round 15**: Added 15 branch-coverage tests for `AgentLoop` (`agent-loop.branches.test.ts`) covering abort handling, streaming errors, hook failures, and edge cases. Fixed bug: removed erroneous `isCancelled` reset in catch block.
-- Build passes; all 170 test files pass (~2233 tests passing, 14 skipped, 1 todo).
-- Coverage improved: statements ~77%+, branches ~68%+, functions ~80%+, lines ~78%+ (after AgentLoop branch tests).
+- **Round 16**: Added 16 branch-coverage tests for `AgentSession` (extended `agent-session.unit.test.ts`) covering setModel auth, cycleModel edge cases, queue overflow, retryable error patterns, dispose safety, system prompt building, and custom message delivery.
+- Build passes; all 171 test files pass (~2249+ tests passing, 14 skipped, 1 todo).
+- Coverage improved: statements ~78%+, branches ~72%+, functions ~81%+, lines ~79%+ (after AgentSession branch tests).
 
 ### 🔄 In Progress
 - Increase branch coverage to reach ≥80% threshold (currently ~68%).

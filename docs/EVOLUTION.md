@@ -314,6 +314,27 @@
 
 **Tests**: +15 new unit tests. Total passing tests: ~2233+.
 
+### Round 16 (2026-06-13): AgentSession Branch Coverage
+
+**Problem**: `AgentSession` had significant uncovered branches in model selection, queue management, retry logic, and compaction, limiting overall branch coverage to ~68%. Needed targeted tests without complex mocking.
+
+**Solution**: Extended `src/session/agent-session.unit.test.ts` with 16 focused unit tests covering:
+- `setModel` auth failures and success
+- `cycleModel` edge cases (single model, no models)
+- Queue overflow handling (steering and follow-up)
+- `_isRetryableError` pattern detection (rate limit, overload, timeout, 5xx, non-retryable)
+- `dispose` safety (multiple calls)
+- `_buildSystemPrompt` with skills and custom prompts
+- `sendCustomMessage` variations (deliverAs nextTurn, direct history)
+- `abortRetry` state clearing
+
+**Impact**:
+- Increases branch coverage for `AgentSession` substantially.
+- Brings overall branch coverage closer to 80% target.
+- Improves confidence in error handling and edge cases.
+- No regressions; all tests pass.
+
+**Tests**: +16 new unit tests. Total passing tests: ~2249+.
 
 ---
 

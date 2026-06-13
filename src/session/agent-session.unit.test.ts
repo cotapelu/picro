@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { AgentSession } from './agent-session.js';
+import type { Model } from '../llm/index.js';
+import { SettingsManager } from '../runtime/settings-manager.js';
+import { DefaultModelRegistry } from './model-registry.js';
+import { SessionManager } from './session-manager.js';
 
 describe('AgentSession unit', () => {
   it('getLeafId returns sessionManager.getLeafId()', () => {
@@ -124,5 +128,169 @@ describe('AgentSession unit', () => {
     (agentSession as any)._branchSummaryAbortController = { abort };
     agentSession.abortBranchSummary();
     expect(abort).toHaveBeenCalled();
+  });
+});
+
+describe('AgentSession branch coverage', () => {
+  const mockModel: Model = {
+    id: 'gpt-4',
+    provider: 'openai',
+    name: 'GPT-4',
+    contextWindow: 128000,
+    maxInputTokens: 128000,
+    maxOutputTokens: 4096,
+    cost: { input: 0.03, output: 0.06, total: 0.09 },
+    reasoning: true,
+  } as Model;
+
+  function buildSession(overrides: any = {}) {
+    const agent = { subscribe: () => () => {}, registerTool: vi.fn(), clearAllQueues: vi.fn(), abort: vi.fn(), setModel: vi.fn(), getToolNames: () => [], steer: vi.fn(), followUp: vi.fn() };
+    const sessionManager = {
+      getLeafId: vi.fn().mockReturnValue('leaf'),
+      getSessionFile: vi.fn().mockReturnValue(undefined),
+      getSessionId: vi.fn().mockReturnValue('sid'),
+      appendMessage: vi.fn(),
+      appendModelChange: vi.fn(),
+      appendThinkingLevelChange: vi.fn(),
+      getBranch: vi.fn().mockReturnValue([]),
+      buildSessionContext: vi.fn().mockReturnValue({ messages: [] }),
+    } as any;
+    const settingsManager = SettingsManager.inMemory({});
+    const modelRegistry = new DefaultModelRegistry();
+    return new AgentSession({
+      agent,
+      sessionManager,
+      settingsManager,
+      cwd: '/test',
+      resourceLoader: {
+        getAgentsFiles: () => undefined,
+        getSkills: () => undefined,
+        getAppendSystemPrompt: () => [],
+        getExtensions: () => ({ runtime: { flagValues: new Map() }, extensions: [], errors: [] }),
+      },
+      modelRegistry,
+      ...overrides,
+    });
+  }
+
+  describe('setModel', () => {
+    it('throws when no API key configured', async () => {
+      const session = buildSession({ modelRegistry: new DefaultModelRegistry() });
+      const modelNoAuth = { ...mockModel, provider: 'anthropic', id: 'claude-3' } as Model;
+      await expect(session.setModel(modelNoAuth)).rejects.toThrow(/No API key/);
+    });
+
+    it('accepts model when hasConfiguredAuth returns true', async () => {
+      const session = buildSession();
+      vi.spyOn(session.modelRegistry, 'hasConfiguredAuth').mockReturnValue(true);
+      await expect(session.setModel(mockModel)).resolves.not.toThrow();
+    });
+  });
+
+  describe('cycleModel', () => {
+    it('returns undefined when only one scoped model', async () => {
+      const session = buildSession({ scopedModels: [{ model: mockModel }] });
+      const result = await session.cycleModel('forward');
+      expect(result).toBeUndefined();
+    });
+
+    it('returns undefined when no scoped models and no available models', async () => {
+      const session = buildSession();
+      vi.spyOn(session.modelRegistry, 'getAvailable').mockResolvedValue([]);
+      const result = await session.cycleModel('forward');
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe('queue management', () => {
+    it('evicts oldest steering when exceeding maxSteeringQueueSize', async () => {
+      const session = buildSession({ maxSteeringQueueSize: 2 });
+      await (session as any)._queueSteer('a');
+      await (session as any)._queueSteer('b');
+      await (session as any)._queueSteer('c');
+      expect(session.getSteeringMessages()).toEqual(['b', 'c']);
+    });
+
+    it('evicts oldest follow-up when exceeding maxFollowUpQueueSize', async () => {
+      const session = buildSession({ maxFollowUpQueueSize: 2 });
+      await (session as any)._queueFollowUp('1');
+      await (session as any)._queueFollowUp('2');
+      await (session as any)._queueFollowUp('3');
+      expect(session.getFollowUpMessages()).toEqual(['2', '3']);
+    });
+  });
+
+  describe('isRetryableError detection', () => {
+    const session = buildSession();
+    const isRetryable = (msg: any) => (session as any)._isRetryableError(msg);
+
+    it('detects rate limit errors', () => {
+      expect(isRetryable({ errorMessage: 'Rate limit exceeded' })).toBe(true);
+      expect(isRetryable({ errorMessage: '429 Too Many Requests' })).toBe(true);
+    });
+    it('detects overload errors', () => {
+      expect(isRetryable({ errorMessage: 'Service overloaded' })).toBe(true);
+    });
+    it('detects timeout errors', () => {
+      expect(isRetryable({ errorMessage: 'Request timed out' })).toBe(true);
+    });
+    it('detects 5xx errors', () => {
+      expect(isRetryable({ errorMessage: '500 Internal Server Error' })).toBe(true);
+      expect(isRetryable({ errorMessage: '503 Service Unavailable' })).toBe(true);
+    });
+    it('rejects non-retryable errors', () => {
+      expect(isRetryable({ errorMessage: 'Invalid API key' })).toBe(false);
+      expect(isRetryable({})).toBe(false);
+    });
+  });
+
+  describe('dispose', () => {
+    it('can be called multiple times safely', () => {
+      const session = buildSession();
+      expect(() => session.dispose()).not.toThrow();
+      expect(() => session.dispose()).not.toThrow();
+    });
+  });
+
+  describe('_buildSystemPrompt', () => {
+    it('includes skills from resourceLoader', () => {
+      const session = buildSession({
+        resourceLoader: {
+          getAgentsFiles: () => ({ agentsFiles: [] }),
+          getSkills: () => ({ skills: [{ id: 's1', name: 'Skill1', description: 'A skill', hooks: [] }] }),
+          getAppendSystemPrompt: () => ['Custom'],
+        } as any,
+      });
+      const prompt = (session as any)._buildSystemPrompt();
+      expect(prompt).toContain('Skill1');
+      expect(prompt).toContain('Custom');
+    });
+  });
+
+  describe('sendCustomMessage', () => {
+    it('adds to history when deliverAs nextTurn', () => {
+      const session = buildSession();
+      (session as any)._agentState = { history: [] };
+      session.sendCustomMessage({ customType: 't', content: 'data' }, { deliverAs: 'nextTurn' });
+      expect((session as any)._pendingNextTurnMessages.length).toBe(1);
+    });
+
+    it('adds to history when not streaming and no triggerTurn', () => {
+      const session = buildSession();
+      (session as any)._agentState = { history: [] };
+      session.sendCustomMessage({ customType: 't', content: {} });
+      expect((session as any)._agentState.history.length).toBe(1);
+    });
+  });
+
+  describe('abort methods', () => {
+    it('abortRetry clears state', () => {
+      const session = buildSession();
+      (session as any)._retryPromise = Promise.resolve();
+      (session as any)._retryResolve = vi.fn();
+      session.abortRetry();
+      expect((session as any)._retryAborted).toBe(true);
+      expect((session as any)._retryPromise).toBeUndefined();
+    });
   });
 });
