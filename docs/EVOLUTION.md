@@ -420,6 +420,39 @@
 
 ---
 
+### Round 22 (2026-06-13): MemoryRetriever Branch Tests
+
+**Problem**: MemoryRetriever in `retrieval.ts` had ~18 uncovered branches, particularly in `retrieve()` filtering logic.
+
+**Solution**:
+- Created `src/memory/retrieval.branches.test.ts` with 12 tests covering:
+  - `filterByProject` with explicit options and default project fallback.
+  - `filterByAction`, `filterByFile`, `filterByTask` paths.
+  - `retrieve()` limit handling and empty array handling.
+- Ensured proper test data to isolate each filter branch.
+
+**Impact**:
+- Covered core retrieval filtering branches; branch coverage improved slightly (~+0.5% estimated).
+- All tests pass; no regressions.
+
+---
+
+### Round 23 (2026-06-13): AgentSession Prompt Branch Tests
+
+**Problem**: AgentSession.prompt() had several uncovered branches: streaming without streamingBehavior, missing model, missing auth, and success path.
+
+**Solution**:
+- Created `src/session/agent-session-prompt.branches.test.ts` with 6 tests covering:
+  - Streaming queue decisions (steer/followUp) based on `streamingBehavior`.
+  - Validation errors: missing model (`formatNoModelSelectedMessage`) and missing API key (`formatNoApiKeyFoundMessage`).
+  - Success path: agent.run invoked and pending bash flushed.
+
+**Impact**:
+- Covered core prompt method branches; branch coverage improved slightly.
+- All tests pass; no regressions.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

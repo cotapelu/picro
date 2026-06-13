@@ -3,46 +3,46 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "SessionManager Branch Coverage",
+      "name": "Coverage Push: SessionManager & Retrieval",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Design branch tests for SessionManager error paths",
+          "content": "Design tests for SessionManager error paths (branch, resetLeaf, getEntry)",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Add tests for open() with invalid JSON and missing fields",
+          "content": "Add tests for SessionManager branch() when parent entry missing",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Add tests for branch() when parent not found",
-          "status": "pending"
-        },
-        {
-          "id": "task-4",
           "content": "Add tests for resetLeaf() with null leafId",
           "status": "pending"
         },
         {
+          "id": "task-4",
+          "content": "Add tests for getEntry() with unknown id",
+          "status": "pending"
+        },
+        {
           "id": "task-5",
-          "content": "Add tests for getEntry() missing id",
+          "content": "Add tests for Retrieval scoring edge cases (empty query, no matches, minScore)",
           "status": "pending"
         },
         {
           "id": "task-6",
-          "content": "Add tests for importSession unknown version",
+          "content": "Add tests for MemoryScorer expected action inference",
           "status": "pending"
         },
         {
           "id": "task-7",
-          "content": "Run tests and coverage, verify",
+          "content": "Run tests, ensure no regressions",
           "status": "pending"
         },
         {
           "id": "task-8",
-          "content": "Update docs and commit",
+          "content": "Update docs and commit round",
           "status": "pending"
         }
       ]
@@ -50,5 +50,5 @@
   ],
   "nextTaskId": 9,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-13T18:53:58.595Z"
+  "updatedAt": "2026-06-13T19:22:50.032Z"
 }
