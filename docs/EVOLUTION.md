@@ -666,6 +666,25 @@
 
 ---
 
+### Round 37 (2026-06-13): SettingsManager Getters Branch Tests
+
+**Problem**: Many simple getter methods in `SettingsManager` lacked branch tests, resulting in uncovered branches for default vs overridden paths.
+
+**Solution**:
+- Created `src/runtime/settings-manager-more.branches.test.ts` with 40 tests covering default and overridden values for numerous getters, including:
+  - `getSteeringMode`, `getFollowUpMode`, `getTheme`, `getDefaultThinkingLevel`, `getTransport`.
+  - `getHideThinkingBlock`, `getShellPath`, `getQuietStartup`, `getShellCommandPrefix`.
+  - `getEnableInstallTelemetry`, `getPackages`, `getExtensionPaths`, `getSkillPaths`.
+  - `getEnableSkillCommands`, `getShowImages`, `getImageWidthCells`, `getEnabledModels`.
+  - `getDoubleEscapeAction`, `getThinkingBudgets`, `getCodeBlockIndent`.
+  Handled nested settings structures (e.g., `terminal.showImages`, `markdown.codeBlockIndent`).
+
+**Impact**:
+- Significantly increased branch coverage across SettingsManager; branches for all these getters are now covered.
+- Overall branch coverage estimate: ~80.0% – target reached!
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
