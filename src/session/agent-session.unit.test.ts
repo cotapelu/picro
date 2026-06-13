@@ -4,6 +4,7 @@ import type { Model } from '../llm/index.js';
 import { SettingsManager } from '../runtime/settings-manager.js';
 import { DefaultModelRegistry } from './model-registry.js';
 import { SessionManager } from './session-manager.js';
+import * as compaction from './compaction.js';
 
 describe('AgentSession unit', () => {
   it('getLeafId returns sessionManager.getLeafId()', () => {
@@ -291,6 +292,84 @@ describe('AgentSession branch coverage', () => {
       session.abortRetry();
       expect((session as any)._retryAborted).toBe(true);
       expect((session as any)._retryPromise).toBeUndefined();
+    });
+  });
+
+  describe('queue methods', () => {
+    it('_queueSteer evicts oldest when exceeding maxSteeringQueueSize', async () => {
+      const session = buildSession({ maxSteeringQueueSize: 2 });
+      await (session as any)._queueSteer('a');
+      await (session as any)._queueSteer('b');
+      await (session as any)._queueSteer('c');
+      expect(session.getSteeringMessages()).toEqual(['b', 'c']);
+    });
+
+    it('_queueFollowUp evicts oldest when exceeding maxFollowUpQueueSize', async () => {
+      const session = buildSession({ maxFollowUpQueueSize: 2 });
+      await (session as any)._queueFollowUp('1');
+      await (session as any)._queueFollowUp('2');
+      await (session as any)._queueFollowUp('3');
+      expect(session.getFollowUpMessages()).toEqual(['2', '3']);
+    });
+  });
+
+  describe('_isRetryableError', () => {
+    const isRetryable = (session: any, msg: any) => session._isRetryableError(msg);
+
+    it('detects rate limit 429 and variations', () => {
+      const session = buildSession();
+      expect(isRetryable(session, { errorMessage: 'Rate limit exceeded' })).toBe(true);
+      expect(isRetryable(session, { errorMessage: '429 Too Many Requests' })).toBe(true);
+    });
+
+    it('detects 5xx server errors', () => {
+      const session = buildSession();
+      expect(isRetryable(session, { errorMessage: '500 Internal Server Error' })).toBe(true);
+      expect(isRetryable(session, { errorMessage: '502 Bad Gateway' })).toBe(true);
+      expect(isRetryable(session, { errorMessage: '503 Service Unavailable' })).toBe(true);
+      expect(isRetryable(session, { errorMessage: '504 Gateway Timeout' })).toBe(true);
+    });
+
+    it('detects overload and timeout errors', () => {
+      const session = buildSession();
+      expect(isRetryable(session, { errorMessage: 'Service overloaded' })).toBe(true);
+      expect(isRetryable(session, { errorMessage: 'Request timed out' })).toBe(true);
+    });
+
+    it('rejects non-retryable errors', () => {
+      const session = buildSession();
+      expect(isRetryable(session, { errorMessage: 'Invalid API key' })).toBe(false);
+      expect(isRetryable(session, { errorMessage: 'Model not found' })).toBe(false);
+      expect(isRetryable(session, {})).toBe(false);
+    });
+  });
+
+  describe('_buildSystemPrompt', () => {
+    it('includes skills and custom append prompt', () => {
+      const session = buildSession({
+        resourceLoader: {
+          getAgentsFiles: () => ({ agentsFiles: [] }),
+          getSkills: () => ({
+            skills: [{ id: 's1', name: 'Skill1', description: 'A skill', hooks: [] as any[] }],
+          }),
+          getAppendSystemPrompt: () => ['Additional instructions'],
+        } as any,
+      });
+      const prompt = (session as any)._buildSystemPrompt();
+      expect(prompt).toContain('Skill1');
+      expect(prompt).toContain('Additional instructions');
+    });
+
+    it('uses default when no skills and no agents files', () => {
+      const session = buildSession({
+        resourceLoader: {
+          getAgentsFiles: () => ({ agentsFiles: [] }),
+          getSkills: () => ({ skills: [] }),
+          getAppendSystemPrompt: () => [],
+        } as any,
+      });
+      const prompt = (session as any)._buildSystemPrompt();
+      expect(prompt).toContain('You are an expert coding assistant');
     });
   });
 

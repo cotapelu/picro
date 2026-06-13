@@ -630,6 +630,24 @@
 
 ---
 
+### Round 35 (2026-06-13): AgentSession Unit Tests Expansion
+
+**Problem**: Additional branches in `AgentSession` remained untested, including queue eviction, retryable error detection variations, system prompt building, and threshold-based compaction.
+
+**Solution**:
+- Extended `src/session/agent-session.unit.test.ts` with 9 new tests covering:
+  - `_queueSteer` and `_queueFollowUp` eviction when exceeding max queue sizes.
+  - `_isRetryableError` for multiple error patterns (rate limit, 5xx, overload, timeout, non-retryable).
+  - `_buildSystemPrompt` with skills & append prompts and default case.
+  - `_checkCompaction` threshold mode trigger.
+
+**Impact**:
+- Significant branch coverage gain in core agent session.
+- All tests pass; no regressions.
+- Overall branch coverage estimate: ~79.0%.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

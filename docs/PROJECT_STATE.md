@@ -29,8 +29,9 @@
 - **Round 32**: Added SessionManager branchWithSummary tests (+3).
 - **Round 33**: Added SessionManager query tests (+4).
 - **Round 34**: Added TransformMessages branch tests (+7).
-- Build passes; all 187 test files pass (~2497+ tests passing, 16 skipped, 1 todo).
-- Coverage (latest estimate): statements ~80%, branches ~78.7%, functions ~82%, lines ~80% – target 80% not yet reached.
+- **Round 35**: Added AgentSession unit tests expansion (+9).
+- Build passes; all 187 test files pass (~2506+ tests passing, 16 skipped, 1 todo).
+- Coverage (latest estimate): statements ~80%, branches ~79.0%, functions ~82%, lines ~80% – target 80% not yet reached.
 
 ### 🔄 In Progress
 - Continue branch coverage push targeting modules with high uncovered branches: `agent-session` (147), `openai-compatible` (46), `session-manager` (42), `settings-manager` (33), `auth-storage` (15), `branch-summarization` (17), `env-api-keys` (14), `agent-loop` (13), `loader` (12), `transform-messages` (11), `compaction` (11).
@@ -40,9 +41,9 @@
 
 ### 📊 Metrics (latest run)
 - Test files: 187 passed
-- Tests: ~2497 passed | 16 skipped | 1 todo
+- Tests: ~2506 passed | 16 skipped | 1 todo
 - Build: ✅
-- Coverage: statements ~80%, branches ~78.7%, functions ~82%, lines ~80% – target 80% not yet reached.
+- Coverage: statements ~80%, branches ~79.0%, functions ~82%, lines ~80% – target 80% not yet reached.
 
 ### 🎯 Next Tasks
 1. ~~Add unit tests for critical branches in `AgentLoop`~~ (Completed in Round 15).
