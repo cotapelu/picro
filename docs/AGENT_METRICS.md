@@ -27,13 +27,14 @@
 | 22     | 2026-06-13 | SessionManager branch tests (+7) | ~2386+     | 0           | 0         |
 | 23     | 2026-06-13 | EnvApiKeys branch tests (+11) | ~2397+     | 0           | 0         |
 | 24     | 2026-06-13 | AuthStorage branch tests (+26) | ~2423+     | 0           | 0         |
+| 25     | 2026-06-13 | AgentSession event handling tests (+21) | ~2444+     | 0           | 0         |
 
 ## Quality Indicators
 
 - **Test Failure Rate**: <1% (2361+ tests passing)
 - **Mean Time To Repair (MTTR)**: < 5 min (fast fix of test failures)
 - **Rollback Count**: 0
-- **Coverage**: ~73.0% branches (estimated), ~80% statements/lines (target 80% not yet reached, work ongoing)
+- **Coverage**: ~75.0% branches (estimated), ~80% statements/lines (target 80% not yet reached, work ongoing)
 
 ## Observations
 

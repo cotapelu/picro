@@ -3,52 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Coverage Push: SessionManager & Retrieval",
+      "name": "Coverage Push: AgentSession Event Handling",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Design tests for SessionManager error paths (branch, resetLeaf, getEntry)",
+          "content": "Design tests for _processAgentEvent covering auto_retry_end, message:start, message:end, agent:end, compaction, performance tracking.",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Add tests for SessionManager branch() when parent entry missing",
+          "content": "Mock agent and necessary state to invoke _processAgentEvent",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Add tests for resetLeaf() with null leafId",
+          "content": "Implement tests for assistant message handling (stopReason, retry emission)",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Add tests for getEntry() with unknown id",
+          "content": "Implement tests for agent:end with retryable error and early return",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Add tests for Retrieval scoring edge cases (empty query, no matches, minScore)",
+          "content": "Run tests and verify coverage increment",
           "status": "pending"
         },
         {
           "id": "task-6",
-          "content": "Add tests for MemoryScorer expected action inference",
-          "status": "pending"
-        },
-        {
-          "id": "task-7",
-          "content": "Run tests, ensure no regressions",
-          "status": "pending"
-        },
-        {
-          "id": "task-8",
-          "content": "Update docs and commit round",
+          "content": "Update docs and commit Round 25",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 9,
+  "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-13T19:22:50.032Z"
+  "updatedAt": "2026-06-13T20:03:13.977Z"
 }

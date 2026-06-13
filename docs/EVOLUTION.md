@@ -482,6 +482,23 @@
 
 ---
 
+### Round 25 (2026-06-13): AgentSession Event Handling Branch Tests
+
+**Problem**: `AgentSession` had many uncovered branches in `_processAgentEvent` and related event handling logic.
+
+**Solution**:
+- Created `src/session/agent-session-events.branches.test.ts` with 21 tests covering:
+  - `auto_retry_end` resetting retry abort flag.
+  - `message:start` user queue removal (steering/follow-up) and overflow recovery reset.
+  - `message:end` for user/assistant/tool appending to session manager.
+  - `_handleAgentEvent` for assistant-specific logic: setting `_lastAssistantMessage`, resetting `_overflowRecoveryAttempted`, auto-retry success emission, and retry attempt reset.
+  - `agent:end` scenarios: with no last assistant, with retryable error (early return), normal flow (retry resolve, flush, performance), auto-compaction (fixed bug: now uses captured `msg` instead of cleared property), performance tracking.
+  - Fixed compaction call to use `msg` instead of `_lastAssistantMessage` which was cleared earlier.
+
+**Impact**:
+- Covered core event handling branches in AgentSession; branch coverage improved to ~75%.
+- All tests pass; no regressions.
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

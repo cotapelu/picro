@@ -1424,8 +1424,8 @@ export class AgentSession {
       // Auto-compaction if enabled (handles both overflow and threshold)
       const compactionConfig = this._config.compaction ?? {};
       const autoCompact = compactionConfig.autoCompact !== false; // default true
-      if (autoCompact && this._lastAssistantMessage) {
-        await this._checkCompaction(this._lastAssistantMessage, false);
+      if (autoCompact && msg) {
+        await this._checkCompaction(msg, false);
       }
     }
   }
