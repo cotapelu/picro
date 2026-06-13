@@ -20,8 +20,10 @@
 - **Round 23**: Added EnvApiKeys branch tests (11) covering getApiKey fallbacks and related helpers.
 - **Round 24**: Added AuthStorage branch tests (26) covering hasAuth, getApiKey, getAuthStatus, lifecycle.
 - **Round 25**: Added AgentSession event handling tests (21) covering `_processAgentEvent` branches and fixed compaction call.
-- Build passes; all 182 test files pass (~2444+ tests passing, 16 skipped, 1 todo).
-- Coverage (latest estimate): statements ~80%, branches ~75.0%, functions ~82%, lines ~80% – target 80% not yet reached.
+- **Round 26**: SessionManager branch tests refinement (+1).
+- **Round 27**: Added BranchSummarization branch tests (15) covering file ops, list formatting, entry collection.
+- Build passes; all 183 test files pass (~2460+ tests passing, 16 skipped, 1 todo).
+- Coverage (latest estimate): statements ~80%, branches ~76.0%, functions ~82%, lines ~80% – target 80% not yet reached.
 
 ### 🔄 In Progress
 - Continue branch coverage push targeting modules with high uncovered branches: `agent-session` (147), `openai-compatible` (46), `session-manager` (42), `settings-manager` (33), `auth-storage` (15), `branch-summarization` (17), `env-api-keys` (14), `agent-loop` (13), `loader` (12), `transform-messages` (11), `compaction` (11).
@@ -30,10 +32,10 @@
 - Branch coverage at 70.38% is below target; actions underway.
 
 ### 📊 Metrics (latest run)
-- Test files: 182 passed
-- Tests: ~2444 passed | 16 skipped | 1 todo
+- Test files: 183 passed
+- Tests: ~2460 passed | 16 skipped | 1 todo
 - Build: ✅
-- Coverage: statements ~80%, branches ~75.0%, functions ~82%, lines ~80% – target 80% not yet reached.
+- Coverage: statements ~80%, branches ~76.0%, functions ~82%, lines ~80% – target 80% not yet reached.
 
 ### 🎯 Next Tasks
 1. ~~Add unit tests for critical branches in `AgentLoop`~~ (Completed in Round 15).

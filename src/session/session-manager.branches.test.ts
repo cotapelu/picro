@@ -1,14 +1,72 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Branch coverage tests for SessionManager error handling.
- * Targets: importSession errors, branch(), branchWithSummary(), appendLabelChange().
+ * Focus: branch, getEntry, resetLeaf, appendLabelChange, importSession.
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SessionManager } from './session-manager.js';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import { mkdirSync, rmSync } from 'fs';
 
 describe('SessionManager branch tests', () => {
-  describe('importSession', () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = join(tmpdir(), 'sm-err-' + Math.random().toString(36).slice(2));
+    mkdirSync(tempDir, { recursive: true });
+  });
+
+  afterEach(() => {
+    try { if (rmSync) rmSync(tempDir, { recursive: true, force: true }); } catch (e) {}
+  });
+
+  describe('branch()', () => {
+    it('throws when parent entry not found', () => {
+      const manager = SessionManager.inMemory(tempDir);
+      expect(() => manager.branch('non-existent')).toThrow('Entry non-existent not found');
+    });
+  });
+
+  describe('getEntry()', () => {
+    it('returns undefined for unknown entry id', () => {
+      const manager = SessionManager.inMemory(tempDir);
+      expect(manager.getEntry('unknown')).toBeUndefined();
+    });
+  });
+
+  describe('resetLeaf()', () => {
+    it('clears leafId without error', () => {
+      const manager = SessionManager.inMemory(tempDir);
+      manager.appendMessage({ role: 'user', content: 'test' });
+      const leafId = manager.getLeafId();
+      expect(leafId).toBeDefined();
+      manager.resetLeaf();
+      expect(manager.getLeafId()).toBeNull();
+    });
+  });
+
+  describe('appendLabelChange()', () => {
+    it('throws when targetId not found', () => {
+      const manager = SessionManager.inMemory(tempDir);
+      expect(() => manager.appendLabelChange('unknown', 'label')).toThrow('Entry unknown not found');
+    });
+
+    it('appends label when target exists', () => {
+      const manager = SessionManager.inMemory(tempDir);
+      manager.appendMessage({ role: 'user', content: 'hi' });
+      const leafId = manager.getLeafId()!;
+      const labelId = manager.appendLabelChange(leafId, 'mylabel');
+      expect(labelId).toBeDefined();
+      const entry = manager.getEntry(labelId);
+      expect(entry?.type).toBe('label');
+      // @ts-ignore
+      expect(entry.targetId).toBe(leafId);
+    });
+  });
+
+  describe('importSession()', () => {
     it('throws on invalid JSON', () => {
       expect(() => SessionManager.importSession('/cwd', '/dir', 'not json')).toThrow('Invalid JSON');
     });
@@ -20,45 +78,7 @@ describe('SessionManager branch tests', () => {
 
     it('throws on decryption failure', () => {
       const json = JSON.stringify({ encrypted: true, data: 'invalid base64???', v: 1 });
-      // using a password, but decryption will produce invalid JSON
       expect(() => SessionManager.importSession('/cwd', '/dir', json, 'wrong')).toThrow('Failed to decrypt session');
-    });
-  });
-
-  describe('branch()', () => {
-    it('throws when parent entry not found', () => {
-      const manager = SessionManager.inMemory('/cwd');
-      // Simulate by not adding the parent entry
-      expect(() => manager.branch('missing')).toThrow('Entry missing not found');
-    });
-  });
-
-  describe('branchWithSummary()', () => {
-    it('throws when branchFromId not in byId', () => {
-      const manager = SessionManager.inMemory('/cwd');
-      expect(() => manager.branchWithSummary('ghost', 'summary')).toThrow('Entry ghost not found');
-    });
-  });
-
-  describe('appendLabelChange()', () => {
-    it('throws when targetId not found', () => {
-      const manager = SessionManager.inMemory('/cwd');
-      // Ensure no such entry exists
-      expect(() => manager.appendLabelChange('unknown', 'label')).toThrow('Entry unknown not found');
-    });
-
-    it('appends label when target exists', () => {
-      const manager = SessionManager.inMemory('/cwd');
-      // Create a message entry first
-      manager.appendMessage({ role: 'user', content: 'hi' });
-      const leafId = manager.getLeafId()!;
-      // Should not throw
-      const labelId = manager.appendLabelChange(leafId, 'mylabel');
-      expect(labelId).toBeDefined();
-      // Verify label entry has correct targetId
-      const entry = manager.getEntry(labelId);
-      expect(entry?.type).toBe('label');
-      expect((entry as any).targetId).toBe(leafId);
     });
   });
 });

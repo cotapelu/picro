@@ -499,6 +499,23 @@
 - Covered core event handling branches in AgentSession; branch coverage improved to ~75%.
 - All tests pass; no regressions.
 
+### Round 27 (2026-06-13): BranchSummarization Branch Tests
+
+**Problem**: `branch-summarization` module had many uncovered branches in file ops extraction, list formatting, and entry collection.
+
+**Solution**:
+- Created `src/session/branch-summarization.branches.test.ts` with 15 tests covering:
+  - `extractFileOpsFromMessage`: read/write/edit detection, role filtering, missing args/path.
+  - `computeFileLists`: separating read-only vs modified, sorting.
+  - `formatFileOperations`: empty, read-only, modified-only, both.
+  - `collectEntriesForBranchSummary`: null oldLeafId, found common ancestor, missing entry breaks collection.
+
+**Impact**:
+- Covered most branches in branch-summarization; branch coverage improved incrementally.
+- All tests pass; no regressions.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
