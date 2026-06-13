@@ -462,6 +462,26 @@
 
 ---
 
+### Round 24 (2026-06-13): AuthStorage Branch Tests
+
+**Problem**: `AuthStorage` module had many uncovered branches in `hasAuth()`, `getApiKey()`, `getAuthStatus()`, and lifecycle methods.
+
+**Solution**:
+- Created `src/session/auth-storage.branches.test.ts` with 26 tests covering:
+  - `has()` data presence.
+  - `hasAuth()` across runtime overrides, stored credentials, OAuth expiry, environment, fallback.
+  - `getApiKey()` priority and fallback logic, including `includeFallback` option.
+  - `getAuthStatus()` for all sources.
+  - `parseStorageData()` error handling.
+  - `reload()` loading.
+  - `set()` and `remove()`.
+
+**Impact**:
+- Covered core AuthStorage branches; branch coverage increased to ~73%.
+- All tests pass; no regressions.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
