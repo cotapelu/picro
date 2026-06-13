@@ -15,12 +15,12 @@
 - **Round 18**: Added 19 branch-coverage tests for `ToolExecutor` (`tool-executor.branches.test.ts`) covering before/after hooks, caching, execution strategies, timeout, signal, and progress updates.
 - **Round 19**: Coverage validation and gap analysis; identified modules with high uncovered branches.
 - **Round 20**: Added comprehensive branch tests for `prompt-templates` (24 tests) and `cli-args` (30 tests). Coverage improved but still below target.
-- **Round 21**: Added prompt() error handling and _handleAgentEvent() branch tests to AgentSession (extended `agent-session.unit.test.ts`). Coverage still below target.
-- Build passes; all 177 test files pass (~2361+ tests passing, 16 skipped, 1 todo).
-- Coverage (latest): statements 79.05%, branches 70.38%, functions 81.94%, lines 79.92% – target 80% not yet reached.
+- **Round 21**: Added AgentSession prompt branch tests (6) and MemoryRetriever branch tests (12) totaling +18 tests. Coverage improved but still below target.
+- Build passes; all 178 test files pass (~2379+ tests passing, 16 skipped, 1 todo).
+- Coverage (latest estimate): statements ~79-80%, branches ~71.0%, functions ~82%, lines ~80% – target 80% not yet reached.
 
 ### 🔄 In Progress
-- Continue branch coverage push targeting: `openai-compatible`, `session-manager`, `retrieval`, `auth-storage`, `branch-summarization`, `env-api-keys`, `agent-loop`, `agent-session`.
+- Continue branch coverage push targeting modules with high uncovered branches: `agent-session` (147), `openai-compatible` (46), `session-manager` (42), `settings-manager` (33), `auth-storage` (15), `branch-summarization` (17), `env-api-keys` (14), `agent-loop` (13), `loader` (12), `transform-messages` (11), `compaction` (11).
 
 ### 🐛 Known Issues
 - Branch coverage at 70.38% is below target; actions underway.
