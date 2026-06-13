@@ -444,6 +444,24 @@
 
 ---
 
+### Round 23 (2026-06-13): EnvApiKeys Branch Tests
+
+**Problem**: `env-api-keys` module had 14 uncovered branches, particularly in `getApiKey` fallback logic, `hasApiKey`, and `getRequiredEnvVars`.
+
+**Solution**:
+- Created `src/llm/env-api-keys.branches.test.ts` with 11 tests covering:
+  - Explicit key override.
+  - Provider-specific environment variable lookup.
+  - Fallback chain: common `API_KEY`, provider-specific uppercase, `OPENAI_API_KEY`.
+  - `hasApiKey` boolean return.
+  - `getRequiredEnvVars` for various providers.
+
+**Impact**:
+- Covered core fallback branches; branch coverage increased slightly (~+0.3% estimated).
+- All tests pass; no regressions.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
