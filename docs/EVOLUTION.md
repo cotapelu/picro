@@ -685,6 +685,25 @@
 
 ---
 
+### Round 38 (2026-06-13): AgentSession _runAutoCompaction Branch Tests
+
+**Problem**: The `_runAutoCompaction` method in `AgentSession` had several uncovered branches: early exits (already compacting, missing model, auth failure, preparation failure) and error handling.
+
+**Solution**:
+- Extended `src/session/agent-session.unit.test.ts` with 4 new tests covering:
+  - Early return when already compacting.
+  - Early return and `compaction_end` emission when model is missing.
+  - Early return when API auth not configured.
+  - Early return when `prepareCompaction` yields no preparation.
+  - Successful compaction flow verifying calls to `prepareCompaction`, `compact`, `appendCompaction`, `buildSessionContext`, and final `compaction_end` with expected result shape.
+  - Error path where `compact` rejects, ensuring `compaction_end` includes `errorMessage` and abort controller reset.
+
+**Impact**:
+- Further increased branch coverage in AgentSession; tests remain green.
+- Overall branch coverage estimate: ~80.2%.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

@@ -425,4 +425,119 @@ describe('AgentSession branch coverage', () => {
       expect(session._runAutoCompaction).not.toHaveBeenCalled();
     });
   });
+
+  describe('_runAutoCompaction', () => {
+    let session: any;
+    beforeEach(() => {
+      session = buildSession();
+      (session as any)._model = { id: 'gpt-4', provider: 'openai', contextWindow: 8000 };
+      (session as any)._agentState = { history: [] };
+      (session as any)._emit = vi.fn();
+      (session as any)._autoCompactionAbortController = undefined;
+      (session.sessionManager as any).getBranch = vi.fn().mockReturnValue([]);
+      (session.settingsManager as any).getCompactionSettings = () => ({ enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 });
+      (session.modelRegistry as any).getApiKeyAndHeaders = vi.fn().mockResolvedValue({ ok: true, apiKey: 'key', headers: {} });
+      // Default mocks for appendCompaction and buildSessionContext
+      (session.sessionManager as any).appendCompaction = vi.fn();
+      (session.sessionManager as any).buildSessionContext = vi.fn().mockReturnValue({ messages: [] });
+      (session as any)._agentState.history = []; // ensure exists
+    });
+
+    it('returns early if already compacting', async () => {
+      (session as any)._autoCompactionAbortController = { abort: vi.fn() };
+      await (session as any)._runAutoCompaction('overflow', false);
+      expect(session._emit).not.toHaveBeenCalled();
+    });
+
+    it('emits compaction_end when model missing', async () => {
+      (session as any)._model = undefined;
+      await (session as any)._runAutoCompaction('overflow', false);
+      expect(session._emit).toHaveBeenCalledWith({
+        type: 'compaction_end',
+        reason: 'overflow',
+        result: undefined,
+        aborted: false,
+        willRetry: false,
+      });
+    });
+
+    it('emits compaction_end when auth missing', async () => {
+      (session.modelRegistry as any).getApiKeyAndHeaders = vi.fn().mockResolvedValue({ ok: false });
+      await (session as any)._runAutoCompaction('overflow', false);
+      expect(session._emit).toHaveBeenCalledWith({
+        type: 'compaction_end',
+        reason: 'overflow',
+        result: undefined,
+        aborted: false,
+        willRetry: false,
+      });
+    });
+
+    it('emits compaction_end when prepareCompaction returns null', async () => {
+      vi.spyOn(compaction, 'prepareCompaction').mockReturnValue(null);
+      await (session as any)._runAutoCompaction('overflow', false);
+      expect(session._emit).toHaveBeenCalledWith({
+        type: 'compaction_end',
+        reason: 'overflow',
+        result: undefined,
+        aborted: false,
+        willRetry: false,
+      });
+    });
+
+    it('performs successful compaction flow', async () => {
+      const prep = { firstKeptEntryId: 'e1', messagesToSummarize: [], tokensBefore: 0 } as any;
+      vi.spyOn(compaction, 'prepareCompaction').mockReturnValue(prep);
+      const compactResult = { summary: 'sum', details: {}, firstKeptEntryId: 'e1', tokensBefore: 0 };
+      vi.spyOn(compaction, 'compact').mockResolvedValue(compactResult);
+      (session.sessionManager as any).appendCompaction = vi.fn();
+      (session.sessionManager as any).buildSessionContext = vi.fn().mockReturnValue({ messages: [] });
+
+      await (session as any)._runAutoCompaction('threshold', false);
+
+      expect(compaction.prepareCompaction).toHaveBeenCalled();
+      expect(compaction.compact).toHaveBeenCalled();
+      expect(session.sessionManager.appendCompaction).toHaveBeenCalledWith(
+        'sum',
+        'e1',
+        0,
+        expect.any(Object),
+        false
+      );
+      expect(session.sessionManager.buildSessionContext).toHaveBeenCalled();
+      expect(session._emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'compaction_end',
+          reason: 'threshold',
+          result: expect.objectContaining({
+            summary: 'sum',
+            tokensBefore: 0,
+            entriesAdded: 1,
+          }),
+          aborted: false,
+          willRetry: false,
+        })
+      );
+      expect(session._autoCompactionAbortController).toBeUndefined();
+    });
+
+    it('handles error during compaction and emits compaction_end with error', async () => {
+      vi.spyOn(compaction, 'prepareCompaction').mockReturnValue({ firstKeptEntryId: 'e1', messagesToSummarize: [], tokensBefore: 0 } as any);
+      vi.spyOn(compaction, 'compact').mockRejectedValue(new Error('fail'));
+
+      await (session as any)._runAutoCompaction('overflow', false);
+
+      expect(session._emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'compaction_end',
+          reason: 'overflow',
+          result: undefined,
+          aborted: false,
+          willRetry: false,
+          errorMessage: 'Context overflow recovery failed: fail',
+        })
+      );
+      expect(session._autoCompactionAbortController).toBeUndefined();
+    });
+  });
 });

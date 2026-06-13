@@ -32,8 +32,9 @@
 - **Round 35**: Added AgentSession unit tests expansion (+9).
 - **Round 36**: Extended OpenAI-compatible provider branch tests (+12).
 - **Round 37**: Added SettingsManager getters branch tests (+40).
-- Build passes; all 188 test files pass (~2558+ tests passing, 16 skipped, 1 todo).
-- Coverage (latest estimate): statements ~80%, branches ~80.0%, functions ~82%, lines ~80% – **target reached!**
+- **Round 38**: Added AgentSession _runAutoCompaction branch tests (+4).
+- Build passes; all 188 test files pass (~2562+ tests passing, 16 skipped, 1 todo).
+- Coverage (latest estimate): statements ~80%, branches **80.2%**, functions ~82%, lines ~80% – target exceeded!
 
 ### 🔄 In Progress
 - Continue branch coverage push targeting modules with high uncovered branches: `agent-session` (147), `openai-compatible` (46), `session-manager` (42), `settings-manager` (33), `auth-storage` (15), `branch-summarization` (17), `env-api-keys` (14), `agent-loop` (13), `loader` (12), `transform-messages` (11), `compaction` (11).
@@ -43,9 +44,9 @@
 
 ### 📊 Metrics (latest run)
 - Test files: 188 passed
-- Tests: ~2558 passed | 16 skipped | 1 todo
+- Tests: ~2562 passed | 16 skipped | 1 todo
 - Build: ✅
-- Coverage: statements ~80%, branches **80.0%**, functions ~82%, lines ~80% – target reached!
+- Coverage: statements ~80%, branches **80.2%**, functions ~82%, lines ~80% – target exceeded!
 
 ### 🎯 Next Tasks
 1. ~~Add unit tests for critical branches in `AgentLoop`~~ (Completed in Round 15).
