@@ -704,6 +704,28 @@
 
 ---
 
+### Round 39 (2026-06-13): Retrieval Scoring Branch Tests
+
+**Problem**: The `MemoryScorer.score` method had many uncovered branches: bonuses for multiple matched words, perfect match, exact phrase, file path matches, generic metadata, recency thresholds, content length, and access count.
+
+**Solution**:
+- Created `src/memory/retrieval-scoring.branches.test.ts` with 15 tests covering:
+  - Matched words bonus (+5 for >=2 words).
+  - Perfect match bonus (+15 when all query words matched).
+  - Exact phrase match (+10 when full query appears as substring).
+  - File path bonuses (exact/contains +15; partial per-word +3).
+  - Generic metadata string matching (+3 per word).
+  - Recency factor thresholds (<1h, <6h, <24h, <72h, <168h, older).
+  - Content length bonus (+2 for <200 chars) and absence for long content.
+  - Access count bonus (2 * access_count).
+
+**Impact**:
+- Increased branch coverage in memory retrieval scoring.
+- All tests pass; no regressions.
+- Overall branch coverage estimate: ~80.4%.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
