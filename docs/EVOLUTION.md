@@ -760,6 +760,23 @@
 
 ---
 
+### Round 42 (2026-06-13): SessionManager Append and GetBranch Branches
+
+**Problem**: `SessionManager` had uncovered branches in `appendMessage` (persistence call), `_persist` early returns, `getBranch` with null leaf, `appendLabelChange` target validation, and `appendCompaction` fields.
+
+**Solution**:
+- Created `src/session/session-manager-append.branches.test.ts` with 10 tests covering:
+  - `appendMessage` adds entry, updates leafId and byId, and calls `_persist` when enabled.
+  - `getBranch` returns empty array for null leaf, path from `fromId`, and full leaf path.
+  - `appendLabelChange` throws if target not found, and updates maps correctly; also ensures multiple labels for same target accumulate.
+  - `appendCompaction` creates correct entry.
+
+**Impact**:
+- Increased branch coverage for SessionManager; tests green.
+- Overall branch coverage estimate: **~80.7%**.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
