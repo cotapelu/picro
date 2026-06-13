@@ -580,6 +580,22 @@
 
 ---
 
+### Round 32 (2026-06-13): SessionManager branchWithSummary Tests
+
+**Problem**: The `branchWithSummary` method in `SessionManager` had several uncovered branches: handling null `branchFromId`, error on missing parent, and successful creation with existing parent.
+
+**Solution**:
+- Added three tests to `src/session/session-manager.branches.test.ts` covering:
+  - Creating a branch summary from the root (`null` branchFromId).
+  - Error when the specified `branchFromId` does not exist.
+  - Creating a branch summary from an existing entry and verifying parent-child linkage.
+
+**Impact**:
+- Filled remaining gaps in `SessionManager` branch coverage; all tests green.
+- Overall branch coverage estimate: ~78.2%.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

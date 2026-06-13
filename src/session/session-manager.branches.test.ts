@@ -91,4 +91,35 @@ describe('SessionManager branch tests', () => {
       expect(() => SessionManager.importSession('/cwd', '/dir', json, 'wrong')).toThrow('Failed to decrypt session');
     });
   });
+
+  describe('branchWithSummary()', () => {
+    it('creates branch summary from root (null branchFromId)', () => {
+      const manager = SessionManager.inMemory(tempDir);
+      const summaryId = manager.branchWithSummary(null, 'First summary');
+      const entry = manager.getEntry(summaryId);
+      expect(entry?.type).toBe('branch_summary');
+      // @ts-ignore
+      expect(entry.summary).toBe('First summary');
+      expect(entry?.parentId).toBeNull();
+      expect(manager.getLeafId()).toBe(summaryId);
+    });
+
+    it('throws when branchFromId not found', () => {
+      const manager = SessionManager.inMemory(tempDir);
+      expect(() => manager.branchWithSummary('missing', 'summary')).toThrow('Entry missing not found');
+    });
+
+    it('creates branch summary from existing entry', () => {
+      const manager = SessionManager.inMemory(tempDir);
+      manager.appendMessage({ role: 'user', content: 'base' } as any);
+      const parentId = manager.getLeafId()!;
+      const summaryId = manager.branchWithSummary(parentId, 'Child summary');
+      const entry = manager.getEntry(summaryId);
+      expect(entry?.type).toBe('branch_summary');
+      // @ts-ignore
+      expect(entry.summary).toBe('Child summary');
+      expect(entry?.parentId).toBe(parentId);
+      expect(manager.getLeafId()).toBe(summaryId);
+    });
+  });
 });
