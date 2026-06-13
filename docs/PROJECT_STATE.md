@@ -28,7 +28,7 @@
 - Test files: 177 passed
 - Tests: 2361 passed | 16 skipped | 1 todo
 - Build: ✅
-- Coverage: statements 75.32%+, branches 65.41%+, functions 78.57%+, lines 76.16%+ (after Agent config tests)
+- Coverage: statements 79.05%, branches 70.38%, functions 81.94%, lines 79.92% – target 80% not yet reached.
 
 ### 🎯 Next Tasks
 1. ~~Add unit tests for critical branches in `AgentLoop`~~ (Completed in Round 15).

@@ -3,57 +3,52 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "AgentSession Branch Coverage Push",
+      "name": "SessionManager Branch Coverage",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Analyze uncovered branches in AgentSession using coverage JSON",
+          "content": "Design branch tests for SessionManager error paths",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Create agent-session.branches.test.ts with mocks",
+          "content": "Add tests for open() with invalid JSON and missing fields",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Add tests for prompt method error paths (isStreaming, no model, no auth)",
+          "content": "Add tests for branch() when parent not found",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Add tests for abort method and state transitions",
+          "content": "Add tests for resetLeaf() with null leafId",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Add tests for setModel validation and model switching",
+          "content": "Add tests for getEntry() missing id",
           "status": "pending"
         },
         {
           "id": "task-6",
-          "content": "Add tests for branch/resetLeaf/loadFrom operations",
+          "content": "Add tests for importSession unknown version",
           "status": "pending"
         },
         {
           "id": "task-7",
-          "content": "Add tests for _handleAgentEvent branches",
+          "content": "Run tests and coverage, verify",
           "status": "pending"
         },
         {
           "id": "task-8",
-          "content": "Run tests and coverage; verify branch increase",
-          "status": "pending"
-        },
-        {
-          "id": "task-9",
-          "content": "Update evolution docs and commit",
+          "content": "Update docs and commit",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 10,
+  "nextTaskId": 9,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-13T17:24:41.395Z"
+  "updatedAt": "2026-06-13T18:53:58.595Z"
 }
