@@ -3,57 +3,37 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "AgentLoop Simplification Phase",
+      "name": "Coverage Increase Round 15",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Analyze AgentLoop complexity and identify extraction candidates (COMPLETED: ~600 lines, 8 responsibilities, 3 follow-up locations)",
+          "content": "Add unit tests for AgentLoop missing branches (abort during LLM, streaming errors, prepareNextTurn failures)",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Design extraction architecture (TurnExecutor, FollowUpManager, TerminationDecider)",
+          "content": "Add unit tests for AgentSession missing branches (model switching auth failures, queue overflow, compaction errors, retry edge cases)",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Extract FollowUpManager first (lowest risk) - centralize follow-up logic",
+          "content": "Run tests and verify coverage increases to ≥80%",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Extract TerminationDecider - simplify termination checks",
+          "content": "Update PROJECT_STATE.md, AGENT_METRICS.md, EVOLUTION.md with iteration results",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Extract TurnExecutor - handle single turn execution",
-          "status": "pending"
-        },
-        {
-          "id": "task-6",
-          "content": "Ensure all 168 test files pass after each extraction step",
-          "status": "pending"
-        },
-        {
-          "id": "task-7",
-          "content": "Run coverage and verify no regression (target ≥80%)",
-          "status": "pending"
-        },
-        {
-          "id": "task-8",
-          "content": "Update PROJECT_STATE.md, EVOLUTION.md, AGENT_METRICS.md",
-          "status": "pending"
-        },
-        {
-          "id": "task-9",
-          "content": "Git commit with message: refactor: extract AgentLoop components for maintainability",
+          "content": "Git commit with evolution round message",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 10,
+  "nextTaskId": 6,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-12T22:35:56.878Z"
+  "updatedAt": "2026-06-13T15:53:21.685Z"
 }

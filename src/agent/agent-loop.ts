@@ -856,7 +856,6 @@ export class AgentLoop {
 
       return finalResult;
     } catch (error: any) {
-      this.state.isCancelled = false;
       await this.emitter.emit({
         type: 'error',
         timestamp: Date.now(),

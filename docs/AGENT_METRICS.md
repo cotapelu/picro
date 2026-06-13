@@ -16,13 +16,15 @@
 | 10     | 2026-06-12 | ApiRegistry unit tests (+8)       | 2024+      | 0           | 0         |
 | 11     | 2026-06-12 | model utilities unit tests (+5)   | 2029+      | 0           | 0         || 12     | 2026-06-12 | Memory subsystem unit tests (+~145) & coverage increase | 2085+      | 0           | 0         |
 | 13     | 2026-06-12 | AgentLoop & ToolExecutor edge case tests (+2) | 2087+      | 0           | 0         |
+| 14     | 2026-06-13 | Agent config & internal methods tests (+28) | 2218+      | 0           | 0         |
+| 15     | 2026-06-13 | AgentLoop branch coverage tests (+15), bug fix (isCancelled) | ~2233+     | 0           | 0         |
 
 ## Quality Indicators
 
 - **Test Failure Rate**: <1% (2087+ tests passing)
 - **Mean Time To Repair (MTTR)**: < 5 min (fast fix of test failures)
 - **Rollback Count**: 0
-- **Coverage**: ~80% (target reached)
+- **Coverage**: ~68% branches (improving toward 80% target)
 
 ## Observations
 

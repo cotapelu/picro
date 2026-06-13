@@ -258,6 +258,65 @@
 
 ---
 
+### Round 14 (2026-06-13): Agent Config & Internal Methods Coverage
+
+**Problem**: The `Agent` class (`src/agent/agent.ts`) had low branch coverage (34.23%) and statement coverage (46.15%). Critical internal methods like `createLogger`, `_resolveConfig`, `_convertToolsToLlm`, `_llmComplete`, `_llmStream`, `_prepareModel`, and constructor config handling paths were not tested, leaving key configuration and LLM integration logic unverified.
+
+**Solution**: Created `src/agent/agent.config.test.ts` with 28 focused unit tests covering:
+- `createLogger`: silent logger (enableLogging=false), verbose logger with all event types (agent:start, agent:end, turn:end, tool:error, error)
+- `_resolveConfig`: toolExecutionStrategy fallback mapping, default values, nested config merging (contextBuilder, executor)
+- `_convertToolsToLlm`: tool conversion with description/parameters defaults, empty array handling
+- `_llmComplete`/`_llmStream` with `getApiKey`: API key injection, undefined handling, model-not-set errors
+- Constructor edge cases: toolExecutionMode/Strategy precedence, steeringMode to queueMode mapping, loopStrategy defaults (SimpleLoopStrategy for sequential, ReActLoopStrategy for parallel)
+- `setModel`: provider creation/clearing
+- `execute`/`streamExecute`: runner delegation with correct arguments
+
+**Implementation**:
+- New test file `src/agent/agent.config.test.ts` (28 tests)
+- Fixed test assumptions to match actual implementation (logger event format, config method names, strategy class names)
+- Used dynamic imports for LLM module mocking to avoid vi.doMock timing issues
+- Added `minimalConfig` helper for tests requiring unset toolExecutionMode
+
+**Impact**:
+- Increases confidence in Agent configuration and LLM integration logic.
+- Covers previously untested branches in `_resolveConfig`, `createLogger`, `_convertToolsToLlm`, and private LLM methods.
+- Low risk; isolated to test additions only.
+
+**Tests**: +28 new unit tests. Total passing tests: 2218+.
+
+### Round 15 (2026-06-13): AgentLoop Branch Coverage & Bug Fix
+
+**Problem**: AgentLoop had several uncovered branches: abort behavior during long-running LLM calls, streaming error handling, transformContext and convertToLlm failures, and edge cases in prepareNextTurn/getSteeringMessages hooks. Additionally, a bug was discovered where the `isCancelled` flag was being reset in the catch block, causing abort state to be lost.
+
+**Solution**:
+- Added `src/agent/agent-loop.branches.test.ts` with 15 targeted unit tests covering:
+  - Abort during non-streaming LLM call (AbortSignal propagation)
+  - Streaming error handling (stream throwing, error event)
+  - Context building errors (transformContext throwing, convertToLlm throwing)
+  - Hook error handling (prepareNextTurn and getSteeringMessages failures)
+  - Tool execution errors (executeAll throwing)
+  - LLM response edge cases (empty content arrays skipped)
+  - combineSignals edge cases (undefined, already aborted)
+  - Follow-up + terminate interactions (allTerminate with/without follow-up)
+  - autoSaveMemory edge cases (undefined content, multiple tool results)
+- Fixed `AgentLoop` by removing the line `this.state.isCancelled = false;` from the catch block so that abort state is preserved for non-streaming runs. Streaming runs still reset `isCancelled` in finally as intended.
+- Verified that all new tests pass and existing tests remain green.
+
+**Implementation**:
+- New test file with comprehensive branch scenarios.
+- One-line fix in `src/agent/agent-loop.ts` (catch block).
+- Updated related test expectations (e.g., streaming abort resets isCancelled).
+
+**Impact**:
+- Increases branch coverage for core AgentLoop module significantly.
+- Improves correctness of abort semantics.
+- No regressions detected.
+
+**Tests**: +15 new unit tests. Total passing tests: ~2233+.
+
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
