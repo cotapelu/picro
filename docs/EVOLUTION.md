@@ -613,6 +613,23 @@
 
 ---
 
+### Round 34 (2026-06-13): TransformMessages Branch Tests
+
+**Problem**: The `transform-messages` module had multiple uncovered branches in image downgrade, thinking block conversion, and toolCall normalization.
+
+**Solution**:
+- Created `src/llm/transform-messages.branches.test.ts` with 7 tests covering:
+  - Image block placeholder when model lacks image support, preservation when supported.
+  - Thinking blocks: keep for same model, convert to text for cross-model, drop empty.
+  - ToolCall ID normalization (pipe/special chars) and removal of `thoughtSignature` for cross-model.
+
+**Impact**:
+- Improved branch coverage across the LLM transform pipeline.
+- All tests pass; no regressions.
+- Overall branch coverage estimate: ~78.7%.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
