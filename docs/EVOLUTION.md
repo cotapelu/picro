@@ -406,6 +406,20 @@
 
 ---
 
+### Round 21 (2026-06-13): AgentSession Prompt and Event Branch Tests
+
+**Problem**: AgentSession has many uncovered branches in `prompt()` method (error handling, streaming, model/auth validation) and event handling.
+
+**Solution**:
+- Extended `src/session/agent-session.unit.test.ts` with 8 new tests covering:
+  - `prompt()` error paths: streaming without `streamingBehavior`, missing model, missing API key, and success path.
+  - `_handleAgentEvent()` for `agent:start` and `turn:start` events.
+
+**Impact**:
+- Added 8 tests; branch coverage increased slightly but remains below 80%. AgentSession still has many uncovered branches; further work needed.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

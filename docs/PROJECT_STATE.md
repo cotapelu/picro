@@ -15,6 +15,7 @@
 - **Round 18**: Added 19 branch-coverage tests for `ToolExecutor` (`tool-executor.branches.test.ts`) covering before/after hooks, caching, execution strategies, timeout, signal, and progress updates.
 - **Round 19**: Coverage validation and gap analysis; identified modules with high uncovered branches.
 - **Round 20**: Added comprehensive branch tests for `prompt-templates` (24 tests) and `cli-args` (30 tests). Coverage improved but still below target.
+- **Round 21**: Added prompt() error handling and _handleAgentEvent() branch tests to AgentSession (extended `agent-session.unit.test.ts`). Coverage still below target.
 - Build passes; all 177 test files pass (~2361+ tests passing, 16 skipped, 1 todo).
 - Coverage (latest): statements 79.05%, branches 70.38%, functions 81.94%, lines 79.92% – target 80% not yet reached.
 

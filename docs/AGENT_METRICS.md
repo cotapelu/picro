@@ -23,6 +23,7 @@
 | 18     | 2026-06-13 | ToolExecutor branch coverage tests (+19) | ~2280+     | 0           | 0         |
 | 19     | 2026-06-13 | Coverage validation & gap analysis | ~2280+     | 0           | 0         |
 | 20     | 2026-06-13 | Prompt-templates & cli-args branch tests (+54) | ~2361+     | 0           | 0         |
+| 21     | 2026-06-13 | AgentSession prompt/event branch tests (+8) | ~2369+     | 0           | 0         |
 
 ## Quality Indicators
 
