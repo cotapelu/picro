@@ -31,6 +31,9 @@ export interface AgentMemoryMetadata {
   // Tool result specific
   toolName?: string;
   isError?: boolean;
+  // Deduplication
+  hash?: string;
+  version?: number;
 }
 
 // Memory entry interface

@@ -31,6 +31,7 @@ import { EventEmitter } from '../events/event-emitter.js';
 import { ToolExecutor } from './tool-executor.js';
 import { ContextBuilder } from './context-manager.js';
 import { MessageQueue } from './message-queue.js';
+import { FollowUpManager } from './follow-up-manager.js';
 
 /**
  * Manages the agent execution loop.
@@ -52,6 +53,8 @@ export class AgentLoop {
   private lastTurnAssistant: AssistantTurn | null = null;
   private lastTurnToolResults: ToolResult[] = [];
   private lastTurnNewMessages: ConversationTurn[] = [];
+
+  private followUpManager = new FollowUpManager();
 
   constructor(
     config: AgentConfig,
@@ -697,10 +700,10 @@ export class AgentLoop {
           // Check for early termination due to all tools signaling terminate
           const allTerminate = toolResults.length > 0 && toolResults.every(r => (r as any).terminate === true);
           if (allTerminate) {
-            const followUpTurns = await this.collectFollowUpTurns(followUpQueue);
+            const followUpTurns = await this.followUpManager.collect(followUpQueue, this.config.getFollowUpMessages, this.config.debug);
             if (followUpTurns.length > 0) {
               this.state.history.push(...followUpTurns);
-              currentPrompt = this.turnsToText(followUpTurns);
+              currentPrompt = this.followUpManager.toText(followUpTurns);
               continue;
             } else {
               turnEnded = true;
@@ -718,10 +721,10 @@ export class AgentLoop {
             }
           } else if (!this.strategy.shouldContinue(shouldContinueResponse, this.state)) {
             // Check follow-up before breaking
-            const followUpTurns = await this.collectFollowUpTurns(followUpQueue);
+            const followUpTurns = await this.followUpManager.collect(followUpQueue, this.config.getFollowUpMessages, this.config.debug);
             if (followUpTurns.length > 0) {
               this.state.history.push(...followUpTurns);
-              currentPrompt = this.turnsToText(followUpTurns);
+              currentPrompt = this.followUpManager.toText(followUpTurns);
               continue;
             } else {
               break;
@@ -773,11 +776,11 @@ export class AgentLoop {
 
         if (turnEnded) {
           // Check follow-up messages
-          const followUpTurns = await this.collectFollowUpTurns(followUpQueue);
+          const followUpTurns = await this.followUpManager.collect(followUpQueue, this.config.getFollowUpMessages, this.config.debug);
           if (followUpTurns.length > 0) {
             // Inject follow-up into history and update prompt for next round
             this.state.history.push(...followUpTurns);
-            currentPrompt = this.turnsToText(followUpTurns);
+            currentPrompt = this.followUpManager.toText(followUpTurns);
             // Continue to next round
             continue;
           } else {
@@ -996,19 +999,7 @@ export class AgentLoop {
   /**
    * Collect follow-up turns from queue (can be extended with config hook)
    */
-  private async collectFollowUpTurns(followUpQueue: MessageQueue): Promise<ConversationTurn[]> {
-    const queueTurns = followUpQueue.drainAll();
-    if (this.config.getFollowUpMessages) {
-      try {
-        const hookTurns = await this.config.getFollowUpMessages();
-        return [...queueTurns, ...hookTurns];
-      } catch (e) {
-        console.warn('getFollowUpMessages hook failed:', e);
-        return queueTurns;
-      }
-    }
-    return queueTurns;
-  }
+
 
   /**
    * Convert turns to plain text for currentPrompt
