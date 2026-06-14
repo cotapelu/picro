@@ -48,8 +48,9 @@
 - **Round 51**: Added AgentSessionRuntime branch tests (9) covering dispose (idempotent, flag), switchSession (disposed, file missing, rebind call), copyToClipboard (clipboardy success, fallback to execSync when not CI, CI logging).
 - **Round 52**: Added models branch tests (7) covering supportsXhigh (xai, zai, api.x.ai, api.z.ai, default true) and calculateCost (full components, zero usage).
 - **Round 53**: Added Agent branch tests (24) covering constructor branches (contextBuilder, executor handlers, memoryStore, logger, providers, queueMode mapping), setModel (set/clear), _llmComplete (array content, apiKey injection, string), _prepareModel defaults, _convertToolsToLlm, createLogger (verbose/mute), reset (normal/running), waitForIdle (idle/pending), run/stream error handling.
-- Build passes; all 200 test files pass (~2920+ tests passing, 2 skipped).
-- Coverage (latest estimate): statements ~79%, branches **~74%**, functions ~81%, lines ~79% – continuing toward 85% target.
+- **Round 54**: Added env-api-keys branch tests (14) covering getApiKey (explicit, env vars, fallbacks, secrets.json, explicit override, undefined), hasApiKey, getRequiredEnvVars.
+- Build passes; all 201 test files pass (~2934+ tests passing, 2 skipped).
+- Coverage (latest estimate): statements ~80%, branches **~75%**, functions ~82%, lines ~80% – continuing toward 85% target.
 - **Phase B In Progress**: Branch coverage still below target; ongoing module-level branch testing.
 
 ### 🔄 In Progress
