@@ -45,9 +45,10 @@
 - **Round 48**: Added FollowUpManager unit tests (6) covering collect (empty, queue-only, hook-append, hook error) and toText (join with newline, skip non-text). Removed incomplete model-resolver branch tests.
 - **Round 49**: Added MessageQueue branch tests (15) covering enqueue, dequeue, drainAll, mode operations, clear, reset, peek, eviction, compaction.
 - **Round 50**: Added ModelResolver branch tests (10) covering parseModelPattern, resolveModelScope, defaultModelPerProvider.
-- Build passes; all 196 test files pass (~2814+ tests passing, 2 skipped).
-- Coverage (latest estimate): statements ~84%, branches **~85%**, functions ~85%, lines ~84% – target reached.
-- **Phase B Complete**: Branch coverage ≥85% achieved and verified. All tests green; no regressions.
+- **Round 51**: Added AgentSessionRuntime branch tests (9) covering dispose (idempotent, flag), switchSession (disposed, file missing, rebind call), copyToClipboard (clipboardy success, fallback to execSync when not CI, CI logging).
+- Build passes; all 198 test files pass (~2892+ tests passing, 2 skipped).
+- Coverage (latest estimate): statements ~77%, branches **~72%**, functions ~79%, lines ~77% – continuing toward 85% target.
+- **Phase B In Progress**: Branch coverage still below target; ongoing module-level branch testing.
 
 ### 🔄 In Progress
 - Optional: Continue to improve coverage beyond 80% toward 85% (remaining hotspots in `branch-summarization`, `openai-compatible`, `session-manager`, `compaction`, etc.).
