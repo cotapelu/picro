@@ -46,8 +46,10 @@
 - **Round 49**: Added MessageQueue branch tests (15) covering enqueue, dequeue, drainAll, mode operations, clear, reset, peek, eviction, compaction.
 - **Round 50**: Added ModelResolver branch tests (10) covering parseModelPattern, resolveModelScope, defaultModelPerProvider.
 - **Round 51**: Added AgentSessionRuntime branch tests (9) covering dispose (idempotent, flag), switchSession (disposed, file missing, rebind call), copyToClipboard (clipboardy success, fallback to execSync when not CI, CI logging).
-- Build passes; all 198 test files pass (~2892+ tests passing, 2 skipped).
-- Coverage (latest estimate): statements ~77%, branches **~72%**, functions ~79%, lines ~77% – continuing toward 85% target.
+- **Round 52**: Added models branch tests (7) covering supportsXhigh (xai, zai, api.x.ai, api.z.ai, default true) and calculateCost (full components, zero usage).
+- **Round 53**: Added Agent branch tests (24) covering constructor branches (contextBuilder, executor handlers, memoryStore, logger, providers, queueMode mapping), setModel (set/clear), _llmComplete (array content, apiKey injection, string), _prepareModel defaults, _convertToolsToLlm, createLogger (verbose/mute), reset (normal/running), waitForIdle (idle/pending), run/stream error handling.
+- Build passes; all 200 test files pass (~2920+ tests passing, 2 skipped).
+- Coverage (latest estimate): statements ~79%, branches **~74%**, functions ~81%, lines ~79% – continuing toward 85% target.
 - **Phase B In Progress**: Branch coverage still below target; ongoing module-level branch testing.
 
 ### 🔄 In Progress
@@ -57,10 +59,10 @@
 - None critical.
 
 ### 📊 Metrics (latest run)
-- Test files: 196 passed
-- Tests: ~2814 passed | 2 skipped
+- Test files: 200 passed
+- Tests: ~2920 passed | 2 skipped
 - Build: ✅
-- Coverage: statements ~84%, branches **~85%**, functions ~85%, lines ~84% – target exceeded!
+- Coverage: statements ~79%, branches **~74%**, functions ~81%, lines ~79% – target not yet reached, continuing.
 
 ### 🎯 Next Tasks
 1. Phase B complete – branch coverage target reached.

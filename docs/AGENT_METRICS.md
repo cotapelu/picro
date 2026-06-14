@@ -54,6 +54,8 @@
 | 49     | 2026-06-14 | MessageQueue branch tests (15) covering enqueue, dequeue, drainAll, eviction, compaction | ~2700+     | 0           | 0         |
 | 50     | 2026-06-14 | ModelResolver branch tests (10) covering parseModelPattern, resolveModelScope | ~2710+     | 0           | 0         |
 | 51     | 2026-06-14 | AgentSessionRuntime branch tests (9) covering dispose, switchSession, copyToClipboard | ~2720+     | 0           | 0         |
+| 52     | 2026-06-14 | models branch tests (7): supportsXhigh scenarios, calculateCost edge cases | ~2727+     | 0           | 0         |
+| 53     | 2026-06-14 | Agent branch tests (24) covering constructor, setModel, _llmComplete, _prepareModel, _convertToolsToLlm, createLogger, reset, waitForIdle, run/stream errors | ~2751+     | 0           | 0         |
 
 ## Quality Indicators
 
