@@ -51,6 +51,8 @@
 | 46     | 2026-06-14 | DefaultModelRegistry branch tests (20), test fixes, remove empty file | ~2663+     | 0           | 0         |
 | 47     | 2026-06-14 | FileMutationQueue branch tests (16) covering edit queue, apply, rollback, preview, edge cases | ~2679+     | 0           | 0         |
 | 48     | 2026-06-14 | FollowUpManager unit tests (6); removed incomplete model-resolver tests | ~2685+     | 0           | 0         |
+| 49     | 2026-06-14 | MessageQueue branch tests (15) covering enqueue, dequeue, drainAll, eviction, compaction | ~2700+     | 0           | 0         |
+| 50     | 2026-06-14 | ModelResolver branch tests (10) covering parseModelPattern, resolveModelScope | ~2710+     | 0           | 0         |
 
 ## Quality Indicators
 
