@@ -20,8 +20,8 @@ interface UserMessageSelectorModalProps {
 export const UserMessageSelectorModal: React.FC<UserMessageSelectorModalProps> = ({ runtime, onClose }) => {
   const { theme } = useTheme();
   // Auto-focus this modal
-  const { setFocus } = useFocus();
-  useEffect(() => { setFocus(); }, [setFocus]);
+  const { focus } = useFocus();
+  useEffect(() => { focus(); }, [focus]);
   const [messages, setMessages] = useState<UserMessageItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const maxVisible = 10;

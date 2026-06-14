@@ -4,7 +4,11 @@
  * Different design: functional approach, no stateful memory injection.
  */
 
-import type { ConversationTurn, MemoryEntry, ContextBuilderConfig } from './types.js';
+import type {
+  ConversationTurn,
+  MemoryEntry,
+  ContextBuilderConfig,
+} from "./types.js";
 
 /**
  * Builds LLM prompt from conversation history.
@@ -29,7 +33,7 @@ export class ContextBuilder {
   build(
     basePrompt: string,
     history: ConversationTurn[],
-    memories?: MemoryEntry[]
+    memories?: MemoryEntry[],
   ): { prompt: string; tokenCount: number } {
     // Step 1: Truncate history to fit context window
     const availableTokens = this.config.maxTokens - this.config.reservedTokens;
@@ -89,25 +93,25 @@ export class ContextBuilder {
   private extractTextContent(content: any[]): string {
     return content
       .map((block) => {
-        if (block.type === 'text') {
+        if (block.type === "text") {
           return block.text;
         }
-        if (block.type === 'thinking') {
+        if (block.type === "thinking") {
           return `[Thinking: ${block.thinking}]`;
         }
-        if (block.type === 'toolCall') {
+        if (block.type === "toolCall") {
           return `[Tool Call: ${block.name}(${JSON.stringify(block.arguments)})]`;
         }
-        return '';
+        return "";
       })
-      .join(' ');
+      .join(" ");
   }
 
   /**
    * Format history as conversation string.
    */
   private formatHistory(history: ConversationTurn[]): string {
-    return history.map((turn) => this.serializeTurn(turn)).join('\n\n');
+    return history.map((turn) => this.serializeTurn(turn)).join("\n\n");
   }
 
   /**
@@ -115,10 +119,10 @@ export class ContextBuilder {
    */
   private formatMemories(memories: MemoryEntry[]): string {
     const topMemories = memories
-      .filter((m) => m.relevance !== undefined ? m.relevance > 0.1 : true)
+      .filter((m) => (m.relevance !== undefined ? m.relevance > 0.1 : true))
       .slice(0, 5)
       .map((m, i) => `[Memory ${i + 1}] ${m.content}`)
-      .join('\n');
+      .join("\n");
 
     return `[Relevant Memories]\n${topMemories}`;
   }
@@ -129,7 +133,7 @@ export class ContextBuilder {
    */
   private truncateHistory(
     history: ConversationTurn[],
-    maxTokens: number
+    maxTokens: number,
   ): ConversationTurn[] {
     if (history.length === 0) {
       return [];
@@ -141,8 +145,8 @@ export class ContextBuilder {
     }
 
     // Separate system messages
-    const systemMessages = history.filter((turn) => turn.role === 'system');
-    const nonSystem = history.filter((turn) => turn.role !== 'system');
+    const systemMessages = history.filter((turn) => turn.role === "system");
+    const nonSystem = history.filter((turn) => turn.role !== "system");
 
     // Keep at least minMessages from recent
     const minKeep = Math.min(this.config.minMessages, nonSystem.length);

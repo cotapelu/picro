@@ -100,7 +100,7 @@ describe('ToolExecutor branch coverage', () => {
         undefined
       );
 
-      expect(result.result).toBe('modified');
+      expect(result.content[0].text).toBe('modified');
     });
 
     it('can set isError: true via after hook', async () => {
@@ -211,7 +211,7 @@ describe('ToolExecutor branch coverage', () => {
       );
 
       expect(handler).toHaveBeenCalledTimes(1);
-      expect(call2.result).toBe('cached value');
+      expect(call2.content[0].text).toBe('cached value');
     });
 
     it('does not cache when cacheDisabled', async () => {

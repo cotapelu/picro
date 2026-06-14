@@ -21,8 +21,8 @@ interface ModelSelectorModalProps {
 export const ModelSelectorModal: React.FC<ModelSelectorModalProps> = ({ runtime, onClose, onSelect }) => {
   const { theme } = useTheme();
   // Auto-focus this modal
-  const { setFocus } = useFocus();
-  useEffect(() => { setFocus(); }, [setFocus]);
+  const { focus } = useFocus();
+  useEffect(() => { focus(); }, [focus]);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(true);

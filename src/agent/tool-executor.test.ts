@@ -72,7 +72,7 @@ describe('ToolExecutor', () => {
       expect(result.isError).toBe(false);
       expect(result.toolName).toBe('echo');
       expect(result.toolCallId).toBeDefined();
-      expect((result as any).result).toBe('hello');
+      expect(result.content[0].text).toBe('hello');
       expect(result.executionTime).toBeGreaterThanOrEqual(0);
     });
 
@@ -157,7 +157,7 @@ describe('ToolExecutor', () => {
         executor.register(tool);
         const result = await executor.execute(buildToolCall('valid', { value: 'ok' }), buildContext());
         expect(result.isError).toBe(false);
-        expect((result as any).result).toBe('success');
+        expect(result.content[0].text).toBe('success');
       });
 
       it('should skip validation when tool has no parameters schema', async () => {
@@ -181,8 +181,8 @@ describe('ToolExecutor', () => {
       expect(resultsArr.length).toBe(2);
       expect(resultsArr[0].isError).toBe(false);
       expect(resultsArr[1].isError).toBe(false);
-      expect((resultsArr[0] as any).result).toBe('a');
-      expect((resultsArr[1] as any).result).toBe('b');
+      expect((resultsArr[0] as any).content[0].text).toBe('a');
+      expect((resultsArr[1] as any).content[0].text).toBe('b');
     });
 
     it('should execute multiple tools in parallel when strategy is parallel', async () => {
@@ -197,7 +197,7 @@ describe('ToolExecutor', () => {
       // Both should succeed
       resultsArr.forEach(r => expect(r.isError).toBe(false));
       // Results should contain a and b regardless of order
-      const values = resultsArr.map(r => (r as any).result).sort();
+      const values = resultsArr.map(r => r.content[0].text).sort();
       expect(values).toEqual(['a', 'b']);
     });
 
@@ -231,8 +231,8 @@ describe('ToolExecutor', () => {
 
       expect(result1.isError).toBe(false);
       expect(result2.isError).toBe(false);
-      expect((result1 as any).result).toBe('hello');
-      expect((result2 as any).result).toBe('hello');
+      expect(result1.content[0].text).toBe('hello');
+      expect(result2.content[0].text).toBe('hello');
     });
 
     it('should not cache when disabled', async () => {
@@ -245,8 +245,8 @@ describe('ToolExecutor', () => {
 
       expect(result1.isError).toBe(false);
       expect(result2.isError).toBe(false);
-      expect((result1 as any).result).toBe('hello');
-      expect((result2 as any).result).toBe('hello');
+      expect(result1.content[0].text).toBe('hello');
+      expect(result2.content[0].text).toBe('hello');
     });
 
     it('should evict oldest entry when cache exceeds size', async () => {
@@ -324,7 +324,7 @@ describe('ToolExecutor', () => {
 
       const result = await executor.execute(buildToolCall('echo'), buildContext());
 
-      expect((result as any).result).toBe('modified');
+      expect(result.content[0].text).toBe('modified');
     });
 
     it('should allow afterHook to mark result as error', async () => {
@@ -420,7 +420,7 @@ describe('ToolExecutor', () => {
       const result = await executor.execute(buildToolCall('upper', { value: 'hello' }), buildContext());
 
       expect(result.isError).toBe(false);
-      expect(result.result).toBe('HELLO');
+      expect(result.content[0].text).toBe('HELLO');
     });
 
     it('should propagate prepareArguments errors', async () => {
@@ -469,7 +469,7 @@ describe('ToolExecutor', () => {
       // First call
       const res1 = await executor.execute(buildToolCall('spy', { a: 'x' }), buildContext());
       expect(res1.isError).toBe(false);
-      expect(JSON.parse(res1.result)).toEqual({ a: 'x', b: 'prepared' });
+      expect(JSON.parse(res1.content[0].text)).toEqual({ a: 'x', b: 'prepared' });
 
       // Second call with same original args should hit cache (handler not called again)
       let handlerCalls = 0;
@@ -536,7 +536,7 @@ describe('ToolExecutor', () => {
       executor.register(createTool('test', async () => 'ok'));
       let capturedResult: any;
       executor.config.afterToolCall = async (ctx) => {
-        capturedResult = ctx.result;
+        capturedResult = ctx.result.content[0].text;
         return { terminate: true };
       };
       const result = await executor.execute(buildToolCall('test'), buildContext());

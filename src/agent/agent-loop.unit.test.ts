@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AgentLoop } from './agent-loop';
-import type { AgentConfig } from './types.js';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { AgentLoop } from "./agent-loop";
+import type { AgentConfig } from "./types.js";
 
 // Minimal mock classes
 class MockEmitter {}
@@ -15,7 +15,7 @@ function createConfig(overrides: Partial<AgentConfig> = {}): AgentConfig {
   } as any;
 }
 
-describe('AgentLoop (unit)', () => {
+describe("AgentLoop (unit)", () => {
   let config: AgentConfig;
   let emitter: MockEmitter;
   let toolExecutor: MockToolExecutor;
@@ -30,9 +30,15 @@ describe('AgentLoop (unit)', () => {
     strategy = new MockLoopStrategy();
   });
 
-  describe('construction', () => {
-    it('should create initial state with default values', () => {
-      const loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+  describe("construction", () => {
+    it("should create initial state with default values", () => {
+      const loop = new AgentLoop(
+        config,
+        emitter,
+        toolExecutor,
+        contextBuilder,
+        strategy,
+      );
       const state = loop.getState();
       expect(state.round).toBe(0);
       expect(state.totalToolCalls).toBe(0);
@@ -45,26 +51,44 @@ describe('AgentLoop (unit)', () => {
       expect(state.metadata).toEqual({});
     });
 
-    it('should expose messages as alias to history', () => {
-      const loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+    it("should expose messages as alias to history", () => {
+      const loop = new AgentLoop(
+        config,
+        emitter,
+        toolExecutor,
+        contextBuilder,
+        strategy,
+      );
       const state = loop.getState();
       // The constructor aliases messages to history
       expect((state as any).messages).toBe(state.history);
     });
   });
 
-  describe('abort', () => {
-    it('should set isCancelled flag', () => {
-      const loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+  describe("abort", () => {
+    it("should set isCancelled flag", () => {
+      const loop = new AgentLoop(
+        config,
+        emitter,
+        toolExecutor,
+        contextBuilder,
+        strategy,
+      );
       expect(loop.getState().isCancelled).toBe(false);
       loop.abort();
       expect(loop.getState().isCancelled).toBe(true);
     });
   });
 
-  describe('reset', () => {
-    it('should reset state to initial values', () => {
-      const loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+  describe("reset", () => {
+    it("should reset state to initial values", () => {
+      const loop = new AgentLoop(
+        config,
+        emitter,
+        toolExecutor,
+        contextBuilder,
+        strategy,
+      );
       // Simulate some state change
       (loop as any).state.round = 5;
       (loop as any).state.totalToolCalls = 2;
@@ -78,9 +102,15 @@ describe('AgentLoop (unit)', () => {
     });
   });
 
-  describe('getState', () => {
-    it('should return a copy of state, not the internal reference', () => {
-      const loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy);
+  describe("getState", () => {
+    it("should return a copy of state, not the internal reference", () => {
+      const loop = new AgentLoop(
+        config,
+        emitter,
+        toolExecutor,
+        contextBuilder,
+        strategy,
+      );
       const state1 = loop.getState();
       const state2 = loop.getState();
       expect(state1).not.toBe(state2);

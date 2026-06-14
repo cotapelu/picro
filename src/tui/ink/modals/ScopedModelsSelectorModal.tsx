@@ -33,8 +33,8 @@ export const ScopedModelsSelectorModal: React.FC<ScopedModelsSelectorModalProps>
   const [enabledIds, setEnabledIds] = useState<EnabledIds>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   // Auto-focus this modal
-  const { setFocus } = useFocus();
-  useEffect(() => { setFocus(); }, [setFocus]);
+  const { focus } = useFocus();
+  useEffect(() => { focus(); }, [focus]);
   const [search, setSearch] = useState('');
   const [isDirty, setIsDirty] = useState(false);
   const maxVisible = 8;

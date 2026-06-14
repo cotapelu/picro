@@ -1,14 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect, vi } from 'vitest';
-import { Agent } from './agent.js';
-import type { AgentConfig, LLMResponse } from './types.js';
+import { describe, it, expect, vi } from "vitest";
+import { Agent } from "./agent.js";
+import type { AgentConfig, LLMResponse } from "./types.js";
 
 // Mock LLM provider
-const mockLLMProvider = async (prompt: string, tools: any[], options?: any): Promise<LLMResponse> => {
+const mockLLMProvider = async (
+  prompt: string,
+  tools: any[],
+  options?: any,
+): Promise<LLMResponse> => {
   return {
-    content: 'Mock response',
-    stopReason: 'stop',
-    usage: { input: 10, output: 20, totalTokens: 30, cost: { input: 0, output: 0, total: 0 } },
+    content: "Mock response",
+    stopReason: "stop",
+    usage: {
+      input: 10,
+      output: 20,
+      totalTokens: 30,
+      cost: { input: 0, output: 0, total: 0 },
+    },
     toolCalls: [],
   };
 };
@@ -19,7 +28,7 @@ function createTestConfig(overrides?: Partial<AgentConfig>): AgentConfig {
     verbose: false,
     toolTimeout: 30000,
     cacheResults: false,
-    toolExecutionStrategy: 'parallel',
+    toolExecutionStrategy: "parallel",
     contextBuilder: {
       maxTokens: 128000,
       reservedTokens: 4096,
@@ -29,60 +38,74 @@ function createTestConfig(overrides?: Partial<AgentConfig>): AgentConfig {
     executor: {
       timeout: 30000,
       cacheEnabled: false,
-      toolExecutionStrategy: 'parallel',
+      toolExecutionStrategy: "parallel",
     },
     enableLogging: false,
-    steeringMode: 'dequeue-one',
-    followUpMode: 'dequeue-one',
+    steeringMode: "dequeue-one",
+    followUpMode: "dequeue-one",
     debug: false,
     compaction: { enabled: true, autoCompact: true },
     ...overrides,
   };
 }
 
-describe('Agent', () => {
-  it('should forward user prompt to runner and record in history', async () => {
+describe("Agent", () => {
+  it("should forward user prompt to runner and record in history", async () => {
     const config = createTestConfig();
     const agent = new Agent(undefined as any, [], config);
     agent.setLLMProvider(mockLLMProvider);
 
-    await agent.run('Hello world');
+    await agent.run("Hello world");
 
     const state = agent.getState();
     expect(state.history.length).toBeGreaterThan(0);
-    const userTurn = state.history.find(turn => turn.role === 'user');
+    const userTurn = state.history.find((turn) => turn.role === "user");
     expect(userTurn).toBeDefined();
-    const textBlock = (userTurn!.content as any[]).find(c => c.type === 'text');
+    const textBlock = (userTurn!.content as any[]).find(
+      (c) => c.type === "text",
+    );
     expect(textBlock).toBeDefined();
-    expect(textBlock.text).toBe('Hello world');
+    expect(textBlock.text).toBe("Hello world");
   });
 
-  it('should record assistant response in history', async () => {
+  it("should record assistant response in history", async () => {
     const config = createTestConfig();
     const agent = new Agent(undefined as any, [], config);
     agent.setLLMProvider(mockLLMProvider);
 
-    await agent.run('Test prompt');
+    await agent.run("Test prompt");
 
     const state = agent.getState();
-    const assistantTurns = state.history.filter(turn => turn.role === 'assistant');
+    const assistantTurns = state.history.filter(
+      (turn) => turn.role === "assistant",
+    );
     expect(assistantTurns.length).toBe(1);
-    expect(assistantTurns[0].content).toEqual([{ type: 'text', text: 'Mock response' }]);
+    expect(assistantTurns[0].content).toEqual([
+      { type: "text", text: "Mock response" },
+    ]);
   });
 
-  describe('reset', () => {
-    it('should clear history and queues', async () => {
+  describe("reset", () => {
+    it("should clear history and queues", async () => {
       const config = createTestConfig();
       const agent = new Agent(undefined as any, [], config);
       agent.setLLMProvider(mockLLMProvider);
 
       // Run once to populate history
-      await agent.run('First');
+      await agent.run("First");
       expect(agent.getState().history.length).toBeGreaterThan(0);
 
       // Add some queued messages
-      agent.steer({ role: 'user', content: [{ type: 'text', text: 'Steered' }], timestamp: Date.now() });
-      agent.followUp({ role: 'user', content: [{ type: 'text', text: 'FollowUp' }], timestamp: Date.now() });
+      agent.steer({
+        role: "user",
+        content: [{ type: "text", text: "Steered" }],
+        timestamp: Date.now(),
+      });
+      agent.followUp({
+        role: "user",
+        content: [{ type: "text", text: "FollowUp" }],
+        timestamp: Date.now(),
+      });
       expect(agent.hasQueuedMessages()).toBe(true);
 
       // Reset
@@ -93,54 +116,56 @@ describe('Agent', () => {
       expect(agent.hasQueuedMessages()).toBe(false);
     });
 
-    it('should throw if called while running', async () => {
+    it("should throw if called while running", async () => {
       const config = createTestConfig();
       const agent = new Agent(undefined as any, [], config);
       // Provider that blocks indefinitely unless aborted
       agent.setLLMProvider((prompt, tools, options) => {
         return new Promise((resolve, reject) => {
           const onAbort = () => {
-            reject(new Error('aborted'));
+            reject(new Error("aborted"));
           };
-          options?.signal?.addEventListener('abort', onAbort, { once: true });
+          options?.signal?.addEventListener("abort", onAbort, { once: true });
         });
       });
 
-      const runPromise = agent.run('Test');
+      const runPromise = agent.run("Test");
       // The agent should be running immediately
       expect(agent.getState().isRunning).toBe(true);
       // Reset should throw
-      expect(() => agent.reset()).toThrow('Cannot reset agent while it is running');
+      expect(() => agent.reset()).toThrow(
+        "Cannot reset agent while it is running",
+      );
 
       // Clean up - abort, then wait for run to terminate (may produce error result, not necessarily reject)
       agent.abort();
       const result = await runPromise;
       expect(result.success).toBe(false);
-      expect(result.stopReason).toBe('aborted');
+      expect(result.stopReason).toBe("aborted");
     });
 
-    it('should allow reuse after reset', async () => {
+    it("should allow reuse after reset", async () => {
       const config = createTestConfig();
       const agent = new Agent(undefined as any, [], config);
       agent.setLLMProvider(mockLLMProvider);
 
-      await agent.run('First');
+      await agent.run("First");
       expect(agent.getState().history.length).toBeGreaterThan(0);
 
       agent.reset();
       expect(agent.getState().history).toEqual([]);
 
-      await agent.run('Second');
+      await agent.run("Second");
       expect(agent.getState().history.length).toBeGreaterThan(0);
       // Check that second prompt is present
-      const userTurn = agent.getState().history.find(t => t.role === 'user');
-      const text = (userTurn!.content as any[]).find(c => c.type === 'text');
-      expect((text as any).text).toBe('Second');
+      const userTurn = agent.getState().history.find((t) => t.role === "user");
+      const text = (userTurn!.content as any[]).find((c) => c.type === "text");
+      expect((text as any).text).toBe("Second");
     });
   });
 
-  describe('waitForIdle', () => {
-    it('should resolve immediately when agent is idle', async () => {
+  describe("waitForIdle", () => {
+    it("should resolve immediately when agent is idle", async () => {
       const config = createTestConfig();
       const agent = new Agent(undefined as any, [], config);
       agent.setLLMProvider(mockLLMProvider);
@@ -148,21 +173,23 @@ describe('Agent', () => {
       await expect(agent.waitForIdle()).resolves.toBeUndefined();
     });
 
-    it('should resolve after run completes', async () => {
+    it("should resolve after run completes", async () => {
       const config = createTestConfig();
       const agent = new Agent(undefined as any, [], config);
       // Use a slower provider (200ms) to ensure run is still in progress
       agent.setLLMProvider(async () => {
-        await new Promise(r => setTimeout(r, 200));
-        return mockLLMProvider('', []);
+        await new Promise((r) => setTimeout(r, 200));
+        return mockLLMProvider("", []);
       });
 
-      const runPromise = agent.run('Test');
+      const runPromise = agent.run("Test");
       // While running, idle is pending. We'll check via a flag.
       let resolved = false;
-      agent.waitForIdle().then(() => { resolved = true; });
+      agent.waitForIdle().then(() => {
+        resolved = true;
+      });
       // Give some time; should not resolve yet
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise((r) => setTimeout(r, 100));
       expect(resolved).toBe(false);
 
       await runPromise;
@@ -172,21 +199,23 @@ describe('Agent', () => {
       expect(resolved).toBe(true);
     });
 
-    it('should resolve after abort', async () => {
+    it("should resolve after abort", async () => {
       const config = createTestConfig();
       const agent = new Agent(undefined as any, [], config);
       // Provider that blocks until aborted
       agent.setLLMProvider((prompt, tools, options) => {
         return new Promise((resolve, reject) => {
-          const onAbort = () => reject(new Error('aborted'));
-          options?.signal?.addEventListener('abort', onAbort, { once: true });
+          const onAbort = () => reject(new Error("aborted"));
+          options?.signal?.addEventListener("abort", onAbort, { once: true });
         });
       });
 
-      const runPromise = agent.run('Long');
+      const runPromise = agent.run("Long");
       let resolved = false;
-      agent.waitForIdle().then(() => { resolved = true; });
-      await new Promise(r => setTimeout(r, 100));
+      agent.waitForIdle().then(() => {
+        resolved = true;
+      });
+      await new Promise((r) => setTimeout(r, 100));
       expect(resolved).toBe(false);
 
       agent.abort();
@@ -196,8 +225,8 @@ describe('Agent', () => {
     });
   });
 
-  describe('setModel', () => {
-    it('should set model and create providers', async () => {
+  describe("setModel", () => {
+    it("should set model and create providers", async () => {
       const config = createTestConfig();
       const agent = new Agent(undefined as any, [], config);
 
@@ -207,13 +236,13 @@ describe('Agent', () => {
 
       // Create a mock model
       const mockModel = {
-        id: 'gpt-4',
-        name: 'GPT-4',
-        api: 'openai',
-        provider: 'openai',
-        baseUrl: 'https://api.openai.com/v1',
+        id: "gpt-4",
+        name: "GPT-4",
+        api: "openai",
+        provider: "openai",
+        baseUrl: "https://api.openai.com/v1",
         reasoning: false,
-        input: ['text'],
+        input: ["text"],
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
         contextWindow: 128000,
         maxTokens: 8192,
@@ -229,7 +258,7 @@ describe('Agent', () => {
       expect((agent as any).llmStream).toBeDefined();
     });
 
-    it('should clear providers when setModel(undefined)', async () => {
+    it("should clear providers when setModel(undefined)", async () => {
       const config = createTestConfig();
       const agent = new Agent(undefined as any, [], config);
       agent.setLLMProvider(mockLLMProvider);

@@ -19,8 +19,8 @@ interface SessionInfoModalProps {
 export const SessionInfoModal: React.FC<SessionInfoModalProps> = ({ runtime, onClose }) => {
   const { theme } = useTheme();
   // Auto-focus this modal
-  const { setFocus } = useFocus();
-  useEffect(() => { setFocus(); }, [setFocus]);
+  const { focus } = useFocus();
+  useEffect(() => { focus(); }, [focus]);
   const [stats, setStats] = useState<{
     id?: string;
     name?: string;
