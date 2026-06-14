@@ -123,7 +123,7 @@ export type ToolHandler = (
   args: Record<string, unknown>,
   context: ToolContext,
   onProgress?: (update: ToolProgressUpdate) => void | Promise<void>
-) => string | Promise<string> | void | Promise<void>;
+) => string | TextBlock[] | Promise<string | TextBlock[]> | void | Promise<void>;
 
 export type ToolRegistry = Record<string, ToolHandler>;
 
@@ -182,7 +182,8 @@ export interface PrepareNextTurnContext {
 /** Override values returned by prepareNextTurn hook */
 export interface PrepareNextTurnOverride {
   reasoningLevel?: ThinkingLevel;
-  // Future: model?, thinkingBudget?, etc.
+  model?: Model;
+  context?: ConversationTurn[];
 }
 
 export type GetApiKeyFn = (provider: string) => Promise<string | undefined> | string | undefined;
@@ -218,7 +219,7 @@ export interface ToolExecutionMetadata {
 export interface SuccessfulToolResult {
   toolCallId: string;
   toolName: string;
-  result: string;
+  content: string | TextBlock[];
   executionTime: number;
   isError: false;
   metadata: ToolExecutionMetadata;
@@ -560,6 +561,8 @@ export interface AgentConfig {
   prepareNextTurn?: (ctx: PrepareNextTurnContext) => Promise<PrepareNextTurnOverride | undefined>;
   // Tool executor options (legacy)
   executor?: ToolExecutorConfig;
+  // Callback for dynamic model changes from prepareNextTurn
+  setModel?: (model: Model) => void;
 }
 
 export interface StreamOptions {

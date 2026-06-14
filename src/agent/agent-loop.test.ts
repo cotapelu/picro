@@ -446,7 +446,7 @@ describe('AgentLoop', () => {
       const memoryStore = { remember: vi.fn().mockResolvedValue(undefined) } as any;
       loop = new AgentLoop(config, emitter, toolExecutor, contextBuilder, strategy, defaultLLMComplete, defaultLLMStream, memoryStore, []);
       const response: LLMResponse = { content: 'Assistant says', stopReason: 'stop', usage: { input: 1, output: 1, totalTokens: 2, cost: { input: 0, output: 0, total: 0 } }, toolCalls: [], raw: {} };
-      const toolResults: any[] = [{ toolName: 'test', result: 'ok', toolCallId: '123', metadata: {} }];
+      const toolResults: any[] = [{ toolName: 'test', content: 'ok', toolCallId: '123', metadata: {} }];
       await (loop as any).autoSaveMemory('prompt', response, toolResults);
       expect(memoryStore.remember).toHaveBeenCalledTimes(3);
     });
@@ -1085,7 +1085,7 @@ describe('AgentLoop', () => {
       expect(call.assistant.content[0].text).toBe('use tool');
       expect(call.toolResults.length).toBeGreaterThanOrEqual(1);
       expect(call.toolResults[0].toolName).toBe('echo');
-      expect(call.toolResults[0].result).toContain('echo: {\"msg\":\"hello\"}');
+      expect(call.toolResults[0].content[0].text).toContain('echo: {\"msg\":\"hello\"}');
       expect(call.newMessages.length).toBeGreaterThanOrEqual(2);
       const roles = call.newMessages.map((m: any) => m.role);
       expect(roles).toContain('assistant');

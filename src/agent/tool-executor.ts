@@ -18,6 +18,7 @@ import type {
   AfterToolHook,
   HookResult,
   ToolCallData,
+  TextBlock,
 } from './types.js';
 import { EventEmitter } from '../events/event-emitter.js';
 import { validateToolArguments } from '../llm/validation.js';
@@ -223,13 +224,20 @@ export class ToolExecutor {
          signal
        );
 
-       // Normalize result to string
-       const resultString = this.normalizeResult(rawResult);
+       // Convert rawResult to TextBlock[] or string
+       let resultContent: string | TextBlock[];
+       if (typeof rawResult === 'string') {
+         resultContent = [{ type: 'text', text: rawResult } as TextBlock];
+       } else if (Array.isArray(rawResult) && rawResult.every(item => (item as any).type === 'text')) {
+         resultContent = rawResult as TextBlock[];
+       } else {
+         resultContent = [{ type: 'text', text: this.normalizeResult(rawResult) } as TextBlock];
+       }
 
        let result: SuccessfulToolResult = {
          toolCallId: toolCall.id,
          toolName: toolCall.name,
-         result: resultString,
+         content: resultContent,
          executionTime: Date.now() - startTime,
          isError: false,
          metadata,
@@ -249,7 +257,7 @@ export class ToolExecutor {
            signal
          );
          if (after) {
-           if (after.result !== undefined) result.result = after.result;
+           if (after.result !== undefined) result.content = after.result;
            if (after.isError) {
              result = {
                ...result,

@@ -24,6 +24,9 @@ import type {
   AssistantTurn,
   PrepareNextTurnContext,
   PrepareNextTurnOverride,
+  TextBlock,
+  SuccessfulToolResult,
+  FailedToolResult,
 } from './types.js';
 import type { Context, Message as LlmMessage, Tool as LlmTool } from '../llm/index.js';
 import type { AgentEvent } from '../events/events.js';
@@ -345,6 +348,16 @@ export class AgentLoop {
             });
             if (overrides?.reasoningLevel !== undefined) {
               this.config.reasoningLevel = overrides.reasoningLevel;
+            }
+            if (overrides?.model) {
+              if (this.config.setModel) {
+                this.config.setModel(overrides.model);
+              } else {
+                this.state.metadata.nextModel = overrides.model;
+              }
+            }
+            if (overrides?.context) {
+              this.state.history = overrides.context;
             }
           } catch (e) {
             if (this.config.debug) console.error('prepareNextTurn hook error:', e);
@@ -989,13 +1002,19 @@ export class AgentLoop {
 
   private createToolTurn(result: ToolResult): ToolTurn {
     const isError = 'error' in result;
+    const contentBlocks: TextBlock[] = isError
+      ? [{ type: 'text', text: (result as FailedToolResult).error }]
+      : (() => {
+          const successful = result as SuccessfulToolResult;
+          return typeof successful.content === 'string'
+            ? [{ type: 'text', text: successful.content }]
+            : successful.content;
+        })();
     return {
       role: 'tool',
       toolCallId: result.toolCallId,
       toolName: result.toolName,
-      content: isError
-        ? [{ type: 'text', text: result.error as string }]
-        : [{ type: 'text', text: result.result as string }],
+      content: contentBlocks,
       isError,
       details: (result as any).metadata?.details,
       timestamp: Date.now(),
@@ -1038,7 +1057,9 @@ export class AgentLoop {
 
   private getResultText(result: ToolResult): string {
     if ('error' in result) return result.error;
-    return result.result;
+    const successful = result as SuccessfulToolResult;
+    if (typeof successful.content === 'string') return successful.content;
+    return successful.content.map(b => b.text).join('\n');
   }
 
   /**
