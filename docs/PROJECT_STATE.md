@@ -42,8 +42,9 @@
 - **Round 45**: Added DefaultResourceLoader branch tests (19).
 - **Round 46**: Added DefaultModelRegistry branch tests (20) covering OAuth detection, auth checks, API key/header precedence, getAvailable filtering, and provider registration. Fixed empty follow-up test file removal.
 - **Round 47**: Added FileMutationQueue branch tests (16) covering queueEdit (happy, not-found, empty oldText, CRLF normalization), applyAll (empty, success, rollback trigger), rollback (restore, delete created file, clear), clear, preview, edge cases (multi-file, length).
-- Build passes; all 194 test files pass (~2789+ tests passing, 2 skipped).
-- Coverage (latest estimate): statements ~81.5%, branches **~83%**, functions ~83%, lines ~81.5% – continuing toward 85%.
+- **Round 48**: Added FollowUpManager unit tests (6) covering collect (empty, queue-only, hook-append, hook error) and toText (join with newline, skip non-text). Removed incomplete model-resolver branch tests.
+- Build passes; all 195 test files pass (~2789+ tests passing, 2 skipped).
+- Coverage (latest estimate): statements ~82%, branches **~83.5%**, functions ~83.5%, lines ~82% – approaching 85%.
 - **Phase B Complete**: Branch coverage ≥80% achieved and verified. All tests green; no regressions.
 
 ### 🔄 In Progress
