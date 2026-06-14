@@ -114,7 +114,10 @@ describe('AgentSession.prompt - branch tests', () => {
       (session as any).waitForRetry = vi.fn().mockResolvedValue(undefined);
       (session as any)._flushPendingBashMessages = vi.fn();
       await session.prompt('hello');
-      expect(session.agent.run).toHaveBeenCalledWith('hello');
+      // agent.run now expects an array of ConversationTurn (or string)
+      expect(session.agent.run).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({ role: 'user', content: [{ type: 'text', text: 'hello' }] })
+      ]));
       expect((session as any)._flushPendingBashMessages).toHaveBeenCalled();
     });
   });

@@ -309,13 +309,13 @@ export class Agent {
   }
 
   /**
-   * Run the agent with a text prompt (non-streaming).
-   * This starts a fresh execution with the given prompt.
-   * @param prompt - The user's input prompt.
+   * Run the agent (non-streaming).
+   * Accepts either a simple text prompt or an array of conversation turns.
+   * @param arg - The user's input prompt (string) or array of ConversationTurn.
    * @param signal - Optional AbortSignal to cancel execution.
    * @returns A promise that resolves with the final result.
    */
-  async run(prompt: string, signal?: AbortSignal): Promise<AgentRunResult> {
+  async run(arg: string | ConversationTurn[], signal?: AbortSignal): Promise<AgentRunResult> {
     if (this.runner.getState().isRunning) {
       throw new Error('Agent is already running');
     }
@@ -324,14 +324,16 @@ export class Agent {
       throw new Error('LLM provider not set. Provide a model or setModel() first.');
     }
 
-    const userTurn: ConversationTurn = {
-      role: 'user',
-      content: [{ type: 'text', text: prompt }],
-      timestamp: Date.now(),
-    };
+    const turns: ConversationTurn[] = typeof arg === 'string'
+      ? [{
+          role: 'user',
+          content: [{ type: 'text', text: arg }],
+          timestamp: Date.now(),
+        }]
+      : arg;
 
     // Track completion for waitForIdle()
-    const p = this.execute([userTurn], signal);
+    const p = this.execute(turns, signal);
     const idle = p.then(() => undefined);
     this._currentRunIdlePromise = idle;
     p.finally(() => {
@@ -379,7 +381,7 @@ export class Agent {
     }
 
     // Track completion for waitForIdle()
-    const p = this.execute(initialTurns, signal);
+    const p = this.runner.resume(initialTurns, this.steeringQueue, this.followUpQueue, signal);
     const idle = p.then(() => undefined);
     this._currentRunIdlePromise = idle;
     p.finally(() => {

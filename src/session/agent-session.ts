@@ -542,7 +542,7 @@ export class AgentSession {
     };
 
     // Add pending next turn messages
-    const initialTurns = [userTurn];
+    const initialTurns: ConversationTurn[] = [userTurn];
     for (const msg of this._pendingNextTurnMessages) {
       initialTurns.push(msg);
     }
@@ -551,8 +551,8 @@ export class AgentSession {
     // Flush any pending bash messages before starting new turn
     this._flushPendingBashMessages();
 
-    // Run the agent
-    await this.agent.run(text);
+    // Run the agent with the constructed turns (supports images)
+    await this.agent.run(initialTurns);
     await this.waitForRetry();
   }
 

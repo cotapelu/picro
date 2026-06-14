@@ -250,6 +250,35 @@ export class AgentLoop {
    }
 
   /**
+   * Resume execution from the current state (without resetting).
+   * Used for continuing after steering/follow-up messages have been queued.
+   */
+  public async resume(
+    initialTurns: ConversationTurn[],
+    steeringQueue: MessageQueue,
+    followUpQueue: MessageQueue,
+    signal?: AbortSignal
+  ): Promise<AgentRunResult> {
+    const iterator = this.executeLoop(
+      '',
+      steeringQueue,
+      followUpQueue,
+      false,
+      signal,
+      initialTurns,
+      false // resetState = false
+    )[Symbol.asyncIterator]();
+
+    // Consume the generator to get the final result
+    while (true) {
+      const { value, done } = await iterator.next();
+      if (done) {
+        return value as AgentRunResult;
+      }
+    }
+  }
+
+  /**
    * Core execution loop used by both run and stream.
    * @param isStreaming - true for streaming, false for non-streaming
    */
@@ -259,14 +288,25 @@ export class AgentLoop {
     followUpQueue: MessageQueue,
     isStreaming: boolean,
     signal?: AbortSignal,
-    initialTurns: ConversationTurn[] = []
+    initialTurns: ConversationTurn[] = [],
+    resetState: boolean = true
   ): AsyncGenerator<any, AgentRunResult> {
     this.abortController = new AbortController();
     const combinedSignal = signal
       ? this.combineSignals(signal, this.abortController.signal)
       : this.abortController.signal;
 
-    this.state = this.createInitialState();
+    if (resetState) {
+      this.state = this.createInitialState();
+    }
+    // Support legacy: if initialTurns empty but initialPrompt provided, create a user turn
+    if (initialTurns.length === 0 && initialPrompt) {
+      initialTurns = [{
+        role: 'user',
+        content: [{ type: 'text', text: initialPrompt }],
+        timestamp: Date.now(),
+      }];
+    }
     if (initialTurns.length > 0) {
       this.state.history.push(...initialTurns);
     }
@@ -277,7 +317,7 @@ export class AgentLoop {
     let totalMemoryRetrievalTime = 0;
     let totalLLMRequestTime = 0;
     let totalToolExecutionTime = 0;
-    let pendingTurns: ConversationTurn[] = [];
+    // No pendingTurns needed - steering messages directly pushed to history
 
     try {
       await this.emitter.emit({
@@ -287,7 +327,6 @@ export class AgentLoop {
         initialPrompt,
       } as any);
 
-      let currentPrompt = initialPrompt;
       const maxRounds = this.config.maxRounds;
 
       while (this.state.round < maxRounds && !this.state.isCancelled) {
@@ -324,38 +363,31 @@ export class AgentLoop {
             type: 'turn:start',
             timestamp: Date.now(),
             round: this.state.round,
-            promptLength: currentPrompt.length,
+            promptLength: this.state.history.length,
           } as any);
         }
 
-        // Get steering turns via hook (if provided) or drain queue
+        // Get steering turns via hook (if provided) or drain queue and push directly to history
         const steeringTurns = await this._collectSteeringTurns(steeringQueue);
-        pendingTurns.push(...steeringTurns);
+        if (steeringTurns.length > 0) {
+          this.state.history.push(...steeringTurns);
+        }
 
-        currentPrompt = this.strategy.transformPrompt?.(currentPrompt, this.state) ?? currentPrompt;
-
-        // Memory retrieval
+        // Memory retrieval - use last user message as query if available
         let memories: MemoryEntry[] = [];
         let memoryRetrievalTime = 0;
-        const memResult = await this._retrieveMemories(currentPrompt);
+        const lastUserTurn = [...this.state.history].reverse().find(t => t.role === 'user');
+        const query = lastUserTurn?.content
+          .filter(c => c.type === 'text')
+          .map(c => c.text)
+          .join('') || '';
+        const memResult = await this._retrieveMemories(query);
         memories = memResult.memories;
         memoryRetrievalTime = memResult.retrievalTime;
         totalMemoryRetrievalTime += memoryRetrievalTime;
 
-        // Inject any pending turns into history
-        if (pendingTurns.length > 0) {
-          this.state.history.push(...pendingTurns);
-          pendingTurns = [];
-        }
-
-        // Build LLM context (combine history + current user prompt)
-        const userTurn: ConversationTurn = {
-          role: 'user',
-          content: [{ type: 'text', text: currentPrompt }],
-          timestamp: Date.now(),
-        };
-        const allTurns = [...this.state.history, userTurn];
-        const llmContext = await this.buildLlmContext(allTurns, memories, combinedSignal);
+        // Build LLM context from current history (includes steering if any)
+        const llmContext = await this.buildLlmContext(this.state.history, memories, combinedSignal);
 
         // LLM request timing
         const llmStartTime = Date.now();
@@ -624,15 +656,20 @@ export class AgentLoop {
           this.state.toolResults.push(...toolResults);
 
           if (this.config.autoSaveMemories && this.memoryStore) {
+            // Use last user query for memory
+            const lastUserTurn = [...this.state.history].reverse().find(t => t.role === 'user');
+            const query = lastUserTurn?.content
+              .filter(c => c.type === 'text')
+              .map(c => c.text)
+              .join('') || '';
             if (isStreaming) {
-              await this.autoSaveMemory(currentPrompt, finalMessage, toolResults);
+              await this.autoSaveMemory(query, finalMessage, toolResults);
             } else {
-              await this.autoSaveMemory(currentPrompt, response!, toolResults);
+              await this.autoSaveMemory(query, response!, toolResults);
             }
           }
 
-          const resultsText = this.strategy.formatResults(toolResults);
-          currentPrompt += `\n\n[Tool Results]\n${resultsText}`;
+          // Do NOT modify currentPrompt - tool results are already in history as tool turns
 
           const toolTurns: ToolTurn[] = [];
           for (const result of toolResults) {
@@ -673,7 +710,7 @@ export class AgentLoop {
             const followUpTurns = await this.followUpManager.collect(followUpQueue, this.config.getFollowUpMessages, this.config.debug);
             if (followUpTurns.length > 0) {
               this.state.history.push(...followUpTurns);
-              currentPrompt = this.followUpManager.toText(followUpTurns);
+              // Continue to next round - follow-up messages are already in history
               continue;
             } else {
               turnEnded = true;
@@ -694,7 +731,7 @@ export class AgentLoop {
             const followUpTurns = await this.followUpManager.collect(followUpQueue, this.config.getFollowUpMessages, this.config.debug);
             if (followUpTurns.length > 0) {
               this.state.history.push(...followUpTurns);
-              currentPrompt = this.followUpManager.toText(followUpTurns);
+              // Continue to next round - follow-up messages are already in history
               continue;
             } else {
               break;
@@ -748,10 +785,8 @@ export class AgentLoop {
           // Check follow-up messages
           const followUpTurns = await this.followUpManager.collect(followUpQueue, this.config.getFollowUpMessages, this.config.debug);
           if (followUpTurns.length > 0) {
-            // Inject follow-up into history and update prompt for next round
+            // Follow-up messages are full turns - push to history and continue
             this.state.history.push(...followUpTurns);
-            currentPrompt = this.followUpManager.toText(followUpTurns);
-            // Continue to next round
             continue;
           } else {
             // No follow-up: emit agent_end if needed and return final result
