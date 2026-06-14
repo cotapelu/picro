@@ -48,6 +48,8 @@
 | 43     | 2026-06-13 | OpenAI-compatible reasoningEffort/toolChoice branches (+4) | ~2617+     | 0           | 0         |
 | 44     | 2026-06-13 | SessionManager error handling branches (+7) | ~2624+     | 0           | 0         |
 | 45     | 2026-06-13 | ResourceLoader branch tests (19) | ~2643+     | 0           | 0         |
+| 46     | 2026-06-14 | DefaultModelRegistry branch tests (20), test fixes, remove empty file | ~2663+     | 0           | 0         |
+| 47     | 2026-06-14 | FileMutationQueue branch tests (16) covering edit queue, apply, rollback, preview, edge cases | ~2679+     | 0           | 0         |
 
 ## Quality Indicators
 

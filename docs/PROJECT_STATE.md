@@ -40,8 +40,10 @@
 - **Round 43**: Added OpenAI-compatible reasoningEffort/toolChoice branches (+4).
 - **Round 44**: Added SessionManager error handling branches (+7).
 - **Round 45**: Added DefaultResourceLoader branch tests (19).
-- Build passes; all 192 test files pass (~2624+ tests passing, 16 skipped, 1 todo).
-- Coverage (latest estimate): statements ~80%, branches **80.9%**, functions ~82%, lines ~80% – target exceeded!
+- **Round 46**: Added DefaultModelRegistry branch tests (20) covering OAuth detection, auth checks, API key/header precedence, getAvailable filtering, and provider registration. Fixed empty follow-up test file removal.
+- **Round 47**: Added FileMutationQueue branch tests (16) covering queueEdit (happy, not-found, empty oldText, CRLF normalization), applyAll (empty, success, rollback trigger), rollback (restore, delete created file, clear), clear, preview, edge cases (multi-file, length).
+- Build passes; all 194 test files pass (~2789+ tests passing, 2 skipped).
+- Coverage (latest estimate): statements ~81.5%, branches **~83%**, functions ~83%, lines ~81.5% – continuing toward 85%.
 - **Phase B Complete**: Branch coverage ≥80% achieved and verified. All tests green; no regressions.
 
 ### 🔄 In Progress
