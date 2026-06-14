@@ -17,17 +17,23 @@ import type {
   ToolRegistry,
   QueueMode,
   ToolDefinition,
-} from './types.js';
-import { EventEmitter } from '../events/event-emitter.js';
-import { ToolExecutor } from './tool-executor.js';
-import { ContextBuilder } from './context-manager.js';
-import { AgentLoop } from './agent-loop.js';
-import { LoopStrategyFactory } from './loop-strategy.js';
-import { MessageQueue } from './message-queue.js';
+} from "./types.js";
+import { EventEmitter } from "../events/event-emitter.js";
+import { ToolExecutor } from "./tool-executor.js";
+import { ContextBuilder } from "./context-manager.js";
+import { AgentLoop } from "./agent-loop.js";
+import { LoopStrategyFactory } from "./loop-strategy.js";
+import { MessageQueue } from "./message-queue.js";
 
 // Import from llm
 import { complete, stream } from "../llm/index.js";
-import type { Model, Context, Message, Tool, StreamOptions } from "../llm/index.js";
+import type {
+  Model,
+  Context,
+  Message,
+  Tool,
+  StreamOptions,
+} from "../llm/index.js";
 
 /**
  * Agent orchestrates AI interactions with tools.
@@ -47,8 +53,14 @@ export class Agent {
   private readonly followUpQueue: MessageQueue;
   private memoryStore?: MemoryStore;
   private model?: Model;
-  private llmComplete?: (context: Context, options?: any) => Promise<LLMResponse>;
-  private llmStream?: (context: Context, options?: any) => AsyncIterable<any> | Promise<AsyncIterable<any>>;
+  private llmComplete?: (
+    context: Context,
+    options?: any,
+  ) => Promise<LLMResponse>;
+  private llmStream?: (
+    context: Context,
+    options?: any,
+  ) => AsyncIterable<any> | Promise<AsyncIterable<any>>;
   private _currentRunIdlePromise: Promise<void> | null = null;
   private toolRegistry: ToolRegistry = {};
   private tools: AgentTool[];
@@ -62,22 +74,28 @@ export class Agent {
   constructor(
     model?: Model,
     tools: AgentTool[] = [],
-    config: AgentConfig = { maxRounds: 10 }
+    config: AgentConfig = { maxRounds: 10 },
   ) {
     this.model = model;
     this.tools = tools;
     this.config = this._resolveConfig(config);
-    this.emitter = this.config.enableLogging ? this.createLogger(this.config.verbose ?? false) : new EventEmitter();
+    // Provide setModel callback for dynamic model changes from prepareNextTurn
+    this.config.setModel = (model: Model) => this.setModel(model);
+    this.emitter = this.config.enableLogging
+      ? this.createLogger(this.config.verbose ?? false)
+      : new EventEmitter();
 
     // Tool executor with registry
     this.toolExecutor = new ToolExecutor(this.toolRegistry);
     // Register any handlers from legacy executor config
     if (this.config.executor?.handlers) {
-      for (const [name, handler] of Object.entries(this.config.executor.handlers)) {
+      for (const [name, handler] of Object.entries(
+        this.config.executor.handlers,
+      )) {
         this.toolRegistry[name] = handler as ToolHandler;
         this.toolExecutor.register({
           name,
-          description: '',
+          description: "",
           parameters: {},
           handler: handler as ToolHandler,
         } as ToolDefinition);
@@ -90,25 +108,37 @@ export class Agent {
         maxTokens: this.config.contextBuilder?.maxTokens ?? 128000,
         reservedTokens: this.config.contextBuilder?.reservedTokens ?? 4096,
         minMessages: this.config.contextBuilder?.minMessages ?? 1,
-        enableMemoryInjection: this.config.contextBuilder?.enableMemoryInjection ?? true,
+        enableMemoryInjection:
+          this.config.contextBuilder?.enableMemoryInjection ?? true,
       });
     } else {
       this.contextBuilder = undefined;
     }
 
     // Loop strategy
-    let strategyName: 'react' | 'plan-solve' | 'reflection' | 'simple' | 'self-refine';
+    let strategyName:
+      | "react"
+      | "plan-solve"
+      | "reflection"
+      | "simple"
+      | "self-refine";
     if (this.config.loopStrategy) {
       strategyName = this.config.loopStrategy;
     } else {
-      strategyName = this.config.toolExecutionMode === 'sequential' ? 'simple' : 'react';
+      strategyName =
+        this.config.toolExecutionMode === "sequential" ? "simple" : "react";
     }
     this.strategy = LoopStrategyFactory.create(strategyName);
 
     // Queues: map queueMode to internal MessageQueue modes
-    const mapQueue = (mode: QueueMode) => mode === 'all' ? 'drain-all' : 'dequeue-one';
-    this.steeringQueue = new MessageQueue(mapQueue(this.config.queueMode ?? 'all'));
-    this.followUpQueue = new MessageQueue(mapQueue(this.config.followUpMode ?? 'all'));
+    const mapQueue = (mode: QueueMode) =>
+      mode === "all" ? "drain-all" : "dequeue-one";
+    this.steeringQueue = new MessageQueue(
+      mapQueue(this.config.queueMode ?? "all"),
+    );
+    this.followUpQueue = new MessageQueue(
+      mapQueue(this.config.followUpMode ?? "all"),
+    );
 
     if (this.config.memoryStore) {
       this.memoryStore = this.config.memoryStore;
@@ -122,16 +152,16 @@ export class Agent {
       this.contextBuilder ?? null,
       this.strategy,
       async (context: Context, options?: any): Promise<LLMResponse> => {
-        if (!this.llmComplete) throw new Error('LLM provider not set');
+        if (!this.llmComplete) throw new Error("LLM provider not set");
         return this.llmComplete(context, options);
       },
       async (context: Context, options?: any): Promise<AsyncIterable<any>> => {
-        if (!this.llmStream) throw new Error('LLM stream provider not set');
+        if (!this.llmStream) throw new Error("LLM stream provider not set");
         // llmStream may return AsyncIterable directly or a Promise of it.
         return this.llmStream(context, options) as Promise<AsyncIterable<any>>;
       },
       this.memoryStore,
-      this.tools
+      this.tools,
     );
 
     // Set model if provided
@@ -144,16 +174,19 @@ export class Agent {
    * Convert agent's Tool metadata to llm's Tool format
    */
   private _convertToolsToLlm(tools: AgentTool[]): Tool[] {
-    return tools.map(tool => ({
+    return tools.map((tool) => ({
       name: tool.name,
-      description: tool.description || '',
+      description: tool.description || "",
       parameters: tool.parameters || {},
     }));
   }
 
   // LLM call implementations using src/llm
-  private _llmComplete = async (context: Context, options?: any): Promise<LLMResponse> => {
-    if (!this.model) throw new Error('Model not set');
+  private _llmComplete = async (
+    context: Context,
+    options?: any,
+  ): Promise<LLMResponse> => {
+    if (!this.model) throw new Error("Model not set");
     const llmOptions: any = { ...options };
     if (this.config.getApiKey) {
       const apiKey = await this.config.getApiKey(this.model.provider);
@@ -161,13 +194,23 @@ export class Agent {
     }
     const result = await complete(this.model, context, llmOptions);
     const content = Array.isArray(result.content)
-      ? result.content.map((c: any) => (c as any).text || (c as any).thinking || '').join('')
-      : (result.content as string) || '';
-    return { content, stopReason: result.stopReason ?? 'stop', usage: result.usage, toolCalls: [] };
+      ? result.content
+          .map((c: any) => (c as any).text || (c as any).thinking || "")
+          .join("")
+      : (result.content as string) || "";
+    return {
+      content,
+      stopReason: result.stopReason ?? "stop",
+      usage: result.usage,
+      toolCalls: [],
+    };
   };
 
-  private _llmStream = async (context: Context, options?: any): Promise<AsyncIterable<any>> => {
-    if (!this.model) throw new Error('Model not set');
+  private _llmStream = async (
+    context: Context,
+    options?: any,
+  ): Promise<AsyncIterable<any>> => {
+    if (!this.model) throw new Error("Model not set");
     const llmOptions: any = { ...options };
     if (this.config.getApiKey) {
       const apiKey = await this.config.getApiKey(this.model.provider);
@@ -183,9 +226,16 @@ export class Agent {
       cacheResults: input.cacheResults ?? true,
       enableLogging: input.enableLogging ?? false,
       verbose: input.verbose ?? false,
-      toolExecutionMode: input.toolExecutionMode ?? input.toolExecutionStrategy ?? 'sequential',
-      queueMode: input.queueMode ?? (input.steeringMode === 'all' ? 'all' : input.steeringMode === 'one-at-a-time' ? 'one-at-a-time' : 'all'),
-      followUpMode: input.followUpMode ?? input.queueMode ?? 'all',
+      toolExecutionMode:
+        input.toolExecutionMode ?? input.toolExecutionStrategy ?? "sequential",
+      queueMode:
+        input.queueMode ??
+        (input.steeringMode === "all"
+          ? "all"
+          : input.steeringMode === "one-at-a-time"
+            ? "one-at-a-time"
+            : "all"),
+      followUpMode: input.followUpMode ?? input.queueMode ?? "all",
       convertToLlm: input.convertToLlm,
       getApiKey: input.getApiKey,
       shouldStopAfterTurn: input.shouldStopAfterTurn,
@@ -211,18 +261,21 @@ export class Agent {
     return {
       id: model.id || model.name,
       name: model.name || model.id,
-      api: 'openai-completions',
-      provider: (model as any).provider || 'openai',
-      baseUrl: (model as any).baseUrl || '',
+      api: "openai-completions",
+      provider: (model as any).provider || "openai",
+      baseUrl: (model as any).baseUrl || "",
       reasoning: (model as any).reasoning || false,
-      input: (model as any).input || ['text'],
-      cost: (model as any).cost || { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      input: (model as any).input || ["text"],
+      cost: (model as any).cost || {
+        input: 0,
+        output: 0,
+        cacheRead: 0,
+        cacheWrite: 0,
+      },
       contextWindow: (model as any).contextWindow || 128000,
       maxTokens: (model as any).maxTokens || 8192,
     };
   }
-
-
 
   // ============================================================================
   // Public API
@@ -231,9 +284,7 @@ export class Agent {
   /**
    * Subscribe to all agent events.
    */
-  subscribe(
-    handler: (event: any) => Promise<void> | void
-  ): () => void {
+  subscribe(handler: (event: any) => Promise<void> | void): () => void {
     return this.emitter.onAny(handler);
   }
 
@@ -288,10 +339,14 @@ export class Agent {
 
   /** (legacy) Set LLM provider using old signature; wraps into llmComplete */
   setLLMProvider(
-    provider: (prompt: string, tools: any[], options?: any) => Promise<LLMResponse>
+    provider: (
+      prompt: string,
+      tools: any[],
+      options?: any,
+    ) => Promise<LLMResponse>,
   ): void {
     this.llmComplete = async (context: Context, options?: any) => {
-      const prompt = context.messages.map(m => (m as any).content).join(''); // simplistic
+      const prompt = context.messages.map((m) => (m as any).content).join(""); // simplistic
       const toolDefs = context.tools || [];
       return provider(prompt, toolDefs, options);
     };
@@ -299,10 +354,14 @@ export class Agent {
 
   /** (legacy) Set stream provider using old signature; wraps into llmStream */
   setStreamProvider(
-    provider: (prompt: string, tools: any[], options?: any) => AsyncIterable<any> | Promise<AsyncIterable<any>>
+    provider: (
+      prompt: string,
+      tools: any[],
+      options?: any,
+    ) => AsyncIterable<any> | Promise<AsyncIterable<any>>,
   ): void {
     this.llmStream = async (context: Context, options?: any) => {
-      const prompt = context.messages.map(m => (m as any).content).join('');
+      const prompt = context.messages.map((m) => (m as any).content).join("");
       const toolDefs = context.tools || [];
       return provider(prompt, toolDefs, options);
     };
@@ -315,29 +374,38 @@ export class Agent {
    * @param signal - Optional AbortSignal to cancel execution.
    * @returns A promise that resolves with the final result.
    */
-  async run(arg: string | ConversationTurn[], signal?: AbortSignal): Promise<AgentRunResult> {
+  async run(
+    arg: string | ConversationTurn[],
+    signal?: AbortSignal,
+  ): Promise<AgentRunResult> {
     if (this.runner.getState().isRunning) {
-      throw new Error('Agent is already running');
+      throw new Error("Agent is already running");
     }
 
     if (!this.llmComplete) {
-      throw new Error('LLM provider not set. Provide a model or setModel() first.');
+      throw new Error(
+        "LLM provider not set. Provide a model or setModel() first.",
+      );
     }
 
-    const turns: ConversationTurn[] = typeof arg === 'string'
-      ? [{
-          role: 'user',
-          content: [{ type: 'text', text: arg }],
-          timestamp: Date.now(),
-        }]
-      : arg;
+    const turns: ConversationTurn[] =
+      typeof arg === "string"
+        ? [
+            {
+              role: "user",
+              content: [{ type: "text", text: arg }],
+              timestamp: Date.now(),
+            },
+          ]
+        : arg;
 
     // Track completion for waitForIdle()
     const p = this.execute(turns, signal);
     const idle = p.then(() => undefined);
     this._currentRunIdlePromise = idle;
     p.finally(() => {
-      if (this._currentRunIdlePromise === idle) this._currentRunIdlePromise = null;
+      if (this._currentRunIdlePromise === idle)
+        this._currentRunIdlePromise = null;
     });
     return p;
   }
@@ -350,22 +418,24 @@ export class Agent {
    */
   async resume(signal?: AbortSignal): Promise<AgentRunResult> {
     if (this.runner.getState().isRunning) {
-      throw new Error('Agent is already running');
+      throw new Error("Agent is already running");
     }
 
     if (!this.llmComplete) {
-      throw new Error('LLM provider not set. Provide a model or setModel() first.');
+      throw new Error(
+        "LLM provider not set. Provide a model or setModel() first.",
+      );
     }
 
     const state = this.runner.getState();
     const lastTurn = state.history[state.history.length - 1];
 
     if (!lastTurn) {
-      throw new Error('No conversation history to resume from');
+      throw new Error("No conversation history to resume from");
     }
 
     let initialTurns: ConversationTurn[];
-    if (lastTurn.role === 'assistant') {
+    if (lastTurn.role === "assistant") {
       // Check steering queue first
       if (this.steeringQueue.hasPending) {
         initialTurns = this.steeringQueue.drainAll();
@@ -373,7 +443,9 @@ export class Agent {
         // Then check follow-up queue
         initialTurns = this.followUpQueue.drainAll();
       } else {
-        throw new Error('Cannot resume: last message is assistant and no queued messages');
+        throw new Error(
+          "Cannot resume: last message is assistant and no queued messages",
+        );
       }
     } else {
       // Continue with empty initial turns (uses existing history)
@@ -381,11 +453,17 @@ export class Agent {
     }
 
     // Track completion for waitForIdle()
-    const p = this.runner.resume(initialTurns, this.steeringQueue, this.followUpQueue, signal);
+    const p = this.runner.resume(
+      initialTurns,
+      this.steeringQueue,
+      this.followUpQueue,
+      signal,
+    );
     const idle = p.then(() => undefined);
     this._currentRunIdlePromise = idle;
     p.finally(() => {
-      if (this._currentRunIdlePromise === idle) this._currentRunIdlePromise = null;
+      if (this._currentRunIdlePromise === idle)
+        this._currentRunIdlePromise = null;
     });
     return p;
   }
@@ -399,32 +477,37 @@ export class Agent {
    */
   async *stream(
     prompt: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): AsyncGenerator<any, AgentRunResult> {
     if (this.runner.getState().isRunning) {
-      throw new Error('Agent is already running');
+      throw new Error("Agent is already running");
     }
 
     if (!this.llmStream) {
-      throw new Error('LLM stream provider not set. Provide a model or setModel() first.');
+      throw new Error(
+        "LLM stream provider not set. Provide a model or setModel() first.",
+      );
     }
 
     const userTurn: ConversationTurn = {
-      role: 'user',
-      content: [{ type: 'text', text: prompt }],
+      role: "user",
+      content: [{ type: "text", text: prompt }],
       timestamp: Date.now(),
     };
 
     // Track completion for waitForIdle()
     let resolveIdle!: () => void;
-    const idlePromise = new Promise<void>((resolve) => { resolveIdle = resolve; });
+    const idlePromise = new Promise<void>((resolve) => {
+      resolveIdle = resolve;
+    });
     this._currentRunIdlePromise = idlePromise;
     try {
       const result = yield* this.streamExecute([userTurn], signal);
       return result;
     } finally {
       resolveIdle();
-      if (this._currentRunIdlePromise === idlePromise) this._currentRunIdlePromise = null;
+      if (this._currentRunIdlePromise === idlePromise)
+        this._currentRunIdlePromise = null;
     }
   }
 
@@ -485,7 +568,7 @@ export class Agent {
   reset(): void {
     const state = this.runner.getState();
     if (state.isRunning) {
-      throw new Error('Cannot reset agent while it is running');
+      throw new Error("Cannot reset agent while it is running");
     }
     this.runner.reset();
     this.clearAllQueues();
@@ -522,65 +605,67 @@ export class Agent {
 
   private async execute(
     initialTurns: ConversationTurn[],
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<AgentRunResult> {
     return this.runner.run(
-      '',
+      "",
       this.steeringQueue,
       this.followUpQueue,
       signal,
-      initialTurns
+      initialTurns,
     );
   }
 
   private async *streamExecute(
     initialTurns: ConversationTurn[],
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): AsyncGenerator<any, AgentRunResult> {
     const result = yield* this.runner.stream(
-      '',
+      "",
       this.steeringQueue,
       this.followUpQueue,
       signal,
-      initialTurns
+      initialTurns,
     );
     return result;
   }
 
-   private resolveConfig(config?: Partial<AgentConfig>): AgentConfig {
-     return {
-       maxRounds: config?.maxRounds ?? 10,
-       verbose: config?.verbose ?? false,
-       toolTimeout: config?.toolTimeout ?? 30000,
-       cacheResults: config?.cacheResults ?? false,
-       toolExecutionStrategy: config?.toolExecutionStrategy ?? 'parallel',
-       loopStrategy: config?.loopStrategy,
-       contextBuilder: {
-         maxTokens: config?.contextBuilder?.maxTokens ?? 128000,
-         reservedTokens: config?.contextBuilder?.reservedTokens ?? 4096,
-         minMessages: config?.contextBuilder?.minMessages ?? 5,
-         enableMemoryInjection: config?.contextBuilder?.enableMemoryInjection ?? true,
-       },
-       executor: {
-         timeout: config?.executor?.timeout ?? 30000,
-         cacheEnabled: config?.executor?.cacheEnabled ?? false,
-         cacheSize: config?.executor?.cacheSize ?? 1000,
-         toolExecutionStrategy: config?.executor?.toolExecutionStrategy ?? 'parallel',
-         beforeToolCall: config?.executor?.beforeToolCall,
-         afterToolCall: config?.executor?.afterToolCall,
-       },
-       enableLogging: config?.enableLogging ?? true,
-       sessionId: config?.sessionId,
-       thinkingBudgets: config?.thinkingBudgets,
-       reasoningLevel: config?.reasoningLevel,
-       transformContext: config?.transformContext,
-       steeringMode: config?.steeringMode ?? 'one-at-a-time',
-       followUpMode: config?.followUpMode ?? 'one-at-a-time',
-       autoSaveMemories: config?.autoSaveMemories,
-       debug: config?.debug ?? false,
-       compaction: config?.compaction ?? { enabled: true, autoCompact: true },
-     };
-   }
+  private resolveConfig(config?: Partial<AgentConfig>): AgentConfig {
+    return {
+      maxRounds: config?.maxRounds ?? 10,
+      verbose: config?.verbose ?? false,
+      toolTimeout: config?.toolTimeout ?? 30000,
+      cacheResults: config?.cacheResults ?? false,
+      toolExecutionStrategy: config?.toolExecutionStrategy ?? "parallel",
+      loopStrategy: config?.loopStrategy,
+      contextBuilder: {
+        maxTokens: config?.contextBuilder?.maxTokens ?? 128000,
+        reservedTokens: config?.contextBuilder?.reservedTokens ?? 4096,
+        minMessages: config?.contextBuilder?.minMessages ?? 5,
+        enableMemoryInjection:
+          config?.contextBuilder?.enableMemoryInjection ?? true,
+      },
+      executor: {
+        timeout: config?.executor?.timeout ?? 30000,
+        cacheEnabled: config?.executor?.cacheEnabled ?? false,
+        cacheSize: config?.executor?.cacheSize ?? 1000,
+        toolExecutionStrategy:
+          config?.executor?.toolExecutionStrategy ?? "parallel",
+        beforeToolCall: config?.executor?.beforeToolCall,
+        afterToolCall: config?.executor?.afterToolCall,
+      },
+      enableLogging: config?.enableLogging ?? true,
+      sessionId: config?.sessionId,
+      thinkingBudgets: config?.thinkingBudgets,
+      reasoningLevel: config?.reasoningLevel,
+      transformContext: config?.transformContext,
+      steeringMode: config?.steeringMode ?? "one-at-a-time",
+      followUpMode: config?.followUpMode ?? "one-at-a-time",
+      autoSaveMemories: config?.autoSaveMemories,
+      debug: config?.debug ?? false,
+      compaction: config?.compaction ?? { enabled: true, autoCompact: true },
+    };
+  }
 
   private createLogger(verbose: boolean): EventEmitter {
     const emitter = new EventEmitter();
@@ -590,22 +675,26 @@ export class Agent {
         const time = new Date(event.timestamp).toISOString();
         const round = `[R${event.round}]`;
         switch (event.type) {
-          case 'agent:start':
+          case "agent:start":
             console.log(`${time} ${round} 🚀 Agent started`);
             break;
-          case 'agent:end':
+          case "agent:end":
             console.log(`${time} ${round} ✅ Agent finished`);
             break;
-          case 'turn:end': {
+          case "turn:end": {
             const tc = (event as any).toolCallsExecuted;
             console.log(`${time} ${round} ⏹️ Turn (${tc} tools)`);
             break;
           }
-          case 'tool:error':
-            console.error(`${time} ${round} 💥 Tool error: ${(event as any).toolName}`);
+          case "tool:error":
+            console.error(
+              `${time} ${round} 💥 Tool error: ${(event as any).toolName}`,
+            );
             break;
-          case 'error':
-            console.error(`${time} ${round} 💥 Error: ${(event as any).message}`);
+          case "error":
+            console.error(
+              `${time} ${round} 💥 Error: ${(event as any).message}`,
+            );
             break;
         }
       });

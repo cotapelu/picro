@@ -30,6 +30,12 @@ export interface TextBlock {
   text: string;
 }
 
+export interface ImageBlock {
+  type: 'image';
+  data: string; // base64
+  mimeType?: string;
+}
+
 export interface ThinkingBlock {
   type: 'thinking';
   thinking: string;
@@ -43,7 +49,7 @@ export interface ToolCallBlock {
   arguments: Record<string, unknown>;
 }
 
-export type ContentBlock = TextBlock | ThinkingBlock | ToolCallBlock;
+export type ContentBlock = TextBlock | ImageBlock | ThinkingBlock | ToolCallBlock;
 
 export interface BaseTurn {
   timestamp: number;
@@ -71,7 +77,7 @@ export interface ToolTurn extends BaseTurn {
   role: 'tool';
   toolCallId: string;
   toolName: string;
-  content: TextBlock[];
+  content: (TextBlock | ImageBlock)[];
   isError: boolean;
   details?: Record<string, unknown>;
 }
@@ -123,7 +129,7 @@ export type ToolHandler = (
   args: Record<string, unknown>,
   context: ToolContext,
   onProgress?: (update: ToolProgressUpdate) => void | Promise<void>
-) => string | TextBlock[] | Promise<string | TextBlock[]> | void | Promise<void>;
+) => string | (TextBlock | ImageBlock)[] | Promise<string | (TextBlock | ImageBlock)[]> | void | Promise<void>;
 
 export type ToolRegistry = Record<string, ToolHandler>;
 
@@ -150,7 +156,7 @@ export interface AfterToolCallContext {
   assistantMessage: AssistantTurn;
   toolCall: ToolCallBlock;
   args: Record<string, unknown>;
-  result: ToolTurn;
+  result: ToolResult; // SuccessfulToolResult or FailedToolResult
   isError: boolean;
   context: AgentRuntimeState;
 }
@@ -219,7 +225,7 @@ export interface ToolExecutionMetadata {
 export interface SuccessfulToolResult {
   toolCallId: string;
   toolName: string;
-  content: string | TextBlock[];
+  content: string | (TextBlock | ImageBlock)[];
   executionTime: number;
   isError: false;
   metadata: ToolExecutionMetadata;

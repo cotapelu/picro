@@ -19,6 +19,7 @@ import type {
   HookResult,
   ToolCallData,
   TextBlock,
+  ImageBlock,
 } from './types.js';
 import { EventEmitter } from '../events/event-emitter.js';
 import { validateToolArguments } from '../llm/validation.js';
@@ -224,12 +225,12 @@ export class ToolExecutor {
          signal
        );
 
-       // Convert rawResult to TextBlock[] or string
-       let resultContent: string | TextBlock[];
+       // Convert rawResult to (TextBlock|ImageBlock)[] or string
+       let resultContent: string | (TextBlock | ImageBlock)[];
        if (typeof rawResult === 'string') {
          resultContent = [{ type: 'text', text: rawResult } as TextBlock];
-       } else if (Array.isArray(rawResult) && rawResult.every(item => (item as any).type === 'text')) {
-         resultContent = rawResult as TextBlock[];
+       } else if (Array.isArray(rawResult) && rawResult.every(item => (item as any).type === 'text' || (item as any).type === 'image')) {
+         resultContent = rawResult as (TextBlock | ImageBlock)[];
        } else {
          resultContent = [{ type: 'text', text: this.normalizeResult(rawResult) } as TextBlock];
        }
@@ -257,7 +258,11 @@ export class ToolExecutor {
            signal
          );
          if (after) {
-           if (after.result !== undefined) result.content = after.result;
+           if (after.result !== undefined) {
+             result.content = typeof after.result === 'string'
+               ? [{ type: 'text', text: after.result } as TextBlock]
+               : after.result as (TextBlock | ImageBlock)[];
+           }
            if (after.isError) {
              result = {
                ...result,
