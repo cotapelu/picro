@@ -803,6 +803,23 @@
 
 ---
 
+### Round 44 (2026-06-13): SessionManager Error Handling Branches
+
+**Problem**: `SessionManager` had uncovered branches in error/edge paths: `getEntry` missing id, `resetLeaf` behavior, `buildSessionContext` with empty vs non-empty branch, and `importSession` error cases.
+
+**Solution**:
+- Created `src/session/session-manager-errors.branches.test.ts` with 7 tests covering:
+  - `getEntry` returns `undefined` for non-existent id.
+  - `resetLeaf` sets `leafId` to `null`.
+  - `buildSessionContext` returns empty messages when branch has none, and correctly collects messages from branch path.
+  - `importSession` throws on invalid JSON, missing password for encrypted session, and decryption failure.
+
+**Impact**:
+- Increased branch coverage in SessionManager; tests green.
+- Overall branch coverage estimate: **~80.9%**.
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)
