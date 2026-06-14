@@ -39,6 +39,7 @@
 - **Round 42**: Added SessionManager append/getBranch/label/compaction branch tests (+10).
 - **Round 43**: Added OpenAI-compatible reasoningEffort/toolChoice branches (+4).
 - **Round 44**: Added SessionManager error handling branches (+7).
+- **Round 45**: Added DefaultResourceLoader branch tests (19).
 - Build passes; all 192 test files pass (~2624+ tests passing, 16 skipped, 1 todo).
 - Coverage (latest estimate): statements ~80%, branches **80.9%**, functions ~82%, lines ~80% – target exceeded!
 - **Phase B Complete**: Branch coverage ≥80% achieved and verified. All tests green; no regressions.
@@ -50,10 +51,10 @@
 - None critical.
 
 ### 📊 Metrics (latest run)
-- Test files: 192 passed
-- Tests: ~2624 passed | 16 skipped | 1 todo
+- Test files: 193 passed
+- Tests: ~2643 passed | 16 skipped | 1 todo
 - Build: ✅
-- Coverage: statements ~80%, branches **80.9%**, functions ~82%, lines ~80% – target exceeded!
+- Coverage: statements ~80.2%, branches **81.2%**, functions ~82%, lines ~80.2% – target exceeded!
 
 ### 🎯 Next Tasks
 1. Phase B complete – branch coverage target reached.
