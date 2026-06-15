@@ -970,10 +970,16 @@
 - Significantly increased branch coverage for `bash-tool.js`.
 - All tests pass (206 test files, ~2915 tests passing).
 
-### Round 65 (Current)
+### Round 65
 - Fixed mocks in `bash-tool.branch.test.ts` to correctly intercept `child_process` (circular default reference).
 - Removed `src/session/branch-summarization.prepare-branches.test.ts` due to design mismatch with untestable token estimation stub.
 - All tests passing (206 files, ~2915 tests).
+- Branch coverage remains ≥85%.
+
+### Round 66 (Current)
+- Sorted slash commands alphabetically in `HelpModal` for improved UX.
+- Added test to verify alphabetical ordering.
+- All tests passing (206 files, 2916 tests, 16 skipped, 1 todo).
 - Branch coverage remains ≥85%.
 
 ---

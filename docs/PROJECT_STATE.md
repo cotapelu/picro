@@ -60,6 +60,7 @@
 - **Round 63**: Added 9 branch tests for `generateBranchSummary` covering aborted signal, customInstructions, fileOps aggregation, and summary structure. All tests pass (205 test files, ~2899 tests).
 - **Round 64**: Added 16 branch tests for `bash-tool.js` covering validation, cwd check, execution (stdout, empty, exit code, stderr, truncation), error handling, timeout, and `isBashToolResult`. All tests pass (206 test files, ~2915 tests).
 - **Round 65**: Fixed mocks in `bash-tool.branch.test.ts` (circular default reference for `child_process`). Removed `session/branch-summarization.prepare-branches.test.ts` due to design mismatch with untestable token estimation stub. All tests pass (206 test files, ~2915 tests, 16 skipped, 1 todo).
+- **Round 66**: Sorted slash commands alphabetically in `HelpModal` for improved UX; added corresponding test. All tests pass (206 test files, 2916 tests, 16 skipped, 1 todo).
 - Build passes; all 206 test files pass.
 - Coverage (latest estimate): statements ~83%, branches **≥85%**, functions ~86%, lines ~83% – target exceeded.
 - **Phase B Complete**: Branch coverage target ≥80% reached.
@@ -72,7 +73,7 @@
 
 ### 📊 Metrics (latest run)
 - Test files: **206 passed**
-- Tests: **~2915 passed** | 16 skipped | 1 todo
+- Tests: **2916 passed** | 16 skipped | 1 todo
 - Build: ✅
 - Coverage: statements ~83%, branches **≥85%**, functions ~86%, lines ~83% – target exceeded.
 
