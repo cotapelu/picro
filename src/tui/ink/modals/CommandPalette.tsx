@@ -98,6 +98,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   {' '}[{cmd.shortcut}]
                 </Text>
               )}
+              {(cmd as any).source && (
+                <Text color={theme.dim}>
+                  {' '}({(cmd as any).source})
+                </Text>
+              )}
               {cmd.description && (
                 <Text color={theme.dim}>
                   {' '}- {cmd.description}
