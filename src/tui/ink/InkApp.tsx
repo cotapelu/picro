@@ -34,6 +34,7 @@ import { InputModal } from './modals/InputModal.js';
 import { SelectModal } from './modals/SelectModal.js';
 import { Modal } from './modals/Modal.js';
 import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands.js';
+import { track } from '../../runtime/telemetry.js';
 import { VERSION } from '../../config.js';
 
 
@@ -1473,7 +1474,15 @@ export const InkApp: React.FC<{ runtime: AgentSessionRuntimeInterface }> = ({ ru
   return (
     <ErrorBoundary onError={(error, errorInfo) => {
       console.error('App error:', error, errorInfo);
-      // TODO: report to telemetry if available
+      try {
+        track('agent.error', {
+          message: error?.message ?? String(error),
+          stack: error?.stack,
+          componentStack: errorInfo?.componentStack,
+        });
+      } catch (e) {
+        // ignore telemetry errors
+      }
     }}>
       <ThemeProvider initialMode={initialMode}>
         <InkAppInner runtime={runtime} />
