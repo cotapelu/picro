@@ -952,6 +952,24 @@
 - Increased branch coverage for branch-summarization module.
 - All tests still pass (205 test files, ~2899 tests passing).
 
+### Round 64 (2026-06-15): BashTool Branch Coverage
+
+**Problem**: `src/tools/bash-tool.js` had extremely low branch coverage (~6%) due to lack of unit tests for its core logic (validation, cwd check, stdout/stderr handling, truncation, timeout, error handling).
+
+**Solution**:
+- Added comprehensive branch test file `bash-tool.branch.test.ts` (16 tests) covering:
+  - `createBashToolDefinition` and `createBashTool` structure.
+  - Command validation (missing, not string).
+  - CWD existence check (early return on missing directory).
+  - Successful execution: stdout output, empty output placeholder, exit code note, combined stdout+stderr, truncation with note.
+  - Error handling: spawn throws, child emits error.
+  - Timeout handling: timed out note, using fake timers.
+  - `isBashToolResult` type checks.
+
+**Impact**:
+- Significantly increased branch coverage for `bash-tool.js`.
+- All tests pass (206 test files, ~2915 tests passing).
+
 ---
 
 ## Planned Refactors (Next Rounds)

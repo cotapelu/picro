@@ -58,8 +58,9 @@
 - **Round 61**: Added branch test for `discoverAndLoadExtensions` covering `package.json` `pi.extensions` resolution; improved `loader.ts` coverage. All tests pass (204 test files, ~2890 tests passing).
 - **Round 62**: Added unit test for `AgentSession._checkCompaction` early‑return when assistant message is older than latest compaction entry; improved branch coverage for a core session module. All tests pass.
 - **Round 63**: Added 9 branch tests for `generateBranchSummary` covering aborted signal, customInstructions, fileOps aggregation, and summary structure. All tests pass (205 test files, ~2899 tests).
-- Build passes; all 205 test files pass (~2899 tests passing, 16 skipped, 1 todo).
-- Coverage (latest estimate): statements ~82%, branches **~82%** (estimated), functions ~85%, lines ~82% – continuing improvement toward 85%.
+- **Round 64**: Added 16 branch tests for `bash-tool.js` covering validation, cwd check, execution (stdout, empty, exit code, stderr, truncation), error handling, timeout, and `isBashToolResult`. All tests pass (206 test files, ~2915 tests).
+- Build passes; all 206 test files pass (~2915 tests passing, 16 skipped, 1 todo).
+- Coverage (latest estimate): statements ~83%, branches **~83%** (estimated), functions ~86%, lines ~83% – continuing improvement toward 85%.
 - **Phase B Complete**: Branch coverage target ≥80% reached.
 
 ### 🔄 In Progress
