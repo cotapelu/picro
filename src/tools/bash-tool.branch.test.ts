@@ -6,17 +6,14 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock dependencies before importing the module under test
-vi.mock('node:fs', () => ({ default: {}, existsSync: vi.fn() }));
-vi.mock('node:os', () => ({ default: {}, tmpdir: vi.fn() }));
-vi.mock('node:path', () => ({ default: {}, join: vi.fn() }));
-vi.mock('node:crypto', () => ({ default: {}, randomBytes: vi.fn() }));
-vi.mock('child_process', () => ({ default: {}, spawn: vi.fn() }));
+// Mock child_process with a namespace that has a default self-reference
+vi.mock('child_process', () => {
+  const mockSpawn = vi.fn();
+  const namespace: any = { spawn: mockSpawn };
+  namespace.default = namespace; // circular for CommonJS default
+  return namespace;
+});
 
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { randomBytes } from 'node:crypto';
 import { spawn } from 'child_process';
 
 import {
@@ -69,18 +66,11 @@ describe('bash-tool branches', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Default mock implementations for Node builtins
-    (existsSync as any).mockReturnValue(true);
-    (tmpdir as any).mockReturnValue('/tmp');
-    (join as any).mockImplementation((dir: string, file: string) => `${dir}/${file}`);
-    (randomBytes as any).mockReturnValue({ toString: () => 'abc' } as any);
-
     // Reset spawn mock
     (spawn as any).mockClear();
-
-    // Create a fresh handler for each test
-    const definition = createBashToolDefinition('/test/cwd', {});
+    // Create a fresh handler for each test, using real cwd
+    const cwd = process.cwd();
+    const definition = createBashToolDefinition(cwd, {});
     handler = definition.handler;
   });
 
@@ -119,8 +109,10 @@ describe('bash-tool branches', () => {
 
   describe('cwd existence check', () => {
     it('returns error string when cwd does not exist', async () => {
-      (existsSync as any).mockReturnValue(false);
-      const result = await handler({ command: 'test' });
+      const badCwd = '/this/path/does/not/exist/9876';
+      const def = createBashToolDefinition(badCwd, {});
+      const badHandler = def.handler;
+      const result = await badHandler({ command: 'test' });
       expect(result).toContain('Working directory does not exist');
     });
   });
