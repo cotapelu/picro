@@ -849,6 +849,19 @@
 - Reduced input interference between modal and background components.
 - All tests remain green.
 
+### Round 57 (2026-06-15): Slash Command Palette Grouping Refinement
+
+**Problem**: Pure alphabetical sorting intermingles commands from different sources (builtin, extensions, skills, templates), making it harder to find commands by category.
+
+**Solution**:
+- Modified command sorting to group by source first (builtin → extension → skill → template), then alphabetize within each group.
+- Preserved search/filtering functionality.
+
+**Impact**:
+- Users can now quickly locate commands by familiar categories while still enjoying alphabetic order within groups.
+- Enhanced discoverability of built-in commands vs. extensions/skills.
+- No performance regression; all tests pass.
+
 ---
 
 ## Planned Refactors (Next Rounds)
