@@ -203,5 +203,36 @@ describe('CommandPalette', () => {
     await pressKey({ return: true });
     expect(onSelect).not.toHaveBeenCalled();
   });
+
+  it('backspace removes last character from filter', async () => {
+    const commands = [{ id: 'a', label: '/a' }, { id: 'ab', label: '/ab' }];
+    await wrap(<CommandPalette commands={commands} onSelect={onSelect} onClose={onClose} />);
+    await typeChar('a'); // filter 'a' -> selects 'a'
+    await typeChar('b'); // filter 'ab' -> selects 'ab' (first if both match? '/ab' matches)
+    await pressKey({ backspace: true }); // filter back to 'a', selection resets to index 0 ('/a')
+    await pressKey({ return: true });
+    expect(onSelect).toHaveBeenCalledWith('a');
+  });
+
+  it('escape clears filter when non-empty and does not close', async () => {
+    const commands = [{ id: 'a', label: '/a' }, { id: 'b', label: '/b' }];
+    await wrap(<CommandPalette commands={commands} onSelect={onSelect} onClose={onClose} />);
+    await typeChar('z'); // filter 'z' -> empty list
+    await pressKey({ escape: true });
+    expect(onClose).not.toHaveBeenCalled();
+    // After escape, filter cleared, selection reset, commands visible again
+    // Verify that we can select a command
+    await pressKey({ downArrow: true }); // select second
+    await pressKey({ return: true });
+    expect(onSelect).toHaveBeenCalledWith('b');
+  });
+
+  it('escape closes when filter is already empty', async () => {
+    const commands = [{ id: 'a', label: '/a' }];
+    await wrap(<CommandPalette commands={commands} onSelect={onSelect} onClose={onClose} />);
+    // Initially filter empty
+    await pressKey({ escape: true });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 });
 

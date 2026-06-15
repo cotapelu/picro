@@ -45,6 +45,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   // Handle input
   useInput((input, key) => {
     if (key.escape) {
+      if (filter.length > 0) {
+        setFilter('');
+        setSelectedIndex(0);
+        return;
+      }
       onClose();
       return;
     }
@@ -67,8 +72,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       return;
     }
 
-    if (input.length === 1 && !key.ctrl && !key.meta) {
+    if (input && input.length === 1 && !key.ctrl && !key.meta) {
       setFilter((prev) => prev + input);
+      return;
+    }
+    // Backspace support
+    if (key.backspace) {
+      setFilter((prev) => prev.slice(0, -1));
+      return;
     }
   });
 
