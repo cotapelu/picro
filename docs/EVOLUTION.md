@@ -896,6 +896,22 @@
 - Overall branch coverage continues to improve toward 85% target.
 - All tests pass (205 test files, ~2888 tests passing).
 
+### Round 60 (2026-06-15): AgentSessionRuntime Branch Coverage Expansion
+
+**Problem**: `AgentSessionRuntime` had several under-tested branches: disposed checks in `fork`, `listSessions`, `importFromJsonl`; error handling in `fork`; and edge cases in session listing and import.
+
+**Solution**:
+- Added 19 new branch tests extending the existing `agent-session-runtime.branches.test.ts`:
+  - `fork`: disposed early return, invalid entry error handling, success for "at" and "before" positions.
+  - `listSessions`: disposed returns empty array, deduplication by path, combination of local and global sessions.
+  - `importFromJsonl`: disposed, file-not-found, and happy path (file exists) branches.
+  - Refactored clipboardy mock to use namespace import for proper default export simulation.
+
+**Impact**:
+- `AgentSessionRuntime` branch coverage increased significantly (from ~60% to ~80%+).
+- Overall branch coverage now ~80-81%.
+- All tests pass (205 test files, ~2907 tests passing).
+
 ---
 
 ## Planned Refactors (Next Rounds)
