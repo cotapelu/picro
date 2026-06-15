@@ -88,7 +88,15 @@ export const ModalRenderers: React.FC<ModalRenderersProps> = ({
       const filtered = allCommands.filter(cmd =>
         cmd.label.toLowerCase().includes(search) ||
         (cmd.description && cmd.description.toLowerCase().includes(search))
-      ).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+      ).sort((a, b) => {
+        // Group by source: builtin (0), extension (1), skill (2), template (3), others (4)
+        const groupOrder: Record<string, number> = { builtin: 0, extension: 1, skill: 2, template: 3 };
+        const groupA = groupOrder[a.source as string] ?? 4;
+        const groupB = groupOrder[b.source as string] ?? 4;
+        if (groupA !== groupB) return groupA - groupB;
+        // Within group, sort alphabetically by label
+        return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
+      });
       return (
         <Modal onClose={onClose}>
           <CommandPalette
