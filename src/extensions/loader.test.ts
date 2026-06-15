@@ -357,6 +357,30 @@ describe('Extension Loader - discoverAndLoadExtensions', () => {
     expect(result.errors).toEqual([]);
   });
 
+  it('should load extensions declared in package.json pi.extensions', async () => {
+    // Create an extension **subdirectory** with package.json pi.extensions pointing to a .js file
+    const agentExtensionsDir = join(agentDir, 'extensions');
+    mkdirSync(agentExtensionsDir, { recursive: true });
+    const extName = 'pkg-ext';
+    const extDir = join(agentExtensionsDir, extName);
+    mkdirSync(extDir, { recursive: true });
+    // Create a sub JS file inside the extension directory referenced by pi.extensions
+    const subJsPath = join(extDir, 'sub.js');
+    const subContent = `module.exports = async (ctx) => ({
+  name: 'pi-sub',
+  path: ctx.extensionDir,
+  tools: new Map([['subTool', {}]]),
+  commands: new Map(),
+});`;
+    writeFileSync(subJsPath, subContent, 'utf-8');
+    // Create package.json with pi.extensions pointing to ./sub.js
+    writeFileSync(join(extDir, 'package.json'), JSON.stringify({ pi: { extensions: ['./sub.js'] } }));
+
+    const result = await discoverAndLoadExtensions({ cwd, agentDir });
+    expect(result.extensions.some(e => e.name === 'pi-sub')).toBe(true);
+    expect(result.errors).toEqual([]);
+  });
+
   it('should combine multiple sources', async () => {
     const agentExtDir = join(agentDir, 'extensions');
     const piExtDir = join(cwd, '.pi', 'extensions');
