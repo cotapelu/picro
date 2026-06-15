@@ -14,7 +14,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
         Slash Commands
       </Text>
       <Box flexDirection="column" marginTop={1}>
-        {BUILTIN_SLASH_COMMANDS.map(cmd => (
+        {BUILTIN_SLASH_COMMANDS.slice().sort((a, b) => a.name.localeCompare(b.name)).map(cmd => (
           <Text key={cmd.name}>/{cmd.name} - {cmd.description}</Text>
         ))}
       </Box>

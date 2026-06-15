@@ -29,4 +29,17 @@ describe('HelpModal', () => {
     expect(lastFrame()).toContain('Quit the application');
     expect(lastFrame()).toContain('Export session to HTML');
   });
+
+  it('lists commands alphabetically by name', () => {
+    const { lastFrame } = renderWithTheme(<HelpModal onClose={() => {}} />);
+    const frame = lastFrame();
+    const lines = frame.split('\n');
+    const commandNames: string[] = [];
+    for (const line of lines) {
+      const match = line.match(/^\/([a-z0-9-]+)/);
+      if (match) commandNames.push(match[1]);
+    }
+    const sorted = [...commandNames].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
+    expect(commandNames).toEqual(sorted);
+  });
 });
