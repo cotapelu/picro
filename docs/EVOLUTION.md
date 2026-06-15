@@ -912,6 +912,19 @@
 - Overall branch coverage now ~80-81%.
 - All tests pass (205 test files, ~2907 tests passing).
 
+### Round 61 (2026-06-15): Loader pi.extensions Branch Coverage
+
+**Problem**: `src/extensions/loader.ts` had a missing branch in `resolveExtensionEntries` for the `package.json` `pi.extensions` resolution path. This reduced branch coverage (~44%).
+
+**Solution**:
+- Added a focused test in `loader.test.ts` for `discoverAndLoadExtensions` that creates an extension directory with a `package.json` declaring `pi.extensions` pointing to a `.js` file, then verifies correct loading.
+- This exercise covers the branch where `resolveExtensionEntries` finds and returns entries from `package.json`.
+
+**Impact**:
+- `loader.ts` branch coverage increased substantially.
+- Overall branch coverage now ~81%.
+- All tests still pass (now 206 test files, ~2915 tests passing).
+
 ---
 
 ## Planned Refactors (Next Rounds)
