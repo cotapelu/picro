@@ -194,5 +194,14 @@ describe('CommandPalette', () => {
     await pressKey({ return: true });
     expect(onSelect).not.toHaveBeenCalled();
   });
+
+  it('ignores down arrow when no commands match', async () => {
+    const commands = [{ id: 'a', label: '/a' }];
+    await wrap(<CommandPalette commands={commands} onSelect={onSelect} onClose={onClose} />);
+    await typeChar('z'); // filter 'z' yields no matches
+    await pressKey({ downArrow: true });
+    await pressKey({ return: true });
+    expect(onSelect).not.toHaveBeenCalled();
+  });
 });
 

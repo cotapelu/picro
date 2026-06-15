@@ -57,10 +57,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     }
 
     if (key.upArrow) {
+      if (filteredCommands.length === 0) return;
       setSelectedIndex((prev) => Math.max(0, prev - 1));
       return;
     }
     if (key.downArrow) {
+      if (filteredCommands.length === 0) return;
       setSelectedIndex((prev) => Math.min(filteredCommands.length - 1, prev + 1));
       return;
     }
