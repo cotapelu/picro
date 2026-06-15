@@ -836,6 +836,19 @@
 - Branch coverage increased due to new SettingsManager tests.
 - Improved test stability and component simplicity.
 
+### Round 56 (2026-06-15): Slash Command Palette UX Improvements
+
+**Problem**: User feedback: 1) Slash commands not in a helpful order (appeared in registration order). 2) Arrow keys did not work correctly when palette opens after typing '/' – first arrow press often ignored.
+
+**Solution**:
+- Sorted slash commands alphabetically by label (case‑insensitive) after filtering. Now commands like `/help`, `/model`, `/session` appear in predictable lexical order.
+- Disabled the main InputBox while any modal is active (`disabled={isSubmitting || activeModal !== null}`). This ensures arrow key events are consumed only by the focused modal, eliminating the conflict that caused missed arrow presses.
+
+**Impact**:
+- Improved interactive experience: slash commands are intuitively ordered and respond immediately to arrow navigation.
+- Reduced input interference between modal and background components.
+- All tests remain green.
+
 ---
 
 ## Planned Refactors (Next Rounds)
