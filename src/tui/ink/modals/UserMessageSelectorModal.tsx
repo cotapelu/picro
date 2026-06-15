@@ -1,5 +1,5 @@
 /** @jsxImportSource react */
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Box, Text, useInput, useFocus } from 'ink';
 import type { AgentSessionRuntimeInterface } from '../../../runtime.js';
 import { useTheme } from '../hooks/useTheme.js';
@@ -22,41 +22,39 @@ export const UserMessageSelectorModal: React.FC<UserMessageSelectorModalProps> =
   // Auto-focus this modal
   const { focus } = useFocus();
   useEffect(() => { focus(); }, [focus]);
-  const [messages, setMessages] = useState<UserMessageItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const maxVisible = 10;
 
-  // Load user messages from session
-  useEffect(() => {
-    const loadMessages = async () => {
-      try {
-        const extRuntime = runtime as any;
-        const session = extRuntime.session;
-        if (!session) return;
-
-        const sessionManager = session.sessionManager;
-        if (!sessionManager) return;
-
-        const entries = sessionManager.getEntries?.() || [];
-        const userMessages: UserMessageItem[] = entries
-          .filter((entry: any) => entry.type === 'message' && entry.message?.role === 'user')
-          .map((entry: any) => ({
-            id: entry.id,
-            text: extractTextFromContent(entry.message.content),
-            timestamp: entry.timestamp,
-          }))
-          .sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || ''));
-
-        setMessages(userMessages);
-        if (userMessages.length > 0) {
-          setSelectedIndex(userMessages.length - 1);
-        }
-      } catch (err) {
-        console.error('Failed to load user messages:', err);
-      }
-    };
-    loadMessages();
+  // Compute user messages directly from runtime (synchronous)
+  const userMessages = useMemo(() => {
+    try {
+      const extRuntime = runtime as any;
+      const session = extRuntime.session;
+      if (!session) return [];
+      const sessionManager = session.sessionManager;
+      if (!sessionManager) return [];
+      const entries = sessionManager.getEntries?.() || [];
+      const msgs: UserMessageItem[] = entries
+        .filter((entry: any) => entry.type === 'message' && entry.message?.role === 'user')
+        .map((entry: any) => ({
+          id: entry.id,
+          text: extractTextFromContent(entry.message.content),
+          timestamp: entry.timestamp,
+        }))
+        .sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || ''));
+      return msgs;
+    } catch (err) {
+      console.error('Failed to load user messages:', err);
+      return [];
+    }
   }, [runtime]);
+
+  // When userMessages are loaded, default to last message
+  useEffect(() => {
+    if (userMessages.length > 0) {
+      setSelectedIndex(userMessages.length - 1);
+    }
+  }, [userMessages]);
 
   const extractTextFromContent = (content: any): string => {
     if (typeof content === 'string') return content;
@@ -73,8 +71,8 @@ export const UserMessageSelectorModal: React.FC<UserMessageSelectorModalProps> =
     }
 
     if (key.return) {
-      if (messages.length === 0) return;
-      const selected = messages[selectedIndex];
+      if (userMessages.length === 0) return;
+      const selected = userMessages[selectedIndex];
       if (selected) {
         // Fork at this entry
         runtime.fork(selected.id).then((result: any) => {
@@ -95,20 +93,20 @@ export const UserMessageSelectorModal: React.FC<UserMessageSelectorModalProps> =
     }
 
     if (key.upArrow) {
-      setSelectedIndex(prev => prev === 0 ? messages.length - 1 : prev - 1);
+      setSelectedIndex(prev => prev === 0 ? userMessages.length - 1 : prev - 1);
       return;
     }
     if (key.downArrow) {
-      setSelectedIndex(prev => prev === messages.length - 1 ? 0 : prev + 1);
+      setSelectedIndex(prev => prev === userMessages.length - 1 ? 0 : prev + 1);
       return;
     }
-  }, [messages, selectedIndex, runtime, onClose]);
+  }, [userMessages, selectedIndex, runtime, onClose]);
 
   useInput(handleKey);
 
-  const visibleCount = Math.min(maxVisible, messages.length);
-  const startIndex = Math.max(0, Math.min(selectedIndex - Math.floor(visibleCount / 2), messages.length - visibleCount));
-  const endIndex = Math.min(startIndex + visibleCount, messages.length);
+  const visibleCount = Math.min(maxVisible, userMessages.length);
+  const startIndex = Math.max(0, Math.min(selectedIndex - Math.floor(visibleCount / 2), userMessages.length - visibleCount));
+  const endIndex = Math.min(startIndex + visibleCount, userMessages.length);
 
   return (
     <Modal onClose={onClose}>
@@ -116,10 +114,10 @@ export const UserMessageSelectorModal: React.FC<UserMessageSelectorModalProps> =
         <Text bold color={theme.accent}>Fork from Message</Text>
         <Text dim>Select a user message to copy the active path up to that point into a new session</Text>
         <Box flexDirection="column" marginTop={1}>
-          {messages.length === 0 ? (
+          {userMessages.length === 0 ? (
             <Text color="muted">No user messages found</Text>
           ) : (
-            messages.slice(startIndex, endIndex).map((msg, idx) => {
+            userMessages.slice(startIndex, endIndex).map((msg, idx) => {
               const globalIndex = startIndex + idx;
               const isSelected = globalIndex === selectedIndex;
               const cursor = isSelected ? theme.fg(theme.accent, '> ') : '  ';
@@ -131,7 +129,7 @@ export const UserMessageSelectorModal: React.FC<UserMessageSelectorModalProps> =
               const line1 = cursor + (isSelected ? theme.bold(truncated) : truncated);
 
               // Second line: metadata
-              const metadata = `  Message ${globalIndex + 1} of ${messages.length}`;
+              const metadata = `  Message ${globalIndex + 1} of ${userMessages.length}`;
               const line2 = theme.fg('muted', metadata);
 
               return (
@@ -144,8 +142,8 @@ export const UserMessageSelectorModal: React.FC<UserMessageSelectorModalProps> =
             })
           )}
         </Box>
-        {startIndex > 0 || endIndex < messages.length ? (
-          <Text dim> ({selectedIndex + 1}/{messages.length})</Text>
+        {startIndex > 0 || endIndex < userMessages.length ? (
+          <Text dim> ({selectedIndex + 1}/{userMessages.length})</Text>
         ) : null}
         <Box marginTop={1}>
           <Text dim>↑↓ navigate · Enter to fork · Esc to cancel</Text>

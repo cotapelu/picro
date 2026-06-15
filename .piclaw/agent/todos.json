@@ -3,42 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Coverage Push: AgentSession Event Handling",
+      "name": "Fix Test Failures - Critical",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Design tests for _processAgentEvent covering auto_retry_end, message:start, message:end, agent:end, compaction, performance tracking.",
-          "status": "in_progress"
+          "content": "Investigate and fix settings-manager.branches.test.ts 15 failures",
+          "status": "in_progress",
+          "details": "All failures in SettingsManager branch tests. Likely bugs in SettingsManager implementation or test expectations mismatch. Need to read both test and source files."
         },
         {
           "id": "task-2",
-          "content": "Mock agent and necessary state to invoke _processAgentEvent",
-          "status": "pending"
+          "content": "Investigate and fix UserMessageSelectorModal.test.tsx 1 failure",
+          "status": "pending",
+          "details": "Modal test failing - likely related to runtime.fork or onClose behavior"
         },
         {
           "id": "task-3",
-          "content": "Implement tests for assistant message handling (stopReason, retry emission)",
-          "status": "pending"
+          "content": "Investigate and fix settings-manager-methods.branches.test.ts 1 failure",
+          "status": "pending",
+          "details": "getImageWidthCells clamping issue"
         },
         {
           "id": "task-4",
-          "content": "Implement tests for agent:end with retryable error and early return",
-          "status": "pending"
+          "content": "Run tests again to verify all pass",
+          "status": "pending",
+          "details": "After fixes, re-run full test suite to ensure no regressions"
         },
         {
           "id": "task-5",
-          "content": "Run tests and verify coverage increment",
-          "status": "pending"
-        },
-        {
-          "id": "task-6",
-          "content": "Update docs and commit Round 25",
-          "status": "pending"
+          "content": "Update evolution docs and git commit",
+          "status": "pending",
+          "details": "After successful test fix round"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
+  "nextTaskId": 6,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-13T20:03:13.977Z"
+  "updatedAt": "2026-06-15T14:23:19.934Z"
 }
