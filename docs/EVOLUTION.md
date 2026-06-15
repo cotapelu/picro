@@ -936,6 +936,22 @@
 - Improved branch coverage for a core session module.
 - All tests still pass.
 
+### Round 63 (2026-06-15): BranchSummarization generateBranchSummary Coverage
+
+**Problem**: `src/session/branch-summarization.ts` had several uncovered branches in `generateBranchSummary`, including `signal.aborted` check, `customInstructions` handling, and file operations aggregation from branch summaries.
+
+**Solution**:
+- Added a dedicated test file `branch-summarization.generate-branches.test.ts` (9 tests) covering:
+  - Early return when `signal` is aborted.
+  - Appending `customInstructions` when `replaceInstructions=false` and omission when `true`.
+  - Aggregation of file operations from both messages and previous `branch_summary` entries.
+  - Correct formatting and omission of file sections when empty.
+  - Summary structure (preamble, goal section with message count).
+
+**Impact**:
+- Increased branch coverage for branch-summarization module.
+- All tests still pass (205 test files, ~2899 tests passing).
+
 ---
 
 ## Planned Refactors (Next Rounds)

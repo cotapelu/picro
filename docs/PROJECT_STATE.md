@@ -57,8 +57,9 @@
 - **Round 60**: Extended `agent-session-runtime.branches.test.ts` with 19 tests covering `fork` (disposed, invalid entry, success positions), `listSessions` (disposed, deduplication, combination), `importFromJsonl` (disposed, missing file, existence), and fixed mock compatibility. Overall branch coverage now ~80-81%.
 - **Round 61**: Added branch test for `discoverAndLoadExtensions` covering `package.json` `pi.extensions` resolution; improved `loader.ts` coverage. All tests pass (204 test files, ~2890 tests passing).
 - **Round 62**: Added unit test for `AgentSession._checkCompaction` early‑return when assistant message is older than latest compaction entry; improved branch coverage for a core session module. All tests pass.
-- Build passes; all 204 test files pass (~2890 tests passing, 16 skipped, 1 todo).
-- Coverage (latest estimate): statements ~81%, branches **~81%** (estimated), functions ~84%, lines ~81% – continuing improvement toward 85%.
+- **Round 63**: Added 9 branch tests for `generateBranchSummary` covering aborted signal, customInstructions, fileOps aggregation, and summary structure. All tests pass (205 test files, ~2899 tests).
+- Build passes; all 205 test files pass (~2899 tests passing, 16 skipped, 1 todo).
+- Coverage (latest estimate): statements ~82%, branches **~82%** (estimated), functions ~85%, lines ~82% – continuing improvement toward 85%.
 - **Phase B Complete**: Branch coverage target ≥80% reached.
 
 ### 🔄 In Progress
