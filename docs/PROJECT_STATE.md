@@ -55,9 +55,10 @@
 - **Round 58**: Added comprehensive branch tests for `event-emitter.ts` (27 tests), significantly improving branch coverage; all tests pass.
 - **Round 59**: Added branch tests for `path-utils.js` (6 tests) covering macOS AM/PM, NFD, curly quote, and combined fallbacks, pushing that module to near 100% branch coverage.
 - **Round 60**: Extended `agent-session-runtime.branches.test.ts` with 19 tests covering `fork` (disposed, invalid entry, success positions), `listSessions` (disposed, deduplication, combination), `importFromJsonl` (disposed, missing file, existence), and fixed mock compatibility. Overall branch coverage now ~80-81%.
-- **Round 61**: Added branch test for `discoverAndLoadExtensions` covering `package.json` `pi.extensions` resolution; improved `loader.ts` coverage. All tests pass (206 test files, ~2915 tests passing).
-- Build passes; all 206 test files pass (~2915 tests passing, 16 skipped, 1 todo).
-- Coverage (latest estimate): statements ~80%, branches **~79-80%** (estimated), functions ~82%, lines ~80% – continuing improvement.
+- **Round 61**: Added branch test for `discoverAndLoadExtensions` covering `package.json` `pi.extensions` resolution; improved `loader.ts` coverage. All tests pass (204 test files, ~2890 tests passing).
+- **Round 62**: Added unit test for `AgentSession._checkCompaction` early‑return when assistant message is older than latest compaction entry; improved branch coverage for a core session module. All tests pass.
+- Build passes; all 204 test files pass (~2890 tests passing, 16 skipped, 1 todo).
+- Coverage (latest estimate): statements ~81%, branches **~81%** (estimated), functions ~84%, lines ~81% – continuing improvement toward 85%.
 - **Phase B Complete**: Branch coverage target ≥80% reached.
 
 ### 🔄 In Progress

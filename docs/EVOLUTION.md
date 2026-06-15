@@ -925,6 +925,17 @@
 - Overall branch coverage now ~81%.
 - All tests still pass (now 206 test files, ~2915 tests passing).
 
+### Round 62 (2026-06-15): AgentSession _checkCompaction Timestamp Branch
+
+**Problem**: `src/session/agent-session.ts` had an uncovered branch in `_checkCompaction` where compaction is skipped if the latest compaction entry is newer than the assistant message timestamp. Coverage ~53%.
+
+**Solution**:
+- Added a targeted unit test in `agent-session.unit.test.ts` simulating an older assistant message with a newer compaction entry, verifying no auto-compaction is triggered.
+
+**Impact**:
+- Improved branch coverage for a core session module.
+- All tests still pass.
+
 ---
 
 ## Planned Refactors (Next Rounds)

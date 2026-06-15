@@ -424,6 +424,17 @@ describe('AgentSession branch coverage', () => {
       });
       expect(session._runAutoCompaction).not.toHaveBeenCalled();
     });
+
+    it('returns early if assistant message is older than latest compaction entry', async () => {
+      (session.settingsManager as any).getCompactionSettings = () => ({ enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 });
+      const now = Date.now();
+      (session.sessionManager as any).getLatestCompactionEntry = vi.fn().mockReturnValue({ timestamp: now });
+      const oldTime = now - 3600000; // 1 hour ago
+      const asstMsg = { role: 'assistant', content: [{ type: 'text', text: '' }], stopReason: 'stop', provider: 'openai', model: 'gpt-4', timestamp: oldTime };
+      await (session as any)._checkCompaction(asstMsg);
+      expect(session._runAutoCompaction).not.toHaveBeenCalled();
+      expect((session as any)._performAutoCompaction).not.toHaveBeenCalled();
+    });
   });
 
   describe('_runAutoCompaction', () => {
