@@ -863,6 +863,19 @@
 - Enhanced discoverability of built-in commands vs. extensions/skills through visual source indicators.
 - No performance regression; all tests pass.
 
+### Round 58 (2026-06-15): Event Emitter Branch Coverage & Command Palette UX Polish
+
+**Problem**: EventEmitter had incomplete branch coverage (43.75%), especially around error handling, global listeners, and metrics. Command palette built-in commands left input after execution, causing stale text.
+
+**Solution**:
+- Added comprehensive branch tests for `EventEmitter` (27 tests) covering all branches: listener registration/removal (typed and any), emit paths (type-specific, global, both, no listeners), error isolation, metrics recording, and `createConsoleLogger` output for all event types.
+- Modified `InkApp` to clear the input value after executing any built-in slash command (non-`insert`/`paste` results), ensuring a clean slate for next user input.
+
+**Impact**:
+- `EventEmitter` branch coverage increased substantially; overall branch coverage continues to climb toward 85% target.
+- Command execution UX improved: built-in commands no longer require manual input clearing.
+- All tests pass (204 test files, ~2882 tests passing).
+
 ---
 
 ## Planned Refactors (Next Rounds)

@@ -1,7 +1,44 @@
 {
   "version": 1,
-  "phases": [],
-  "nextTaskId": 1,
-  "nextPhaseId": 1,
-  "updatedAt": "2026-06-15T15:27:18.956Z"
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Branch Coverage Improvement",
+      "tasks": [
+        {
+          "id": "task-1",
+          "content": "Write branch tests for event-emitter.ts (43.75%)",
+          "status": "in_progress"
+        },
+        {
+          "id": "task-2",
+          "content": "Write branch tests for agent-session.ts (~52.78%)",
+          "status": "pending"
+        },
+        {
+          "id": "task-3",
+          "content": "Write branch tests for extensions/loader.ts (~44.28%)",
+          "status": "pending"
+        },
+        {
+          "id": "task-4",
+          "content": "Write branch tests for runtime/agent-runtime.ts (~60.52%)",
+          "status": "pending"
+        },
+        {
+          "id": "task-5",
+          "content": "Write branch tests for session/summarization.ts (~61.81%)",
+          "status": "pending"
+        },
+        {
+          "id": "task-6",
+          "content": "Run tests and verify coverage improvement to ≥85%",
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "nextTaskId": 7,
+  "nextPhaseId": 2,
+  "updatedAt": "2026-06-15T16:25:57.333Z"
 }

@@ -51,13 +51,14 @@
 - **Round 54**: Added env-api-keys branch tests (14) covering getApiKey (explicit, env vars, fallbacks, secrets.json, explicit override, undefined), hasApiKey, getRequiredEnvVars.
 - **Round 55**: Fixed critical test suite failures: rewrote SettingsManager branch tests (88 tests), corrected methods test, refactored UserMessageSelectorModal for synchronous rendering; all 203 test files passing (2855+ tests).
 - **Round 56**: UI/UX improvements: alphabetical sorting for slash commands in CommandPalette; disabled InputBox during modal open to prevent arrow key conflicts, ensuring responsive navigation.
-- **Round 57**: Refined slash command ordering: commands grouped by source (builtin, extension, skill, template) and display source label in palette for clarity; improved interactive navigation.
-- Build passes; all 203 test files pass (2855+ tests passing, 16 skipped, 1 todo).
+- **Round 57**: Refined slash command ordering: commands grouped by source (builtin, extension, skill, template) with source label displayed; also clear input after executing built-in commands for cleaner UX.
+- **Round 58**: Added comprehensive branch tests for `event-emitter.ts` (27 tests), significantly improving branch coverage; all tests pass.
+- Build passes; all 204 test files pass (~2882 tests passing, 16 skipped, 1 todo).
 - Coverage (latest estimate): statements ~79-80%, branches **~78%** (estimated), functions ~82%, lines ~79% – continuing improvement.
 - **Phase B Complete**: Branch coverage target ≥80% reached.
 
 ### 🔄 In Progress
-- Optional: Continue to improve coverage beyond 80% toward 85% (remaining hotspots in `branch-summarization`, `openai-compatible`, `session-manager`, `compaction`, etc.).
+- Branch Coverage Improvement Phase (target ≥85%): writing branch tests for low-coverage modules including `extensions/loader.ts`, `runtime/agent-runtime.ts`, `session/agent-session.ts`, `session/branch-summarization.ts`, and others.
 
 ### 🐛 Known Issues
 - None critical.
