@@ -988,9 +988,15 @@
 - All tests passing (206 files, 2917 tests, 16 skipped, 1 todo).
 - Branch coverage remains ≥85%.
 
-### Round 68 (Current)
+### Round 68
 - Enhanced `CommandPalette` UX: added backspace to edit filter, Escape clears filter (or closes when empty), and arrow guard.
 - Added tests for backspace, escape-filter, and empty-list navigation.
+- All tests passing (206 files, 2920 tests, 16 skipped, 1 todo).
+- Branch coverage remains ≥85%.
+
+### Round 69 (Current)
+- Implemented telemetry reporting in ErrorBoundary: calls `track('agent.error')` with error details, if telemetry is available.
+- Added import of `track` from `../../runtime/telemetry.js`.
 - All tests passing (206 files, 2920 tests, 16 skipped, 1 todo).
 - Branch coverage remains ≥85%.
 

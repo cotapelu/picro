@@ -63,6 +63,7 @@
 - **Round 66**: Sorted slash commands alphabetically in `HelpModal` for improved UX; added corresponding test. All tests pass (206 test files, 2916 tests, 16 skipped, 1 todo).
 - **Round 67**: Improved arrow key navigation in `CommandPalette` by ignoring arrow keys when filtered list is empty; added corresponding test. All tests pass (206 test files, 2917 tests, 16 skipped, 1 todo).
 - **Round 68**: Enhanced `CommandPalette` UX: added backspace filter editing, Escape clears filter (or closes when empty), and arrow guard. Added tests. All tests pass (206 test files, 2920 tests, 16 skipped, 1 todo).
+- **Round 69**: Added telemetry reporting in ErrorBoundary (calls `track('agent.error')`). All tests pass (206 test files, 2920 tests, 16 skipped, 1 todo).
 - Build passes; all 206 test files pass.
 - Coverage (latest estimate): statements ~83%, branches **≥85%**, functions ~86%, lines ~83% – target exceeded.
 - **Phase B Complete**: Branch coverage target ≥80% reached.
