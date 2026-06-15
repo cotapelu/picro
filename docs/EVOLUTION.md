@@ -878,6 +878,26 @@
 
 ---
 
+### Round 59 (2026-06-15): Path Utils ResolveReadPath Branch Coverage
+
+**Problem**: The `resolveReadPath` function in `src/tools/path-utils.js` had incomplete branch coverage (71.42%), specifically the fallback variant returns for macOS AM/PM, NFD, curly quote, and combined NFD+curly were not exercised.
+
+**Solution**:
+- Added comprehensive branch tests using real temporary files to cover all fallback paths:
+  - Tests for AM/PM variant (`file AM.txt` -> narrow no-break space variant)
+  - Tests for NFD variant using precomposed 'café.txt' decomposed form.
+  - Tests for curly quote variant using ASCII single quote → curly quote.
+  - Tests for combined NFD + curly quote variant.
+  - Test for fallback when no variants exist.
+- Total new tests: 6.
+
+**Impact**:
+- `path-utils.js` branch coverage increased to near 100%.
+- Overall branch coverage continues to improve toward 85% target.
+- All tests pass (205 test files, ~2888 tests passing).
+
+---
+
 ## Planned Refactors (Next Rounds)
 
 1. ~~Tool Execution Modes per Tool~~ (Completed in Round 2)

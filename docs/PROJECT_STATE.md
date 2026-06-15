@@ -53,8 +53,9 @@
 - **Round 56**: UI/UX improvements: alphabetical sorting for slash commands in CommandPalette; disabled InputBox during modal open to prevent arrow key conflicts, ensuring responsive navigation.
 - **Round 57**: Refined slash command ordering: commands grouped by source (builtin, extension, skill, template) with source label displayed; also clear input after executing built-in commands for cleaner UX.
 - **Round 58**: Added comprehensive branch tests for `event-emitter.ts` (27 tests), significantly improving branch coverage; all tests pass.
-- Build passes; all 204 test files pass (~2882 tests passing, 16 skipped, 1 todo).
-- Coverage (latest estimate): statements ~79-80%, branches **~78%** (estimated), functions ~82%, lines ~79% – continuing improvement.
+- **Round 59**: Added branch tests for `path-utils.js` (6 tests) covering macOS AM/PM, NFD, curly quote, and combined fallbacks, pushing that module to near 100% branch coverage.
+- Build passes; all 205 test files pass (~2888 tests passing, 16 skipped, 1 todo).
+- Coverage (latest estimate): statements ~80%, branches **~79-80%** (estimated), functions ~82%, lines ~80% – continuing improvement.
 - **Phase B Complete**: Branch coverage target ≥80% reached.
 
 ### 🔄 In Progress
