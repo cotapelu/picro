@@ -384,6 +384,9 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
       if (result === 'insert') {
         const textToInsert = slashArgs ?? '/' + commandId;
         setInputValue(prev => prev + textToInsert + ' ');
+      } else if (result !== 'paste') {
+        // Built-in commands (or any non-insert/paste) should clear the input
+        setInputValue('');
       }
       // 'paste' result is handled by command handler (toast shown)
     } catch (err: any) {
