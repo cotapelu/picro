@@ -59,10 +59,11 @@
 | 54     | 2026-06-14 | env-api-keys branch tests (14) covering getApiKey (explicit, env, fallbacks, secrets), hasApiKey, getRequiredEnvVars | ~2765+     | 0           | 0         |
 | 65     | 2026-06-15 | BashTool mock fixes (circular default), remove flaky test | 2915+      | 0           | 0         |
 | 66     | 2026-06-15 | HelpModal slash command alphabetical ordering (+1 test) | 2916+      | 0           | 0         |
+| 67     | 2026-06-15 | CommandPalette arrow key navigation guard when no matches (+1 test) | 2917+      | 0           | 0         |
 
 ## Quality Indicators
 
-- **Test Failure Rate**: 0% (2916+ tests passing)
+- **Test Failure Rate**: 0% (2917+ tests passing)
 - **Mean Time To Repair (MTTR)**: < 5 min (fast fix of test failures)
 - **Rollback Count**: 0
 - **Coverage**: statements ~83%, branches **≥85%**, functions ~86%, lines ~83% – target exceeded.

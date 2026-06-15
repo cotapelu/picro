@@ -976,10 +976,16 @@
 - All tests passing (206 files, ~2915 tests).
 - Branch coverage remains ≥85%.
 
-### Round 66 (Current)
+### Round 66
 - Sorted slash commands alphabetically in `HelpModal` for improved UX.
 - Added test to verify alphabetical ordering.
 - All tests passing (206 files, 2916 tests, 16 skipped, 1 todo).
+- Branch coverage remains ≥85%.
+
+### Round 67 (Current)
+- Improved arrow key navigation in `CommandPalette`: ignore arrow keys when no commands match, preventing invalid selection state.
+- Added test to verify behavior.
+- All tests passing (206 files, 2917 tests, 16 skipped, 1 todo).
 - Branch coverage remains ≥85%.
 
 ---
