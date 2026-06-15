@@ -88,7 +88,7 @@ export const ModalRenderers: React.FC<ModalRenderersProps> = ({
       const filtered = allCommands.filter(cmd =>
         cmd.label.toLowerCase().includes(search) ||
         (cmd.description && cmd.description.toLowerCase().includes(search))
-      );
+      ).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
       return (
         <Modal onClose={onClose}>
           <CommandPalette

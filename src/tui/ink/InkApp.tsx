@@ -1186,7 +1186,7 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
     onChange: setInputValue,
     onSubmit: handleSubmit,
     placeholder: 'Type your message...',
-    disabled: isSubmitting,
+    disabled: isSubmitting || activeModal !== null,
     onSlashCommand,
     onTab,
     cwd: runtime.cwd,
