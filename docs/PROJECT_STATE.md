@@ -68,7 +68,7 @@
 - **Phase B Complete**: Branch coverage target ≥80% reached.
 
 ### 🔄 In Progress
-- Branch Coverage Improvement Phase (target ≥85%): writing branch tests for low-coverage modules including `extensions/loader.ts`, `runtime/agent-runtime.ts`, `session/agent-session.ts`, `session/branch-summarization.ts`, and others.
+- None. All planned coverage and UX targets met.
 
 ### 🐛 Known Issues
 - None critical.
@@ -82,7 +82,7 @@
 ### 🎯 Next Tasks
 1. ✅ Phase B – branch coverage target reached (≥80%).
 2. ✅ **UI/UX improvements**: slash command ordering, CommandPalette navigation/backspace/escape all complete.
-3. Optional: Push towards 85% branch coverage with low‑impact tests.
+3. ✅ Optional: Push towards 85% branch coverage – completed.
 4. Maintain test stability; monitor regressions.
 
 ---
