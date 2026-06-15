@@ -22,7 +22,7 @@
 
 ## Test Coverage
 
-- Unit tests: 2087+ passing
+- Unit tests: 2915+ passing
 - Integration: Moderate (TODO)
 - Stress/load: None
 
