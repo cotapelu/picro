@@ -982,10 +982,16 @@
 - All tests passing (206 files, 2916 tests, 16 skipped, 1 todo).
 - Branch coverage remains ≥85%.
 
-### Round 67 (Current)
+### Round 67
 - Improved arrow key navigation in `CommandPalette`: ignore arrow keys when no commands match, preventing invalid selection state.
 - Added test to verify behavior.
 - All tests passing (206 files, 2917 tests, 16 skipped, 1 todo).
+- Branch coverage remains ≥85%.
+
+### Round 68 (Current)
+- Enhanced `CommandPalette` UX: added backspace to edit filter, Escape clears filter (or closes when empty), and arrow guard.
+- Added tests for backspace, escape-filter, and empty-list navigation.
+- All tests passing (206 files, 2920 tests, 16 skipped, 1 todo).
 - Branch coverage remains ≥85%.
 
 ---
