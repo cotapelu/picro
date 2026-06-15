@@ -855,11 +855,12 @@
 
 **Solution**:
 - Modified command sorting to group by source first (builtin → extension → skill → template), then alphabetize within each group.
+- Added visible source label (e.g., '(builtin)') next to each command in the palette to make the grouping explicit.
 - Preserved search/filtering functionality.
 
 **Impact**:
 - Users can now quickly locate commands by familiar categories while still enjoying alphabetic order within groups.
-- Enhanced discoverability of built-in commands vs. extensions/skills.
+- Enhanced discoverability of built-in commands vs. extensions/skills through visual source indicators.
 - No performance regression; all tests pass.
 
 ---

@@ -51,7 +51,7 @@
 - **Round 54**: Added env-api-keys branch tests (14) covering getApiKey (explicit, env vars, fallbacks, secrets.json, explicit override, undefined), hasApiKey, getRequiredEnvVars.
 - **Round 55**: Fixed critical test suite failures: rewrote SettingsManager branch tests (88 tests), corrected methods test, refactored UserMessageSelectorModal for synchronous rendering; all 203 test files passing (2855+ tests).
 - **Round 56**: UI/UX improvements: alphabetical sorting for slash commands in CommandPalette; disabled InputBox during modal open to prevent arrow key conflicts, ensuring responsive navigation.
-- **Round 57**: Refined slash command ordering: commands now grouped by source (builtin, extension, skill, template) for clearer, more intuitive palette navigation.
+- **Round 57**: Refined slash command ordering: commands grouped by source (builtin, extension, skill, template) and display source label in palette for clarity; improved interactive navigation.
 - Build passes; all 203 test files pass (2855+ tests passing, 16 skipped, 1 todo).
 - Coverage (latest estimate): statements ~79-80%, branches **~78%** (estimated), functions ~82%, lines ~79% – continuing improvement.
 - **Phase B Complete**: Branch coverage target ≥80% reached.
