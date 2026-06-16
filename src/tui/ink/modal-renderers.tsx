@@ -20,6 +20,7 @@ import { TreeSelectorModal } from './modals/TreeSelectorModal.js';
 import { BashOutputModal } from './modals/BashOutputModal.js';
 import { InputModal } from './modals/InputModal.js';
 import { SelectModal } from './modals/SelectModal.js';
+import { EditorModal } from './modals/EditorModal.js';
 import { Modal } from './modals/Modal.js';
 
 export type ModalState =
@@ -243,30 +244,22 @@ export const ModalRenderers: React.FC<ModalRenderersProps> = ({
         </Modal>
       );
 
-    case 'editor': {
-      const [editorValue, setEditorValue] = React.useState(activeModal.initialValue);
+    case 'editor':
       return (
         <Modal onClose={onClose}>
-          <Box flexDirection="column">
-            <Text bold>Edit Input</Text>
-            <InputBox
-              value={editorValue}
-              onChange={setEditorValue}
-              onSubmit={async () => {
-                await activeModal.onSave(editorValue);
-                onClose();
-              }}
-              onEscape={() => {
-                activeModal.onCancel?.();
-                onClose();
-              }}
-              multiline
-              autoFocus
-            />
-          </Box>
+          <EditorModal
+            initialValue={activeModal.initialValue}
+            onSave={(val) => {
+              activeModal.onSave(val);
+              onClose();
+            }}
+            onCancel={() => {
+              activeModal.onCancel?.();
+              onClose();
+            }}
+          />
         </Modal>
       );
-    }
 
     case 'input':
       return (
