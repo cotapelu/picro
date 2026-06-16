@@ -267,6 +267,57 @@ export class ExtensionRunner {
   async selectString(options: any): Promise<string | undefined> {
     return undefined;
   }
+
+  getRegisteredCommands(): any[] {
+    const commands: any[] = [];
+    for (const ext of this.extensions) {
+      for (const [name, cmd] of ext.commands) {
+        commands.push({
+          invocationName: name,
+          name: name,
+          description: cmd.description,
+          getArgumentCompletions: (cmd as any).getArgumentCompletions ?? (() => []),
+        });
+      }
+    }
+    return commands;
+  }
+
+  getShortcuts(resolvedKeybindings: any): Map<any, any> {
+    // Return empty map; extensions can provide shortcuts
+    return new Map();
+  }
+
+  getShortcutDiagnostics(): any[] { return []; }
+  getCommandDiagnostics(): any[] { return []; }
+  getMessageRenderer(customType: string): any { return undefined; }
+  getAllRegisteredTools(): any[] {
+    const tools: any[] = [];
+    for (const ext of this.extensions) {
+      for (const tool of ext.tools.values()) tools.push(tool);
+    }
+    return tools;
+  }
+  getToolDefinition(toolName: string): any {
+    for (const ext of this.extensions) {
+      const tool = ext.tools.get(toolName);
+      if (tool) return tool;
+    }
+    return undefined;
+  }
+  getExtensionPaths(): string[] {
+    return this.extensions.map(ext => ext.path);
+  }
+  getUIContext(): any { return this._uiContext; }
+  getFlags(): Map<string, any> {
+    const flags = new Map<string, any>();
+    for (const ext of this.extensions) {
+      for (const [name, flag] of ext.flags) flags.set(name, flag);
+    }
+    return flags;
+  }
+  getFlagValues(): Map<string, boolean | string> { return this.runtime.flagValues; }
+  setFlagValue(name: string, value: boolean | string): void { this.runtime.flagValues.set(name, value); }
 }
 
 /**

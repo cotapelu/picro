@@ -158,6 +158,10 @@ export class DefaultModelRegistry implements ModelRegistry {
     return `${provider}:${modelId}`;
   }
 
+  getError(): string | undefined {
+    return undefined;
+  }
+
   find(provider: string, modelId: string): ModelEntry | undefined {
     return getModel(provider, modelId);
   }
@@ -185,6 +189,11 @@ export class DefaultModelRegistry implements ModelRegistry {
 
   getProviders(): string[] {
     return getProviders();
+  }
+
+  /** Refresh models (no-op, models are static) */
+  async refresh(): Promise<void> {
+    // No operation needed; models are loaded from MODELS constant.
   }
 }
 

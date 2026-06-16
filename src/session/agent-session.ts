@@ -293,16 +293,42 @@ export class AgentSession {
   }
 
   /** Scoped models for cycling (from --models flag) */
-  get scopedModels(): ReadonlyArray<{
+   get scopedModels(): ReadonlyArray<{
     model: Model;
     thinkingLevel?: ThinkingLevel;
   }> {
     return this._scopedModels;
   }
 
+  /** Extension runner for loaded extensions */
+  get extensionRunner(): any {
+    return this._extensionRunner;
+  }
+
+  /** Prompt templates for autocomplete (from resource loader) */
+  get promptTemplates(): any[] {
+    const rl = this.resourceLoader as any;
+    if (rl.getPromptTemplates) {
+      return rl.getPromptTemplates();
+    }
+    if (rl._promptTemplates) {
+      return rl._promptTemplates;
+    }
+    return [];
+  }
+
+  // For pi-coding-agent InteractiveMode compatibility
+  getBashExecutor(): any {
+    return null;
+  }
+
+  getBashOperations(): any {
+    return null;
+  }
+
   /** Full agent state */
-  get state(): AgentRuntimeState {
-    return this._agentState;
+  get state(): AgentRuntimeState & { model?: Model } {
+    return { ...this._agentState, model: this._model };
   }
 
   /** All messages */

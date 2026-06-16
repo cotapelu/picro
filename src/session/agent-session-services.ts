@@ -124,6 +124,26 @@ export async function createAgentSessionServices(
   // Create settings manager
   const settingsManager = options.settingsManager ?? SettingsManager.create(cwd, agentDir);
 
+  // Patch missing methods for pi-coding-agent compatibility
+  const smAny = settingsManager as any;
+  smAny.getShowHardwareCursor = smAny.getShowHardwareCursor ?? (() => false);
+  smAny.setShowHardwareCursor = smAny.setShowHardwareCursor ?? ((show: boolean) => {});
+  smAny.getClearOnShrink = smAny.getClearOnShrink ?? (() => false);
+  smAny.setClearOnShrink = smAny.setClearOnShrink ?? (() => {});
+  // Additional pi settings methods (stubs)
+  smAny.getEditorPaddingX = smAny.getEditorPaddingX ?? (() => 0);
+  smAny.setEditorPaddingX = smAny.setEditorPaddingX ?? (() => {});
+  smAny.getAutocompleteMaxVisible = smAny.getAutocompleteMaxVisible ?? (() => 10);
+  smAny.setAutocompleteMaxVisible = smAny.setAutocompleteMaxVisible ?? (() => {});
+  smAny.getAutocompleteProvider = smAny.getAutocompleteProvider ?? (() => ({ getOptions: () => [] }));
+  smAny.setAutocompleteProvider = smAny.setAutocompleteProvider ?? (() => {});
+  smAny.getAutocompleteSource = smAny.getAutocompleteSource ?? (() => ['builtin']);
+  smAny.setAutocompleteSource = smAny.setAutocompleteSource ?? (() => {});
+  smAny.getHttpIdleTimeoutMs = smAny.getHttpIdleTimeoutMs ?? (() => 30000);
+  smAny.setHttpIdleTimeoutMs = smAny.setHttpIdleTimeoutMs ?? (() => {});
+  // Add more stubs as needed
+  
+
   // Determine session directory
   const sessionDir = settingsManager.getSessionDir() ?? join(agentDir, "sessions");
   if (!existsSync(sessionDir)) {

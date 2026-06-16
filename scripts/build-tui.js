@@ -1,6 +1,7 @@
-const esbuild = require('esbuild');
-const { glob } = require('glob');
-const path = require('path');
+import esbuild from 'esbuild';
+import { glob } from 'glob';
+import { writeFileSync } from 'fs';
+import { join } from 'path';
 
 (async () => {
   const outDir = 'dist/tui';
@@ -34,7 +35,7 @@ const path = require('path');
   });
 
   // Create package.json to mark as ESM
-  require('fs').writeFileSync(`${outDir}/package.json`, '{"type":"module"}');
+  writeFileSync(`${outDir}/package.json`, JSON.stringify({ type: 'module' }));
   console.log(`Built TUI to ${outDir}`);
 })().catch(err => {
   console.error('Build failed:', err);

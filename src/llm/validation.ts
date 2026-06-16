@@ -7,11 +7,13 @@
  * - Model configurations
  */
 
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
+import * as Ajv from 'ajv';
+import * as ajvFmt from 'ajv-formats';
 
-const ajv = new Ajv({ allErrors: true, strict: false });
-addFormats(ajv);
+const AjvConstructor = (Ajv as any).default || Ajv;
+const ajv = new AjvConstructor({ allErrors: true, strict: false });
+const addFmt = (ajvFmt as any).default || ajvFmt;
+addFmt(ajv);
 
 /**
  * Validate data against JSON Schema
@@ -22,7 +24,7 @@ export function validate(schema: any, data: any): { valid: boolean; errors?: str
     const valid = validateFn(data);
     return {
       valid,
-      errors: valid ? undefined : (validateFn.errors?.map(err =>
+      errors: valid ? undefined : (validateFn.errors?.map((err: any) =>
         `${err.instancePath || '/'}: ${err.message}`
       ) || ['Validation failed']),
     };

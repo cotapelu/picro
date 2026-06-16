@@ -8,7 +8,7 @@
  * - Extension flags support
  */
 
-export type Mode = "text" | "json" | "rpc";
+export type Mode = "text" | "json" | "rpc" | "tui" | "interactive";
 
 export type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
 
@@ -75,7 +75,7 @@ export function parseArgs(args: string[]): Args {
       result.version = true;
     } else if (arg === "--mode" && i + 1 < args.length) {
       const mode = args[++i];
-      if (mode === "text" || mode === "json" || mode === "rpc") {
+      if (mode === "text" || mode === "json" || mode === "rpc" || mode === "tui" || mode === "interactive") {
         result.mode = mode;
       }
     } else if (arg === "--continue" || arg === "-c") {

@@ -785,6 +785,19 @@ export class SettingsManager {
     this.save();
   }
 
+  getShowTerminalProgress(): boolean {
+    return this.settings.terminal?.showTerminalProgress ?? false;
+  }
+
+  setShowTerminalProgress(show: boolean): void {
+    if (!this.globalSettings.terminal) {
+      this.globalSettings.terminal = {};
+    }
+    this.globalSettings.terminal.showTerminalProgress = show;
+    this.markModified("terminal", "showTerminalProgress");
+    this.save();
+  }
+
   getImageWidthCells(): number {
     const width = this.settings.terminal?.imageWidthCells;
     if (typeof width !== "number" || !Number.isFinite(width)) {

@@ -2,6 +2,7 @@
   "name": "@picro/picro",
   "version": "0.0.1",
   "description": "picro agnent",
+  "type": "module",
   "private": false,
   "bin": {
     "picro": "./dist/cli.js"
@@ -48,6 +49,7 @@
     "vitest": "^4.1.5"
   },
   "dependencies": {
+    "@earendil-works/pi-coding-agent": "^0.79.1",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "arabic-reshaper": "^1.1.0",

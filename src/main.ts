@@ -28,6 +28,7 @@ import type { Model } from "./llm/index.js";
 // Ink TUI will be dynamically imported to avoid ESM/CJS conflicts
 import { runPrintMode } from "./modes/print-mode.js";
 import { runRpcMode } from "./modes/rpc-mode.js";
+import { runTuiMode } from "./modes/tui-mode.js";
 import type { AgentSessionRuntimeDiagnostic } from "./session/agent-session-services.js";
 
 // Load environment variables from .env
@@ -50,14 +51,15 @@ function loadEnvFile(): void {
 }
 
 // Determine application mode
-function resolveAppMode(parsed: Args, stdinIsTTY: boolean): "interactive" | "print" | "json" | "rpc" {
+function resolveAppMode(parsed: Args, stdinIsTTY: boolean): "print" | "json" | "rpc" | "tui" {
   // If mode explicitly set via --mode, use it
   if (parsed.mode === "rpc") return "rpc";
   if (parsed.mode === "json") return "json";
-  // Note: "interactive" is not a valid --mode value; it's the default when TTY and not --print
-  // Default selection based on TTY and --print flag
+  if (parsed.mode === "tui") return "tui";
+  if (parsed.mode === "interactive") return "tui"; // alias for backwards compat
+  // Default: if TTY and not --print, use TUI mode (pi reference TUI)
   if (parsed.print || !stdinIsTTY) return "print";
-  return "interactive";
+  return "tui";
 }
 
 // Print help message
@@ -73,7 +75,7 @@ Options:
   --api-key <key>                API key (defaults to env vars)
   --system-prompt <text>         System prompt
   --append-system-prompt <text>  Append to system prompt
-  --mode <mode>                  Output mode: text (default), json, or rpc
+  --mode <mode>                  Output mode: tui (default), text, json, or rpc
   --print, -p                    Non-interactive mode: process prompt and exit
   --continue, -c                 Continue previous session
   --resume, -r                   Select a session to resume
@@ -221,7 +223,7 @@ async function main(): Promise<void> {
   if (migratedAuthProviders.length > 0) {
     console.log(`Migrated auth config for providers: ${migratedAuthProviders.join(", ")}`);
   }
-  if (appMode === "interactive" && deprecationWarnings.length > 0) {
+  if (appMode === "tui" && deprecationWarnings.length > 0) {
     await showDeprecationWarnings(deprecationWarnings);
   }
 
@@ -357,7 +359,7 @@ async function main(): Promise<void> {
   // Check session cwd existence
   const missingCwdIssue = getMissingSessionCwdIssue(session.sessionManager, cwd);
   if (missingCwdIssue) {
-    if (appMode === "interactive") {
+    if (appMode === "tui") {
       const ok = await promptConfirm(`Session cwd "${missingCwdIssue.sessionCwd}" not found. Use current cwd "${cwd}"? (y/N): `);
       const selectedCwd = ok ? cwd : undefined;
       if (!selectedCwd) {
@@ -392,8 +394,8 @@ async function main(): Promise<void> {
     stdinContent,
   });
 
-  // For interactive mode, use Ink-based UI
-  if (appMode === "interactive") {
+  // For interactive mode, choose between Ink and pi-coding-agent TUI
+  if (appMode === "tui") {
     // Add initial message to session (if any) to start conversation
     if (initialResult.initialMessage) {
       await session.prompt(initialResult.initialMessage, { images: initialResult.initialImages });
@@ -404,9 +406,15 @@ async function main(): Promise<void> {
     }
 
     try {
-      // Use TUI bootstrap to load ESM TUI
-      const { runTui } = require('./tui-bootstrap.js');
-      await runTui(runtime);
+      if (appMode === "tui") {
+        // Use pi-coding-agent's InteractiveMode
+        await runTuiMode(runtime);
+      } else {
+        // Use Ink-based TUI
+        // @ts-ignore - tui-bootstrap.js has no types
+        const { runTui } = await import('./tui-bootstrap.js');
+        await runTui(runtime);
+      }
     } catch (err: any) {
       console.error('Interactive mode error:', err.message || err);
     }

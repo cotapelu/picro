@@ -1,14 +1,18 @@
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
+import * as Ajv from 'ajv';
+import * as ajvFmt from 'ajv-formats';
 
-// Cấu hình Ajv khác với legacy (thêm useDefaults)
-const validator = new Ajv({
+// Get the default export (constructor) from Ajv namespace
+const AjvConstructor = (Ajv as any).default || Ajv;
+const validator = new AjvConstructor({
   allErrors: true,
   strict: false,
   coerceTypes: true,
   useDefaults: true,
 });
-addFormats(validator);
+
+// addFormats also has default export
+const addFmt = (ajvFmt as any).default || ajvFmt;
+addFmt(validator);
 
 /**
  * Validate tham số tool call với JSON Schema.
@@ -28,7 +32,7 @@ export function validateToolCall(tools: any[], toolCall: any): any {
   }
 
   const errorDetails = validate.errors
-    ?.map(err => {
+    ?.map((err: any) => {
       const path = err.instancePath || err.params?.missingProperty || 'root';
       return `  - ${path}: ${err.message}`;
     })

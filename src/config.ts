@@ -2,14 +2,18 @@
 /**
  * Application configuration constants
  *
- * CommonJS-compatible: uses __dirname for path resolution.
+ * ESM-compatible: uses import.meta.url for path resolution.
  */
 
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import * as os from "node:os";
+import { fileURLToPath } from "node:url";
 
-/** __dirname is provided by Node.js in CommonJS modules */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+/** Get package directory by walking up from __dirname */
 function getPackageDir(): string {
   let dir = __dirname;
   while (dir !== dirname(dir)) {
