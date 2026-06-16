@@ -67,9 +67,11 @@
 - Build passes; all 206 test files pass.
 - Coverage (latest estimate): statements ~83%, branches **≥85%**, functions ~86%, lines ~83% – target exceeded.
 - **Phase B Complete**: Branch coverage target ≥80% reached.
+- **Phase C (pi TUI Compatibility) Complete**: Full pi-coding-agent InteractiveMode compatibility achieved.
+- **Round 73**: Final stability validation & documentation sync - all 206 test files pass (2920+ tests), build clean, TUI functional, zero regressions.
 
 ### 🔄 In Progress
-- None. All planned coverage and UX targets met.
+- None. All planned coverage, UX, and compatibility targets met.
 
 ### 🐛 Known Issues
 - None critical.
