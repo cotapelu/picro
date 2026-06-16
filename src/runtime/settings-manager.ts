@@ -13,6 +13,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, openSync, closeSync
 import { validateOrThrow } from "../runtime/settings-validator.js";
 import { dirname, join } from "node:path";
 import { homedir } from "node:os";
+import { ProjectTrustStore, hasProjectTrustInputs } from "./trust-manager.js";
 
 // ============================================================================
 // Types
@@ -266,6 +267,8 @@ export class SettingsManager {
   private writeQueue: Promise<void> = Promise.resolve();
   private errors: SettingsError[];
   private changeListeners: Array<(scope: SettingsScope, fields: Set<keyof Settings>) => void> = [];
+  private trustStore: ProjectTrustStore | null = null;
+  private cwd: string;
 
   private constructor(
     storage: SettingsStorage,
@@ -273,7 +276,9 @@ export class SettingsManager {
     initialProject: Settings,
     globalLoadError: Error | null = null,
     projectLoadError: Error | null = null,
-    initialErrors: SettingsError[] = []
+    initialErrors: SettingsError[] = [],
+    cwd: string = "",
+    agentDir: string = ""
   ) {
     this.storage = storage;
     this.globalSettings = initialGlobal;
@@ -282,14 +287,18 @@ export class SettingsManager {
     this.projectSettingsLoadError = projectLoadError;
     this.errors = [...initialErrors];
     this.settings = deepMergeSettings(this.globalSettings, this.projectSettings);
+    this.cwd = cwd;
+    if (agentDir) {
+      this.trustStore = new ProjectTrustStore(agentDir);
+    }
   }
 
   static create(cwd: string, agentDir: string = join(homedir(), ".pi", "agent")): SettingsManager {
     const storage = new FileSettingsStorage(cwd, agentDir);
-    return SettingsManager.fromStorage(storage);
+    return SettingsManager.fromStorage(storage, cwd, agentDir);
   }
 
-  static fromStorage(storage: SettingsStorage): SettingsManager {
+  static fromStorage(storage: SettingsStorage, cwd: string = "", agentDir: string = ""): SettingsManager {
     const globalLoad = SettingsManager.tryLoadFromStorage(storage, "global");
     const projectLoad = SettingsManager.tryLoadFromStorage(storage, "project");
     const initialErrors: SettingsError[] = [];
@@ -306,14 +315,16 @@ export class SettingsManager {
       projectLoad.settings,
       globalLoad.error,
       projectLoad.error,
-      initialErrors
+      initialErrors,
+      cwd,
+      agentDir
     );
   }
 
   static inMemory(settings: Partial<Settings> = {}): SettingsManager {
     const storage = new InMemorySettingsStorage();
     storage.withLock("global", () => JSON.stringify(settings, null, 2));
-    return SettingsManager.fromStorage(storage);
+    return SettingsManager.fromStorage(storage, "", "");
   }
 
   private static loadFromStorage(storage: SettingsStorage, scope: SettingsScope): Settings {
@@ -847,6 +858,12 @@ export class SettingsManager {
   }
 
   isProjectTrusted(): boolean {
+    if (this.trustStore && this.cwd) {
+      const decision = this.trustStore.get(this.cwd);
+      if (decision !== null) {
+        return decision;
+      }
+    }
     return this.settings.projectTrusted ?? false;
   }
 
@@ -854,6 +871,9 @@ export class SettingsManager {
     this.globalSettings.projectTrusted = trusted;
     this.markModified("projectTrusted");
     this.save();
+    if (this.trustStore && this.cwd) {
+      this.trustStore.set(this.cwd, trusted);
+    }
   }
 
   setDefaultModelAndProvider(modelId: string, provider: string): void {

@@ -490,6 +490,21 @@ export class AgentSession {
   }
 
   /**
+   * Cycle thinking level forward/backward.
+   */
+  cycleThinkingLevel(direction: "forward" | "backward" = "forward"): void {
+    const availableLevels = this.getAvailableThinkingLevels();
+    if (availableLevels.length === 0) return;
+
+    const currentIndex = availableLevels.indexOf(this._thinkingLevel);
+    const nextIndex = direction === "forward"
+      ? (currentIndex + 1) % availableLevels.length
+      : (currentIndex - 1 + availableLevels.length) % availableLevels.length;
+
+    this.setThinkingLevel(availableLevels[nextIndex]);
+  }
+
+  /**
    * Get available thinking levels for current model.
    */
   getAvailableThinkingLevels(): ThinkingLevel[] {
@@ -875,6 +890,79 @@ export class AgentSession {
     scopedModels: Array<{ model: Model; thinkingLevel?: ThinkingLevel }>
   ): void {
     this._scopedModels = scopedModels;
+  }
+
+  /**
+   * Execute a bash command.
+   */
+  async executeBash(command: string, options?: { cwd?: string; timeout?: number; excludeFromContext?: boolean }): Promise<{ output: string; exitCode: number }> {
+    const agent = this.agent as any;
+    const result = await agent.executeBash?.(command, options);
+    if (result) return result;
+    const bashTool = agent.getTool?.('bash');
+    if (bashTool) {
+      return bashTool.execute({ command, ...options });
+    }
+    return { output: '', exitCode: 1 };
+  }
+
+  /**
+   * Export session to HTML.
+   */
+  async exportToHtml(): Promise<string> {
+    return (this.sessionManager as any).exportToHtml?.() ?? '';
+  }
+
+  /**
+   * Export session to JSONL.
+   */
+  async exportToJsonl(): Promise<string> {
+    return (this.sessionManager as any).exportToJsonl?.() ?? '';
+  }
+
+  /**
+   * Set session name.
+   */
+  setSessionName(name: string): void {
+    (this.sessionManager as any).setSessionName?.(name);
+  }
+
+  /**
+   * Get follow-up mode.
+   */
+  /**
+   * Get follow-up mode.
+   */
+  get followUpMode(): "all" | "one-at-a-time" {
+    return this.settingsManager.getFollowUpMode();
+  }
+
+  /**
+   * Set follow-up mode.
+   */
+  setFollowUpMode(mode: "all" | "one-at-a-time"): void {
+    this.settingsManager.setFollowUpMode(mode);
+  }
+
+  /**
+   * Get steering mode.
+   */
+  get steeringMode(): "all" | "one-at-a-time" {
+    return this.settingsManager.getSteeringMode();
+  }
+
+  /**
+   * Set steering mode.
+   */
+  setSteeringMode(mode: "all" | "one-at-a-time"): void {
+    this.settingsManager.setSteeringMode(mode);
+  }
+
+  /**
+   * Reload session.
+   */
+  async reload(): Promise<void> {
+    (this.sessionManager as any).reload?.();
   }
 
   // =========================================================================
