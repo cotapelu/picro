@@ -294,6 +294,11 @@ export class DefaultResourceLoader implements ResourceLoader {
     return { prompts: this._promptsCache ?? [], diagnostics: [] };
   }
 
+  /** Alias for compatibility with AgentSession */
+  get promptTemplates(): any[] {
+    return this._promptsCache ?? [];
+  }
+
   getThemes(): { themes: Theme[]; diagnostics: ResourceDiagnostic[] } {
     if (!this._initialized) {
       return { themes: [], diagnostics: [] };

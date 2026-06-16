@@ -101,8 +101,11 @@ export interface Settings {
   editorPaddingX?: number;
   autocompleteMaxVisible?: number;
   showHardwareCursor?: boolean;
+  autocompleteProvider?: string;
+  autocompleteSource?: string;
   markdown?: MarkdownSettings;
   sessionDir?: string;
+  projectTrusted?: boolean;
 }
 
 export type SettingsScope = "global" | "project";
@@ -692,6 +695,73 @@ export class SettingsManager {
     this.save();
   }
 
+  getHttpIdleTimeoutMs(): number {
+    return 30000;
+  }
+
+  getShowHardwareCursor(): boolean {
+    return this.settings.showHardwareCursor ?? false;
+  }
+
+  setShowHardwareCursor(show: boolean): void {
+    this.globalSettings.showHardwareCursor = show;
+    this.markModified("showHardwareCursor");
+    this.save();
+  }
+
+  getClearOnShrink(): boolean {
+    return this.settings.terminal?.clearOnShrink ?? true;
+  }
+
+  setClearOnShrink(clear: boolean): void {
+    if (!this.globalSettings.terminal) {
+      this.globalSettings.terminal = {};
+    }
+    this.globalSettings.terminal.clearOnShrink = clear;
+    this.markModified("terminal", "clearOnShrink");
+    this.save();
+  }
+
+  getEditorPaddingX(): number {
+    return this.settings.editorPaddingX ?? 1;
+  }
+
+  setEditorPaddingX(padding: number): void {
+    this.globalSettings.editorPaddingX = padding;
+    this.markModified("editorPaddingX");
+    this.save();
+  }
+
+  getAutocompleteMaxVisible(): number {
+    return this.settings.autocompleteMaxVisible ?? 10;
+  }
+
+  setAutocompleteMaxVisible(max: number): void {
+    this.globalSettings.autocompleteMaxVisible = max;
+    this.markModified("autocompleteMaxVisible");
+    this.save();
+  }
+
+  getAutocompleteProvider(): string | undefined {
+    return this.settings.autocompleteProvider;
+  }
+
+  setAutocompleteProvider(provider: string | undefined): void {
+    this.globalSettings.autocompleteProvider = provider;
+    this.markModified("autocompleteProvider");
+    this.save();
+  }
+
+  getAutocompleteSource(): string | undefined {
+    return this.settings.autocompleteSource;
+  }
+
+  setAutocompleteSource(source: string | undefined): void {
+    this.globalSettings.autocompleteSource = source;
+    this.markModified("autocompleteSource");
+    this.save();
+  }
+
   getShellPath(): string | undefined {
     return this.settings.shellPath;
   }
@@ -769,6 +839,28 @@ export class SettingsManager {
   setEnableSkillCommands(enabled: boolean): void {
     this.globalSettings.enableSkillCommands = enabled;
     this.markModified("enableSkillCommands");
+    this.save();
+  }
+
+  getWarnings(): string[] {
+    return [];
+  }
+
+  isProjectTrusted(): boolean {
+    return this.settings.projectTrusted ?? false;
+  }
+
+  setProjectTrusted(trusted: boolean): void {
+    this.globalSettings.projectTrusted = trusted;
+    this.markModified("projectTrusted");
+    this.save();
+  }
+
+  setDefaultModelAndProvider(modelId: string, provider: string): void {
+    this.globalSettings.defaultModel = modelId;
+    this.globalSettings.defaultProvider = provider;
+    this.markModified("defaultModel");
+    this.markModified("defaultProvider");
     this.save();
   }
 
