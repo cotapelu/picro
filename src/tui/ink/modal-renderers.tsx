@@ -26,7 +26,7 @@ export type ModalState =
   | { type: 'command-palette'; filter?: string; isSlash?: boolean }
   | { type: 'thinking' }
   | { type: 'login' }
-  | { type: 'editor'; initialValue: string; onSave: (value: string) => Promise<void> }
+  | { type: 'editor'; initialValue: string; onSave: (value: string) => Promise<void>; onCancel?: () => void }
   | { type: 'help' }
   | { type: 'session-selector' }
   | { type: 'confirmation'; title: string; message: string; onConfirm: () => Promise<void> | void; onCancel?: () => void }
@@ -243,16 +243,21 @@ export const ModalRenderers: React.FC<ModalRenderersProps> = ({
         </Modal>
       );
 
-    case 'editor':
+    case 'editor': {
+      const [editorValue, setEditorValue] = React.useState(activeModal.initialValue);
       return (
         <Modal onClose={onClose}>
           <Box flexDirection="column">
             <Text bold>Edit Input</Text>
             <InputBox
-              value={activeModal.initialValue}
-              onChange={() => {}}
-              onSubmit={async (val) => {
-                await activeModal.onSave(val);
+              value={editorValue}
+              onChange={setEditorValue}
+              onSubmit={async () => {
+                await activeModal.onSave(editorValue);
+                onClose();
+              }}
+              onEscape={() => {
+                activeModal.onCancel?.();
                 onClose();
               }}
               multiline
@@ -261,6 +266,7 @@ export const ModalRenderers: React.FC<ModalRenderersProps> = ({
           </Box>
         </Modal>
       );
+    }
 
     case 'input':
       return (

@@ -46,7 +46,7 @@ type ModalState =
   | { type: 'command-palette'; filter?: string; isSlash?: boolean }
   | { type: 'thinking' }
   | { type: 'login' }
-  | { type: 'editor'; initialValue: string; onSave: (value: string) => Promise<void> }
+  | { type: 'editor'; initialValue: string; onSave: (value: string) => Promise<void>; onCancel?: () => void }
   | { type: 'help' }
   | { type: 'session-selector' }
   | { type: 'confirmation'; title: string; message: string; onConfirm: () => Promise<void> | void; onCancel?: () => void }
@@ -1021,13 +1021,9 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
         setActiveModal({
           type: 'editor',
           initialValue: prefill || '',
-          onSave: async (val) => resolve(val),
+          onSave: (val) => resolve(val),
+          onCancel: () => resolve(undefined),
         });
-        // onCancel should also resolve undefined; we add cancel handler via existing modal infrastructure? The modal can be dismissed with Esc.
-        // For simplicity, we'll rely on modal's onClose. But we need to differentiate save vs cancel.
-        // For now, return prefill on immediate resolve (not correct). We'll need to modify modal handling to support cancellable editor.
-        //TODO: proper modal with onCancel
-        setTimeout(() => resolve(prefill), 0);
       });
     },
     addAutocompleteProvider: (factory: any) => {
