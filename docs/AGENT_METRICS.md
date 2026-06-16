@@ -62,6 +62,7 @@
 | 67     | 2026-06-15 | CommandPalette arrow key navigation guard when no matches (+1 test) | 2917+      | 0           | 0         |
 | 68     | 2026-06-15 | CommandPalette UX improvements: backspace, escape-filter (+3 tests) | 2920+      | 0           | 0         |
 | 69     | 2026-06-15 | ErrorBoundary telemetry reporting (track agent.error) | 2920+      | 0           | 0         |
+| 70     | 2026-06-15 | Editor modal fix: internal state, onEscape cancel, removed setTimeout bug | 2920+      | 0           | 0         |
 
 ## Quality Indicators
 

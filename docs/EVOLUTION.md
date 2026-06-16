@@ -994,9 +994,15 @@
 - All tests passing (206 files, 2920 tests, 16 skipped, 1 todo).
 - Branch coverage remains ≥85%.
 
-### Round 69 (Current)
+### Round 69
 - Implemented telemetry reporting in ErrorBoundary: calls `track('agent.error')` with error details, if telemetry is available.
 - Added import of `track` from `../../runtime/telemetry.js`.
+- All tests passing (206 files, 2920 tests, 16 skipped, 1 todo).
+- Branch coverage remains ≥85%.
+
+### Round 70 (Current)
+- Fixed editor modal: added internal state for value changes, implemented onEscape handler for cancellation, and removed setTimeout hack.
+- Fixed critical bug where onChange was no-op, making editor non-functional.
 - All tests passing (206 files, 2920 tests, 16 skipped, 1 todo).
 - Branch coverage remains ≥85%.
 
