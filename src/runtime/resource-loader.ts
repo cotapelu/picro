@@ -320,6 +320,23 @@ export class DefaultResourceLoader implements ResourceLoader {
   getAppendSystemPrompt(): string[] {
     return this._appendSystemPrompt;
   }
+
+  /**
+   * Extend resources from extensions (skills, prompts, themes)
+   */
+  extendResources(paths: {
+    skillPaths: Array<{ path: string; extensionPath: string }>;
+    promptPaths: Array<{ path: string; extensionPath: string }>;
+    themePaths: Array<{ path: string; extensionPath: string }>;
+  }): void {
+    // For now, simply reload all resources (simplified)
+    // In full implementation, would selectively load only new resources
+    if (paths.skillPaths.length > 0 || paths.promptPaths.length > 0 || paths.themePaths.length > 0) {
+      // Mark need reload; next get* calls will use updated cache after reload
+      // For simplicity, just call reload() to pick up new files
+      this.reload().catch(console.error);
+    }
+  }
 }
 
 /**

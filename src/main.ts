@@ -241,6 +241,26 @@ async function main(): Promise<void> {
   });
   time("createAgentSessionServices");
 
+  // Handle --provider flag: set default provider
+  if (parsed.provider) {
+    services.settingsManager.setDefaultProvider(parsed.provider);
+  }
+
+  // Handle --api-key flag: store API key for the specified provider
+  if (parsed.apiKey) {
+    const provider = parsed.provider || services.settingsManager.getDefaultProvider();
+    if (!provider) {
+      console.error('No provider specified for API key. Use --provider <name> or set defaultProvider in settings.');
+      process.exit(1);
+    }
+    // Save API key to auth storage
+    await services.authStorage.setApiKey(provider, parsed.apiKey);
+    // Also set as default provider if not already
+    if (!services.settingsManager.getDefaultProvider()) {
+      services.settingsManager.setDefaultProvider(provider);
+    }
+  }
+
   // Report diagnostics collected during service creation
   if (services.diagnostics?.length > 0) {
     for (const diag of services.diagnostics) {

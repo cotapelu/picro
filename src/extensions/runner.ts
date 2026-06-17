@@ -172,6 +172,22 @@ export class ExtensionRunner {
   }
 
   /**
+   * Emit resources_discover event to gather additional resource paths from extensions.
+   */
+  async emitResourcesDiscover(cwd: string, reason: string): Promise<{
+    skillPaths: Array<{ path: string; extensionPath: string }>;
+    promptPaths: Array<{ path: string; extensionPath: string }>;
+    themePaths: Array<{ path: string; extensionPath: string }>;
+  }> {
+    const result = await this.emit({
+      type: 'resources_discover',
+      cwd,
+      reason,
+    });
+    return result ?? { skillPaths: [], promptPaths: [], themePaths: [] };
+  }
+
+  /**
    * Invalidate the runner
    */
   invalidate(message: string): void {

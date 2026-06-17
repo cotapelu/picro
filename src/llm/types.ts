@@ -20,15 +20,58 @@ export type Api = KnownApi | (string & {});
  *
  * Mở rộng sau: thêm vào union type
  */
+// All providers from models.generated.js
+// Using string to accommodate all generated providers without exhaustive list
 export type KnownProvider =
+  | "amazon-bedrock"
+  | "ant-ling"
+  | "anthropic"
+  | "google"
+  | "google-vertex"
+  | "openai"
+  | "azure-openai-responses"
+  | "openai-codex"
   | "nvidia"
-  | "kilo"
+  | "deepseek"
+  | "github-copilot"
+  | "xai"
+  | "groq"
+  | "cerebras"
+  | "openrouter"
+  | "vercel-ai-gateway"
+  | "zai"
+  | "zai-coding-cn"
+  | "mistral"
+  | "minimax"
+  | "minimax-cn"
+  | "moonshotai"
+  | "moonshotai-cn"
+  | "huggingface"
+  | "fireworks"
+  | "together"
   | "opencode"
   | "opencode-go"
-  | "google"
-  | "github-copilot"
+  | "kimi-coding"
+  | "cloudflare-workers-ai"
+  | "cloudflare-ai-gateway"
+  | "xiaomi"
+  | "xiaomi-token-plan-cn"
+  | "xiaomi-token-plan-ams"
+  | "xiaomi-token-plan-sgp"
+  | "kilo"
   | "302ai";
 
+
+export type ThinkingLevel = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+export type ModelThinkingLevel = 'off' | ThinkingLevel;
+export type ThinkingLevelMap = Partial<Record<ModelThinkingLevel, number | null>>;
+
+export interface ThinkingBudgets {
+  minimal?: number;
+  low?: number;
+  medium?: number;
+  high?: number;
+}
 
 export type StopReason = 'stop' | 'length' | 'toolUse' | 'error' | 'aborted';
 
@@ -126,6 +169,8 @@ export interface Model<TApi extends Api = Api> {
   compat?: Record<string, any>;
   headers?: Record<string, string>;
   releaseDate?: string;
+  thinkingLevelMap?: Record<string, any>;
+  [key: string]: any; // Allow other generated fields
 }
 
 export interface StreamOptions {

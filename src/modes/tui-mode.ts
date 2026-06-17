@@ -21,7 +21,8 @@ export async function runTuiMode(runtime: any): Promise<void> {
     console.log('[TUI] init complete, running...');
     await interactive.run();
   } catch (err) {
-    console.error('[TUI] error:', err);
+    console.error('[TUI] fatal error:', err);
+    console.error('[TUI] stack:', err instanceof Error ? err.stack : 'no stack');
     throw err;
   }
 }

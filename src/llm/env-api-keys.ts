@@ -107,14 +107,21 @@ function loadSecrets(): Record<string, string> | null {
 function loadAuth(): Record<string, { type: string; key: string }> | null {
   if (authCache !== null) return authCache;
   try {
-    // 1. Try ~/.picro/agent/auth.json first (new unified location)
-    const homePath = join(homedir(), '.picro', 'agent', 'auth.json');
-    if (existsSync(homePath)) {
-      authCache = JSON.parse(readFileSync(homePath, 'utf-8'));
+    // 1. Try ~/.pi/agent/auth.json first (pi-ai legacy location)
+    const piPath = join(homedir(), '.pi', 'agent', 'auth.json');
+    if (existsSync(piPath)) {
+      authCache = JSON.parse(readFileSync(piPath, 'utf-8'));
       return authCache;
     }
 
-    // 2. Fallback to process.cwd()/auth.json (legacy location)
+    // 2. Try ~/.picro/agent/auth.json (new unified location)
+    const picroPath = join(homedir(), '.picro', 'agent', 'auth.json');
+    if (existsSync(picroPath)) {
+      authCache = JSON.parse(readFileSync(picroPath, 'utf-8'));
+      return authCache;
+    }
+
+    // 3. Fallback to process.cwd()/auth.json (local legacy)
     const cwdPath = join(process.cwd(), 'auth.json');
     if (existsSync(cwdPath)) {
       authCache = JSON.parse(readFileSync(cwdPath, 'utf-8'));

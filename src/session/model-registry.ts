@@ -42,6 +42,9 @@ export interface ModelRegistry {
   getApiKeyAndHeaders(model: ModelEntry): Promise<{ ok: boolean; apiKey?: string; headers?: Record<string, string>; error?: string }>;
   registerProvider(name: string, config: unknown): void;
   getProviders(): string[];
+  getProviderDisplayName(provider: string): string;
+  getOAuthProviders(): string[];
+  getProviderAuthStatus(provider: string): "unavailable" | "api_key" | "oauth";
 }
 
 const PROVIDER_API_KEYS: Record<string, string> = {
@@ -95,7 +98,9 @@ export class DefaultModelRegistry implements ModelRegistry {
     // 3. Check environment variables
     if (!apiKey) {
       const envVar = PROVIDER_API_KEYS[model.provider];
-      if (envVar) apiKey = process.env[envVar];
+      if (envVar) {
+        apiKey = process.env[envVar];
+      }
     }
 
     if (!apiKey) {
@@ -189,6 +194,39 @@ export class DefaultModelRegistry implements ModelRegistry {
 
   getProviders(): string[] {
     return getProviders();
+  }
+
+  /**
+   * Get display name for a provider (stub)
+   */
+  getProviderDisplayName(provider: string): string {
+    // Return capitalized provider name by default
+    return provider.charAt(0).toUpperCase() + provider.slice(1);
+  }
+
+  getOAuthProviders(): string[] {
+    if (this.authStorage) {
+      // Delegate to authStorage if available
+      const allProviders = getProviders();
+      return allProviders.filter(p => {
+        const cred = (this.authStorage as any)?.data?.[p];
+        return cred?.type === 'oauth';
+      });
+    }
+    return [];
+  }
+
+  getProviderAuthStatus(provider: string): "unavailable" | "api_key" | "oauth" {
+    if (!this.hasConfiguredAuth({ provider } as any)) {
+      return "unavailable";
+    }
+    // Check if OAuth token exists for provider
+    const cred = (this.authStorage as any)?.data?.[provider];
+    if (cred?.type === 'oauth') {
+      return 'oauth';
+    }
+    // Default: API key
+    return 'api_key';
   }
 
   /** Refresh models (no-op, models are static) */

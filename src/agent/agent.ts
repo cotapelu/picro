@@ -600,6 +600,20 @@ export class Agent {
   }
 
   // ============================================================================
+  // Interactive Mode Compatibility
+  // ============================================================================
+
+  /** Get abort signal for current operation (if any) */
+  get signal(): AbortSignal | undefined {
+    return undefined;
+  }
+
+  /** Get transport (unused) */
+  get transport(): any {
+    return null;
+  }
+
+  // ============================================================================
   // Private methods
   // ============================================================================
 
