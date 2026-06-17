@@ -610,6 +610,11 @@ export class Agent {
   }
 
   /** Get transport (unused) */
+  /** Get agent config (for session integration) */
+  getConfig(): any {
+    return this.config;
+  }
+
   get transport(): any {
     return null;
   }

@@ -225,6 +225,9 @@ export class AgentSession {
     this._cwd = config.cwd;
     this._scopedModels = config.scopedModels ?? [];
     this._config = config;
+    // Provide queue access to agent config for AgentLoop
+    (this.agent.getConfig() as any).getSteeringMessages = () => this._steeringMessages;
+    (this.agent.getConfig() as any).getFollowUpMessages = () => this._followUpMessages;
     this.resourceLoader = config.resourceLoader;
     this.modelRegistry = config.modelRegistry;
     this._initialActiveToolNames = config.initialActiveToolNames;
