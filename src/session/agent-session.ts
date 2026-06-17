@@ -147,6 +147,9 @@ export class AgentSession {
   private _unsubscribeAgent?: () => void;
   private _eventListeners: SessionEventListener[] = [];
 
+  // Cached agent state (when agent.runner.state not yet available)
+  private _agentStateData: any = { history: [] };
+
   // Queue tracking for UI display
   private _steeringMessages: string[] = [];
   private _followUpMessages: string[] = [];
@@ -226,8 +229,16 @@ export class AgentSession {
     this._scopedModels = config.scopedModels ?? [];
     this._config = config;
     // Provide queue access to agent config for AgentLoop
-    (this.agent.getConfig() as any).getSteeringMessages = () => this._steeringMessages;
-    (this.agent.getConfig() as any).getFollowUpMessages = () => this._followUpMessages;
+    const agentConfig = this.agent.getConfig?.();
+    if (agentConfig) {
+      agentConfig.getSteeringMessages = () => this._steeringMessages;
+      agentConfig.getFollowUpMessages = () => this._followUpMessages;
+    } else {
+      // Agent may not have getConfig in some test scenarios; ignore.
+      if (this._config.debug) {
+        console.warn('Agent does not provide getConfig; steering/followUp hooks will not be available.');
+      }
+    }
     this.resourceLoader = config.resourceLoader;
     this.modelRegistry = config.modelRegistry;
     this._initialActiveToolNames = config.initialActiveToolNames;
@@ -268,8 +279,8 @@ export class AgentSession {
 
   /** Whether agent is currently running */
   get isStreaming(): boolean {
-    const state = this.agent.getState() as any;
-    return this._isPromptRunning || !!state.isStreaming;
+    const state = this._agentState as any;
+    return this._isPromptRunning || !!state.isRunning;
   }
 
   /** Current effective system prompt */
@@ -333,12 +344,12 @@ export class AgentSession {
 
   /** Full agent state */
   get state(): AgentRuntimeState & { model?: Model } {
-    return { ...this.agent.getState(), model: this._model };
+    return { ...this._agentState, model: this._model } as any;
   }
 
   /** All messages */
   get messages(): any[] {
-    return this.agent.getState().history;
+    return this._agentState.history;
   }
 
   /** Whether compaction or branch summarization is currently running */
@@ -883,7 +894,7 @@ export class AgentSession {
 
     for (const bashMessage of this._pendingBashMessages) {
       this._agentState.history.push(bashMessage);
-      this.sessionManager.appendMessage(bashMessage as any);
+      this.sessionManager?.appendMessage(bashMessage as any);
     }
 
     this._pendingBashMessages = [];
@@ -1654,15 +1665,37 @@ export class AgentSession {
   // =========================================================================
 
   private get _agentState(): any {
-    const state = (this.agent as any).state || (this.agent as any).runner?.state || this._agentState;
-    if (state && !state.messages && state.history) {
-      state.messages = state.history; // alias for compatibility
+    const agent = this.agent as any;
+    // Prefer agent.runner.state (the actual runtime state)
+    if (agent?.runner?.state) {
+      const state = agent.runner.state;
+      if (!state.messages && state.history) {
+        state.messages = state.history; // alias for compatibility
+      }
+      return state;
     }
-    return state;
+    // Also check agent.state (for mocks and direct assignment)
+    if (agent?.state) {
+      const state = agent.state;
+      if (!state.messages && state.history) {
+        state.messages = state.history;
+      }
+      return state;
+    }
+    // Fallback to cached local state
+    return this._agentStateData;
   }
 
   private set _agentState(val: any) {
-    (this.agent as any).state = val;
+    // Update cached state
+    this._agentStateData = val;
+    // Also try to update agent's state if possible
+    const agent = this.agent as any;
+    if (agent?.runner) {
+      agent.runner.state = val;
+    } else if (agent?.state) {
+      agent.state = val;
+    }
   }
 
   // =========================================================================
@@ -1854,9 +1887,32 @@ export class AgentSession {
         return { type: 'message_end', turn: event.turn };
       case 'tool:call:start':
         return { type: 'tool_call', toolName: event.toolName, toolCallId: event.toolCallId, input: event.arguments };
-      case 'tool:call:end':
+      case 'tool:call:end': {
         const result = event.result;
-        return { type: 'tool_result', toolName: result.toolName, toolCallId: result.toolCallId, result: result.result || result.error, isError: result.isError };
+        let payload: string | undefined;
+        if (result.isError) {
+          payload = result.error;
+        } else {
+          // Prefer 'result' field for backward compatibility, else use 'content'
+          if (result.result !== undefined) {
+            payload = result.result;
+          } else if (Array.isArray(result.content)) {
+            payload = result.content
+              .filter((c: any) => c.type === 'text')
+              .map((c: any) => c.text)
+              .join('\n');
+          } else {
+            payload = result.content;
+          }
+        }
+        return {
+          type: 'tool_result',
+          toolName: result.toolName,
+          toolCallId: result.toolCallId,
+          result: payload,
+          isError: result.isError,
+        };
+      }
       case 'memory:retrieve':
         return { type: 'memory_retrieve', query: event.query, memoriesRetrieved: event.memoriesRetrieved };
       default:

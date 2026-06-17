@@ -20,6 +20,7 @@ function buildSession(overrides: any = {}) {
     registerTool: vi.fn(),
     setModel: vi.fn(),
     resume: vi.fn().mockResolvedValue(undefined),
+    getConfig: vi.fn().mockReturnValue({}),
     // other agent methods not needed for tests
   } as any;
 

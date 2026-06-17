@@ -18,6 +18,7 @@ function createSession(overrides = {}) {
     getToolNames: vi.fn(() => []),
     steer: vi.fn(),
     followUp: vi.fn(),
+    getConfig: vi.fn().mockReturnValue({}),
     state: { isRunning: false, history: [] },
   };
   const sessionManager = {

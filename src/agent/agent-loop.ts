@@ -459,7 +459,6 @@ export class AgentLoop {
         let response: LLMResponse | null = null;
         let finalMessage: any = null;
         // Set streaming flag in state
-        this.state.isStreaming = isStreaming;
 
         if (isStreaming) {
           const streamOptions: any = {
@@ -694,7 +693,6 @@ export class AgentLoop {
         }
 
         // Clear streaming flag after response
-        this.state.isStreaming = false;
         // Determine tool calls and response for strategy
         let toolCalls: ToolCallData[] = [];
         let shouldContinueResponse: any = null;

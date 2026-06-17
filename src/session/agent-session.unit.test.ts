@@ -145,7 +145,7 @@ describe('AgentSession branch coverage', () => {
   } as Model;
 
   function buildSession(overrides: any = {}) {
-    const agent = { subscribe: () => () => {}, registerTool: vi.fn(), clearAllQueues: vi.fn(), abort: vi.fn(), setModel: vi.fn(), getToolNames: () => [], steer: vi.fn(), followUp: vi.fn() };
+    const agent = { subscribe: () => () => {}, registerTool: vi.fn(), clearAllQueues: vi.fn(), abort: vi.fn(), setModel: vi.fn(), getToolNames: () => [], steer: vi.fn(), followUp: vi.fn(), getConfig: () => ({}) };
     const sessionManager = {
       getLeafId: vi.fn().mockReturnValue('leaf'),
       getSessionFile: vi.fn().mockReturnValue(undefined),

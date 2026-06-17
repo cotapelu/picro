@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { AgentSession, parseSkillBlock } from './agent-session.js';
 
 function agentWithState(history: any[] = []) {
-  return { subscribe: () => () => {}, state: { history }, getToolNames: () => [], registerTool: vi.fn(), clearAllQueues: vi.fn(), abort: vi.fn(), setModel: vi.fn() };
+  return { subscribe: () => () => {}, state: { history }, getToolNames: () => [], registerTool: vi.fn(), clearAllQueues: vi.fn(), abort: vi.fn(), setModel: vi.fn(), getConfig: vi.fn().mockReturnValue({}), getState: () => ({ history }) };
 }
 
 function buildSession(agent: any, overrides: any = {}) {

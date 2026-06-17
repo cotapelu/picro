@@ -3,42 +3,27 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Branch Coverage Improvement",
+      "name": "Fix AgentSession bugs",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Write branch tests for event-emitter.ts (43.75%)",
+          "content": "Fix _agentState getter infinite recursion",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Write branch tests for agent-session.ts (~52.78%)",
+          "content": "Fix _convertAgentEventToExtensionEvent for tool:call:end",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Write branch tests for extensions/loader.ts (~44.28%)",
-          "status": "pending"
-        },
-        {
-          "id": "task-4",
-          "content": "Write branch tests for runtime/agent-runtime.ts (~60.52%)",
-          "status": "pending"
-        },
-        {
-          "id": "task-5",
-          "content": "Write branch tests for session/summarization.ts (~61.81%)",
-          "status": "pending"
-        },
-        {
-          "id": "task-6",
-          "content": "Run tests and verify coverage improvement to ≥85%",
+          "content": "Run tests to verify fixes",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
+  "nextTaskId": 4,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-15T16:25:57.333Z"
+  "updatedAt": "2026-06-17T22:42:54.664Z"
 }
