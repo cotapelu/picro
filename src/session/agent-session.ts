@@ -1413,11 +1413,14 @@ export class AgentSession {
 
     // Forward message events to session listeners for InteractiveMode
     if (event.type === 'message:start' || event.type === 'message:end') {
+      const turn = event.turn || event.message;
+      const message = turn;
       this._emit({
         type: event.type.replace(':', '_'),
         timestamp: event.timestamp,
-        round: event.round,
-        turn: event.turn || event.message,
+        round: this.state.round,
+        turn: turn,
+        message: message,
       } as any);
     }
 
