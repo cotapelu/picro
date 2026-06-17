@@ -961,4 +961,9 @@ export class SettingsManager {
       this.changeListeners = this.changeListeners.filter(l => l !== listener);
     };
   }
+
+  getTreeFilterMode(): string {
+    // Return 'none' by default; could be 'gitignore' etc.
+    return 'none';
+  }
 }

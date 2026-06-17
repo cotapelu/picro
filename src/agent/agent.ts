@@ -399,6 +399,7 @@ export class Agent {
           ]
         : arg;
 
+
     // Track completion for waitForIdle()
     const p = this.execute(turns, signal);
     const idle = p.then(() => undefined);
