@@ -1411,6 +1411,16 @@ export class AgentSession {
       }
     }
 
+    // Forward message events to session listeners for InteractiveMode
+    if (event.type === 'message:start' || event.type === 'message:end') {
+      this._emit({
+        type: event.type.replace(':', '_'),
+        timestamp: event.timestamp,
+        round: event.round,
+        turn: event.turn,
+      } as any);
+    }
+
     // Process event
     this._processAgentEvent(event);
   };

@@ -683,13 +683,13 @@ export class AgentLoop {
             type: "message:start",
             timestamp: Date.now(),
             round: this.state.round,
-            message: assistantTurn,
+            turn: assistantTurn,
           } as any);
           this.emitter.emit({
             type: "message:end",
             timestamp: Date.now(),
             round: this.state.round,
-            message: assistantTurn,
+            turn: assistantTurn,
           } as any);
         }
 
