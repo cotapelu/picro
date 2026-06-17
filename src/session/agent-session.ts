@@ -171,6 +171,7 @@ export class AgentSession {
   private _retryPromise: Promise<void> | undefined;
   private _retryResolve: (() => void) | undefined;
   private _retryAborted = false;
+  private _isPromptRunning = false;
 
   // Tool registry
   private _toolRegistry: Map<string, AgentTool> = new Map();
@@ -264,7 +265,7 @@ export class AgentSession {
 
   /** Whether agent is currently running */
   get isStreaming(): boolean {
-    return this._agentState.isRunning;
+    return this._isPromptRunning || this.agent.getState().isRunning;
   }
 
   /** Current effective system prompt */
@@ -594,7 +595,12 @@ export class AgentSession {
     this._flushPendingBashMessages();
 
     // Run the agent with the constructed turns (supports images)
-    await this.agent.run(initialTurns);
+    this._isPromptRunning = true;
+    try {
+      await this.agent.run(initialTurns);
+    } finally {
+      this._isPromptRunning = false;
+    }
     await this.waitForRetry();
   }
 
