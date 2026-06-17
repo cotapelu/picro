@@ -1417,7 +1417,7 @@ export class AgentSession {
         type: event.type.replace(':', '_'),
         timestamp: event.timestamp,
         round: event.round,
-        turn: event.turn,
+        turn: event.turn || event.message,
       } as any);
     }
 
