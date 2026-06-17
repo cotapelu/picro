@@ -3,27 +3,27 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Fix AgentSession bugs",
+      "name": "Fixed",
       "tasks": [
         {
           "id": "task-1",
           "content": "Fix _agentState getter infinite recursion",
-          "status": "in_progress"
+          "status": "completed"
         },
         {
           "id": "task-2",
           "content": "Fix _convertAgentEventToExtensionEvent for tool:call:end",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-3",
           "content": "Run tests to verify fixes",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     }
   ],
   "nextTaskId": 4,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-17T22:42:54.664Z"
+  "updatedAt": "2026-06-17T23:35:16.892Z"
 }

@@ -277,8 +277,10 @@ export class AgentSession {
     return this._thinkingLevel;
   }
 
-  /** Whether agent is currently running */
+  /** Whether agent is currently running (streaming mode) */
   get isStreaming(): boolean {
+    // _isPromptRunning covers the period from prompt() call until agent.run() starts
+    // Also check underlying agent state (works for both mocks and real runtime)
     const state = this._agentState as any;
     return this._isPromptRunning || !!state.isRunning;
   }
@@ -860,7 +862,7 @@ export class AgentSession {
       excludeFromContext: options?.excludeFromContext,
     };
 
-    if (this._agentState.isStreaming) {
+    if (this.isStreaming) {
       this._pendingBashMessages.push(bashMessage);
     } else {
       this._agentState.history.push(bashMessage);
@@ -1425,17 +1427,49 @@ export class AgentSession {
       }
     }
 
-    // Forward message events to session listeners for InteractiveMode
-    if (event.type === 'message:start' || event.type === 'message:end') {
-      const turn = event.turn || event.message;
-      const message = turn;
-      this._emit({
+    // Forward events to session listeners for InteractiveMode (convert colon to underscore)
+    if (
+      event.type === 'message:start' ||
+      event.type === 'message:end' ||
+      event.type === 'agent:start' ||
+      event.type === 'agent:end' ||
+      event.type === 'turn:start' ||
+      event.type === 'turn:end' ||
+      event.type === 'tool:call:start' ||
+      event.type === 'tool:call:end' ||
+      event.type === 'memory:retrieve'
+    ) {
+      const converted: any = {
         type: event.type.replace(':', '_'),
         timestamp: event.timestamp,
-        round: this.state.round,
-        turn: turn,
-        message: message,
-      } as any);
+      };
+      // Include relevant fields based on event type
+      if (event.type === 'agent:start') {
+        converted.prompt = event.initialPrompt;
+      } else if (event.type === 'agent:end') {
+        converted.result = event.result;
+      } else if (event.type === 'turn:start' || event.type === 'turn:end') {
+        converted.round = event.round;
+        if (event.type === 'turn:end') converted.toolCallsExecuted = event.toolCallsExecuted;
+        if (event.type === 'turn:start') converted.promptLength = event.promptLength;
+      } else if (event.type === 'tool:call:start') {
+        converted.toolName = event.toolName;
+        converted.toolCallId = event.toolCallId;
+        converted.input = event.arguments;
+      } else if (event.type === 'tool:call:end') {
+        converted.toolName = event.result?.toolName;
+        converted.toolCallId = event.result?.toolCallId;
+        converted.result = event.result?.result || event.result?.error;
+        converted.isError = event.result?.isError;
+      } else if (event.type === 'memory:retrieve') {
+        converted.query = event.query;
+        converted.memoriesRetrieved = event.memoriesRetrieved;
+      } else {
+        // message:start / message:end
+        converted.turn = event.turn || event.message;
+        converted.message = converted.turn;
+      }
+      this._emit(converted);
     }
 
     // Process event
@@ -1845,7 +1879,7 @@ export class AgentSession {
         setTimeout(() => {
           this.agent.resume().catch(() => {});
         }, 0);
-      } else if (this._agentState.isStreaming) {
+      } else if (this.isStreaming) {
         // Kick the loop if queued messages exist
         setTimeout(() => {
           this.agent.resume().catch(() => {});
