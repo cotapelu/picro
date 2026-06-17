@@ -329,12 +329,12 @@ export class AgentSession {
 
   /** Full agent state */
   get state(): AgentRuntimeState & { model?: Model } {
-    return { ...this._agentState, model: this._model };
+    return { ...this.agent.getState(), model: this._model };
   }
 
   /** All messages */
   get messages(): any[] {
-    return this._agentState.history;
+    return this.agent.getState().history;
   }
 
   /** Whether compaction or branch summarization is currently running */
