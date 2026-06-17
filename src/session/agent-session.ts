@@ -545,6 +545,7 @@ export class AgentSession {
     images?: any[];
     streamingBehavior?: "steer" | "followUp";
   }): Promise<void> {
+    console.log('[PROMPT]', { text: text.substring(0, 30), streamingBehavior: options?.streamingBehavior, isStreaming: this.isStreaming });
     // If streaming, queue via steer() or followUp()
     if (this.isStreaming) {
       if (!options?.streamingBehavior) {
@@ -601,6 +602,7 @@ export class AgentSession {
    * Queue a steering message (injected during next turn).
    */
   async steer(text: string, images?: any[]): Promise<void> {
+    console.log('[STEER]', text.substring(0, 30));
     await this._queueSteer(text, images);
   }
 
@@ -608,6 +610,7 @@ export class AgentSession {
    * Queue a follow-up message (runs after agent stops).
    */
   async followUp(text: string, images?: any[]): Promise<void> {
+    console.log('[FOLLOWUP]', text.substring(0, 30));
     await this._queueFollowUp(text, images);
   }
 

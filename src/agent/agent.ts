@@ -401,6 +401,7 @@ export class Agent {
 
 
     // Track completion for waitForIdle()
+    console.log('[AGENT.run] executing', turns.length, 'turns');
     const p = this.execute(turns, signal);
     const idle = p.then(() => undefined);
     this._currentRunIdlePromise = idle;

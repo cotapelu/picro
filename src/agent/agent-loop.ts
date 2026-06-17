@@ -455,6 +455,7 @@ export class AgentLoop {
           toolsAvailable: this.tools.length,
         } as any);
 
+        console.log('[LOOP.executeLoop] about to call LLM, streaming=' + isStreaming);
         let llmRequestTime = 0;
         let response: LLMResponse | null = null;
         let finalMessage: any = null;
@@ -678,6 +679,7 @@ export class AgentLoop {
           this.lastTurnToolResults = [];
         }
 
+        console.log('[LOOP.executeLoop] LLM returned, finalMessage:', !!finalMessage, 'response:', !!response);
         // Determine tool calls and response for strategy
         let toolCalls: ToolCallData[] = [];
         let shouldContinueResponse: any = null;
