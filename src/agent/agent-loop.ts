@@ -455,10 +455,11 @@ export class AgentLoop {
           toolsAvailable: this.tools.length,
         } as any);
 
-        console.log('[LOOP.executeLoop] about to call LLM, streaming=' + isStreaming);
         let llmRequestTime = 0;
         let response: LLMResponse | null = null;
         let finalMessage: any = null;
+        // Set streaming flag in state
+        this.state.isStreaming = isStreaming;
 
         if (isStreaming) {
           const streamOptions: any = {
@@ -692,7 +693,8 @@ export class AgentLoop {
           } as any);
         }
 
-        console.log('[LOOP.executeLoop] LLM returned, finalMessage:', !!finalMessage, 'response:', !!response);
+        // Clear streaming flag after response
+        this.state.isStreaming = false;
         // Determine tool calls and response for strategy
         let toolCalls: ToolCallData[] = [];
         let shouldContinueResponse: any = null;

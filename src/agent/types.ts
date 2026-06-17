@@ -403,6 +403,7 @@ export interface AgentRuntimeState {
   toolResults: ToolResult[];
   history: ConversationTurn[];
   metadata: Record<string, unknown>;
+  isStreaming?: boolean;
 }
 
 /** Alias for compatibility */
