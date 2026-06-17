@@ -677,6 +677,19 @@ export class AgentLoop {
           this.lastTurnAssistant = assistantTurn as AssistantTurn;
           this.lastTurnNewMessages = [assistantTurn];
           this.lastTurnToolResults = [];
+          // Emit message:start and message:end for non-streaming
+          this.emitter.emit({
+            type: "message:start",
+            timestamp: Date.now(),
+            round: this.state.round,
+            message: assistantTurn,
+          } as any);
+          this.emitter.emit({
+            type: "message:end",
+            timestamp: Date.now(),
+            round: this.state.round,
+            message: assistantTurn,
+          } as any);
         }
 
         console.log('[LOOP.executeLoop] LLM returned, finalMessage:', !!finalMessage, 'response:', !!response);

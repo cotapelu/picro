@@ -265,7 +265,8 @@ export class AgentSession {
 
   /** Whether agent is currently running */
   get isStreaming(): boolean {
-    return this._isPromptRunning || this.agent.getState().isRunning;
+    const state = this.agent.getState() as any;
+    return this._isPromptRunning || !!state.isStreaming;
   }
 
   /** Current effective system prompt */
