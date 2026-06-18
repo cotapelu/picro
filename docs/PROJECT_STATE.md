@@ -71,6 +71,7 @@
 - **Round 73**: Final stability validation & documentation sync - all 206 test files pass (2920+ tests), build clean, TUI functional, zero regressions.
 - **Round 74 (2026-06-18)**: Full alignment with reference implementation: tool registration, system prompt improvements, test fixes. All 2953 tests passed.
 - **Round 75 (2026-06-18)**: Optimization: reduce default `maxRounds` to 5 for faster convergence and less token usage. No regressions.
+- **Round 82 (2026-06-18)**: Compaction metrics tracking integration (call `recordCompaction`). All 2969 tests passed.
 - **Round 81 (2026-06-18)**: Performance profiling via SessionMetrics. All 2969 tests passed.
 - **Round 80 (2026-06-18)**: Compaction with optional LLM summarization. Added/updated tests; all 2969 tests passed.
 - **Round 79 (2026-06-18)**: Smart memory retention with score boosting. All 2966 tests passed.

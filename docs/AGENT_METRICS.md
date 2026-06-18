@@ -65,6 +65,7 @@
 | 70     | 2026-06-15 | Editor modal fix: internal state, onEscape cancel, removed setTimeout bug | 2920+      | 0           | 0         |
 | 71     | 2026-06-16 | Full pi-coding-agent InteractiveMode compatibility | 2920+      | 0           | 0         |
 | 72     | 2026-06-16 | Comprehensive test validation & stability | 2920+      | 0           | 0         |
+| 82     | 2026-06-18 | Compaction metrics tracking integration | 2969       | 0           | 0         |
 | 81     | 2026-06-18 | Performance profiling & SessionMetrics | 2969       | 0           | 0         |
 | 80     | 2026-06-18 | Compaction with LLM summarization (optional) | 2969       | 0           | 0         |
 | 79     | 2026-06-18 | Smart memory retention with score boosting | 2966       | 0           | 0         |

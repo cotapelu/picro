@@ -452,6 +452,8 @@ describe('AgentSession branch coverage', () => {
       (session.sessionManager as any).appendCompaction = vi.fn();
       (session.sessionManager as any).buildSessionContext = vi.fn().mockReturnValue({ messages: [] });
       (session as any)._agentState.history = []; // ensure exists
+      // Stub agent.getRunner() to avoid TypeError in recordCompaction call
+      (session.agent as any).getRunner = () => ({ recordCompaction: vi.fn() });
     });
 
     it('returns early if already compacting', async () => {
@@ -499,7 +501,7 @@ describe('AgentSession branch coverage', () => {
     it('performs successful compaction flow', async () => {
       const prep = { firstKeptEntryId: 'e1', messagesToSummarize: [], tokensBefore: 0 } as any;
       vi.spyOn(compaction, 'prepareCompaction').mockReturnValue(prep);
-      const compactResult = { summary: 'sum', details: {}, firstKeptEntryId: 'e1', tokensBefore: 0 };
+      const compactResult = { summary: 'sum', details: {}, firstKeptEntryId: 'e1', tokensBefore: 0, tokensAfter: 0 };
       vi.spyOn(compaction, 'compact').mockResolvedValue(compactResult);
       (session.sessionManager as any).appendCompaction = vi.fn();
       (session.sessionManager as any).buildSessionContext = vi.fn().mockReturnValue({ messages: [] });

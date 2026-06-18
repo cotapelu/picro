@@ -194,6 +194,11 @@ export class Agent {
     }
   }
 
+  /** Get the underlying AgentLoop (for metrics, advanced control) */
+  public getRunner(): AgentLoop {
+    return this.runner;
+  }
+
   /**
    * Convert agent's Tool metadata to llm's Tool format
    */

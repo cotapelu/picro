@@ -512,6 +512,7 @@ export async function compact(
   summary: string;
   firstKeptEntryId: string;
   tokensBefore: number;
+  tokensAfter: number;
   details?: { readFiles: string[]; modifiedFiles: string[] };
 }> {
   const { messagesToSummarize, turnPrefixMessages, isSplitTurn, previousSummary, fileOps, firstKeptEntryId, tokensBefore } = preparation;
@@ -524,10 +525,12 @@ export async function compact(
   if (!preparation.settings.summarize) {
     const msgCount = messagesToSummarize.length;
     const summary = msgCount > 0 ? `[Compacted ${msgCount} messages]` : '[No messages to summarize]';
+    const summaryTokens = Math.ceil(summary.length / 4);
     return {
       summary,
       firstKeptEntryId,
       tokensBefore,
+      tokensAfter: summaryTokens,
       details,
     };
   }
@@ -587,10 +590,12 @@ export async function compact(
     }
   }
 
+  const summaryTokens = Math.ceil(summary.length / 4);
   return {
     summary,
     firstKeptEntryId,
     tokensBefore,
+    tokensAfter: summaryTokens,
     details,
   };
 }

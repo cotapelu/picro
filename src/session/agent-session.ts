@@ -1884,6 +1884,10 @@ export class AgentSession {
         false // fromExtension
       );
 
+      // Update compaction metrics via AgentLoop
+      const tokensSaved = compactResult.tokensBefore - compactResult.tokensAfter;
+      this.agent?.getRunner()?.recordCompaction(tokensSaved);
+
       // Rebuild agent state messages from session
       const sessionContext = this.sessionManager.buildSessionContext();
       this._agentState.history = sessionContext.messages;

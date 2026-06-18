@@ -1088,6 +1088,25 @@
 
 **Tests**: 206 test files, 2920+ tests passing; zero regressions; build clean; TUI functional.
 
+### Round 82 (2026-06-18): Compaction Metrics Tracking Integration
+
+**Problem**: The `SessionMetrics` interface defined `compactions` and `compactionTokensSaved` fields, but the compaction process never recorded metrics, leaving those fields at zero and defeating the purpose of observation.
+
+**Solution**:
+- In `AgentSession._runAutoCompaction`, after appending the compaction entry, compute `tokensSaved = compactResult.tokensBefore - compactResult.tokensAfter` and call `this.agent?.getRunner()?.recordCompaction(tokensSaved)`.
+- Added `getRunner()` public getter to `Agent` class to expose the `AgentLoop` instance, avoiding direct access to private `runner`.
+- Updated `AgentSession` to use `agent.getRunner()` (rather than `agent.runner`) for safe encapsulation.
+- Extended `compact()` return type to include `tokensAfter` (number of tokens in the summary) – stub summary estimates tokens as `Math.ceil(summary.length / 4)`.
+- Fixed tests: added `getRunner` stub to compaction tests to prevent `TypeError`; updated mock `compactResult` to include `tokensAfter`.
+
+**Impact**:
+- Compaction metrics are now accurately captured in `SessionMetrics`.
+- Completes the metrics pipeline for allocation, LLM, tools, memory, and compaction.
+- Low‑risk change; only adds observation and small refactoring.
+- All 2969 tests pass; no regressions.
+
+---
+
 ### Round 81 (2026-06-18): Performance Profiling & SessionMetrics
 
 **Problem**: Lack of visibility into agent performance (LLM latency, tool success rates, memory retrieval stats) made tuning difficult.

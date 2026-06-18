@@ -1231,6 +1231,12 @@ export class AgentLoop {
     };
   }
 
+  /** Record a successful compaction and tokens saved */
+  public recordCompaction(tokensSaved: number): void {
+    this.metrics.compactions++;
+    this.metrics.compactionTokensSaved += tokensSaved;
+  }
+
   private getResultText(result: ToolResult): string {
     if ("error" in result) return result.error;
     const successful = result as SuccessfulToolResult;
