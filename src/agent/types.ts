@@ -439,6 +439,9 @@ export interface ToolExecutorConfig {
    /** Whether to emit progress updates during tool execution */
    emitProgressUpdates?: boolean;
    handlers?: ToolRegistry;
+   // Retry configuration for tool execution
+   toolMaxRetries?: number; // default 1
+   toolRetryDelayMs?: number; // default 500
  }
 
 export interface BeforeToolHook {
@@ -570,6 +573,9 @@ export interface AgentConfig {
   // LLM retry configuration
   maxRetries?: number; // default 2
   retryDelayMs?: number; // base delay in ms, default 1000
+  // Tool execution retry configuration
+  toolMaxRetries?: number; // default 1
+  toolRetryDelayMs?: number; // base delay in ms, default 500
 
   // Callback for dynamic model changes from prepareNextTurn
   setModel?: (model: Model) => void;

@@ -44,9 +44,70 @@ export class ToolExecutor {
        beforeToolCall: config?.beforeToolCall,
        afterToolCall: config?.afterToolCall,
        emitProgressUpdates: config?.emitProgressUpdates ?? false,
+       toolMaxRetries: config?.toolMaxRetries ?? 1,
+       toolRetryDelayMs: config?.toolRetryDelayMs ?? 500,
      };
      this.emitter = config?.emitter;
    }
+
+  /**
+   * Determine if an error is retryable.
+   * Retryable: network errors, 5xx, 429, I/O transient errors.
+   * Not retryable: aborts, validation, permission errors.
+   */
+  private _isRetryableError(error: any): boolean {
+    if (!error) return false;
+    // Abort – do not retry
+    if (error.name === 'AbortError' || error.message?.includes('aborted')) return false;
+    // HTTP status codes
+    if (error.status !== undefined) {
+      if (error.status >= 500 && error.status < 600) return true; // 5xx
+      if (error.status === 429) return true; // rate limit
+      return false; // 4xx (except 429)
+    }
+    // Network error codes (Node.js)
+    const retryableCodes = [
+      'ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENETUNREACH', 'EPIPE', 'ECONNABORTED', 'EAI_AGAIN',
+      'EIO', 'EBUSY', 'ETIME',
+    ];
+    if (error.code && retryableCodes.includes(error.code)) return true;
+    // Generic network/timeouts
+    const msg = String(error.message || error).toLowerCase();
+    if (msg.includes('network') || msg.includes('timeout') || msg.includes('econnreset')) return true;
+    return false;
+  }
+
+  /**
+   * Execute a function with exponential backoff retry.
+   */
+  private async _callWithRetry<T>(
+    fn: () => Promise<T>,
+    signal?: AbortSignal,
+    maxRetries?: number,
+    baseDelayMs?: number
+  ): Promise<T> {
+    const attempt = async (n: number): Promise<T> => {
+      try {
+        return await fn();
+      } catch (error: any) {
+        // Abort check
+        if (signal?.aborted) throw error;
+        // Not retryable?
+        if (!this._isRetryableError(error)) throw error;
+        // Max retries reached?
+        const maxRetry = maxRetries ?? this.config.toolMaxRetries!;
+        if (n >= maxRetry) throw error;
+        // Delay with jitter
+        const base = (baseDelayMs ?? this.config.toolRetryDelayMs!) as number;
+        const backoff = base * Math.pow(2, n);
+        const jitter = Math.random() * (base * 0.5);
+        const delay = backoff + jitter;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return attempt(n + 1);
+      }
+    };
+    return attempt(0);
+  }
 
   /**
    * Register a single tool.
@@ -200,29 +261,34 @@ export class ToolExecutor {
        // Emit tool call start
        await this.emitToolCallStart(metadata);
 
-       // Execute with timeout and signal (use prepared args)
-       const rawResult = await this.executeWithTimeout(
-         async () => {
-           // Check if the tool handler accepts an onProgress callback
-           if (tool.handler.length > 2) {
-             // Create a wrapper for onProgress that emits events
-             const onProgressWrapper = (update: ToolProgressUpdate) => {
-               if (this.config.emitProgressUpdates !== false) {
-                 this.emitProgress(metadata, update);
+       // Execute with retry, timeout, and signal (use prepared args)
+       const rawResult = await this._callWithRetry(
+         async () =>
+           this.executeWithTimeout(
+             async () => {
+               // Check if the tool handler accepts an onProgress callback
+               if (tool.handler.length > 2) {
+                 // Create a wrapper for onProgress that emits events
+                 const onProgressWrapper = (update: ToolProgressUpdate) => {
+                   if (this.config.emitProgressUpdates !== false) {
+                     this.emitProgress(metadata, update);
+                   }
+                   // Call original onProgress if provided, but don't return its value
+                   // We just call it for side effects
+                   return;
+                 };
+                 return await tool.handler(actualArgs, context, onProgressWrapper);
+               } else {
+                 // Tool handler doesn't accept onProgress, call it normally
+                 return await tool.handler(actualArgs, context);
                }
-               // Call original onProgress if provided, but don't return its value
-               // We just call it for side effects
-               return;
-             };
-             
-             return await tool.handler(actualArgs, context, onProgressWrapper);
-           } else {
-             // Tool handler doesn't accept onProgress, call it normally
-             return await tool.handler(actualArgs, context);
-           }
-         },
-         this.config.timeout,
-         signal
+             },
+             this.config.timeout,
+             signal
+           ),
+         signal,
+         this.config.toolMaxRetries,
+         this.config.toolRetryDelayMs
        );
 
        // Convert rawResult to (TextBlock|ImageBlock)[] or string

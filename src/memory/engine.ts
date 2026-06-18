@@ -46,6 +46,8 @@ export class MemoryEngine {
   private maxCandidates: number;
   private adaptiveThresholds: number[];
   private maxContextCharsPerMemory?: number;
+  private memoryCache: Map<string, {result: RetrievalResult, timestamp: number}>;
+  private cacheTTL: number;
 
   public stats = {
     retrievals: 0,
@@ -53,6 +55,8 @@ export class MemoryEngine {
     queries: 0,
     errors: 0,
     hashVerifications: 0,
+    cacheHits: 0,
+    cacheMisses: 0,
   };
   // Performance metrics (not persisted)
   private queryCount = 0;
@@ -68,7 +72,9 @@ export class MemoryEngine {
       maxMemories: config.maxMemories || 100,
     });
     this.retriever = new MemoryRetriever();
-    this.retriever.setCacheTTL(config.cacheTTL || 300000); // 5 min default
+    this.memoryCache = new Map();
+    this.cacheTTL = config.cacheTTL || 300000; // 5 min default
+    this.retriever.setCacheTTL(this.cacheTTL);
     this.eventLog = new MemoryEventLog();
     this.currentProject = config.project || "default";
     this.topK = config.topK || 50;
@@ -109,8 +115,9 @@ export class MemoryEngine {
     const memId = await this.storage.add(content, action, this.currentProject, metadata);
     this.eventLog.log("SAVE", memId, content, action, undefined, hash);
     this.stats.saves++;
-    // Invalidate retrieval cache
+    // Invalidate retrieval caches
     this.retriever.invalidateCache();
+    this.memoryCache.clear();
     return memId;
   }
 
@@ -127,7 +134,17 @@ export class MemoryEngine {
   async recall(query: string): Promise<RetrievalResult> {
     this.stats.queries++;
     const startTime = performance.now();
-    
+
+    // Check cache
+    const cacheKey = `${query}:${this.currentProject}:${this.topK}:${this.minScore}`;
+    const now = Date.now();
+    const cached = this.memoryCache.get(cacheKey);
+    if (cached && now - cached.timestamp < this.cacheTTL) {
+      this.stats.cacheHits = (this.stats.cacheHits || 0) + 1;
+      return cached.result;
+    }
+    this.stats.cacheMisses = (this.stats.cacheMisses || 0) + 1;
+
     const allMemories = await this.storage.getAll();
     if (allMemories.length === 0) {
       this.queryCount++;
@@ -199,6 +216,13 @@ export class MemoryEngine {
     this.totalResultScores = (this.totalResultScores || 0) + scoreSum;
     this.resultCount = (this.resultCount || 0) + memories.length;
 
+    // Prepare result
+    const scores = filtered.slice(0, this.topK).map(item => item.score);
+    const result = { memories, scores, query };
+
+    // Cache the result (before state mutations)
+    this.memoryCache.set(cacheKey, { result, timestamp: Date.now() });
+
     // Increment access count for retrieved memories to track usage frequency
     const store = this.storage.getStore();
     for (const mem of memories) {
@@ -210,8 +234,7 @@ export class MemoryEngine {
     }
     this.stats.retrievals += memories.length;
 
-    const scores = filtered.slice(0, this.topK).map(item => item.score);
-    return { memories, scores, query };
+    return result;
   }
 
   /**
@@ -355,12 +378,15 @@ export class MemoryEngine {
     await this.storage.clear();
     this.eventLog.clear();
     this.retriever.invalidateCache();
+    this.memoryCache.clear();
     this.stats = {
       retrievals: 0,
       saves: 0,
       queries: 0,
       errors: 0,
       hashVerifications: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
     };
   }
 

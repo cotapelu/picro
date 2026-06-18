@@ -91,6 +91,8 @@ export class Agent {
       cacheEnabled: this.config.cacheResults ?? false,
       cacheSize: 1000,
       toolExecutionStrategy: this.config.toolExecutionStrategy ?? 'parallel',
+      toolMaxRetries: this.config.toolMaxRetries,
+      toolRetryDelayMs: this.config.toolRetryDelayMs,
       // Note: beforeToolCall/afterToolCall hooks are not passed to ToolExecutor currently due to type differences
     });
     // Register any handlers from legacy executor config

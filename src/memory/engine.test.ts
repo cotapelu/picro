@@ -116,6 +116,30 @@ describe('MemoryEngine', () => {
       const result = await engine.recall('zzzzznonexistent');
       expect(result.memories.length).toBe(0);
     });
+
+    describe('caching', () => {
+      it('should cache results and hit on second identical query', async () => {
+        const result1 = await engine.recall('read file');
+        const result2 = await engine.recall('read file');
+        expect(result2.memories).toEqual(result1.memories);
+        const stats = await engine.getStats();
+        expect(stats.cacheHits).toBeGreaterThanOrEqual(1);
+        expect(stats.cacheMisses).toBe(1);
+      });
+
+      it('should invalidate cache on add', async () => {
+        // Prime cache
+        await engine.recall('read file');
+        const statsBefore = await engine.getStats();
+        const missBefore = statsBefore.cacheMisses;
+        // Add new memory - should invalidate
+        await engine.add('fresh memory', 'read_file', { filePath: '/fresh' });
+        // Query again - should be a miss because cache cleared
+        await engine.recall('read file');
+        const statsAfter = await engine.getStats();
+        expect(statsAfter.cacheMisses).toBe(missBefore + 1);
+      });
+    });
   });
 
   describe('getAll()', () => {
