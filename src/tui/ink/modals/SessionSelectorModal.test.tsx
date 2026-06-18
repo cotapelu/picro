@@ -100,10 +100,11 @@ describe('SessionSelectorModal', () => {
 
   describe('keyboard interactions', () => {
     it('navigates down with down arrow', async () => {
+      const base = Date.now();
       const sessions = [
-        { id: '1', path: '/1', cwd: '/', modified: new Date(), name: 'A' },
-        { id: '2', path: '/2', cwd: '/', modified: new Date(), name: 'B' },
-        { id: '3', path: '/3', cwd: '/', modified: new Date(), name: 'C' },
+        { id: '1', path: '/1', cwd: '/', modified: new Date(base - 2000), name: 'A' },
+        { id: '2', path: '/2', cwd: '/', modified: new Date(base - 1000), name: 'B' },
+        { id: '3', path: '/3', cwd: '/', modified: new Date(base), name: 'C' },
       ];
       runtime.listSessions = vi.fn().mockResolvedValue(sessions);
       renderModal();

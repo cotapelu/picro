@@ -30,11 +30,14 @@ describe('buildSystemPrompt', () => {
         { path: 'AGENTS.md', content: 'Instructions' },
       ],
     });
-    expect(prompt).toContain('# Project Context');
-    expect(prompt).toContain('## README.md');
-    expect(prompt).toContain('# Project');
-    expect(prompt).toContain('## AGENTS.md');
+    // XML format for project context
+    expect(prompt).toContain('<project_context>');
+    expect(prompt).toContain('Project-specific instructions and guidelines:');
+    expect(prompt).toContain('<project_instructions path="README.md">');
+    expect(prompt).toContain('# Project'); // content
+    expect(prompt).toContain('<project_instructions path="AGENTS.md">');
     expect(prompt).toContain('Instructions');
+    expect(prompt).toContain('</project_context>');
   });
 
   it('includes skills when provided', () => {
@@ -60,9 +63,11 @@ describe('buildSystemPrompt', () => {
     });
     expect(prompt).toContain('You are a custom assistant.');
     expect(prompt).toContain('Be extra helpful.');
-    expect(prompt).toContain('# Project Context');
-    expect(prompt).toContain('file.txt');
+    // XML format for project context
+    expect(prompt).toContain('<project_context>');
+    expect(prompt).toContain('<project_instructions path="file.txt">');
     expect(prompt).toContain('data');
+    expect(prompt).toContain('</project_context>');
   });
 
   it('does not show empty tools list when no snippets', () => {
