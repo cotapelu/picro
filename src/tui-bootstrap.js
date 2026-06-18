@@ -1,13 +1,11 @@
 /**
- * TUI Bootstrap (CommonJS)
+ * TUI Bootstrap (ESM)
  * Provides a function to start the Ink app.
- * This file is NOT processed by TypeScript; it's hand-written JS to avoid import() transformation.
+ * This file is NOT processed by TypeScript; it's hand-written JS.
  */
 
-async function runTui(runtime) {
+export async function runTui(runtime) {
   // Dynamically import the ESM TUI bundle
   const { runInkApp } = await import('./tui/ink/index.js');
   await runInkApp(runtime);
 }
-
-module.exports = { runTui };

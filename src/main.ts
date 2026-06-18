@@ -28,7 +28,6 @@ import type { Model } from "./llm/index.js";
 // Ink TUI will be dynamically imported to avoid ESM/CJS conflicts
 import { runPrintMode } from "./modes/print-mode.js";
 import { runRpcMode } from "./modes/rpc-mode.js";
-import { runTuiMode } from "./modes/tui-mode.js";
 import type { AgentSessionRuntimeDiagnostic } from "./session/agent-session-services.js";
 
 // Load environment variables from .env
@@ -57,7 +56,7 @@ function resolveAppMode(parsed: Args, stdinIsTTY: boolean): "print" | "json" | "
   if (parsed.mode === "json") return "json";
   if (parsed.mode === "tui") return "tui";
   if (parsed.mode === "interactive") return "tui"; // alias for backwards compat
-  // Default: if TTY and not --print, use TUI mode (pi reference TUI)
+  // Default: if TTY and not --print, use Ink TUI (custom)
   if (parsed.print || !stdinIsTTY) return "print";
   return "tui";
 }
@@ -426,15 +425,10 @@ async function main(): Promise<void> {
     }
 
     try {
-      if (appMode === "tui") {
-        // Use pi-coding-agent's InteractiveMode
-        await runTuiMode(runtime);
-      } else {
-        // Use Ink-based TUI
-        // @ts-ignore - tui-bootstrap.js has no types
-        const { runTui } = await import('./tui-bootstrap.js');
-        await runTui(runtime);
-      }
+      // Use Ink-based TUI (custom)
+      // @ts-ignore - tui-bootstrap.js has no types
+      const { runTui } = await import('./tui-bootstrap.js');
+      await runTui(runtime);
     } catch (err: any) {
       console.error('Interactive mode error:', err.message || err);
     }

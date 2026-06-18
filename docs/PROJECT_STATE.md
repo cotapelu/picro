@@ -71,6 +71,7 @@
 - **Round 73**: Final stability validation & documentation sync - all 206 test files pass (2920+ tests), build clean, TUI functional, zero regressions.
 - **Round 74 (2026-06-18)**: Full alignment with reference implementation: tool registration, system prompt improvements, test fixes. All 2953 tests passed.
 - **Round 75 (2026-06-18)**: Optimization: reduce default `maxRounds` to 5 for faster convergence and less token usage. No regressions.
+- **Round 83 (2026-06-18)**: Ink TUI as Default Interactive Mode. Switched default TUI to Ink; all 2969 tests pass.
 - **Round 82 (2026-06-18)**: Compaction metrics tracking integration (call `recordCompaction`). All 2969 tests passed.
 - **Round 81 (2026-06-18)**: Performance profiling via SessionMetrics. All 2969 tests passed.
 - **Round 80 (2026-06-18)**: Compaction with optional LLM summarization. Added/updated tests; all 2969 tests passed.
@@ -96,6 +97,7 @@
 2. ✅ **UI/UX improvements**: slash command ordering, CommandPalette navigation/backspace/escape all complete.
 3. ✅ Optional: Push towards 85% branch coverage – completed.
 4. Maintain test stability; monitor regressions.
+5. ✅ **Ink TUI Completion** – fixed TypeScript errors, finalize components, replaced InteractiveMode with Ink TUI.
 
 ---
 

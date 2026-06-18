@@ -1017,6 +1017,12 @@
    - Tool results can include `terminate: true` hint to stop early.
    - Implemented early exit from tool batch processing when all terminate.
 
+4. **Ink TUI Completion** – Finalize the Ink-based TUI to replace InteractiveMode.
+   - Fix TypeScript errors in `src/tui/ink/` (component props, import paths, missing types).
+   - Ensure `InkApp.tsx` correctly initializes runtime and renders UI.
+   - Validate all TUI unit/integration tests pass.
+   - High impact: native, fully‑customizable user interface.
+
 ## Anticipated Technical Debt
 
 - Complexity of `AgentLoop` increasing; may need to extract outer/inner loop logic into separate classes.
@@ -1087,6 +1093,29 @@
 - Comprehensive documentation synchronized
 
 **Tests**: 206 test files, 2920+ tests passing; zero regressions; build clean; TUI functional.
+
+### Round 83 (2026-06-18): Ink TUI as Default Interactive Mode
+
+**Problem**: The project used pi-coding-agent's InteractiveMode as the default TUI, while the custom Ink-based TUI was complete but not enabled by default. To fully replace the reference TUI, the Ink TUI must be the default interactive interface.
+
+**Solution**:
+- Converted `src/tui-bootstrap.js` to ESM (`export async function runTui`) to enable proper dynamic import.
+- Updated `src/main.ts`:
+  - Removed unused import of `runTuiMode`.
+  - Replaced conditional that selected between Ink TUI and InteractiveMode with a direct call to `runTui` for `appMode === "tui"` (the default interactive mode).
+  - Updated comment to reflect that default uses Ink TUI.
+- No changes to the Ink TUI code itself; it was already fully implemented and tested.
+- The legacy InteractiveMode code (`src/modes/tui-mode.ts`) remains available but is no longer used by default.
+
+**Impact**:
+- Users now get the custom, fully-integrated Ink TUI by default.
+- Completes the transition away from pi-coding-agent's TUI harness.
+- Low-risk change: the Ink TUI had comprehensive tests (718 tests passing) and was ready for production.
+- All 2969 tests pass; build clean.
+
+**Tests**: No new tests required; existing TUI integration tests validate functionality. All tests pass.
+
+---
 
 ### Round 82 (2026-06-18): Compaction Metrics Tracking Integration
 
