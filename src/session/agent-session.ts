@@ -563,9 +563,6 @@ export class AgentSession {
     images?: any[];
     streamingBehavior?: "steer" | "followUp";
   }): Promise<void> {
-    if (process.env.VERBOSE) {
-      console.log('[DEBUG prompt] start, text:', text.substring(0, 50), '_agentState.history:', this._agentState?.history?.length);
-    }
     // If streaming, queue via steer() or followUp()
     if (this.isStreaming) {
       if (!options?.streamingBehavior) {
@@ -616,20 +613,18 @@ export class AgentSession {
     // Run the agent with the constructed turns (supports images)
     this._isPromptRunning = true;
     try {
-      // Use resume if we have existing conversation history to maintain context
       const hasHistory = this._agentState?.history?.length > 0;
       if (hasHistory) {
-        if (process.env.VERBOSE) console.log('[DEBUG prompt] using agent.resume() for context continuity');
-        await this.agent.resume(initialTurns);
+        // Enqueue all turns into steering queue for resume to pick up
+        for (const turn of initialTurns) {
+          this.agent.steer(turn);
+        }
+        await this.agent.resume();
       } else {
-        if (process.env.VERBOSE) console.log('[DEBUG prompt] using agent.run() for first turn');
         await this.agent.run(initialTurns);
       }
     } finally {
       this._isPromptRunning = false;
-    }
-    if (process.env.VERBOSE) {
-      console.log('[DEBUG prompt] end, _agentState.history:', this._agentState?.history?.length);
     }
     await this.waitForRetry();
   }
@@ -1713,12 +1708,6 @@ export class AgentSession {
   // =========================================================================
 
   private get _agentState(): any {
-    if (process.env.VERBOSE) {
-      const agent_debug = this.agent as any;
-      const runnerState = agent_debug?.runner?.state;
-      const agentState = agent_debug?.state;
-      console.log('[DEBUG _agentState.getter] runner.state exists:', !!runnerState, 'agent.state exists:', !!agentState, 'runner.state.history length:', runnerState?.history?.length, '_agentStateData length:', this._agentStateData?.history?.length);
-    }
     const agent = this.agent as any;
     // Prefer agent.runner.state (the actual runtime state)
     if (agent?.runner?.state) {
@@ -1741,15 +1730,11 @@ export class AgentSession {
   }
 
   private set _agentState(val: any) {
-    if (process.env.VERBOSE) {
-      console.log('[DEBUG _agentState.setter] val.history length:', val?.history?.length);
-    }
     // Update cached state
     this._agentStateData = val;
     // Also try to update agent's state if possible
     const agent = this.agent as any;
     if (agent?.runner) {
-      if (process.env.VERBOSE) console.log('[DEBUG _agentState.setter] setting agent.runner.state');
       agent.runner.state = val;
     } else if (agent?.state) {
       agent.state = val;
@@ -2117,24 +2102,12 @@ export class AgentSession {
   }
 
   getContextUsage(): { tokens: number; contextWindow: number; percent: number } | undefined {
-    if (process.env.VERBOSE) {
-      console.log('[DEBUG getContextUsage] _agentState.history length:', this._agentState?.history?.length, 'model:', this._model?.id);
-    }
     const model = this._model;
-    if (!model) {
-      if (process.env.VERBOSE) console.log('[DEBUG getContextUsage] no model');
-      return undefined;
-    }
+    if (!model) return undefined;
     const contextWindow = model.contextWindow ?? 0;
-    if (contextWindow <= 0) {
-      if (process.env.VERBOSE) console.log('[DEBUG getContextUsage] contextWindow <= 0');
-      return undefined;
-    }
+    if (contextWindow <= 0) return undefined;
     const estimate = estimateContextUsage(this._agentState.history);
     const percent = (estimate.tokens / contextWindow) * 100;
-    if (process.env.VERBOSE) {
-      console.log('[DEBUG getContextUsage] tokens:', estimate.tokens, 'contextWindow:', contextWindow, 'percent:', percent);
-    }
     return { tokens: estimate.tokens, contextWindow, percent };
   }
 
