@@ -1088,6 +1088,22 @@
 
 **Tests**: 206 test files, 2920+ tests passing; zero regressions; build clean; TUI functional.
 
+### Round 75 (2026-06-18): Optimization - Reduce maxRounds for Faster Convergence
+
+**Problem**: Default `maxRounds=10` could lead to more LLM calls than necessary, increasing token usage and latency. For simple tool-based interactions, fewer rounds are sufficient.
+
+**Solution**: Reduced default `maxRounds` in `createAgentSessionFromServices` from 10 to 5. This limits the agent to at most 5 turns (user + assistant + tool rounds) before stopping, which is enough for most tasks while conserving tokens and reducing potential verbosity.
+
+**Impact**:
+- Lower token consumption for simple queries.
+- Faster convergence for task execution.
+- No impact on test suite (tests explicitly set maxRounds or use mocks).
+- Low-risk change.
+
+**Tests**: All tests continue to pass (2953+).
+
+---
+
 ### Round 74 (2026-06-18): Full Alignment with Reference Implementation & Verbosity Fix
 
 **Problem**: Agent exhibited verbose output ("I will use X tool") and lacked complete tool registration relative to reference. System prompt needed stronger enforcement of direct tool calling. Tests failing due to built-in tools not registered and system prompt format mismatches.
