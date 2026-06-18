@@ -1088,6 +1088,25 @@
 
 **Tests**: 206 test files, 2920+ tests passing; zero regressions; build clean; TUI functional.
 
+### Round 80 (2026-06-18): Compaction with Optional LLM Summarization
+
+**Problem**: Compaction only deleted old entries, losing branch context.
+
+**Solution**:
+- Extended `CompactionConfig` with `summarize?: boolean` (default false) and `summaryModelId?: string`.
+- Updated `compact()`: if `summarize` false → return stub summary (`[Compacted N messages]` or `[No messages to summarize]`); if true → call LLM using `SUMMARIZATION_SYSTEM_PROMPT` with serialized conversation and file operations; fallback to stub on error.
+- `SettingsManager.getCompactionSettings()` now exposes `summarize` and `summaryModelId`.
+- Backward compatible (summarization off by default).
+- Low‑Medium risk: LLM call but well‑encapsulated with fallback.
+
+**Impact**:
+- Long‑session context preservation via branch summaries.
+- No regression; isolated change.
+
+**Tests**: Updated existing compaction tests to use `summarize: true`; added tests for stub and LLM flows. All 2969 tests pass (212 files).
+
+---
+
 ### Round 79 (2026-06-18): Smart Memory Retention with Score Boosting
 
 **Problem**: ContextBuilder selects memories based on recency and similarity only, missing important types like file reads and code edits. This leads to suboptimal context for code-related tasks.
