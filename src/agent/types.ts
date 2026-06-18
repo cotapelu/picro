@@ -567,6 +567,10 @@ export interface AgentConfig {
   prepareNextTurn?: (ctx: PrepareNextTurnContext) => Promise<PrepareNextTurnOverride | undefined>;
   // Tool executor options (legacy)
   executor?: ToolExecutorConfig;
+  // LLM retry configuration
+  maxRetries?: number; // default 2
+  retryDelayMs?: number; // base delay in ms, default 1000
+
   // Callback for dynamic model changes from prepareNextTurn
   setModel?: (model: Model) => void;
 }

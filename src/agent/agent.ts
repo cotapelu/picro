@@ -204,28 +204,66 @@ export class Agent {
   }
 
   // LLM call implementations using src/llm
+  private _isRetryableError(err: any): boolean {
+    // AbortError not retryable
+    if (err.name === 'AbortError' || err.message?.includes('aborted')) return false;
+    // Network error codes
+    const code = err.code;
+    if (code && ['ECONNREFUSED','ECONNRESET','ETIMEDOUT','ENETUNREACH','EPIPE','ECONNABORTED'].includes(code)) return true;
+    // HTTP status from provider (e.g., 5xx, 429)
+    const status = err.status as number | undefined;
+    if (status && (status >= 500 || status === 429)) return true;
+    return false;
+  }
+
+  private async _callWithRetry<T>(fn: () => Promise<T>, signal?: AbortSignal): Promise<T> {
+    const maxRetries = this.config.maxRetries ?? 2;
+    const baseDelay = this.config.retryDelayMs ?? 1000;
+    let lastError: any;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+      try {
+        return await fn();
+      } catch (err: any) {
+        lastError = err;
+        // Convert AbortError to a standard abort signal
+        if (err.name === 'AbortError') throw new Error('Aborted');
+        if (attempt === maxRetries) break;
+        if (!this._isRetryableError(err)) break;
+        if (signal?.aborted) throw new Error('Aborted');
+        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 0.5 * baseDelay;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    throw lastError;
+  }
+
   private _llmComplete = async (
     context: Context,
     options?: any,
   ): Promise<LLMResponse> => {
     if (!this.model) throw new Error("Model not set");
-    const llmOptions: any = { ...options };
-    if (this.config.getApiKey) {
-      const apiKey = await this.config.getApiKey(this.model.provider);
-      if (apiKey) llmOptions.apiKey = apiKey;
-    }
-    const result = await complete(this.model, context, llmOptions);
-    const content = Array.isArray(result.content)
-      ? result.content
-          .map((c: any) => (c as any).text || (c as any).thinking || "")
-          .join("")
-      : (result.content as string) || "";
-    return {
-      content,
-      stopReason: result.stopReason ?? "stop",
-      usage: result.usage,
-      toolCalls: [],
-    };
+    const signal = options?.signal;
+    const model = this.model; // capture to avoid undefined during retries
+    return this._callWithRetry(async () => {
+      const llmOptions: any = { ...options };
+      if (this.config.getApiKey) {
+        const apiKey = await this.config.getApiKey(model.provider);
+        if (apiKey) llmOptions.apiKey = apiKey;
+      }
+      const result = await complete(model, context, llmOptions);
+      const content = Array.isArray(result.content)
+        ? result.content
+            .map((c: any) => (c as any).text || (c as any).thinking || "")
+            .join("")
+        : (result.content as string) || "";
+      return {
+        content,
+        stopReason: result.stopReason ?? "stop",
+        usage: result.usage,
+        toolCalls: [],
+      } as LLMResponse;
+    }, signal);
   };
 
   private _llmStream = async (
@@ -233,12 +271,16 @@ export class Agent {
     options?: any,
   ): Promise<AsyncIterable<any>> => {
     if (!this.model) throw new Error("Model not set");
-    const llmOptions: any = { ...options };
-    if (this.config.getApiKey) {
-      const apiKey = await this.config.getApiKey(this.model.provider);
-      if (apiKey) llmOptions.apiKey = apiKey;
-    }
-    return stream(this.model, context, llmOptions);
+    const signal = options?.signal;
+    const model = this.model;
+    return this._callWithRetry(async () => {
+      const llmOptions: any = { ...options };
+      if (this.config.getApiKey) {
+        const apiKey = await this.config.getApiKey(model.provider);
+        if (apiKey) llmOptions.apiKey = apiKey;
+      }
+      return await stream(model, context, llmOptions);
+    }, signal);
   };
 
   private _resolveConfig(input: Partial<AgentConfig>): AgentConfig {
@@ -275,6 +317,8 @@ export class Agent {
       debug: input.debug,
       sessionId: input.sessionId,
       autoSaveMemories: input.autoSaveMemories,
+      maxRetries: input.maxRetries,
+      retryDelayMs: input.retryDelayMs,
     };
   }
 
