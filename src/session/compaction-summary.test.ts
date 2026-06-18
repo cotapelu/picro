@@ -42,7 +42,7 @@ describe('compact (LLM summarization)', () => {
       tokensBefore: 100,
       previousSummary: undefined,
       fileOps: { read: new Set(), written: new Set(), edited: new Set() },
-      settings: { enabled: true, reserveTokens: 16384, keepRecentTokens: 20000 },
+      settings: { enabled: true, reserveTokens: 16384, keepRecentTokens: 20000, summarize: true },
     };
 
     llmComplete.mockResolvedValue({ content: [{ text: 'Mock summary from LLM' }] });
@@ -73,7 +73,7 @@ describe('compact (LLM summarization)', () => {
       tokensBefore: 50,
       previousSummary: undefined,
       fileOps: { read: new Set(), written: new Set(), edited: new Set() },
-      settings: { enabled: true, reserveTokens: 16384, keepRecentTokens: 20000 },
+      settings: { enabled: true, reserveTokens: 16384, keepRecentTokens: 20000, summarize: true },
     };
 
     llmComplete.mockRejectedValue(new Error('LLM error'));
@@ -116,6 +116,6 @@ function makePrep(messages: any[]): CompactionPreparation {
     tokensBefore: 50,
     previousSummary: undefined,
     fileOps: { read: new Set(), written: new Set(), edited: new Set() },
-    settings: { enabled: true, reserveTokens: 16384, keepRecentTokens: 20000 },
+    settings: { enabled: true, reserveTokens: 16384, keepRecentTokens: 20000, summarize: true },
   };
 }

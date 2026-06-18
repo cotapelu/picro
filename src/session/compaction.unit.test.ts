@@ -423,7 +423,7 @@ describe('Compaction unit', () => {
           ops.edited.add('/c');
           return ops;
         })(),
-        settings: { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 } as any,
+        settings: { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000, summarize: true } as any,
       };
 
       const result = await compact(prep, model, apiKey);
@@ -457,7 +457,7 @@ describe('Compaction unit', () => {
         tokensBefore: 100,
         previousSummary: undefined,
         fileOps: createFileOps(),
-        settings: { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 } as any,
+        settings: { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000, summarize: true } as any,
       };
 
       const result = await compact(prep, {}, '');
@@ -475,7 +475,7 @@ describe('Compaction unit', () => {
         tokensBefore: 0,
         previousSummary: undefined,
         fileOps: createFileOps(),
-        settings: { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000 } as any,
+        settings: { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000, summarize: true } as any,
       };
 
       const result = await compact(prep, {}, '');

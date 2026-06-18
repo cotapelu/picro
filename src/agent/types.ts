@@ -495,6 +495,10 @@ export interface CompactionConfig {
   reserveTokens?: number;
   /** Auto-compaction after agent:end (default: true) */
   autoCompact?: boolean;
+  /** Enable LLM summarization for compacted branches (default: false) */
+  summarize?: boolean;
+  /** Optional model ID to use for summarization (defaults to current model) */
+  summaryModelId?: string;
 }
 
 export interface MemoryEntry {

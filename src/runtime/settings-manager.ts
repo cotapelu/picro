@@ -23,6 +23,8 @@ export interface CompactionSettings {
   enabled?: boolean;
   reserveTokens?: number;
   keepRecentTokens?: number;
+  summarize?: boolean;
+  summaryModelId?: string;
 }
 
 export interface BranchSummarySettings {
@@ -671,11 +673,13 @@ export class SettingsManager {
     return this.settings.compaction?.keepRecentTokens ?? 20000;
   }
 
-  getCompactionSettings(): { enabled: boolean; reserveTokens: number; keepRecentTokens: number } {
+  getCompactionSettings(): { enabled: boolean; reserveTokens: number; keepRecentTokens: number; summarize?: boolean; summaryModelId?: string } {
     return {
       enabled: this.getCompactionEnabled(),
       reserveTokens: this.getCompactionReserveTokens(),
       keepRecentTokens: this.getCompactionKeepRecentTokens(),
+      summarize: this.settings.compaction?.summarize ?? false,
+      summaryModelId: this.settings.compaction?.summaryModelId,
     };
   }
 

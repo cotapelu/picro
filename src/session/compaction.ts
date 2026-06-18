@@ -34,6 +34,8 @@ export interface CompactionSettings {
   enabled: boolean;
   reserveTokens: number;
   keepRecentTokens: number;
+  summarize?: boolean; // default false – use LLM to generate summary instead of stub
+  summaryModelId?: string; // optional model override for summarization
 }
 
 export const DEFAULT_COMPACTION_SETTINGS: CompactionSettings = {
@@ -516,7 +518,19 @@ export async function compact(
 
   // Compute file lists for details and prompt
   const { readFiles, modifiedFiles } = computeFileLists(fileOps);
-  const fileOpsText = formatFileOperations(readFiles, modifiedFiles);
+  const details = { readFiles, modifiedFiles };
+
+  // If summarization disabled, return simple stub summary
+  if (!preparation.settings.summarize) {
+    const msgCount = messagesToSummarize.length;
+    const summary = msgCount > 0 ? `[Compacted ${msgCount} messages]` : '[No messages to summarize]';
+    return {
+      summary,
+      firstKeptEntryId,
+      tokensBefore,
+      details,
+    };
+  }
 
   // Build LLM prompt
   let systemPrompt = previousSummary
@@ -525,6 +539,7 @@ export async function compact(
   if (_customInstructions) {
     systemPrompt += `\n\nAdditional instructions:\n${_customInstructions}`;
   }
+  const fileOpsText = formatFileOperations(readFiles, modifiedFiles);
   const fullSystemPrompt = fileOpsText
     ? `${systemPrompt}\n\nFiles accessed during this branch:${fileOpsText}`
     : systemPrompt;
@@ -576,6 +591,6 @@ export async function compact(
     summary,
     firstKeptEntryId,
     tokensBefore,
-    details: { readFiles, modifiedFiles },
+    details,
   };
 }
