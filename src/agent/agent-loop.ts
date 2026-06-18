@@ -435,6 +435,29 @@ export class AgentLoop {
             .join("") || "";
         const memResult = await this._retrieveMemories(query);
         memories = memResult.memories;
+        // Apply smart boosting and rerank if enabled
+        if (this.config.memoryBoosting && memResult.scores) {
+          const scores = memResult.scores;
+          if (scores.length === memories.length) {
+            const paired = memories.map((mem, idx) => ({ mem, score: scores[idx] }));
+            // Boost factors based on action and content
+            paired.forEach(item => {
+              const action = (item.mem as any).metadata?.action;
+              if (action === 'read_file') {
+                item.score *= 1.2;
+              } else if (action === 'edit_file') {
+                item.score *= 1.1;
+              } else if (action === 'tool_result') {
+                if (this._containsCode(item.mem.content)) {
+                  item.score *= 1.3;
+                }
+              }
+            });
+            // Resort by boosted score
+            paired.sort((a, b) => b.score - a.score);
+            memories = paired.map(p => p.mem);
+          }
+        }
         memoryRetrievalTime = memResult.retrievalTime;
         totalMemoryRetrievalTime += memoryRetrievalTime;
 
@@ -1029,8 +1052,8 @@ export class AgentLoop {
 
   private async _retrieveMemories(
     currentPrompt: string,
-  ): Promise<{ memories: MemoryEntry[]; retrievalTime: number }> {
-    const result: { memories: MemoryEntry[]; retrievalTime: number } = {
+  ): Promise<{ memories: MemoryEntry[]; retrievalTime: number; scores?: number[] }> {
+    const result: { memories: MemoryEntry[]; retrievalTime: number; scores?: number[] } = {
       memories: [],
       retrievalTime: 0,
     };
@@ -1039,6 +1062,7 @@ export class AgentLoop {
     try {
       const retrieval = await this.memoryStore.recall(currentPrompt);
       result.memories = retrieval.memories;
+      result.scores = retrieval.scores;
       result.retrievalTime = Date.now() - memoryStart;
       await this.emitter.emit({
         type: "memory:retrieve",
@@ -1057,6 +1081,22 @@ export class AgentLoop {
       console.warn("Memory retrieval failed:", e);
     }
     return result;
+  }
+
+  /** Simple heuristic: detect if content likely contains code */
+  private _containsCode(content: string): boolean {
+    if (content.includes('```')) return true;
+    if (content.includes('<?php') || content.includes('<?=')) return true;
+    const lines = content.split('\n');
+    const codePatterns = [
+      'function ', 'class ', 'def ', 'public ', 'private ', 'protected ',
+      'const ', 'let ', 'var ', 'import ', 'export ', '#include', 'package '
+    ];
+    for (const line of lines) {
+      const trimmed = line.trimStart();
+      if (codePatterns.some(pat => trimmed.startsWith(pat))) return true;
+    }
+    return false;
   }
 
   private async autoSaveMemory(

@@ -23,6 +23,7 @@ export class ContextBuilder {
       reservedTokens: config?.reservedTokens ?? 4096,
       minMessages: config?.minMessages ?? 5,
       enableMemoryInjection: config?.enableMemoryInjection ?? true,
+      memoryTopK: config?.memoryTopK ?? 5,
     };
   }
 
@@ -120,7 +121,7 @@ export class ContextBuilder {
   private formatMemories(memories: MemoryEntry[]): string {
     const topMemories = memories
       .filter((m) => (m.relevance !== undefined ? m.relevance > 0.1 : true))
-      .slice(0, 5)
+      .slice(0, this.config.memoryTopK)
       .map((m, i) => `[Memory ${i + 1}] ${m.content}`)
       .join("\n");
 

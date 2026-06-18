@@ -476,6 +476,7 @@ export interface ContextBuilderConfig {
   reservedTokens: number;
   minMessages: number;
   enableMemoryInjection: boolean;
+  memoryTopK?: number; // default 5
 }
 
 /**
@@ -576,6 +577,8 @@ export interface AgentConfig {
   // Tool execution retry configuration
   toolMaxRetries?: number; // default 1
   toolRetryDelayMs?: number; // base delay in ms, default 500
+  // Smart memory retention
+  memoryBoosting?: boolean; // default false – boost scores for read_file, edit_file, tool_result with code
 
   // Callback for dynamic model changes from prepareNextTurn
   setModel?: (model: Model) => void;
