@@ -280,7 +280,7 @@ export async function createAgentSessionFromServices(
   // Create Agent with built-in tools only (model can be undefined)
   // AgentSession will register customTools separately
   const agent = new Agent(undefined, builtInTools, {
-    maxRounds: 10,
+    maxRounds: 5, // Reduced from 10 to minimize unnecessary iterations and verbosity
     verbose: false,
     toolTimeout: DEFAULT_TOOL_TIMEOUT,
     cacheResults: true,
