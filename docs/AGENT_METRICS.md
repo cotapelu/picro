@@ -65,6 +65,7 @@
 | 70     | 2026-06-15 | Editor modal fix: internal state, onEscape cancel, removed setTimeout bug | 2920+      | 0           | 0         |
 | 71     | 2026-06-16 | Full pi-coding-agent InteractiveMode compatibility | 2920+      | 0           | 0         |
 | 72     | 2026-06-16 | Comprehensive test validation & stability | 2920+      | 0           | 0         |
+| 84     | 2026-06-18 | App Mode Resolution Tests and Refactor | 2976+      | 0           | 0         |
 | 83     | 2026-06-18 | Ink TUI as Default Interactive Mode | 2969       | 0           | 0         |
 | 82     | 2026-06-18 | Compaction metrics tracking integration | 2969       | 0           | 0         |
 | 81     | 2026-06-18 | Performance profiling & SessionMetrics | 2969       | 0           | 0         |

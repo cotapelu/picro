@@ -24,6 +24,7 @@ import { resetTimings, time, printTimings } from "./utils/timings.js";
 import { handleConfigCommand } from "./package-manager-cli.js";
 import { isLocalPath } from "./utils/paths.js";
 import { runMigrations, showDeprecationWarnings } from "./migrations.js";
+import { resolveAppMode } from "./runtime/app-mode.js";
 import type { Model } from "./llm/index.js";
 // Ink TUI will be dynamically imported to avoid ESM/CJS conflicts
 import { runPrintMode } from "./modes/print-mode.js";
@@ -49,17 +50,7 @@ function loadEnvFile(): void {
   }
 }
 
-// Determine application mode
-function resolveAppMode(parsed: Args, stdinIsTTY: boolean): "print" | "json" | "rpc" | "tui" {
-  // If mode explicitly set via --mode, use it
-  if (parsed.mode === "rpc") return "rpc";
-  if (parsed.mode === "json") return "json";
-  if (parsed.mode === "tui") return "tui";
-  if (parsed.mode === "interactive") return "tui"; // alias for backwards compat
-  // Default: if TTY and not --print, use Ink TUI (custom)
-  if (parsed.print || !stdinIsTTY) return "print";
-  return "tui";
-}
+
 
 // Print help message
 function printHelp(): void {

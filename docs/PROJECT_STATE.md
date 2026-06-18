@@ -71,6 +71,7 @@
 - **Round 73**: Final stability validation & documentation sync - all 206 test files pass (2920+ tests), build clean, TUI functional, zero regressions.
 - **Round 74 (2026-06-18)**: Full alignment with reference implementation: tool registration, system prompt improvements, test fixes. All 2953 tests passed.
 - **Round 75 (2026-06-18)**: Optimization: reduce default `maxRounds` to 5 for faster convergence and less token usage. No regressions.
+- **Round 84 (2026-06-18)**: App Mode Resolution Tests and Refactor. Extracted resolveAppMode, added 7 unit tests; total tests now 2976+.
 - **Round 83 (2026-06-18)**: Ink TUI as Default Interactive Mode. Switched default TUI to Ink; all 2969 tests pass.
 - **Round 82 (2026-06-18)**: Compaction metrics tracking integration (call `recordCompaction`). All 2969 tests passed.
 - **Round 81 (2026-06-18)**: Performance profiling via SessionMetrics. All 2969 tests passed.
@@ -87,8 +88,8 @@
 - None critical.
 
 ### 📊 Metrics (latest run)
-- Test files: **212 passed**
-- Tests: **2969 passed** | 16 skipped | 1 todo
+- Test files: **213 passed**
+- Tests: **2976 passed** | 16 skipped | 1 todo
 - Build: ✅
 - Coverage: statements ~83%, branches **≥85%**, functions ~86%, lines ~83% – target exceeded.
 

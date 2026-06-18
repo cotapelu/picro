@@ -1094,6 +1094,23 @@
 
 **Tests**: 206 test files, 2920+ tests passing; zero regressions; build clean; TUI functional.
 
+### Round 84 (2026-06-18): App Mode Resolution Tests and Refactor
+
+**Problem**: The mode resolution logic was embedded in `src/main.ts` without unit tests, making it error-prone and difficult to verify after changes (e.g., switching default to Ink TUI).
+
+**Solution**:
+- Extracted `resolveAppMode` into a dedicated module `src/runtime/app-mode.ts`.
+- Updated `src/main.ts` to import and use the new function, removing the inline implementation.
+- Added comprehensive unit tests (`src/runtime/app-mode.test.ts`) covering all branches: print, json, rpc, tui, interactive alias, TTY vs non-TTY, and the `--print` flag.
+- Tests: added 7 unit tests; total tests now 2976+.
+
+**Impact**:
+- Improved reliability of mode selection and reduced complexity of `main.ts`.
+- Provided automated guard against regressions in a critical user-facing decision point.
+- Low-risk, high-value change; all tests pass, build clean.
+
+---
+
 ### Round 83 (2026-06-18): Ink TUI as Default Interactive Mode
 
 **Problem**: The project used pi-coding-agent's InteractiveMode as the default TUI, while the custom Ink-based TUI was complete but not enabled by default. To fully replace the reference TUI, the Ink TUI must be the default interactive interface.
