@@ -1088,6 +1088,28 @@
 
 **Tests**: 206 test files, 2920+ tests passing; zero regressions; build clean; TUI functional.
 
+### Round 76 (2026-06-18): LLM Retry with Exponential Backoff for Resilience
+
+**Problem**: Transient network errors or provider issues (5xx, timeouts, rate limits) could cause agent runs to fail without recovery. No retry logic existed.
+
+**Solution**:
+- Added `maxRetries` (default 2) and `retryDelayMs` (default 1000) to `AgentConfig`.
+- Implemented `_callWithRetry` wrapper in `Agent` class. Used for both `complete` and `stream` calls.
+- Recognized retryable errors: network errors (`ECONNREFUSED`, `ECONNRESET`, `ETIMEDOUT`, `ENETUNREACH`, `EPIPE`, `ECONNABORTED`) and HTTP status 5xx or 429.
+- Non-retryable: aborted signals, client errors (4xx other than 429), and other exceptions.
+- Exponential backoff with jitter: `delay = base * 2^attempt + random(0, 0.5*base)`.
+- Abort handling: if signal is aborted, throw immediately; also convert `AbortError` to a clear `Error('Aborted')`.
+
+**Impact**:
+- Agent automatically recovers from transient LLM failures, improving reliability.
+- Configurable retry count and delay.
+- No impact on existing functionality; fully backward compatible.
+- Low-risk implementation (wrapper).
+
+**Tests**: Added comprehensive unit tests covering retry on network errors, non-retryable errors, exponential backoff timing, maxRetries limit, and stream retry. All tests pass (428 agent tests + 6 new).
+
+---
+
 ### Round 75 (2026-06-18): Optimization - Reduce maxRounds for Faster Convergence
 
 **Problem**: Default `maxRounds=10` could lead to more LLM calls than necessary, increasing token usage and latency. For simple tool-based interactions, fewer rounds are sufficient.

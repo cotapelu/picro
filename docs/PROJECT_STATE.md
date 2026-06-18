@@ -71,6 +71,7 @@
 - **Round 73**: Final stability validation & documentation sync - all 206 test files pass (2920+ tests), build clean, TUI functional, zero regressions.
 - **Round 74 (2026-06-18)**: Full alignment with reference implementation: tool registration, system prompt improvements, test fixes. All 2953 tests passed.
 - **Round 75 (2026-06-18)**: Optimization: reduce default `maxRounds` to 5 for faster convergence and less token usage. No regressions.
+- **Round 76 (2026-06-18)**: LLM retry with exponential backoff for resilience. Improved test coverage (428 agent tests + 6 new).
 
 ### 🔄 In Progress
 - None. All planned coverage, UX, and compatibility targets met.
