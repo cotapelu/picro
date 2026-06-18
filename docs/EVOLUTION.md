@@ -1094,6 +1094,21 @@
 
 **Tests**: 206 test files, 2920+ tests passing; zero regressions; build clean; TUI functional.
 
+### Round 85 (2026-06-18): Remove Legacy InteractiveMode Wrapper
+
+**Problem**: The reference InteractiveMode wrapper (`src/modes/tui-mode.ts`) was no longer used after switching to Ink TUI as default. Leaving unused code increases maintenance burden and can confuse developers.
+
+**Solution**:
+- Deleted `src/modes/tui-mode.ts` which provided a shim for pi-coding-agent's `InteractiveMode`.
+- No longer needed; all functionality is now in the custom Ink TUI.
+- Low‑risk cleanup; the file was not imported anywhere.
+
+**Impact**:
+- Reduces codebase clutter and prevents accidental usage of deprecated TUI.
+- Simplifies project structure.
+
+---
+
 ### Round 84 (2026-06-18): App Mode Resolution Tests and Refactor
 
 **Problem**: The mode resolution logic was embedded in `src/main.ts` without unit tests, making it error-prone and difficult to verify after changes (e.g., switching default to Ink TUI).
