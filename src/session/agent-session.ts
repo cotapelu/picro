@@ -263,13 +263,15 @@ export class AgentSession {
     this._registerTools(config);
 
     // Populate tool definitions from the agent (includes built-in tools)
-    for (const tool of this.agent.getTools()) {
-      if (!this._toolDefinitions.has(tool.name)) {
-        this._toolDefinitions.set(tool.name, {
-          name: tool.name,
-          description: tool.description,
-          parameters: tool.parameters,
-        } as ToolDefinition);
+    if (typeof this.agent.getTools === 'function') {
+      for (const tool of this.agent.getTools()) {
+        if (!this._toolDefinitions.has(tool.name)) {
+          this._toolDefinitions.set(tool.name, {
+            name: tool.name,
+            description: tool.description,
+            parameters: tool.parameters,
+          } as ToolDefinition);
+        }
       }
     }
   }

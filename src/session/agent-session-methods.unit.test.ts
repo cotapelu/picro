@@ -455,7 +455,7 @@ describe('AgentSession methods', () => {
       resourceLoader: {},
       modelRegistry: {},
     });
-    (agentSession as any)._agentState = { isStreaming: true, history: [] };
+    (agentSession as any)._agentState = { isRunning: true, history: [] };
     agentSession.recordBashResult('ls', 'output', 0, false, false);
     expect((agentSession as any)._pendingBashMessages).toHaveLength(1);
     expect(sessionManager.appendMessage).not.toHaveBeenCalled();
