@@ -85,20 +85,42 @@ export class Agent {
       ? this.createLogger(this.config.verbose ?? false)
       : new EventEmitter();
 
-    // Tool executor with registry
-    this.toolExecutor = new ToolExecutor(this.toolRegistry);
+    // Tool executor with config and registry
+    this.toolExecutor = new ToolExecutor({
+      timeout: this.config.toolTimeout ?? 30000,
+      cacheEnabled: this.config.cacheResults ?? false,
+      cacheSize: 1000,
+      toolExecutionStrategy: this.config.toolExecutionStrategy ?? 'parallel',
+      // Note: beforeToolCall/afterToolCall hooks are not passed to ToolExecutor currently due to type differences
+    });
     // Register any handlers from legacy executor config
     if (this.config.executor?.handlers) {
-      for (const [name, handler] of Object.entries(
-        this.config.executor.handlers,
-      )) {
-        this.toolRegistry[name] = handler as ToolHandler;
+      for (const [name, handler] of Object.entries(this.config.executor.handlers)) {
+        (this.toolRegistry as any)[name] = handler as ToolHandler;
         this.toolExecutor.register({
           name,
           description: "",
           parameters: {},
           handler: handler as ToolHandler,
         } as ToolDefinition);
+      }
+    }
+    // Register provided tools (built-in tools)
+    for (const tool of this.tools) {
+      // Only register if a handler is present
+      const anyTool = tool as any;
+      if (anyTool.handler) {
+        // Also add to toolRegistry for legacy checks if needed
+        (this.toolRegistry as any)[tool.name] = anyTool.handler as ToolHandler;
+        const toolDef: ToolDefinition = {
+          name: tool.name,
+          description: tool.description || "",
+          parameters: tool.parameters || {},
+          handler: anyTool.handler as ToolHandler,
+          executionMode: tool.executionMode,
+          prepareArguments: anyTool.prepareArguments,
+        };
+        this.toolExecutor.register(toolDef);
       }
     }
 
@@ -321,6 +343,26 @@ export class Agent {
    */
   registerTool(tool: ToolDefinition): void {
     this.toolExecutor.register(tool);
+    // Add to tools array for LLM context, replacing if exists
+    const existingIndex = this.tools.findIndex(t => t.name === tool.name);
+    const toolMeta: AgentTool = {
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.parameters,
+      executionMode: tool.executionMode,
+    };
+    if (existingIndex >= 0) {
+      this.tools[existingIndex] = toolMeta;
+    } else {
+      this.tools.push(toolMeta);
+    }
+  }
+
+  /**
+   * Get all registered tools (for LLM context).
+   */
+  getTools(): AgentTool[] {
+    return this.tools;
   }
 
   /**

@@ -3,37 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Fix agent verbose output",
+      "name": "Deep Alignment with Reference",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Changed default loopStrategy to 'simple' in agent-session-services.ts",
-          "status": "completed"
+          "content": "Register built-in tools in Agent toolExecutor",
+          "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Enhanced system prompt with Action Protocol (default + custom)",
-          "status": "completed"
+          "content": "Fix hasTool method to use correct check",
+          "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Set hideThinkingBlock=true in MessageItem component",
-          "status": "completed"
+          "content": "Add executionMode to ToolDefinition interface",
+          "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Added reasoning-specific guidance in system prompt",
-          "status": "completed"
+          "content": "Pass Agent config to ToolExecutor",
+          "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Build successful, awaiting user testing",
-          "status": "completed"
+          "content": "Populate AgentSession._toolDefinitions with built-in tools",
+          "status": "pending"
+        },
+        {
+          "id": "task-6",
+          "content": "Test that agent can execute built-in tools",
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 6,
+  "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-18T14:46:07.382Z"
+  "updatedAt": "2026-06-18T15:08:30.528Z"
 }
