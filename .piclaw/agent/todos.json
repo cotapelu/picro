@@ -3,27 +3,37 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Fixed",
+      "name": "Fix agent verbose output",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Fix _agentState getter infinite recursion",
+          "content": "Changed default loopStrategy to 'simple' in agent-session-services.ts",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Fix _convertAgentEventToExtensionEvent for tool:call:end",
+          "content": "Enhanced system prompt with Action Protocol (default + custom)",
           "status": "completed"
         },
         {
           "id": "task-3",
-          "content": "Run tests to verify fixes",
+          "content": "Set hideThinkingBlock=true in MessageItem component",
+          "status": "completed"
+        },
+        {
+          "id": "task-4",
+          "content": "Added reasoning-specific guidance in system prompt",
+          "status": "completed"
+        },
+        {
+          "id": "task-5",
+          "content": "Build successful, awaiting user testing",
           "status": "completed"
         }
       ]
     }
   ],
-  "nextTaskId": 4,
+  "nextTaskId": 6,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-17T23:35:16.892Z"
+  "updatedAt": "2026-06-18T14:46:07.382Z"
 }

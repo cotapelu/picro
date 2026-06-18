@@ -413,10 +413,14 @@ export class AgentSession {
 
   /** Build system prompt from current tool snippets and guidelines */
   private _buildSystemPrompt(): string {
+    const toolGuidelines = Array.from(this._toolPromptGuidelines.values()).flat();
+    const settingsGuidelines = this.settingsManager.getPromptGuidelines();
+    const allGuidelines = [...toolGuidelines, ...settingsGuidelines];
+
     return buildSystemPrompt({
       selectedTools: this.getActiveToolNames(),
       toolSnippets: Object.fromEntries(this._toolPromptSnippets),
-      promptGuidelines: Array.from(this._toolPromptGuidelines.values()).flat(),
+      promptGuidelines: allGuidelines,
       cwd: this._cwd,
       contextFiles: this.resourceLoader.getAgentsFiles()?.agentsFiles,
       skills: this.resourceLoader.getSkills()?.skills,

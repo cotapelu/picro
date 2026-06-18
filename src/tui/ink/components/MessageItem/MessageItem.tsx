@@ -25,7 +25,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   message,
   onToolToggle,
   expandedTools = new Set(),
-  hideThinkingBlock = false,
+  hideThinkingBlock = true, // Hide thinking by default for concise output
   hiddenThinkingLabel = 'Thinking...',
   showImages = true,
   imageWidthCells = 60,

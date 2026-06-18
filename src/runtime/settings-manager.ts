@@ -107,6 +107,8 @@ export interface Settings {
   markdown?: MarkdownSettings;
   sessionDir?: string;
   projectTrusted?: boolean;
+  /** Additional guidelines to add to system prompt */
+  promptGuidelines?: string[];
 }
 
 export type SettingsScope = "global" | "project";
@@ -625,6 +627,16 @@ export class SettingsManager {
   setDefaultThinkingLevel(level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh"): void {
     this.globalSettings.defaultThinkingLevel = level;
     this.markModified("defaultThinkingLevel");
+    this.save();
+  }
+
+  getPromptGuidelines(): string[] {
+    return this.settings.promptGuidelines ?? [];
+  }
+
+  setPromptGuidelines(guidelines: string[]): void {
+    this.globalSettings.promptGuidelines = guidelines;
+    this.markModified("promptGuidelines");
     this.save();
   }
 

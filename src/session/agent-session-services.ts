@@ -285,6 +285,7 @@ export async function createAgentSessionFromServices(
     toolTimeout: DEFAULT_TOOL_TIMEOUT,
     cacheResults: true,
     toolExecutionStrategy: "parallel",
+    loopStrategy: 'simple', // Use simple strategy: no ReAct prompting, direct tool calls
     contextBuilder: {
       maxTokens: 128000,
       reservedTokens: 4096,
