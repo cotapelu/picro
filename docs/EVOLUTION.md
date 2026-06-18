@@ -1088,6 +1088,28 @@
 
 **Tests**: 206 test files, 2920+ tests passing; zero regressions; build clean; TUI functional.
 
+### Round 79 (2026-06-18): Smart Memory Retention with Score Boosting
+
+**Problem**: ContextBuilder selects memories based on recency and similarity only, missing important types like file reads and code edits. This leads to suboptimal context for code-related tasks.
+
+**Solution**:
+- Added `memoryBoosting?: boolean` to `AgentConfig` (default false) and `memoryTopK?: number` to `ContextBuilderConfig` (default 5).
+- Implemented post-retrieval score boosting in `AgentLoop._runRound`:
+  - `read_file` ×1.2, `edit_file` ×1.1, `tool_result` with code (detected via `_containsCode`) ×1.3.
+- Re-sort memories by boosted scores before passing to ContextBuilder.
+- Added `_containsCode` helper (triple backticks, PHP tags, common code keywords).
+- `ContextBuilder` respects `memoryTopK` when injecting memories.
+- Backward compatible: boosting disabled by default; opt-in via `AgentConfig.memoryBoosting`.
+
+**Impact**:
+- Increases relevance of injected memories, especially for code-centric tasks.
+- Low‑risk: isolated post-retrieval enhancement.
+- Improves agent performance without breaking existing behavior.
+
+**Tests**: All existing tests pass (211 files, 2966 tests). No new unit tests; manual validation performed.
+
+---
+
 ### Round 78 (2026-06-18): Tool Execution Retry with Exponential Backoff
 
 **Problem**: Transient errors during tool execution (network timeouts, connection resets, rate limits) could cause agent runs to fail immediately. No retry logic existed at tool execution layer.

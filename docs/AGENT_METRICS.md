@@ -65,6 +65,7 @@
 | 70     | 2026-06-15 | Editor modal fix: internal state, onEscape cancel, removed setTimeout bug | 2920+      | 0           | 0         |
 | 71     | 2026-06-16 | Full pi-coding-agent InteractiveMode compatibility | 2920+      | 0           | 0         |
 | 72     | 2026-06-16 | Comprehensive test validation & stability | 2920+      | 0           | 0         |
+| 79     | 2026-06-18 | Smart memory retention with score boosting | 2966       | 0           | 0         |
 | 78     | 2026-06-18 | Tool execution retry with exponential backoff | 2966       | 0           | 0         |
 | 77     | 2026-06-18 | Memory retrieval caching for faster queries | 2961       | 0           | 0         |
 | 76     | 2026-06-18 | LLM retry with exponential backoff for resilience | 2959       | 0           | 0         |
