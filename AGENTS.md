@@ -49,11 +49,12 @@ Dự án này implement một AI coding agent (picro) từ scratch, tham khảo 
 
 ### TUI (`src/tui/ink/`) & Modes (`src/modes/`)
 
-- **InkApp**: React component-based TUI sử dụng Ink.
-- **Modals**: ModelSelectorModal, LoginModal, SettingsSelectorModal, etc.
-- **Hooks**: `useRuntime` để kết nối UI với runtime.
-- **Command handlers**: Xử lý slash commands.
+- **InkApp**: React component-based TUI sử dụng Ink (đang phát triển, chưa chạy được).
+- **Modals**: ModelSelectorModal, LoginModal, SettingsSelectorModal, etc. (đang phát triển).
+- **Hooks**: `useRuntime` để kết nối UI với runtime (đang phát triển).
+- **Command handlers**: Xử lý slash commands (đang phát triển).
 - **Print mode & RPC mode**: Trong `src/modes/` tương ứng `print-mode.ts`, `rpc-mode.ts`.
+- **TUI tạm thời**: Hiện tại sử dụng `InteractiveMode` từ `pi-coding-agent` (xem `src/modes/tui-mode.ts`) để test các module llm, agent, session, runtime. Đây là giải pháp tạm thời; Ink-based TUI sẽ thay thế khi hoàn thành.
 
 ## Flow từ UI đến API (Model Selection)
 
@@ -79,9 +80,9 @@ Dự án này implement một AI coding agent (picro) từ scratch, tham khảo 
 
 - **Tests**: 2024+ passing, coverage ~78% (target 80%+).
 - **Build**: Thành công (`npm run build`).
-- **Auth-Model sync**: Fixed – LoginModal now persists to AuthStorage and ModelRegistry consults it.
-- **Interactive mode**: Functional – model selection works after login.
-- **Known issues**: None critical; continuing to increase coverage.
+- **Auth-Model sync**: Fixed – AuthStorage and ModelRegistry are synchronized.
+- **Interactive mode**: Sử dụng `InteractiveMode` từ `pi-coding-agent` (tạm thời) – model selection hoạt động sau khi đăng nhập. Ink-based TUI đang được phát triển.
+- **Known issues**: Ink TUI chưa chạy được; đang dùng InteractiveMode để test các module llm, agent, session, runtime.
 
 ## Tasks cần làm
 

@@ -335,6 +335,9 @@ export class AgentLoop {
     if (resetState) {
       this.state = this.createInitialState();
     }
+    if (process.env.VERBOSE) {
+      console.log('[DEBUG AgentLoop.executeLoop] start, initialTurns.length:', initialTurns.length, 'state.history.length:', this.state.history.length);
+    }
     // Support legacy: if initialTurns empty but initialPrompt provided, create a user turn
     if (initialTurns.length === 0 && initialPrompt) {
       initialTurns = [
@@ -347,6 +350,9 @@ export class AgentLoop {
     }
     if (initialTurns.length > 0) {
       this.state.history.push(...initialTurns);
+      if (process.env.VERBOSE) {
+        console.log('[DEBUG AgentLoop.executeLoop] after push initialTurns, state.history.length:', this.state.history.length);
+      }
     }
     this.state.isRunning = true;
 
@@ -646,6 +652,9 @@ export class AgentLoop {
 
           const assistantTurn = this.createAssistantTurn(finalMessage);
           this.state.history.push(assistantTurn);
+          if (process.env.VERBOSE) {
+            console.log('[DEBUG AgentLoop.executeLoop] after push assistant (stream), state.history.length:', this.state.history.length);
+          }
           this.lastTurnAssistant = assistantTurn as AssistantTurn;
           this.lastTurnNewMessages = [assistantTurn];
           this.lastTurnToolResults = [];
@@ -674,6 +683,9 @@ export class AgentLoop {
 
           const assistantTurn = this.createAssistantTurn(response!);
           this.state.history.push(assistantTurn);
+          if (process.env.VERBOSE) {
+            console.log('[DEBUG AgentLoop.executeLoop] after push assistant (non-stream), state.history.length:', this.state.history.length);
+          }
           this.lastTurnAssistant = assistantTurn as AssistantTurn;
           this.lastTurnNewMessages = [assistantTurn];
           this.lastTurnToolResults = [];
