@@ -28,7 +28,9 @@ import type {
   ImageBlock,
   SuccessfulToolResult,
   FailedToolResult,
+  SessionMetrics,
 } from "./types.js";
+import { createSessionMetrics } from "./types.js";
 import type {
   Context,
   Message as LlmMessage,
@@ -69,6 +71,8 @@ export class AgentLoop {
   private lastTurnNewMessages: ConversationTurn[] = [];
 
   private followUpManager = new FollowUpManager();
+  private metrics: SessionMetrics = createSessionMetrics();
+  private memoryLatencyAccumulator = 0; // for calculating avg latency
 
   constructor(
     config: AgentConfig,
@@ -435,6 +439,9 @@ export class AgentLoop {
             .join("") || "";
         const memResult = await this._retrieveMemories(query);
         memories = memResult.memories;
+        // Update memory retrieval metrics
+        this.metrics.memoryRetrievals++;
+        this.memoryLatencyAccumulator += memResult.retrievalTime;
         // Apply smart boosting and rerank if enabled
         if (this.config.memoryBoosting && memResult.scores) {
           const scores = memResult.scores;
@@ -686,6 +693,13 @@ export class AgentLoop {
           const llmEndTime = Date.now();
           llmRequestTime = llmEndTime - llmStartTime;
           totalLLMRequestTime += llmRequestTime;
+          // Update LLM metrics
+          this.metrics.llmCalls++;
+          if (response?.usage) {
+            this.metrics.llmTokensInput += response.usage.input || 0;
+            this.metrics.llmTokensOutput += response.usage.output || 0;
+          }
+          this.metrics.llmTotalLatencyMs += llmRequestTime;
 
           await this.emitter.emit({
             type: "llm:response",
@@ -756,6 +770,11 @@ export class AgentLoop {
           const toolExecEndTime = Date.now();
           const toolExecutionTime = toolExecEndTime - toolExecStartTime;
           totalToolExecutionTime += toolExecutionTime;
+          // Update tool metrics
+          this.metrics.toolCalls += toolResults.length;
+          this.metrics.toolSuccesses += toolResults.filter(r => !r.isError).length;
+          this.metrics.toolFailures += toolResults.filter(r => r.isError).length;
+          this.metrics.toolTotalLatencyMs += toolExecutionTime;
 
           this.state.toolResults.push(...toolResults);
 
@@ -1189,6 +1208,27 @@ export class AgentLoop {
       }
     }
     return controller.signal;
+  }
+
+  /** Get accumulated session metrics */
+  public async getMetrics(): Promise<SessionMetrics> {
+    const base = this.metrics;
+    let memoryCacheHits = 0;
+    let memoryCacheMisses = 0;
+    if (this.memoryStore && typeof (this.memoryStore as any).getMetrics === 'function') {
+      const mem = await (this.memoryStore as any).getMetrics();
+      memoryCacheHits = mem.cacheHits || 0;
+      memoryCacheMisses = mem.cacheMisses || 0;
+    }
+    const avgMemoryLatency = this.metrics.memoryRetrievals > 0
+      ? this.memoryLatencyAccumulator / this.metrics.memoryRetrievals
+      : 0;
+    return {
+      ...base,
+      memoryCacheHits,
+      memoryCacheMisses,
+      memoryAvgLatencyMs: avgMemoryLatency,
+    };
   }
 
   private getResultText(result: ToolResult): string {

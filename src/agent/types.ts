@@ -622,6 +622,41 @@ export interface ToolCallData {
   arguments: Record<string, unknown>;
 }
 
+/** Session-level metrics for profiling */
+export interface SessionMetrics {
+  llmCalls: number;
+  llmTokensInput: number;
+  llmTokensOutput: number;
+  llmTotalLatencyMs: number;
+  toolCalls: number;
+  toolSuccesses: number;
+  toolFailures: number;
+  toolTotalLatencyMs: number;
+  memoryRetrievals: number;
+  memoryCacheHits: number;
+  memoryCacheMisses: number;
+  memoryAvgLatencyMs: number;
+  compactions: number;
+  compactionTokensSaved: number;
+}
+
+export const createSessionMetrics = (): SessionMetrics => ({
+  llmCalls: 0,
+  llmTokensInput: 0,
+  llmTokensOutput: 0,
+  llmTotalLatencyMs: 0,
+  toolCalls: 0,
+  toolSuccesses: 0,
+  toolFailures: 0,
+  toolTotalLatencyMs: 0,
+  memoryRetrievals: 0,
+  memoryCacheHits: 0,
+  memoryCacheMisses: 0,
+  memoryAvgLatencyMs: 0,
+  compactions: 0,
+  compactionTokensSaved: 0,
+});
+
 export type LLMStreamEvent =
   | { type: 'start'; partial: AssistantTurn }
   | { type: 'text_start'; contentIndex: number; partial: AssistantTurn }
