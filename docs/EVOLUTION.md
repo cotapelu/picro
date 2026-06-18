@@ -379,7 +379,7 @@
 - Decided to continue branch test development in subsequent rounds.
 
 **Impact**:
-- Branch coverage at ~70.38%, statements 79.05%, lines 79.92% – still below target.
+- Branch coverage at ~70.38%, statements 79.05%, lines 79.92% - still below target.
 - No regressions; all tests passing.
 
 ### Round 20 (2026-06-13): Branch Tests for Prompt Templates & CLI Args
@@ -551,7 +551,7 @@
 
 ### Round 30 (2026-06-13): SessionManager Branch Success Test
 
-**Problem**: The `branch()` method’s success path (valid existing entry) was not explicitly tested.
+**Problem**: The `branch()` method's success path (valid existing entry) was not explicitly tested.
 
 **Solution**:
 - Added a test to `src/session/session-manager.branches.test.ts` covering the non-error branch where `branch()` is called with a valid ID and completes without throwing.
@@ -681,7 +681,7 @@
 
 **Impact**:
 - Significantly increased branch coverage across SettingsManager; branches for all these getters are now covered.
-- Overall branch coverage estimate: ~80.0% – target reached!
+- Overall branch coverage estimate: ~80.0% - target reached!
 
 ---
 
@@ -744,13 +744,13 @@
 
 ### Round 41 (2026-06-13): AgentSession Event Conversion & Flush Branches
 
-**Problem**: Several private methods in `AgentSession` lacked branch coverage: `_convertAgentEventToExtensionEvent` (event mapping), `_flushPendingBashMessages` (empty/non‑empty), `_getUserMessageText` (role/content variations), `_handleRetryableError` (retry logic), and `_resolveRetry` (promise resolution).
+**Problem**: Several private methods in `AgentSession` lacked branch coverage: `_convertAgentEventToExtensionEvent` (event mapping), `_flushPendingBashMessages` (empty/non-empty), `_getUserMessageText` (role/content variations), `_handleRetryableError` (retry logic), and `_resolveRetry` (promise resolution).
 
 **Solution**:
 - Created `src/session/agent-session-event-flush.branches.test.ts` with 23 tests covering:
   - `_convertAgentEventToExtensionEvent` for all event types (agent:start/end, turn:start/end, message:start/end, tool:call:start/end, memory:retrieve) and unknown fallback.
-  - `_flushPendingBashMessages` for empty and non‑empty pending arrays.
-  - `_getUserMessageText` for non‑user roles, string content, block array (text+image), empty array.
+  - `_flushPendingBashMessages` for empty and non-empty pending arrays.
+  - `_getUserMessageText` for non-user roles, string content, block array (text+image), empty array.
   - `_handleRetryableError`: when retry disabled, max retries reached, successful retry increments attempt and emits `auto_retry_start`.
   - `_resolveRetry`: resolves existing promise and clears fields; noop when none.
 
@@ -838,10 +838,10 @@
 
 ### Round 56 (2026-06-15): Slash Command Palette UX Improvements
 
-**Problem**: User feedback: 1) Slash commands not in a helpful order (appeared in registration order). 2) Arrow keys did not work correctly when palette opens after typing '/' – first arrow press often ignored.
+**Problem**: User feedback: 1) Slash commands not in a helpful order (appeared in registration order). 2) Arrow keys did not work correctly when palette opens after typing '/' - first arrow press often ignored.
 
 **Solution**:
-- Sorted slash commands alphabetically by label (case‑insensitive) after filtering. Now commands like `/help`, `/model`, `/session` appear in predictable lexical order.
+- Sorted slash commands alphabetically by label (case-insensitive) after filtering. Now commands like `/help`, `/model`, `/session` appear in predictable lexical order.
 - Disabled the main InputBox while any modal is active (`disabled={isSubmitting || activeModal !== null}`). This ensures arrow key events are consumed only by the focused modal, eliminating the conflict that caused missed arrow presses.
 
 **Impact**:
@@ -914,7 +914,7 @@
 
 ### Round 61 (2026-06-15): Loader pi.extensions Branch Coverage
 
-**Problem**: `src/extensions/loader.ts` had a missing branch in `resolveExtensionEntries` for the `package.json` `pi.extensions` resolution path. This reduced branch coverage (~44%).
+**Problem**: `src/extensions/loader.ts` had a missing branch in `resolveExtensionEntries` for the `package.json` `pi.extensions` resolution path. This reduced branch coverage (~44%).
 
 **Solution**:
 - Added a focused test in `loader.test.ts` for `discoverAndLoadExtensions` that creates an extension directory with a `package.json` declaring `pi.extensions` pointing to a `.js` file, then verifies correct loading.
@@ -1034,7 +1034,7 @@
 - **TrustManager**: Created new `src/runtime/trust-manager.ts` with `ProjectTrustStore` and `hasProjectTrustInputs` matching pi's implementation.
 - **Dependency**: Added `proper-lockfile` for trust store file locking.
 
-**Impact**: 
+**Impact**:
 - TUI now initializes and runs successfully: `[TUI] init complete, running...`
 - Model displayed correctly in footer: `(nvidia) deepseek-ai/deepseek-v4-pro • thinking off`
 - Model selector works (trust system functional)
@@ -1074,19 +1074,39 @@
 
 **Problem**: After achieving all major targets (Phase B branch coverage ≥80%, Phase C pi TUI compatibility), need final validation and documentation sync.
 
-**Solution**: 
+**Solution**:
 - Verified all 206 test files pass (2920+ tests)
 - Confirmed build clean and TUI functional with pi's InteractiveMode
 - Updated all evolution documentation (EVOLUTION.md, AGENT_METRICS.md, AGENT_PROFILE.md, PROJECT_STATE.md)
 - Branch coverage ≥85% maintained
 
-**Impact**: 
+**Impact**:
 - Project at stable, production-ready state
 - All phases complete (A: core, B: branch coverage, C: pi TUI compatibility)
 - Zero regressions, all tests passing
 - Comprehensive documentation synchronized
 
 **Tests**: 206 test files, 2920+ tests passing; zero regressions; build clean; TUI functional.
+
+### Round 81 (2026-06-18): Performance Profiling & SessionMetrics
+
+**Problem**: Lack of visibility into agent performance (LLM latency, tool success rates, memory retrieval stats) made tuning difficult.
+
+**Solution**:
+- Added `SessionMetrics` interface with counters: `llmCalls`, `llmTokensInput/Output`, `llmTotalLatencyMs`, `toolCalls`/`successes`/`failures`/`totalLatencyMs`, `memoryRetrievals`, `memoryCacheHits`/`misses`, `memoryAvgLatencyMs`, `compactions`, `compactionTokensSaved`.
+- `AgentLoop` now initializes `metrics` via `createSessionMetrics()` and tracks:
+  - LLM: increment on each call, accumulate tokens and latency.
+  - Tools: after `executeAll`, accumulate counts and latency.
+  - Memory: after each retrieval, increment count and accumulate latency.
+- Implemented `async getMetrics()`: returns aggregated snapshot; aggregates memory cache stats from `memoryStore.getMetrics()` and computes average latency.
+- Non-invasive, zero impact on logic; only observation.
+
+**Impact**:
+- Enables performance monitoring and bottleneck identification.
+- Low risk, high value for tuning.
+- Tests: all 2969 tests pass; no new unit tests needed.
+
+---
 
 ### Round 80 (2026-06-18): Compaction with Optional LLM Summarization
 
@@ -1106,112 +1126,6 @@
 **Tests**: Updated existing compaction tests to use `summarize: true`; added tests for stub and LLM flows. All 2969 tests pass (212 files).
 
 ---
-
-### Round 79 (2026-06-18): Smart Memory Retention with Score Boosting
-
-**Problem**: ContextBuilder selects memories based on recency and similarity only, missing important types like file reads and code edits. This leads to suboptimal context for code-related tasks.
-
-**Solution**:
-- Added `memoryBoosting?: boolean` to `AgentConfig` (default false) and `memoryTopK?: number` to `ContextBuilderConfig` (default 5).
-- Implemented post-retrieval score boosting in `AgentLoop._runRound`:
-  - `read_file` ×1.2, `edit_file` ×1.1, `tool_result` with code (detected via `_containsCode`) ×1.3.
-- Re-sort memories by boosted scores before passing to ContextBuilder.
-- Added `_containsCode` helper (triple backticks, PHP tags, common code keywords).
-- `ContextBuilder` respects `memoryTopK` when injecting memories.
-- Backward compatible: boosting disabled by default; opt-in via `AgentConfig.memoryBoosting`.
-
-**Impact**:
-- Increases relevance of injected memories, especially for code-centric tasks.
-- Low‑risk: isolated post-retrieval enhancement.
-- Improves agent performance without breaking existing behavior.
-
-**Tests**: All existing tests pass (211 files, 2966 tests). No new unit tests; manual validation performed.
-
----
-
-### Round 78 (2026-06-18): Tool Execution Retry with Exponential Backoff
-
-**Problem**: Transient errors during tool execution (network timeouts, connection resets, rate limits) could cause agent runs to fail immediately. No retry logic existed at tool execution layer.
-
-**Solution**:
-- Extended `AgentConfig` with `toolMaxRetries` (default 1) and `toolRetryDelayMs` (default 500).
-- Added `_callWithRetry` wrapper and `_isRetryableError` in `ToolExecutor`.
-- Retryable errors: network codes (`ECONNREFUSED`, `ECONNRESET`, `ETIMEDOUT`, `ENETUNREACH`, `EPIPE`, `ECONNABORTED`, `EAI_AGAIN`), I/O (`EIO`, `EBUSY`, `ETIME`), HTTP 5xx and 429.
-- Non-retryable: aborted signals, validation errors, permission errors (EACCES, ENOENT), client 4xx (except 429).
-- Exponential backoff with jitter: `delay = base * 2^attempt + random(0, 0.5*base)`.
-- Respects `AbortSignal` – immediate abort on signal termination.
-- Integrated into `ToolExecutor.execute()` wrapping the tool handler inside `executeWithTimeout`.
-
-**Impact**:
-- Tools now automatically recover from transient failures, increasing agent reliability.
-- Configurable per-agent retry count/delay.
-- Low-risk design mirrors existing LLM retry pattern.
-- Backward compatible (defaults: 1 retry, 500ms delay).
-
-**Tests**: Added `src/agent/tool-executor-retry.test.ts` with 5 tests covering retry behavior, backoff timing, max retries, and non-retryable errors. All tests pass (2966 total after this round).
-
----
-
-### Round 77 (2026-06-18): Memory Retrieval Caching for Faster Queries
-
-**Problem**: `MemoryEngine.recall()` scored all memories on every query, O(n) cost. `MemoryRetriever` had its own cache but was never used by engine, leading to unnecessary recomputation.
-
-**Solution**:
-- Added `memoryCache: Map<string, {result, timestamp}>` and `cacheTTL` to `MemoryEngine`.
-- In `recall()`: check cache first (key = `${query}:${project}:${topK}:${minScore}`); return cached if fresh.
-- After computing results, store in cache.
-- Invalidate cache on `add()`, `clear()`, and `applyForgetting()` (already).
-- Added `cacheHits`/`cacheMisses` to `stats`.
-- Fixed duplicate `store` variable bug from previous edit.
-
-**Impact**:
-- Avoids full rescoring for repeated queries → reduced latency.
-- Provides cache metrics for observability.
-- Low-risk: transparent wrapper cache.
-
-**Tests**: Added 2 unit tests for cache hit and invalidation in `engine.test.ts`. All tests pass (2961 total after this round).
-
----
-
-### Round 76 (2026-06-18): LLM Retry with Exponential Backoff for Resilience
-
-**Problem**: Transient network errors or provider issues (5xx, timeouts, rate limits) could cause agent runs to fail without recovery. No retry logic existed.
-
-**Solution**:
-- Added `maxRetries` (default 2) and `retryDelayMs` (default 1000) to `AgentConfig`.
-- Implemented `_callWithRetry` wrapper in `Agent` class. Used for both `complete` and `stream` calls.
-- Recognized retryable errors: network errors (`ECONNREFUSED`, `ECONNRESET`, `ETIMEDOUT`, `ENETUNREACH`, `EPIPE`, `ECONNABORTED`) and HTTP status 5xx or 429.
-- Non-retryable: aborted signals, client errors (4xx other than 429), and other exceptions.
-- Exponential backoff with jitter: `delay = base * 2^attempt + random(0, 0.5*base)`.
-- Abort handling: if signal is aborted, throw immediately; also convert `AbortError` to a clear `Error('Aborted')`.
-
-**Impact**:
-- Agent automatically recovers from transient LLM failures, improving reliability.
-- Configurable retry count and delay.
-- No impact on existing functionality; fully backward compatible.
-- Low-risk implementation (wrapper).
-
-**Tests**: Added comprehensive unit tests covering retry on network errors, non-retryable errors, exponential backoff timing, maxRetries limit, and stream retry. All tests pass (428 agent tests + 6 new).
-
----
-
-### Round 75 (2026-06-18): Optimization - Reduce maxRounds for Faster Convergence
-
-**Problem**: Default `maxRounds=10` could lead to more LLM calls than necessary, increasing token usage and latency. For simple tool-based interactions, fewer rounds are sufficient.
-
-**Solution**: Reduced default `maxRounds` in `createAgentSessionFromServices` from 10 to 5. This limits the agent to at most 5 turns (user + assistant + tool rounds) before stopping, which is enough for most tasks while conserving tokens and reducing potential verbosity.
-
-**Impact**:
-- Lower token consumption for simple queries.
-- Faster convergence for task execution.
-- No impact on test suite (tests explicitly set maxRounds or use mocks).
-- Low-risk change.
-
-**Tests**: All tests continue to pass (2953+).
-
----
-
-### Round 74 (2026-06-18): Full Alignment with Reference Implementation & Verbosity Fix
 
 **Problem**: Agent exhibited verbose output ("I will use X tool") and lacked complete tool registration relative to reference. System prompt needed stronger enforcement of direct tool calling. Tests failing due to built-in tools not registered and system prompt format mismatches.
 
