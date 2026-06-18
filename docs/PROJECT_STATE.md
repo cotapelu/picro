@@ -71,6 +71,8 @@
 - **Round 73**: Final stability validation & documentation sync - all 206 test files pass (2920+ tests), build clean, TUI functional, zero regressions.
 - **Round 74 (2026-06-18)**: Full alignment with reference implementation: tool registration, system prompt improvements, test fixes. All 2953 tests passed.
 - **Round 75 (2026-06-18)**: Optimization: reduce default `maxRounds` to 5 for faster convergence and less token usage. No regressions.
+- **Round 78 (2026-06-18)**: Tool execution retry with exponential backoff. Added 5 tests; all 2966 tests passed.
+- **Round 77 (2026-06-18)**: Memory retrieval caching for faster queries. Added 2 tests; all 2961 tests passed.
 - **Round 76 (2026-06-18)**: LLM retry with exponential backoff for resilience. Improved test coverage (428 agent tests + 6 new).
 
 ### 🔄 In Progress
@@ -80,8 +82,8 @@
 - None critical.
 
 ### 📊 Metrics (latest run)
-- Test files: **209 passed**
-- Tests: **2953 passed** | 16 skipped | 1 todo
+- Test files: **211 passed**
+- Tests: **2966 passed** | 16 skipped | 1 todo
 - Build: ✅
 - Coverage: statements ~83%, branches **≥85%**, functions ~86%, lines ~83% – target exceeded.
 

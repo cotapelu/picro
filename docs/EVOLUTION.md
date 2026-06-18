@@ -1088,6 +1088,50 @@
 
 **Tests**: 206 test files, 2920+ tests passing; zero regressions; build clean; TUI functional.
 
+### Round 78 (2026-06-18): Tool Execution Retry with Exponential Backoff
+
+**Problem**: Transient errors during tool execution (network timeouts, connection resets, rate limits) could cause agent runs to fail immediately. No retry logic existed at tool execution layer.
+
+**Solution**:
+- Extended `AgentConfig` with `toolMaxRetries` (default 1) and `toolRetryDelayMs` (default 500).
+- Added `_callWithRetry` wrapper and `_isRetryableError` in `ToolExecutor`.
+- Retryable errors: network codes (`ECONNREFUSED`, `ECONNRESET`, `ETIMEDOUT`, `ENETUNREACH`, `EPIPE`, `ECONNABORTED`, `EAI_AGAIN`), I/O (`EIO`, `EBUSY`, `ETIME`), HTTP 5xx and 429.
+- Non-retryable: aborted signals, validation errors, permission errors (EACCES, ENOENT), client 4xx (except 429).
+- Exponential backoff with jitter: `delay = base * 2^attempt + random(0, 0.5*base)`.
+- Respects `AbortSignal` – immediate abort on signal termination.
+- Integrated into `ToolExecutor.execute()` wrapping the tool handler inside `executeWithTimeout`.
+
+**Impact**:
+- Tools now automatically recover from transient failures, increasing agent reliability.
+- Configurable per-agent retry count/delay.
+- Low-risk design mirrors existing LLM retry pattern.
+- Backward compatible (defaults: 1 retry, 500ms delay).
+
+**Tests**: Added `src/agent/tool-executor-retry.test.ts` with 5 tests covering retry behavior, backoff timing, max retries, and non-retryable errors. All tests pass (2966 total after this round).
+
+---
+
+### Round 77 (2026-06-18): Memory Retrieval Caching for Faster Queries
+
+**Problem**: `MemoryEngine.recall()` scored all memories on every query, O(n) cost. `MemoryRetriever` had its own cache but was never used by engine, leading to unnecessary recomputation.
+
+**Solution**:
+- Added `memoryCache: Map<string, {result, timestamp}>` and `cacheTTL` to `MemoryEngine`.
+- In `recall()`: check cache first (key = `${query}:${project}:${topK}:${minScore}`); return cached if fresh.
+- After computing results, store in cache.
+- Invalidate cache on `add()`, `clear()`, and `applyForgetting()` (already).
+- Added `cacheHits`/`cacheMisses` to `stats`.
+- Fixed duplicate `store` variable bug from previous edit.
+
+**Impact**:
+- Avoids full rescoring for repeated queries → reduced latency.
+- Provides cache metrics for observability.
+- Low-risk: transparent wrapper cache.
+
+**Tests**: Added 2 unit tests for cache hit and invalidation in `engine.test.ts`. All tests pass (2961 total after this round).
+
+---
+
 ### Round 76 (2026-06-18): LLM Retry with Exponential Backoff for Resilience
 
 **Problem**: Transient network errors or provider issues (5xx, timeouts, rate limits) could cause agent runs to fail without recovery. No retry logic existed.
