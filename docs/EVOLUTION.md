@@ -1088,3 +1088,22 @@
 
 **Tests**: 206 test files, 2920+ tests passing; zero regressions; build clean; TUI functional.
 
+### Round 74 (2026-06-18): Full Alignment with Reference Implementation & Verbosity Fix
+
+**Problem**: Agent exhibited verbose output ("I will use X tool") and lacked complete tool registration relative to reference. System prompt needed stronger enforcement of direct tool calling. Tests failing due to built-in tools not registered and system prompt format mismatches.
+
+**Solution**:
+- **Agent Layer**: Register built-in tools in `Agent` constructor; pass config (`toolTimeout`, `cacheResults`, `toolExecutionStrategy`) to `ToolExecutor`; expose `getTools()`; update `registerTool` to maintain `this.tools` array for LLM context including `executionMode`.
+- **Tool Definitions**: Populate `AgentSession._toolDefinitions` from `agent.getTools()` so UI and system prompt see built-in tools.
+- **System Prompt**: Add explicit Action Protocol mandating immediate tool calls, no natural language pre-description; always include skills section regardless of tool availability; apply to both default and custom prompt branches.
+- **TUI**: Reverted unnecessary default change; ensured thinking blocks visibility remains as designed.
+- **Tests**: Fixed `agent-session-methods` test for streaming simulation (`_agentState.isRunning`); updated `system-prompt` tests to expect XML project context tags; fixed `SessionSelectorModal` flakiness by using deterministic timestamps for sorting.
+
+**Impact**:
+- Agent now aligns closely with `llm-context` reference behavior: tools correctly registered, loop strategy effectively simple, direct tool calls enforced.
+- Verbose output eliminated at prompt level; LLM instructed to call tools immediately.
+- Test suite now fully green: 2953 tests passing (16 skipped, 1 todo), branch coverage ≥85%.
+- No regressions.
+
+**Tests**: All tests pass; added coverage for tool registration, system prompt edge cases, and UI interactions.
+

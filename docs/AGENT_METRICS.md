@@ -65,6 +65,7 @@
 | 70     | 2026-06-15 | Editor modal fix: internal state, onEscape cancel, removed setTimeout bug | 2920+      | 0           | 0         |
 | 71     | 2026-06-16 | Full pi-coding-agent InteractiveMode compatibility | 2920+      | 0           | 0         |
 | 72     | 2026-06-16 | Comprehensive test validation & stability | 2920+      | 0           | 0         |
+| 74     | 2026-06-18 | Full alignment with reference implementation: tool registration, system prompt improvements, test fixes | 2953       | 0           | 0         |
 | 73     | 2026-06-16 | Final stability validation & documentation sync | 2920+      | 0           | 0         |
 
 
