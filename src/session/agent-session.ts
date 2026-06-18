@@ -616,7 +616,15 @@ export class AgentSession {
     // Run the agent with the constructed turns (supports images)
     this._isPromptRunning = true;
     try {
-      await this.agent.run(initialTurns);
+      // Use resume if we have existing conversation history to maintain context
+      const hasHistory = this._agentState?.history?.length > 0;
+      if (hasHistory) {
+        if (process.env.VERBOSE) console.log('[DEBUG prompt] using agent.resume() for context continuity');
+        await this.agent.resume(initialTurns);
+      } else {
+        if (process.env.VERBOSE) console.log('[DEBUG prompt] using agent.run() for first turn');
+        await this.agent.run(initialTurns);
+      }
     } finally {
       this._isPromptRunning = false;
     }
