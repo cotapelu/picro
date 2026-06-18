@@ -1,6 +1,6 @@
 # Project State
 
-## Current Status (2026-06-15)
+## Current Status (2026-06-18)
 
 ### ✅ Completed
 - Auth-Model sync fix: `DefaultModelRegistry` now consults `AuthStorage`, enabling model selection after login.
@@ -69,6 +69,8 @@
 - **Phase B Complete**: Branch coverage target ≥80% reached.
 - **Phase C (pi TUI Compatibility) Complete**: Full pi-coding-agent InteractiveMode compatibility achieved.
 - **Round 73**: Final stability validation & documentation sync - all 206 test files pass (2920+ tests), build clean, TUI functional, zero regressions.
+- **Round 74 (2026-06-18)**: Full alignment with reference implementation: tool registration, system prompt improvements, test fixes. All 2953 tests passed.
+- **Round 75 (2026-06-18)**: Optimization: reduce default `maxRounds` to 5 for faster convergence and less token usage. No regressions.
 
 ### 🔄 In Progress
 - None. All planned coverage, UX, and compatibility targets met.
@@ -77,8 +79,8 @@
 - None critical.
 
 ### 📊 Metrics (latest run)
-- Test files: **206 passed**
-- Tests: **2920 passed** | 16 skipped | 1 todo
+- Test files: **209 passed**
+- Tests: **2953 passed** | 16 skipped | 1 todo
 - Build: ✅
 - Coverage: statements ~83%, branches **≥85%**, functions ~86%, lines ~83% – target exceeded.
 
