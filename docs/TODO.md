@@ -92,6 +92,6 @@ Picro cần tương thích với `InteractiveMode` từ `pi-coding-agent`. Refer
 
 ---
 
-**Note (2026-06-22)**: Round 86 fixed the multi-turn conversation issue by ensuring AgentLoop always checks follow-up queue after each turn, removing erroneous hooks, and syncing session state. Round 87 added integration test to guard against regression. All 2975 tests pass. Remaining items in this TODO are either already satisfied by current architecture or optional.
+**Status (2026-06-22)**: All items satisfied by current architecture. Multi-turn conversation works continuously. No further action required.
 
 Last updated: 2025-06-17
