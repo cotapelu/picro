@@ -830,49 +830,37 @@ export class AgentLoop {
             hasAssistantContent: true,
           } as any);
 
+          // LUÔN check follow-up sau mỗi turn (trước khi quyết định tiếp tục hay kết thúc)
+          const followUpTurns = await this.followUpManager.collect(
+            followUpQueue,
+            this.config.getFollowUpMessages,
+            this.config.debug,
+          );
+          if (followUpTurns.length > 0) {
+            this.state.history.push(...followUpTurns);
+            this.lastTurnNewMessages.push(...followUpTurns);
+            continue; // tiếp tục vòng lặp với follow-up messages
+          }
+
           // Check for early termination due to all tools signaling terminate
           const allTerminate =
             toolResults.length > 0 &&
             toolResults.every((r) => (r as any).terminate === true);
           if (allTerminate) {
-            const followUpTurns = await this.followUpManager.collect(
-              followUpQueue,
-              this.config.getFollowUpMessages,
-              this.config.debug,
-            );
-            if (followUpTurns.length > 0) {
-              this.state.history.push(...followUpTurns);
-              // Continue to next round - follow-up messages are already in history
-              continue;
-            } else {
-              turnEnded = true;
-              finalResultCandidate = {
-                finalAnswer: "",
-                totalRounds: this.state.round,
-                totalToolCalls: this.state.totalToolCalls,
-                totalTokens: this.state.totalTokens,
-                toolResults: this.state.toolResults,
-                success: true,
-                stopReason: "stop",
-                error: undefined,
-                finalState: { ...this.state },
-              };
-            }
-          } else {
-            // After tool execution and not allTerminate: we need another LLM turn to get final answer,
-            // unless follow-up interrupts.
-            const followUpTurns = await this.followUpManager.collect(
-              followUpQueue,
-              this.config.getFollowUpMessages,
-              this.config.debug,
-            );
-            if (followUpTurns.length > 0) {
-              this.state.history.push(...followUpTurns);
-              // Continue to next round - follow-up messages are already in history
-              continue;
-            }
-            // else: no follow-up, loop will continue for another LLM call
+            turnEnded = true;
+            finalResultCandidate = {
+              finalAnswer: "",
+              totalRounds: this.state.round,
+              totalToolCalls: this.state.totalToolCalls,
+              totalTokens: this.state.totalTokens,
+              toolResults: this.state.toolResults,
+              success: true,
+              stopReason: "stop",
+              error: undefined,
+              finalState: { ...this.state },
+            };
           }
+          // Nếu không allTerminate, không set turnEnded → sẽ tiếp tục LLM turn tiếp theo
         } else {
           await this.emitter.emit({
             type: "turn:end",
@@ -882,7 +870,19 @@ export class AgentLoop {
             hasAssistantContent: true,
           } as any);
 
-          // No tool calls: prepare final result candidate
+          // LUÔN check follow-up sau mỗi turn
+          const followUpTurns = await this.followUpManager.collect(
+            followUpQueue,
+            this.config.getFollowUpMessages,
+            this.config.debug,
+          );
+          if (followUpTurns.length > 0) {
+            this.state.history.push(...followUpTurns);
+            this.lastTurnNewMessages.push(...followUpTurns);
+            continue;
+          }
+
+          // Không có follow-up: prepare final result candidate
           let finalAnswer: string;
           let stopReason: StopReason | undefined;
           let errorMessage: string | undefined;
@@ -919,43 +919,31 @@ export class AgentLoop {
         }
 
         if (turnEnded) {
-          // Check follow-up messages
-          const followUpTurns = await this.followUpManager.collect(
-            followUpQueue,
-            this.config.getFollowUpMessages,
-            this.config.debug,
-          );
-          if (followUpTurns.length > 0) {
-            // Follow-up messages are full turns - push to history and continue
-            this.state.history.push(...followUpTurns);
-            continue;
-          } else {
-            // No follow-up: emit agent_end if needed and return final result
-            if (finalResultCandidate) {
-              if (this.config.debug) {
-                const runEndTime = Date.now();
-                const totalRunTime = runEndTime - roundStartTime;
-                await this.emitter.emit({
-                  type: "debug:run:timing",
-                  timestamp: Date.now(),
-                  totalRunTime,
-                  totalContextBuildingTime,
-                  totalMemoryRetrievalTime,
-                  totalLLMRequestTime,
-                  totalToolExecutionTime,
-                } as any);
-              }
+          // Follow-up đã được xử lý ở trên; chỉ cần return kết quả nếu có
+          if (finalResultCandidate) {
+            if (this.config.debug) {
+              const runEndTime = Date.now();
+              const totalRunTime = runEndTime - roundStartTime;
               await this.emitter.emit({
-                type: "agent:end",
+                type: "debug:run:timing",
                 timestamp: Date.now(),
-                round: this.state.round,
-                result: finalResultCandidate,
+                totalRunTime,
+                totalContextBuildingTime,
+                totalMemoryRetrievalTime,
+                totalLLMRequestTime,
+                totalToolExecutionTime,
               } as any);
-              return finalResultCandidate;
-            } else {
-              // No final result candidate? Should not happen, break to exit.
-              break;
             }
+            await this.emitter.emit({
+              type: "agent:end",
+              timestamp: Date.now(),
+              round: this.state.round,
+              result: finalResultCandidate,
+            } as any);
+            return finalResultCandidate;
+          } else {
+            // Không có finalResultCandidate, thoát vòng lặp
+            break;
           }
         }
       } // while
