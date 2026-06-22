@@ -228,17 +228,9 @@ export class AgentSession {
     this._cwd = config.cwd;
     this._scopedModels = config.scopedModels ?? [];
     this._config = config;
-    // Provide queue access to agent config for AgentLoop
-    const agentConfig = this.agent.getConfig?.();
-    if (agentConfig) {
-      agentConfig.getSteeringMessages = () => this._steeringMessages;
-      agentConfig.getFollowUpMessages = () => this._followUpMessages;
-    } else {
-      // Agent may not have getConfig in some test scenarios; ignore.
-      if (this._config.debug) {
-        console.warn('Agent does not provide getConfig; steering/followUp hooks will not be available.');
-      }
-    }
+    // NOTE: Không set getSteeringMessages/getFollowUpMessages hooks.
+    // AgentLoop sẽ dùng trực tiếp steeringQueue và followUpQueue từ Agent.
+    // _steeringMessages và _followUpMessages chỉ để UI hiển thị.
     this.resourceLoader = config.resourceLoader;
     this.modelRegistry = config.modelRegistry;
     this._initialActiveToolNames = config.initialActiveToolNames;
