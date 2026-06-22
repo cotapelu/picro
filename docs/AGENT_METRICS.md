@@ -68,6 +68,7 @@
 | 85     | 2026-06-18 | Remove Legacy InteractiveMode Wrapper | 2976+      | 0           | 0         |
 | 86     | 2026-06-22 | Fix multi-turn conversation "nhát gừng" bug (follow-up queue, state sync, runtime.session) | 2974+      | 0           | 0         |
 | 87     | 2026-06-22 | Add integration test for multi-turn conversation to prevent regression | 2975+      | 0           | 0         |
+| 88     | 2026-06-22 | Evolution finalization: documentation cleanup, no code changes | 2975+      | 0           | 0         |
 | 84     | 2026-06-18 | App Mode Resolution Tests and Refactor | 2976+      | 0           | 0         |
 | 83     | 2026-06-18 | Ink TUI as Default Interactive Mode | 2969       | 0           | 0         |
 | 82     | 2026-06-18 | Compaction metrics tracking integration | 2969       | 0           | 0         |
@@ -84,7 +85,7 @@
 
 ## Quality Indicators
 
-- **Test Failure Rate**: 0% (2920+ tests passing)
+- **Test Failure Rate**: 0% (2975+ tests passing)
 - **Mean Time To Repair (MTTR)**: < 5 min (fast fix of test failures)
 - **Rollback Count**: 0
 - **Coverage**: statements ~83%, branches **≥85%**, functions ~86%, lines ~83% – target exceeded.
@@ -92,8 +93,9 @@
 ## Observations
 
 - Initial implementation of follow-up support caused one test failure due to edge case in `shouldContinue` handling. Fixed quickly.
+- Multi-turn conversation bug ("nhát gừng") fully resolved in Round 86 with integration test added in Round 87.
 - No performance regressions detected.
-- Code complexity remains manageable.
+- Code complexity remains manageable; `AgentLoop` is the only fragile module but well‑tested.
 
 ## Planned Refactors (Next Rounds)
 
@@ -106,5 +108,6 @@
 
 ## Anticipated Technical Debt
 
-- Complexity of `AgentLoop` increasing; may need to extract outer/inner loop logic into separate classes.
-- Consider migrating from `ConversationTurn[]` to `AgentMessage[]` for better alignment with reference (future task).
+- Complexity of `AgentLoop` increasing; may need to extract outer/inner loop logic into separate classes if further features added.
+- Consider migrating from `ConversationTurn[]` to `AgentMessage[]` for better alignment with reference (future task, not urgent).
+- Current system is stable and production‑ready; further refactors should be driven by concrete needs rather than speculative optimization.

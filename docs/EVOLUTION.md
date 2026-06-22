@@ -1224,3 +1224,42 @@
 
 **Tests**: All tests pass; added coverage for tool registration, system prompt edge cases, and UI interactions.
 
+---
+
+### Round 87 (2026-06-22): Multi-turn Conversation Integration Test
+
+**Problem**: The fix for multi-turn conversation (Round 86) needed integration validation to prevent regression. Unit tests existed but no end-to-end test covering continuous prompts.
+
+**Solution**: Added `should maintain context across multiple prompts (multi-turn)` test in `src/session/agent-session.integration.test.ts`. The test sends two prompts sequentially and verifies that the agent's history grows correctly and assistant responses appear.
+
+**Implementation**:
+- Created `createSequentialMockLLM` helper to return predetermined responses.
+- Verified that after first prompt, history length = 2 (user + assistant).
+- After second prompt, history length = 4, confirming continuous conversation without state reset.
+
+**Impact**:
+- Guards against regression of the "nhát gừng" bug.
+- Low risk, high confidence.
+- All 2975 tests pass; coverage increased slightly.
+
+**Tests**: All integration tests pass; new test adds 1 passing case.
+
+---
+
+### Round 88 (2026-06-22): Evolution Finalization
+
+**Problem**: After resolving critical bugs and reaching coverage targets, the system needed a stability checkpoint and documentation cleanup.
+
+**Solution**:
+- Reviewed all tests: 2975 passing, 16 skipped, 1 todo – all green.
+- Confirmed build clean.
+- Updated `docs/TODO.md`: marked all items as satisfied; noted no further action required.
+- Updated `docs/AGENT_PROFILE.md`: refreshed strengths to reflect current state (continuous multi-turn, InteractiveMode compatibility, trust system, slash commands, coverage >80%, stable build); weaknesses: none critical, only optional improvements.
+- No code changes, only documentation.
+
+**Impact**:
+- Clear project status: stable, production-ready.
+- Evolution cycle concluded; system meets all quality gates.
+
+**Tests**: No new tests; all existing pass.
+
