@@ -42,6 +42,21 @@ function createMockLLM(response: string, toolCalls: any[] = []) {
   };
 }
 
+// Mock LLM with sequential responses
+function createSequentialMockLLM(responses: string[]) {
+  let idx = 0;
+  return async (prompt: string, tools: any[], options?: any): Promise<any> => {
+    const response = responses[idx % responses.length];
+    idx++;
+    return {
+      content: response,
+      stopReason: 'stop',
+      usage: { input: 100, output: 50, totalTokens: 150, cost: { input: 0, output: 0, total: 0 } },
+      toolCalls: [],
+    };
+  };
+}
+
 // Minimal test model
 const mockModel: Model = {
   id: 'mock-model',
@@ -204,6 +219,29 @@ describe('AgentSession Integration', () => {
       });
       // New session's manager has same branch
       expect(newSession['sessionManager'].getBranch().length).toBeGreaterThan(0);
+    });
+
+    it('should maintain context across multiple prompts (multi-turn)', async () => {
+      // Mock LLM that returns responses sequentially
+      const llmProvider = createSequentialMockLLM(['Nice to meet you!', 'Your name is Alice.']);
+      agent.setLLMProvider(llmProvider);
+      await session.setModel(mockModel);
+
+      // First prompt: introduce
+      await session.prompt('My name is Alice');
+      const state1 = session.agent.getState();
+      const len1 = state1.history.length; // capture immediately
+      expect(len1).toBe(2);
+      expect(state1.history[1].role).toBe('assistant');
+
+      // Second prompt: ask about name
+      await session.prompt('What is my name?');
+      const state2 = session.agent.getState();
+      const len2 = state2.history.length;
+      // After second prompt: should have 2 more messages
+      expect(len2).toBe(4);
+      // Ensure history grew
+      expect(len2).toBeGreaterThan(len1);
     });
   });
 });
