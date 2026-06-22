@@ -408,11 +408,11 @@ async function main(): Promise<void> {
   if (appMode === "tui") {
     // Add initial message to session (if any) to start conversation
     if (initialResult.initialMessage) {
-      await runtime.prompt(initialResult.initialMessage, { images: initialResult.initialImages });
+      await runtime.session.prompt(initialResult.initialMessage, { images: initialResult.initialImages });
     }
     // Process any additional messages
     for (const msg of parsed.messages) {
-      await runtime.prompt(msg);
+      await runtime.session.prompt(msg);
     }
 
     try {

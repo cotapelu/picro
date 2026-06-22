@@ -28,13 +28,13 @@ export async function runPrintMode(runtime: AgentSessionRuntime, options: PrintM
   try {
     // Initial message with optional images
     if (options.initialMessage) {
-      await runtime.prompt(options.initialMessage, { images: options.initialImages });
+      await runtime.session.prompt(options.initialMessage, { images: options.initialImages });
     }
 
     // Additional messages
     if (options.messages) {
       for (const msg of options.messages) {
-        await runtime.prompt(msg);
+        await runtime.session.prompt(msg);
       }
     }
 

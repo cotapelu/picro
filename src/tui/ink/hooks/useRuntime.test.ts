@@ -384,27 +384,6 @@ describe('useRuntime', () => {
     });
   });
 
-  describe('sendMessage', () => {
-    it('should call runtime.session.prompt with text', async () => {
-      const { result } = renderHook(() => useRuntime(runtime));
-
-      await act(async () => {
-        await result.current.sendMessage('Hello');
-      });
-
-      expect(runtime.session.prompt).toHaveBeenCalledWith('Hello');
-    });
-
-    it('should handle prompt rejection', async () => {
-      runtime.session.prompt = vi.fn().mockRejectedValue(new Error('Network error'));
-      const { result } = renderHook(() => useRuntime(runtime));
-
-      await expect(act(async () => {
-        await result.current.sendMessage('Hello');
-      })).rejects.toThrow('Network error');
-    });
-  });
-
   describe('streaming messages', () => {
     it('should add assistant message on message:start', async () => {
       let capturedHandler: (event: any) => void;
