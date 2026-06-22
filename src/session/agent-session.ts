@@ -1442,6 +1442,9 @@ export class AgentSession {
   }
 
   private _handleAgentEvent = (event: any): void => {
+    // Sync agent state to session state
+    this._agentState = this.agent.getState();
+
     // Create retry promise synchronously
     this._createRetryPromiseForAgentEnd(event);
 
