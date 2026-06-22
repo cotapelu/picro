@@ -23,24 +23,23 @@ export interface PrintModeOptions {
  * Returns exit code (0 = success, non-zero = error).
  */
 export async function runPrintMode(runtime: AgentSessionRuntime, options: PrintModeOptions): Promise<number> {
-  const session = runtime.session;
   let exitCode = 0;
 
   try {
     // Initial message with optional images
     if (options.initialMessage) {
-      await session.prompt(options.initialMessage, { images: options.initialImages });
+      await runtime.prompt(options.initialMessage, { images: options.initialImages });
     }
 
     // Additional messages
     if (options.messages) {
       for (const msg of options.messages) {
-        await session.prompt(msg);
+        await runtime.prompt(msg);
       }
     }
 
     // Get last assistant turn from history
-    const state = session.state;
+    const state = runtime.session.state;
     const history = state.history;
     const lastTurn = history[history.length - 1] as AssistantTurn | undefined;
 

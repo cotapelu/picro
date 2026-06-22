@@ -219,7 +219,7 @@ export function useRuntime(runtime: ExtendedRuntime) {
   }, [runtime, thinkingLevel]);
 
   const sendMessage = useCallback(async (text: string) => {
-    await runtime.session.prompt(text);
+    await runtime.prompt(text);
   }, [runtime]);
 
   const abort = useCallback(() => {

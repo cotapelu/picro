@@ -78,6 +78,8 @@ export interface AgentSessionInterface {
 export interface AgentSessionRuntimeInterface {
   session: AgentSessionInterface;
   cwd: string;
+  // Prompting (high-level API)
+  prompt(text: string, options?: { images?: unknown[] }): Promise<void>;
   // Session management
   newSession(): Promise<{ cancelled: boolean }>;
   switchSession(path: string): Promise<{ cancelled: boolean }>;
