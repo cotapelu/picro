@@ -86,6 +86,7 @@
 | 91     | 2026-06-24 | Enabled integration test: fixed LLM mock in scan-code.test.ts; cleared known issues | 3000+      | 0           | 0         |
 | 92     | 2026-06-24 | Security hardening: npm audit 0 vulnerabilities via overrides (esbuild, undici) | 3000+      | 0           | 0         |
 | 93     | 2026-06-24 | Documentation consistency: removed duplicate round entries; aligned EVOLUTION.md with actual history | 3000+      | 0           | 0         |
+| 94     | 2026-06-24 | Function length reduction: extracted initialization and memory retrieval helpers from AgentLoop.executeLoop; progressing toward Funcs≤20 target | 3000+      | 0           | 0         |
 
 
 ## Quality Indicators

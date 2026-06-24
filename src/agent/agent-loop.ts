@@ -447,36 +447,12 @@ export class AgentLoop {
             .filter((c) => c.type === "text")
             .map((c) => c.text)
             .join("") || "";
-        const memResult = await this._retrieveMemories(query);
-        memories = memResult.memories;
-        // Update memory retrieval metrics
+        const result = await this._retrieveMemoriesWithBoosting(query);
+        memories = result.memories;
         this.metrics.memoryRetrievals++;
-        this.memoryLatencyAccumulator += memResult.retrievalTime;
-        // Apply smart boosting and rerank if enabled
-        if (this.config.memoryBoosting && memResult.scores) {
-          const scores = memResult.scores;
-          if (scores.length === memories.length) {
-            const paired = memories.map((mem, idx) => ({ mem, score: scores[idx] }));
-            // Boost factors based on action and content
-            paired.forEach(item => {
-              const action = (item.mem as any).metadata?.action;
-              if (action === 'read_file') {
-                item.score *= 1.2;
-              } else if (action === 'edit_file') {
-                item.score *= 1.1;
-              } else if (action === 'tool_result') {
-                if (this._containsCode(item.mem.content)) {
-                  item.score *= 1.3;
-                }
-              }
-            });
-            // Resort by boosted score
-            paired.sort((a, b) => b.score - a.score);
-            memories = paired.map(p => p.mem);
-          }
-        }
-        memoryRetrievalTime = memResult.retrievalTime;
-        totalMemoryRetrievalTime += memoryRetrievalTime;
+        this.memoryLatencyAccumulator += result.retrievalTime;
+        memoryRetrievalTime = result.retrievalTime;
+        totalMemoryRetrievalTime += result.retrievalTime;
 
         // Build LLM context from current history (includes steering if any)
         const llmContext = await this.buildLlmContext(
@@ -1275,5 +1251,34 @@ export class AgentLoop {
       }
     }
     return parts.join("\n");
+  }
+
+  private async _retrieveMemoriesWithBoosting(
+    query: string,
+  ): Promise<{ memories: MemoryEntry[]; retrievalTime: number }> {
+    const memResult = await this._retrieveMemories(query);
+    let memories = memResult.memories;
+    // Apply smart boosting if enabled
+    if (this.config.memoryBoosting && memResult.scores) {
+      const scores = memResult.scores;
+      if (scores.length === memories.length) {
+        const paired = memories.map((mem, idx) => ({ mem, score: scores[idx] }));
+        paired.forEach(item => {
+          const action = (item.mem as any).metadata?.action;
+          if (action === 'read_file') {
+            item.score *= 1.2;
+          } else if (action === 'edit_file') {
+            item.score *= 1.1;
+          } else if (action === 'tool_result') {
+            if (this._containsCode(item.mem.content)) {
+              item.score *= 1.3;
+            }
+          }
+        });
+        paired.sort((a, b) => b.score - a.score);
+        memories = paired.map(p => p.mem);
+      }
+    }
+    return { memories, retrievalTime: memResult.retrievalTime };
   }
 }

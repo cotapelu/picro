@@ -90,6 +90,8 @@
 - **Round 90 (2026-06-24)**: Coverage enhancement: added edge case tests for AgentLoop, ToolExecutor, ContextBuilder (23 new tests) pushing branch coverage to ≥90%. All tests passing; build clean.
 - **Round 91 (2026-06-24)**: Enabled integration test by fixing LLM mock configuration in scan-code.test.ts; integration test now passes. All tests passing; build clean.
 - **Round 92 (2026-06-24)**: Security hardening: resolved all npm audit vulnerabilities via overrides (esbuild, undici); 0 vulnerabilities. All tests passing; build clean.
+- **Round 93 (2026-06-24)**: Documentation consistency: removed duplicate round entries; aligned EVOLUTION.md with actual history. No code changes; all tests pass.
+- **Round 94 (2026-06-24)**: Function length reduction: extracted `_initializeExecution` and `_retrieveMemoriesWithBoosting` from `AgentLoop.executeLoop`; progressing toward Funcs≤20 target. All tests passing; build clean.
 
 ### 🔄 In Progress
 - None. All planned coverage, UX, and compatibility targets met.
