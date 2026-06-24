@@ -259,14 +259,22 @@ export class Agent {
         if (apiKey) llmOptions.apiKey = apiKey;
       }
       const result = await complete(model, context, llmOptions);
-      const contentBlocks = Array.isArray(result.content) ? result.content : [];
-      const textContent = contentBlocks
-        .filter((c: any) => c.type === 'text' || c.type === 'thinking')
-        .map((c: any) => c.text || c.thinking)
-        .join('');
-      const toolCalls = contentBlocks
-        .filter((c: any) => c.type === 'toolCall')
-        .map((c: any) => ({ id: c.id, name: c.name, arguments: c.arguments }));
+      let textContent: string;
+      let toolCalls: any[] = [];
+      if (typeof result.content === 'string') {
+        textContent = result.content;
+      } else if (Array.isArray(result.content)) {
+        const contentBlocks = result.content;
+        textContent = contentBlocks
+          .filter((c: any) => c.type === 'text' || c.type === 'thinking')
+          .map((c: any) => c.text || c.thinking)
+          .join('');
+        toolCalls = contentBlocks
+          .filter((c: any) => c.type === 'toolCall')
+          .map((c: any) => ({ id: c.id, name: c.name, arguments: c.arguments }));
+      } else {
+        textContent = String(result.content ?? '');
+      }
       return {
         content: textContent,
         stopReason: result.stopReason ?? "stop",

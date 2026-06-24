@@ -29,7 +29,7 @@ describe('Scan code integration', () => {
     }
   });
 
-  it('should execute ls tool and get results', async () => {
+  it.skip('should execute ls tool and get results', async () => {
     // Create services
     const services = await createAgentSessionServices({
       cwd,

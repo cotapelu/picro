@@ -33,6 +33,76 @@ export interface LsEntry {
  * @param cwd - Working directory to resolve relative paths against
  */
 export function createLsToolDefinition(cwd: string) {
+  // Helper to list directory and collect entries
+  async function listEntries(input: LsToolInput): Promise<{ entries: LsEntry[]; count: number }> {
+    const { path: dirPath = '.', recursive = false, includeHidden = false } = input;
+
+    // Resolve directory path safely within cwd
+    const resolvedDir = resolveToCwd(dirPath, cwd);
+
+    // Validate the resolved directory is within cwd (security)
+    if (!validatePathWithinBase(resolvedDir, cwd)) {
+      throw new Error(`Access denied: Path outside working directory (resolved: ${resolvedDir}, cwd: ${cwd})`);
+    }
+
+    const entries: LsEntry[] = [];
+
+    const walk = (dir: string, depth: number) => {
+      if (depth > 5) return;
+
+      try {
+        const files = readdirSync(dir, { withFileTypes: true });
+        for (const file of files) {
+          if (!includeHidden && file.name.startsWith('.')) continue;
+
+          const fullPath = join(dir, file.name);
+          try {
+            const stats = statSync(fullPath);
+            entries.push({
+              name: file.name,
+              path: fullPath,
+              type: file.isDirectory() ? 'directory' : file.isSymbolicLink() ? 'symlink' : 'file',
+              size: stats.size,
+              modified: stats.mtimeMs,
+            });
+
+            if (recursive && file.isDirectory()) {
+              walk(fullPath, depth + 1);
+            }
+          } catch (e: any) {
+            // Skip file that can't be stat'ed
+            console.warn(`ls: cannot stat ${fullPath}:`, e?.message || e);
+          }
+        }
+      } catch (err: any) {
+        throw new Error(`Failed to read directory ${dir}: ${err.message || err}`);
+      }
+    };
+
+    walk(resolvedDir, 0);
+    return { entries, count: entries.length };
+  }
+
+  // Execute method for direct invocation (returns structured data)
+  const execute = async (input: LsToolInput) => {
+    const result = await listEntries(input);
+    return result; // { entries, count }
+  };
+
+  // Handler method for Agent tool execution (returns formatted text blocks)
+  const handler = async (input: LsToolInput, context?: any, onProgress?: any) => {
+    const { entries, count } = await listEntries(input);
+    const lines: string[] = [];
+    for (const entry of entries) {
+      const type = entry.type === 'directory' ? 'd' : entry.type === 'symlink' ? 'l' : '-';
+      const size = entry.size.toString();
+      const date = new Date(entry.modified).toISOString().split('T')[0];
+      lines.push(`${type} ${size} ${date} ${entry.path}`);
+    }
+    const output = lines.join('\n') + `\n\nTotal: ${count} entries`;
+    return [{ type: 'text', text: output }];
+  };
+
   return {
     name: 'ls',
     description: 'List directory contents with details (permissions, size, date). Use to explore project structure.',
@@ -61,63 +131,7 @@ export function createLsToolDefinition(cwd: string) {
       },
       required: [],
     },
-    handler: async (input: LsToolInput) => {
-      const { path: dirPath = '.', recursive = false, includeHidden = false } = input;
-
-      // Resolve directory path safely within cwd
-      const resolvedDir = resolveToCwd(dirPath, cwd);
-
-      // Validate the resolved directory is within cwd (security)
-      if (!validatePathWithinBase(resolvedDir, cwd)) {
-        throw new Error(`Access denied: Path outside working directory (resolved: ${resolvedDir}, cwd: ${cwd})`);
-      }
-
-      const entries: LsEntry[] = [];
-
-      const walk = (dir: string, depth: number) => {
-        if (depth > 5) return;
-
-        try {
-          const files = readdirSync(dir, { withFileTypes: true });
-          for (const file of files) {
-            if (!includeHidden && file.name.startsWith('.')) continue;
-
-            const fullPath = join(dir, file.name);
-            try {
-              const stats = statSync(fullPath);
-              entries.push({
-                name: file.name,
-                path: fullPath,
-                type: file.isDirectory() ? 'directory' : file.isSymbolicLink() ? 'symlink' : 'file',
-                size: stats.size,
-                modified: stats.mtimeMs,
-              });
-
-              if (recursive && file.isDirectory()) {
-                walk(fullPath, depth + 1);
-              }
-            } catch (e: any) {
-              // Skip file that can't be stat'ed
-              console.warn(`ls: cannot stat ${fullPath}:`, e?.message || e);
-            }
-          }
-        } catch (err: any) {
-          throw new Error(`Failed to read directory ${dir}: ${err.message || err}`);
-        }
-      };
-
-      walk(resolvedDir, 0);
-
-      // Format entries as text for the agent
-      const lines: string[] = [];
-      for (const entry of entries) {
-        const type = entry.type === 'directory' ? 'd' : entry.type === 'symlink' ? 'l' : '-';
-        const size = entry.size.toString();
-        const date = new Date(entry.modified).toISOString().split('T')[0];
-        lines.push(`${type} ${size} ${date} ${entry.name}`);
-      }
-      const output = lines.join('\n') + `\n\nTotal: ${entries.length} entries`;
-      return [{ type: 'text', text: output }];
-    },
+    execute,
+    handler,
   };
 }
