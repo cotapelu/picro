@@ -89,8 +89,9 @@
 | 94     | 2026-06-24 | Function length reduction: extracted initialization and memory retrieval helpers from AgentLoop.executeLoop; progressing toward Funcs≤20 target | 3000+      | 0           | 0         |
 | 95     | 2026-06-24 | Unlimited agent runtime: maxRounds=10000; termination debug logging added for diagnostics | 3000+      | 0           | 0         |
 | 96     | 2026-06-24 | Enhanced termination logging: include totalToolCalls and totalTokens for better diagnostics | 3000+      | 0           | 0         |
-| 97     | 2026-06-24 | Function length reduction: extracted `_processTurnWithTools` & `_processTurnWithoutTools` from `executeLoop`, significantly shortened main loop | 3000+      | 0           | 0         |
 | 97     | 2026-06-24 | Extract `_emitLlmRequest` helper from executeLoop (first step of function length reduction) | 3000+      | 0           | 0         |
+| 98     | 2026-06-24 | Termination logging: add debug logs with stopReason, totalToolCalls, totalTokens to diagnose unexpected stops | 3000+      | 0           | 0         |
+| 99     | 2026-06-24 | Function length reduction: extracted `_processTurnWithTools`, `_processTurnWithoutTools`, and `_finalizeAssistantTurn`; significantly shortened `executeLoop` | 3000+      | 0           | 0         |
 
 
 ## Quality Indicators
