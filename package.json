@@ -48,6 +48,10 @@
     "typescript": "^5.9.3",
     "vitest": "^4.1.5"
   },
+  "overrides": {
+    "esbuild": "^0.28.1",
+    "undici": "^7.28.0"
+  },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "^0.79.1",
     "@types/proper-lockfile": "^4.1.4",

@@ -85,11 +85,13 @@
 | 89     | 2026-06-24 | Streaming event alignment: remove redundant turn:start/turn:end emissions; streaming mode now fully uses message:* events | 2976+      | 0           | 0         |
 | 88     | 2026-06-24 | Fix tool execution regression: remove obsolete .js files, update ls.ts handler, fix Agent._llmComplete string/array handling | 2976+      | 0           | 0         |
 | 90     | 2026-06-24 | Coverage enhancement: edge case tests for AgentLoop, ToolExecutor, ContextBuilder (+23 tests) | 2999+      | 0           | 0         |
+| 91     | 2026-06-24 | Enabled integration test: fixed LLM mock in scan-code.test.ts; cleared known issues | 3000+      | 0           | 0         |
+| 92     | 2026-06-24 | Security hardening: npm audit 0 vulnerabilities via overrides (esbuild, undici) | 3000+      | 0           | 0         |
 
 
 ## Quality Indicators
 
-- **Test Failure Rate**: 0% (2999+ tests passing)
+- **Test Failure Rate**: 0% (3000+ tests passing)
 - **Mean Time To Repair (MTTR)**: < 5 min (fast fix of test failures)
 - **Rollback Count**: 0
 - **Coverage**: statements ~84%, branches **≥90%**, functions ~87%, lines ~84% – target exceeded.
