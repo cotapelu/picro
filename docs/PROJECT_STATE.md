@@ -91,7 +91,8 @@
 - None. All planned coverage, UX, and compatibility targets met.
 
 ### 🐛 Known Issues
-- None critical.
+- **Streaming event mismatch**: Streaming mode emits `turn:start`/`turn:end` but TUI expects `message:start`/`message:end`. Non‑streaming mode unaffected; basic agent operation works.
+- Integration tests skipped pending model configuration (non‑critical).
 
 ### 📊 Metrics (latest run)
 - Test files: **213 passed**
@@ -100,12 +101,9 @@
 - Coverage: statements ~83%, branches **≥85%**, functions ~86%, lines ~83% – target exceeded.
 
 ### 🎯 Next Tasks
-1. ✅ Phase B – branch coverage target reached (≥80%).
-2. ✅ **UI/UX improvements**: slash command ordering, CommandPalette navigation/backspace/escape all complete.
-3. ✅ Optional: Push towards 85% branch coverage – completed.
-4. Maintain test stability; monitor regressions.
-5. ✅ **Ink TUI Completion** – fixed TypeScript errors, finalize components, replaced InteractiveMode with Ink TUI.
-6. ⏳ **Enable integration tests** with proper model configuration (currently skipped).
+- System stable; all core tests passing. Awaiting user feedback or new feature requests.
+- Optional: Align streaming mode events with TUI expectations (turn → message) for full feature parity.
+- Optional: Enable integration tests by providing model configuration.
 
 ---
 
