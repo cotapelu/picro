@@ -201,6 +201,7 @@ export class ToolExecutor {
      if (!tool) {
        return this.createErrorResult(toolCall, `Tool '${toolCall.name}' not found`, startTime);
      }
+     const handler = tool.handler!; // All registered tools have handler
 
      // Build metadata (keep original arguments for logging)
      const metadata: ToolExecutionMetadata = {
@@ -266,21 +267,26 @@ export class ToolExecutor {
          async () =>
            this.executeWithTimeout(
              async () => {
-               // Check if the tool handler accepts an onProgress callback
-               if (tool.handler.length > 2) {
-                 // Create a wrapper for onProgress that emits events
-                 const onProgressWrapper = (update: ToolProgressUpdate) => {
-                   if (this.config.emitProgressUpdates !== false) {
-                     this.emitProgress(metadata, update);
-                   }
-                   // Call original onProgress if provided, but don't return its value
-                   // We just call it for side effects
-                   return;
-                 };
-                 return await tool.handler(actualArgs, context, onProgressWrapper);
-               } else {
-                 // Tool handler doesn't accept onProgress, call it normally
-                 return await tool.handler(actualArgs, context);
+               try {
+                 // Check if the tool handler accepts an onProgress callback
+                 if (handler.length > 2) {
+                   // Create a wrapper for onProgress that emits events
+                   const onProgressWrapper = (update: ToolProgressUpdate) => {
+                     if (this.config.emitProgressUpdates !== false) {
+                       this.emitProgress(metadata, update);
+                     }
+                     // Call original onProgress if provided, but don't return its value
+                     // We just call it for side effects
+                     return;
+                   };
+                   return await handler(actualArgs, context, onProgressWrapper);
+                 } else {
+                   // Tool handler doesn't accept onProgress, call it normally
+                   return await handler(actualArgs, context);
+                 }
+               } catch (e: any) {
+                 console.error('ToolExecutor executeInner caught error:', { tool: toolCall.name, error: e, args: actualArgs });
+                 throw e;
                }
              },
              this.config.timeout,
@@ -289,7 +295,10 @@ export class ToolExecutor {
          signal,
          this.config.toolMaxRetries,
          this.config.toolRetryDelayMs
-       );
+       ).catch((err: any) => {
+         console.error('ToolExecutor executeAfter retry caught error:', { tool: toolCall.name, error: err, args: actualArgs });
+         throw err;
+       });
 
        // Convert rawResult to (TextBlock|ImageBlock)[] or string
        let resultContent: string | (TextBlock | ImageBlock)[];

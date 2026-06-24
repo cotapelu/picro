@@ -108,10 +108,16 @@ export interface ToolDefinition {
   name: string;
   description: string;
   parameters?: any;
-  handler: ToolHandler;
+  handler?: ToolHandler; // optional for metadata-only definitions
   prepareArguments?: (args: Record<string, unknown>, context: ToolContext) => Promise<Record<string, unknown>>;
   /** Optional per-tool execution mode override */
   executionMode?: ToolExecutionMode;
+  /** Short description for system prompt (tool usage snippet) */
+  promptSnippet?: string;
+  /** Detailed usage guidelines for system prompt */
+  promptGuides?: string[];
+  /** Display label (optional) */
+  label?: string;
 }
 
 export type AgentTool = Tool & {
@@ -122,6 +128,12 @@ export type AgentTool = Tool & {
    * If omitted, the agent's default tool execution strategy applies.
    */
   executionMode?: ToolExecutionMode;
+  /** Short description for system prompt */
+  promptSnippet?: string;
+  /** Usage guidelines for system prompt */
+  promptGuides?: string[];
+  /** Display label */
+  label?: string;
 };
 export type AgentMessage = LlmMessage;
 

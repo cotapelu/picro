@@ -24,8 +24,24 @@ export interface EditToolInput {
 export function createEditToolDefinition(cwd: string) {
   return {
     name: 'edit',
-    description: 'Replace text in a file',
-    schema: {},
+    description: 'Replace text in files. Use for refactoring, fixing typos, updating code patterns.',
+    promptSnippet: 'Edit file by replacing old text with new. Example: edit({ path: "file.ts", oldString: "foo", newString: "bar" })',
+    promptGuides: [
+      'oldString must match exactly including whitespace',
+      'Use dryRun: true to preview changes before applying',
+      'Only replace first occurrence per call',
+      'Combine multiple edit calls for multiple replacements',
+    ],
+    schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "File path to edit" },
+        oldString: { type: "string", description: "Exact text to find" },
+        newString: { type: "string", description: "Replacement text" },
+        dryRun: { type: "boolean", description: "Preview without applying" }
+      },
+      required: ["path", "oldString", "newString"]
+    },
     async execute(input: EditToolInput): Promise<any> {
       const { path: filePath, oldString, newString, dryRun = false } = input;
 

@@ -93,7 +93,7 @@ export class Agent {
       toolExecutionStrategy: this.config.toolExecutionStrategy ?? 'parallel',
       toolMaxRetries: this.config.toolMaxRetries,
       toolRetryDelayMs: this.config.toolRetryDelayMs,
-      // Note: beforeToolCall/afterToolCall hooks are not passed to ToolExecutor currently due to type differences
+      emitter: this.emitter, // Pass emitter for tool execution events
     });
     // Register any handlers from legacy executor config
     if (this.config.executor?.handlers) {
@@ -259,16 +259,20 @@ export class Agent {
         if (apiKey) llmOptions.apiKey = apiKey;
       }
       const result = await complete(model, context, llmOptions);
-      const content = Array.isArray(result.content)
-        ? result.content
-            .map((c: any) => (c as any).text || (c as any).thinking || "")
-            .join("")
-        : (result.content as string) || "";
+      const contentBlocks = Array.isArray(result.content) ? result.content : [];
+      const textContent = contentBlocks
+        .filter((c: any) => c.type === 'text' || c.type === 'thinking')
+        .map((c: any) => c.text || c.thinking)
+        .join('');
+      const toolCalls = contentBlocks
+        .filter((c: any) => c.type === 'toolCall')
+        .map((c: any) => ({ id: c.id, name: c.name, arguments: c.arguments }));
       return {
-        content,
+        content: textContent,
         stopReason: result.stopReason ?? "stop",
         usage: result.usage,
-        toolCalls: [],
+        toolCalls,
+        errorMessage: result.errorMessage,
       } as LLMResponse;
     }, signal);
   };

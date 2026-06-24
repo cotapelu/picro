@@ -26,6 +26,9 @@ import type {
   PrepareNextTurnOverride,
   TextBlock,
   ImageBlock,
+  ThinkingBlock,
+  ToolCallBlock,
+  ContentBlock,
   SuccessfulToolResult,
   FailedToolResult,
   SessionMetrics,
@@ -747,6 +750,7 @@ export class AgentLoop {
             errorMessage: finalMessage.errorMessage,
           };
         } else {
+          // Non-streaming: toolCalls are extracted by _llmComplete
           toolCalls = response!.toolCalls || [];
           shouldContinueResponse = response!;
         }
@@ -1131,11 +1135,25 @@ export class AgentLoop {
   }
 
   private createAssistantTurn(response: LLMResponse): ConversationTurn {
+    const contentBlocks: ContentBlock[] = [];
+    // Add text content if present (string)
+    if (response.content) {
+      contentBlocks.push({ type: 'text', text: response.content });
+    }
+    // Add tool calls if present
+    if (response.toolCalls && Array.isArray(response.toolCalls)) {
+      for (const tc of response.toolCalls) {
+        contentBlocks.push({
+          type: 'toolCall',
+          id: tc.id,
+          name: tc.name,
+          arguments: tc.arguments,
+        } as ToolCallBlock);
+      }
+    }
     return {
       role: "assistant",
-      content: response.content
-        ? [{ type: "text", text: response.content }]
-        : [],
+      content: contentBlocks,
       timestamp: Date.now(),
       stopReason: response.stopReason,
       errorMessage: response.errorMessage,
@@ -1145,14 +1163,21 @@ export class AgentLoop {
 
   private createToolTurn(result: ToolResult): ToolTurn {
     const isError = "error" in result;
-    const contentBlocks: (TextBlock | ImageBlock)[] = isError
-      ? [{ type: "text", text: (result as FailedToolResult).error }]
-      : (() => {
-          const successful = result as SuccessfulToolResult;
-          return typeof successful.content === "string"
-            ? [{ type: "text", text: successful.content }]
-            : successful.content;
-        })();
+    let contentBlocks: (TextBlock | ImageBlock)[];
+    if (isError) {
+      contentBlocks = [{ type: "text", text: (result as FailedToolResult).error }];
+    } else {
+      const successful = result as SuccessfulToolResult;
+      if (typeof successful.content === "string") {
+        contentBlocks = [{ type: "text", text: successful.content }];
+      } else if (Array.isArray(successful.content)) {
+        contentBlocks = successful.content;
+      } else {
+        // Fallback: convert to JSON string
+        const json = JSON.stringify(successful.content, null, 2);
+        contentBlocks = [{ type: "text", text: json }];
+      }
+    }
     return {
       role: "tool",
       toolCallId: result.toolCallId,

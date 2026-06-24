@@ -23,8 +23,22 @@ export interface ReadToolInput {
 export function createReadToolDefinition(cwd: string) {
   return {
     name: 'read',
-    description: 'Read contents of a file',
-    schema: {}, // placeholder - in full impl would use typebox
+    description: 'Read file contents. Use to examine source code, config files, or any text file.',
+    promptSnippet: 'Read a file. Example: read({ path: "src/agent/agent.ts" })',
+    promptGuides: [
+      'Always specify the full path relative to cwd',
+      'Use maxLines and offset to read large files incrementally',
+      'Check if file exists before reading',
+    ],
+    schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "File path to read" },
+        maxLines: { type: "number", description: "Maximum number of lines to return" },
+        offset: { type: "number", description: "Number of lines to skip from start" }
+      },
+      required: ["path"]
+    }, // placeholder - in full impl would use typebox
     async execute(input: ReadToolInput): Promise<any> {
       const { path: filePath, maxLines, offset = 0 } = input;
 

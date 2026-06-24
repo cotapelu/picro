@@ -3,36 +3,36 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Deep Alignment with Reference",
+      "name": "Phân tích kiến trúc so với reference",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Register built-in tools in Agent toolExecutor",
+          "content": "Đọc và đề cập luồng chính từ main.ts -> runtime -> session -> agent -> llm",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Fix hasTool method to use correct check",
+          "content": "So sánh từng module với reference llm-context (agent, llm, session, runtime, tools, modes)",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Add executionMode to ToolDefinition interface",
+          "content": "Xác định điểm khác biệt về organization, interfaces, dependencies",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Pass Agent config to ToolExecutor",
+          "content": "Kiểm tra các mode (print, rpc, tui) và tại sao tui fail",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Populate AgentSession._toolDefinitions with built-in tools",
+          "content": "Chạy tests để xác nhận coverage và tìm bugs tiềm ẩn",
           "status": "pending"
         },
         {
           "id": "task-6",
-          "content": "Test that agent can execute built-in tools",
+          "content": "Đề xuất fixes nếu cần",
           "status": "pending"
         }
       ]
@@ -40,5 +40,5 @@
   ],
   "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-18T15:08:30.528Z"
+  "updatedAt": "2026-06-23T15:42:17.126Z"
 }

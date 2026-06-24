@@ -230,7 +230,7 @@ export async function createAgentSessionServices(
  * Wrap built-in tool's execute method as handler
  */
 function wrapBuiltinTool(tool: any): ToolDefinition {
-  return {
+  const def: ToolDefinition = {
     name: tool.name,
     description: tool.description,
     parameters: tool.schema,
@@ -238,6 +238,11 @@ function wrapBuiltinTool(tool: any): ToolDefinition {
       return tool.execute(input, context);
     },
   };
+  // Preserve optional fields if present
+  if (tool.promptSnippet) def.promptSnippet = tool.promptSnippet;
+  if (tool.promptGuides) def.promptGuides = tool.promptGuides;
+  if (tool.label) def.label = tool.label;
+  return def;
 }
 
 /**

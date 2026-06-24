@@ -35,9 +35,33 @@ export interface LsEntry {
 export function createLsToolDefinition(cwd: string) {
   return {
     name: 'ls',
-    description: 'List directory contents',
-    schema: {},
-    async execute(input: LsToolInput): Promise<any> {
+    description: 'List directory contents with details (permissions, size, date). Use to explore project structure.',
+    promptSnippet: 'List files and directories in current location. Example: ls() or ls({ path: "src" })',
+    promptGuides: [
+      'Use ls() to see current directory',
+      'Use ls({ path: "src" }) to list specific directory',
+      'Use ls({ recursive: true }) to list recursively (limited depth)',
+      'Use ls({ includeHidden: true }) to see dotfiles',
+    ],
+    schema: {
+      type: "object",
+      properties: {
+        path: {
+          type: "string",
+          description: "Directory path to list (default: current directory)",
+        },
+        recursive: {
+          type: "boolean",
+          description: "List recursively",
+        },
+        includeHidden: {
+          type: "boolean",
+          description: "Include hidden files",
+        },
+      },
+      required: [],
+    },
+    handler: async (input: LsToolInput) => {
       const { path: dirPath = '.', recursive = false, includeHidden = false } = input;
 
       // Resolve directory path safely within cwd
@@ -45,7 +69,7 @@ export function createLsToolDefinition(cwd: string) {
 
       // Validate the resolved directory is within cwd (security)
       if (!validatePathWithinBase(resolvedDir, cwd)) {
-        throw new Error(`Access denied: Path outside working directory`);
+        throw new Error(`Access denied: Path outside working directory (resolved: ${resolvedDir}, cwd: ${cwd})`);
       }
 
       const entries: LsEntry[] = [];
@@ -72,21 +96,28 @@ export function createLsToolDefinition(cwd: string) {
               if (recursive && file.isDirectory()) {
                 walk(fullPath, depth + 1);
               }
-            } catch {
-              // Skip
+            } catch (e: any) {
+              // Skip file that can't be stat'ed
+              console.warn(`ls: cannot stat ${fullPath}:`, e?.message || e);
             }
           }
-        } catch (err) {
-          throw new Error(`Failed to read directory ${dir}: ${err}`);
+        } catch (err: any) {
+          throw new Error(`Failed to read directory ${dir}: ${err.message || err}`);
         }
       };
 
       walk(resolvedDir, 0);
 
-      return {
-        entries,
-        count: entries.length,
-      };
+      // Format entries as text for the agent
+      const lines: string[] = [];
+      for (const entry of entries) {
+        const type = entry.type === 'directory' ? 'd' : entry.type === 'symlink' ? 'l' : '-';
+        const size = entry.size.toString();
+        const date = new Date(entry.modified).toISOString().split('T')[0];
+        lines.push(`${type} ${size} ${date} ${entry.name}`);
+      }
+      const output = lines.join('\n') + `\n\nTotal: ${entries.length} entries`;
+      return [{ type: 'text', text: output }];
     },
   };
 }

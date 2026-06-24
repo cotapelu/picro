@@ -181,6 +181,7 @@ export class AgentSession {
   private _toolDefinitions: Map<string, ToolDefinition> = new Map();
   private _toolPromptSnippets: Map<string, string> = new Map();
   private _toolPromptGuidelines: Map<string, string[]> = new Map();
+  private _toolPromptGuides: Map<string, string[]> = new Map();
 
   // System prompt
   private _baseSystemPrompt = "";
@@ -258,11 +259,23 @@ export class AgentSession {
     if (typeof this.agent.getTools === 'function') {
       for (const tool of this.agent.getTools()) {
         if (!this._toolDefinitions.has(tool.name)) {
-          this._toolDefinitions.set(tool.name, {
+          const toolDef: ToolDefinition = {
             name: tool.name,
             description: tool.description,
             parameters: tool.parameters,
-          } as ToolDefinition);
+          };
+          // Capture optional fields if present
+          if (tool.promptSnippet) toolDef.promptSnippet = tool.promptSnippet;
+          if (tool.promptGuides) toolDef.promptGuides = tool.promptGuides;
+          if (tool.label) toolDef.label = tool.label;
+          this._toolDefinitions.set(tool.name, toolDef);
+        }
+        // Also populate prompt snippets and guides for system prompt
+        if (tool.promptSnippet && !this._toolPromptSnippets.has(tool.name)) {
+          this._toolPromptSnippets.set(tool.name, tool.promptSnippet);
+        }
+        if (tool.promptGuides && !this._toolPromptGuides.has(tool.name)) {
+          this._toolPromptGuides.set(tool.name, tool.promptGuides);
         }
       }
     }
@@ -419,8 +432,9 @@ export class AgentSession {
   /** Build system prompt from current tool snippets and guidelines */
   private _buildSystemPrompt(): string {
     const toolGuidelines = Array.from(this._toolPromptGuidelines.values()).flat();
+    const toolGuides = Array.from(this._toolPromptGuides.values()).flat();
     const settingsGuidelines = this.settingsManager.getPromptGuidelines();
-    const allGuidelines = [...toolGuidelines, ...settingsGuidelines];
+    const allGuidelines = [...toolGuides, ...toolGuidelines, ...settingsGuidelines];
 
     return buildSystemPrompt({
       selectedTools: this.getActiveToolNames(),
@@ -632,6 +646,8 @@ export class AgentSession {
       } else {
         await this.agent.run(initialTurns);
       }
+    } catch (err: any) {
+      throw err;
     } finally {
       this._isPromptRunning = false;
     }
@@ -1210,6 +1226,13 @@ export class AgentSession {
     if (config.customTools) {
       for (const def of config.customTools) {
         this._toolDefinitions.set(def.name, def);
+        // Capture snippets and guides for system prompt
+        if (def.promptSnippet) {
+          this._toolPromptSnippets.set(def.name, def.promptSnippet);
+        }
+        if (def.promptGuides) {
+          this._toolPromptGuides.set(def.name, def.promptGuides);
+        }
         if (def.handler) {
           const tool: AgentTool = {
             name: def.name,

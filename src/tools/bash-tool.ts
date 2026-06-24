@@ -274,7 +274,14 @@ export function createBashHandler(cwd: string, options?: BashToolOptions): ToolH
 export function createBashToolDefinition(cwd: string, options?: BashToolOptions): ToolDefinition {
   return {
     name: "bash",
-    description: "Execute a bash command. Use for git operations, running tests, npm commands, etc. Returns command output.",
+    description: "Execute shell commands. Use for git, npm, tests, file operations, and system tasks.",
+    promptSnippet: "Run a shell command. Example: bash({ command: 'ls -la' })",
+    promptGuides: [
+      "Always provide the full command as a string",
+      "Use absolute paths or relative paths from cwd",
+      "Set timeout for long-running commands (max 60s)",
+      "Check exit code from output",
+    ],
     parameters: {
       type: "object",
       properties: {
