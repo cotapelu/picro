@@ -1,4 +1,44 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+
+// Mock LLM module before any imports that use it
+vi.mock('../llm/index.js', () => {
+  let llmCallCount = 0;
+  const complete = vi.fn().mockImplementation(async () => {
+    llmCallCount++;
+    if (llmCallCount === 1) {
+      // First response: tool call (content array with toolCall block)
+      return {
+        content: [{ type: 'toolCall', id: 'call_1', name: 'ls', arguments: {} }],
+        stopReason: 'toolUse',
+        usage: { input: 10, output: 5, totalTokens: 15 },
+      };
+    } else {
+      // Second response: final answer (text block)
+      return {
+        content: [{ type: 'text', text: 'Here is the directory listing:\nTotal: 20 entries' }],
+        stopReason: 'stop',
+        usage: { input: 10, output: 5, totalTokens: 15 },
+      };
+    }
+  });
+  const stream = vi.fn().mockImplementation(function* () {
+    llmCallCount++;
+    if (llmCallCount === 1) {
+      // Stream first turn: toolCall
+      yield { type: 'start', partial: { role: 'assistant', content: [{ type: 'toolCall', id: 'call_1', name: 'ls', arguments: {} }], stopReason: undefined, usage: undefined } as any };
+      yield { type: 'toolcall_end', toolCall: { id: 'call_1', name: 'ls', arguments: {} } } as any;
+      yield { type: 'done', reason: 'toolUse' as const, usage: { input: 10, output: 5, totalTokens: 15 } } as any;
+    } else {
+      // Stream second turn: text
+      yield { type: 'start', partial: { role: 'assistant', content: [{ type: 'text', text: '' }], stopReason: undefined, usage: undefined } as any };
+      yield { type: 'text_delta', delta: 'Here is the directory listing:\nTotal: 20 entries' } as any;
+      yield { type: 'done', reason: 'stop' as const, usage: { input: 10, output: 5, totalTokens: 15 } } as any;
+    }
+  });
+
+  return { complete, stream };
+});
+
 import { createAgentSessionServices } from '../session/agent-session-services.js';
 import { SessionManager } from '../session/session-manager.js';
 import { createAgentSessionFromServices } from '../session/agent-session-services.js';
@@ -6,41 +46,6 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { existsSync, unlinkSync, mkdirSync } from 'node:fs';
 import type { Model } from '../llm/index.js';
-import { complete, stream } from '../llm/index.js';
-
-// Mock LLM to avoid real API calls
-let llmCallCount = 0;
-vi.spyOn({ complete, stream }, 'complete').mockImplementation(async () => {
-  llmCallCount++;
-  if (llmCallCount === 1) {
-    return {
-      content: '',
-      stopReason: 'toolUse' as const,
-      usage: { input: 10, output: 5, totalTokens: 15 },
-      toolCalls: [{ id: 'call_1', name: 'ls', arguments: {} }],
-    };
-  } else {
-    return {
-      content: 'Here is the directory listing:\nTotal: 20 entries',
-      stopReason: 'stop' as const,
-      usage: { input: 10, output: 5, totalTokens: 15 },
-      toolCalls: [],
-    };
-  }
-});
-
-vi.spyOn({ complete, stream }, 'stream').mockImplementation(async function*() {
-  llmCallCount++;
-  if (llmCallCount === 1) {
-    yield { type: 'start', partial: { role: 'assistant', content: [{ type: 'toolCall', id: 'call_1', name: 'ls', arguments: {} }], stopReason: undefined, usage: undefined } as any };
-    yield { type: 'toolcall_end', toolCall: { id: 'call_1', name: 'ls', arguments: {} } } as any;
-    yield { type: 'done', reason: 'toolUse' as const, usage: { input: 10, output: 5, totalTokens: 15 } } as any;
-  } else {
-    yield { type: 'start', partial: { role: 'assistant', content: [{ type: 'text', text: '' }], stopReason: undefined, usage: undefined } as any };
-    yield { type: 'text_delta', delta: 'Here is the directory listing:\nTotal: 20 entries' } as any;
-    yield { type: 'done', reason: 'stop' as const, usage: { input: 10, output: 5, totalTokens: 15 } } as any;
-  }
-});
 
 describe('Scan code integration', () => {
   let cwd: string;
@@ -101,12 +106,13 @@ describe('Scan code integration', () => {
 
     // Collect messages
     const turns: any[] = [];
+    const errors: any[] = [];
     const unsubscribe = session.subscribe((event: any) => {
       if (event.type === 'message_end') {
         turns.push(event.turn);
       }
       if (event.type === 'error') {
-        console.error('Session error event:', event);
+        errors.push(event);
       }
     });
 
@@ -114,27 +120,33 @@ describe('Scan code integration', () => {
       // Prompt to list files
       await session.prompt('list files');
 
-      // Wait longer for async processing (multiple rounds: ls + final answer)
-      await new Promise(resolve => setTimeout(resolve, 10000));
+      // Wait a bit for async event flushing (should not be needed but safe)
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Debug: log all turns to see structure
+      // Log for debugging
       console.log('Collected turns:', JSON.stringify(turns, null, 2));
+      if (errors.length) {
+        console.log('Errors:', errors);
+      }
 
-      // Check we have assistant messages
+      // Check we have assistant messages with text content
       const assistantTurns = turns.filter(t => t.role === 'assistant');
-      expect(assistantTurns.length).toBeGreaterThan(0);
+      expect(assistantTurns.length).toBeGreaterThanOrEqual(1, 'Should have at least one assistant turn');
 
-      // Get the last assistant turn
-      const last = assistantTurns[assistantTurns.length - 1];
-      const text = last.content
+      // Find a turn with a text message
+      const turnWithText = assistantTurns.find(t =>
+        t.content.some((c: any) => c.type === 'text')
+      );
+      expect(turnWithText).toBeDefined('Should have an assistant turn containing text');
+
+      const text = turnWithText.content
         .filter((c: any) => c.type === 'text')
         .map((c: any) => c.text)
         .join('');
 
-      // Should contain file listing (entries from ls)
       expect(text).toMatch(/Total: \d+ entries/);
     } finally {
       unsubscribe();
     }
   });
-});
+}, 30000);

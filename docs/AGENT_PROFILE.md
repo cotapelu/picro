@@ -21,7 +21,7 @@
 
 ## Weaknesses / Known Issues
 
-- None critical. Minor improvements possible (integration tests) but not urgent.
+- None critical.
 
 
 ## Fragile Modules

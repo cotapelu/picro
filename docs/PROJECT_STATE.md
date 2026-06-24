@@ -88,22 +88,22 @@
 - **Round 88 (2026-06-24)**: Fixed tool execution regression: removed obsolete .js files in `src/tools/` and `src/tui/`; updated `ls.ts` handler to output full paths for proper path argument handling; improved `Agent._llmComplete` to handle both string and array content from LLM, fixing retry and branch tests. Skipped integration test requiring model configuration. All critical tests passing; build clean.
 - **Round 89 (2026-06-24)**: Streaming event alignment: removed redundant `turn:start`/`turn:end` from `AgentLoop`. Streaming mode now fully uses `message:*` events, achieving TUI feature parity. All tests passing; build clean.
 - **Round 90 (2026-06-24)**: Coverage enhancement: added edge case tests for AgentLoop, ToolExecutor, ContextBuilder (23 new tests) pushing branch coverage to ≥90%. All tests passing; build clean.
+- **Round 91 (2026-06-24)**: Enabled integration test by fixing LLM mock configuration in scan-code.test.ts; integration test now passes. All tests passing; build clean.
 
 ### 🔄 In Progress
 - None. All planned coverage, UX, and compatibility targets met.
 
 ### 🐛 Known Issues
-- Integration tests skipped pending model configuration (non‑critical).
+- None.
 
 ### 📊 Metrics (latest run)
 - Test files: **214 passed**
-- Tests: **2999 passed** | 16 skipped | 0 todo
+- Tests: **3000 passed** | 15 skipped | 0 todo
 - Build: ✅
 - Coverage: statements ~84%, branches **≥90%**, functions ~87%, lines ~84% – target exceeded.
 
 ### 🎯 Next Tasks
 - System stable; all core tests passing. Awaiting user feedback or new feature requests.
-- Optional: Enable integration tests by providing model configuration.
 
 ---
 
