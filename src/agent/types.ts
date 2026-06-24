@@ -543,6 +543,8 @@ export interface LoopStrategy {
 export interface AgentConfig {
   // Core
   maxRounds: number;
+  /** Optional system prompt injected into every LLM request */
+  systemPrompt?: string;
   // Optional booleans
   verbose?: boolean;
   enableLogging?: boolean;

@@ -279,6 +279,10 @@ export class AgentSession {
         }
       }
     }
+
+    // Build initial system prompt from registered tools and set on agent
+    this._baseSystemPrompt = this._buildSystemPrompt();
+    this.agent.setSystemPrompt(this._baseSystemPrompt);
   }
 
   // =========================================================================
@@ -461,6 +465,7 @@ export class AgentSession {
     // Rebuild system prompt with updated tool set
     this._baseSystemPrompt = this._buildSystemPrompt();
     this._agentState.systemPrompt = this._baseSystemPrompt;
+    this.agent.setSystemPrompt(this._baseSystemPrompt);
   }
 
   // =========================================================================

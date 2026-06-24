@@ -219,13 +219,16 @@ export class AgentLoop {
       llmMessages = this.convertTurnsToMessages(processed);
     }
 
-    const systemTurn = processed.find((t) => t.role === "system");
-    let systemPrompt: string | undefined;
-    if (systemTurn) {
-      systemPrompt = (systemTurn as any).content
-        .filter((c: any) => c.type === "text")
-        .map((c: any) => c.text)
-        .join("");
+    // Prefer systemPrompt from config (set by AgentSession). Fallback to system turn for compatibility.
+    let systemPrompt = this.config.systemPrompt;
+    if (!systemPrompt) {
+      const systemTurn = processed.find((t) => t.role === "system");
+      if (systemTurn) {
+        systemPrompt = (systemTurn as any).content
+          .filter((c: any) => c.type === "text")
+          .map((c: any) => c.text)
+          .join("");
+      }
     }
 
     return {

@@ -697,6 +697,11 @@ export class Agent {
     }
   }
 
+  /** Set the system prompt for the agent (injected into LLM context). */
+  setSystemPrompt(prompt: string): void {
+    this.config.systemPrompt = prompt;
+  }
+
   // ============================================================================
   // Interactive Mode Compatibility
   // ============================================================================
