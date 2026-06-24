@@ -15,13 +15,13 @@
 - Complete slash command support
 - Trust warnings for untrusted projects
 - Model selector with search and persistence
-- **Test coverage >80% across all metrics (2975+ passing tests)**
+- **Test coverage >90% across all metrics (2999+ passing tests)**
 - **Build stable, CI-ready**
 
 
 ## Weaknesses / Known Issues
 
-- None critical. Minor improvements possible (coverage 90%+, integration tests) but not urgent.
+- None critical. Minor improvements possible (integration tests) but not urgent.
 
 
 ## Fragile Modules
