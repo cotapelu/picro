@@ -653,11 +653,7 @@ export class AgentLoop {
             return errorResult;
           }
 
-          const assistantTurn = this.createAssistantTurn(finalMessage);
-          this.state.history.push(assistantTurn);
-          this.lastTurnAssistant = assistantTurn as AssistantTurn;
-          this.lastTurnNewMessages = [assistantTurn];
-          this.lastTurnToolResults = [];
+          const assistantTurn = this._finalizeAssistantTurn(finalMessage);
         } else {
           const llmResponse = await this.llmComplete(llmContext, {
             signal: combinedSignal,
@@ -688,11 +684,7 @@ export class AgentLoop {
             toolCallsCount: response!.toolCalls?.length ?? 0,
           } as any);
 
-          const assistantTurn = this.createAssistantTurn(response!);
-          this.state.history.push(assistantTurn);
-          this.lastTurnAssistant = assistantTurn as AssistantTurn;
-          this.lastTurnNewMessages = [assistantTurn];
-          this.lastTurnToolResults = [];
+          const assistantTurn = this._finalizeAssistantTurn(response!);
           // Emit message:start and message:end for non-streaming
           this.emitter.emit({
             type: "message:start",
@@ -732,161 +724,31 @@ export class AgentLoop {
         }
 
         if (toolCalls.length > 0) {
-          this.state.totalToolCalls += toolCalls.length;
-
-          const toolContext: ToolContext = {
-            round: this.state.round,
-            runtimeState: this.state,
-            signal: combinedSignal,
-          };
-
-          // Tool execution timing
-          const toolExecStartTime = Date.now();
-          const toolResults = await this.toolExecutor.executeAll(
+          const result = await this._processTurnWithTools(
             toolCalls,
-            toolContext,
+            isStreaming,
+            finalMessage,
+            response,
             combinedSignal,
-          );
-          const toolExecEndTime = Date.now();
-          const toolExecutionTime = toolExecEndTime - toolExecStartTime;
-          totalToolExecutionTime += toolExecutionTime;
-          // Update tool metrics
-          this.metrics.toolCalls += toolResults.length;
-          this.metrics.toolSuccesses += toolResults.filter(r => !r.isError).length;
-          this.metrics.toolFailures += toolResults.filter(r => r.isError).length;
-          this.metrics.toolTotalLatencyMs += toolExecutionTime;
-
-          this.state.toolResults.push(...toolResults);
-
-          if (this.config.autoSaveMemories && this.memoryStore) {
-            // Use last user query for memory
-            const lastUserTurn = [...this.state.history]
-              .reverse()
-              .find((t) => t.role === "user");
-            const query =
-              lastUserTurn?.content
-                .filter((c) => c.type === "text")
-                .map((c) => c.text)
-                .join("") || "";
-            if (isStreaming) {
-              await this.autoSaveMemory(query, finalMessage, toolResults);
-            } else {
-              await this.autoSaveMemory(query, response!, toolResults);
-            }
-          }
-
-          // Do NOT modify currentPrompt - tool results are already in history as tool turns
-
-          const toolTurns: ToolTurn[] = [];
-          for (const result of toolResults) {
-            const toolTurn = this.createToolTurn(result);
-            this.state.history.push(toolTurn);
-            toolTurns.push(toolTurn);
-            this.lastTurnNewMessages.push(toolTurn);
-          }
-          this.lastTurnToolResults = toolResults;
-
-          // Emit round timing if debug mode is enabled (match original: only non-streaming)
-          if (this.config.debug && !isStreaming) {
-            const roundEndTime = Date.now();
-            const totalRoundTime = roundEndTime - roundStartTime;
-            await this.emitter.emit({
-              type: "debug:round:timing",
-              timestamp: Date.now(),
-              round: this.state.round,
-              contextBuildingTime: 0,
-              memoryRetrievalTime,
-              llmRequestTime,
-              toolExecutionTime,
-              totalRoundTime,
-            } as any);
-          }
-
-          // Non-streaming mode already emitted message:end above (line 731).
-          // Streaming mode emitted message:end via stream handler.
-          // No additional turn:end needed.
-
-          // LUÔN check follow-up sau mỗi turn (trước khi quyết định tiếp tục hay kết thúc)
-          const followUpTurns = await this.followUpManager.collect(
             followUpQueue,
-            this.config.getFollowUpMessages,
-            this.config.debug,
+            roundStartTime,
           );
-          if (followUpTurns.length > 0) {
-            this.state.history.push(...followUpTurns);
-            this.lastTurnNewMessages.push(...followUpTurns);
-            continue; // tiếp tục vòng lặp với follow-up messages
-          }
-
-          // Check for early termination due to all tools signaling terminate
-          const allTerminate =
-            toolResults.length > 0 &&
-            toolResults.every((r) => (r as any).terminate === true);
-          if (allTerminate) {
+          totalToolExecutionTime += result.toolExecutionTime || 0;
+          if (result.finalResult) {
             turnEnded = true;
-            finalResultCandidate = {
-              finalAnswer: "",
-              totalRounds: this.state.round,
-              totalToolCalls: this.state.totalToolCalls,
-              totalTokens: this.state.totalTokens,
-              toolResults: this.state.toolResults,
-              success: true,
-              stopReason: "stop",
-              error: undefined,
-              finalState: { ...this.state },
-            };
+            finalResultCandidate = result.finalResult;
           }
-          // Nếu không allTerminate, không set turnEnded → sẽ tiếp tục LLM turn tiếp theo
         } else {
-          // Non-streaming mode already emitted message:end above (line 731).
-          // No additional turn:end needed.
-
-          // LUÔN check follow-up sau mỗi turn
-          const followUpTurns = await this.followUpManager.collect(
+          const result = await this._processTurnWithoutTools(
+            isStreaming,
+            finalMessage,
+            response,
             followUpQueue,
-            this.config.getFollowUpMessages,
-            this.config.debug,
           );
-          if (followUpTurns.length > 0) {
-            this.state.history.push(...followUpTurns);
-            this.lastTurnNewMessages.push(...followUpTurns);
-            continue;
+          if (result.finalResult) {
+            turnEnded = true;
+            finalResultCandidate = result.finalResult;
           }
-
-          // Không có follow-up: prepare final result candidate
-          let finalAnswer: string;
-          let stopReason: StopReason | undefined;
-          let errorMessage: string | undefined;
-
-          if (isStreaming) {
-            const contentBlocks = finalMessage.content || [];
-            finalAnswer = Array.isArray(contentBlocks)
-              ? contentBlocks
-                  .filter((c: any) => c.type === "text")
-                  .map((c: any) => c.text)
-                  .join("")
-              : String(contentBlocks);
-            stopReason = finalMessage.stopReason;
-            errorMessage = finalMessage.errorMessage;
-          } else {
-            finalAnswer = response!.content || "";
-            stopReason = response!.stopReason;
-            errorMessage = response!.errorMessage;
-          }
-
-          finalResultCandidate = {
-            finalAnswer,
-            totalRounds: this.state.round,
-            totalToolCalls: this.state.totalToolCalls,
-            totalTokens: this.state.totalTokens,
-            toolResults: this.state.toolResults,
-            success: true,
-            stopReason: stopReason || "stop",
-            error: errorMessage,
-            finalState: { ...this.state },
-          };
-
-          turnEnded = true;
         }
 
         if (turnEnded) {
@@ -1293,5 +1155,163 @@ export class AgentLoop {
       toolsAvailable: this.tools.length,
     } as any);
     return llmStartTime;
+  }
+
+  private _finalizeAssistantTurn(message: any): AssistantTurn {
+    const assistantTurn = this.createAssistantTurn(message);
+    this.state.history.push(assistantTurn);
+    this.lastTurnAssistant = assistantTurn as AssistantTurn;
+    this.lastTurnNewMessages = [assistantTurn];
+    this.lastTurnToolResults = [];
+    return assistantTurn as AssistantTurn;
+  }
+
+  private async _processTurnWithTools(
+    toolCalls: ToolCallData[],
+    isStreaming: boolean,
+    finalMessage: any,
+    response: LLMResponse | null,
+    combinedSignal: AbortSignal,
+    followUpQueue: MessageQueue,
+    roundStartTime: number,
+  ): Promise<{ needNextTurn: boolean; finalResult?: AgentRunResult; toolExecutionTime: number }> {
+    this.state.totalToolCalls += toolCalls.length;
+    const toolContext: ToolContext = {
+      round: this.state.round,
+      runtimeState: this.state,
+      signal: combinedSignal,
+    };
+
+    const toolExecStartTime = Date.now();
+    const toolResults = await this.toolExecutor.executeAll(
+      toolCalls,
+      toolContext,
+      combinedSignal,
+    );
+    const toolExecutionTime = Date.now() - toolExecStartTime;
+
+    this.state.totalToolCalls += toolCalls.length;
+    this.metrics.toolCalls += toolResults.length;
+    this.metrics.toolSuccesses += toolResults.filter(r => !r.isError).length;
+    this.metrics.toolFailures += toolResults.filter(r => r.isError).length;
+    this.metrics.toolTotalLatencyMs += toolExecutionTime;
+    this.state.toolResults.push(...toolResults);
+
+    if (this.config.autoSaveMemories && this.memoryStore) {
+      const lastUserTurn = [...this.state.history].reverse().find(t => t.role === "user");
+      const query = lastUserTurn?.content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("") || "";
+      if (isStreaming) {
+        await this.autoSaveMemory(query, finalMessage, toolResults);
+      } else if (response) {
+        await this.autoSaveMemory(query, response, toolResults);
+      }
+    }
+
+    const toolTurns: ToolTurn[] = [];
+    for (const result of toolResults) {
+      const toolTurn = this.createToolTurn(result);
+      this.state.history.push(toolTurn);
+      toolTurns.push(toolTurn);
+      this.lastTurnNewMessages.push(toolTurn);
+    }
+    this.lastTurnToolResults = toolResults;
+
+    if (this.config.debug && !isStreaming) {
+      const roundEndTime = Date.now();
+      const totalRoundTime = roundEndTime - roundStartTime;
+      await this.emitter.emit({
+        type: "debug:round:timing",
+        timestamp: Date.now(),
+        round: this.state.round,
+        contextBuildingTime: 0,
+        memoryRetrievalTime: 0,
+        llmRequestTime: 0,
+        toolExecutionTime,
+        totalRoundTime,
+      } as any);
+    }
+
+    const followUpTurns = await this.followUpManager.collect(
+      followUpQueue,
+      this.config.getFollowUpMessages,
+      this.config.debug,
+    );
+    if (followUpTurns.length > 0) {
+      this.state.history.push(...followUpTurns);
+      this.lastTurnNewMessages.push(...followUpTurns);
+      return { needNextTurn: true, toolExecutionTime };
+    }
+
+    const allTerminate = toolResults.length > 0 && toolResults.every((r: any) => r.terminate === true);
+    if (allTerminate) {
+      return {
+        needNextTurn: false,
+        finalResult: {
+          finalAnswer: "",
+          totalRounds: this.state.round,
+          totalToolCalls: this.state.totalToolCalls,
+          totalTokens: this.state.totalTokens,
+          toolResults: this.state.toolResults,
+          success: true,
+          stopReason: "stop",
+          error: undefined,
+          finalState: { ...this.state },
+        },
+        toolExecutionTime,
+      };
+    }
+
+    return { needNextTurn: true, toolExecutionTime };
+  }
+
+  private async _processTurnWithoutTools(
+    isStreaming: boolean,
+    finalMessage: any,
+    response: LLMResponse | null,
+    followUpQueue: MessageQueue,
+  ): Promise<{ needNextTurn: boolean; finalResult?: AgentRunResult; toolExecutionTime?: number }> {
+    const followUpTurns = await this.followUpManager.collect(
+      followUpQueue,
+      this.config.getFollowUpMessages,
+      this.config.debug,
+    );
+    if (followUpTurns.length > 0) {
+      this.state.history.push(...followUpTurns);
+      this.lastTurnNewMessages.push(...followUpTurns);
+      return { needNextTurn: true };
+    }
+
+    let finalAnswer: string;
+    let stopReason: StopReason | undefined;
+    let errorMessage: string | undefined;
+
+    if (isStreaming) {
+      const contentBlocks = finalMessage.content || [];
+      finalAnswer = Array.isArray(contentBlocks)
+        ? contentBlocks.filter((c: any) => c.type === "text").map((c: any) => c.text).join("")
+        : String(contentBlocks);
+      stopReason = finalMessage.stopReason;
+      errorMessage = finalMessage.errorMessage;
+    } else {
+      finalAnswer = response!.content || "";
+      stopReason = response!.stopReason;
+      errorMessage = response!.errorMessage;
+    }
+
+    return {
+      needNextTurn: false,
+      finalResult: {
+        finalAnswer,
+        totalRounds: this.state.round,
+        totalToolCalls: this.state.totalToolCalls,
+        totalTokens: this.state.totalTokens,
+        toolResults: this.state.toolResults,
+        success: true,
+        stopReason: stopReason || "stop",
+        error: errorMessage,
+        finalState: { ...this.state },
+      },
+      toolExecutionTime: 0,
+    };
   }
 }
