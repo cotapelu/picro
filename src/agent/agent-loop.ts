@@ -462,14 +462,7 @@ export class AgentLoop {
         );
 
         // LLM request timing
-        const llmStartTime = Date.now();
-        await this.emitter.emit({
-          type: "llm:request",
-          timestamp: Date.now(),
-          round: this.state.round,
-          promptLength: llmContext.messages.length,
-          toolsAvailable: this.tools.length,
-        } as any);
+        const llmStartTime = await this._emitLlmRequest(llmContext);
 
         let llmRequestTime = 0;
         let response: LLMResponse | null = null;
@@ -1288,5 +1281,17 @@ export class AgentLoop {
       }
     }
     return { memories, retrievalTime: memResult.retrievalTime };
+  }
+
+  private async _emitLlmRequest(llmContext: Context): Promise<number> {
+    const llmStartTime = Date.now();
+    await this.emitter.emit({
+      type: "llm:request",
+      timestamp: Date.now(),
+      round: this.state.round,
+      promptLength: llmContext.messages.length,
+      toolsAvailable: this.tools.length,
+    } as any);
+    return llmStartTime;
   }
 }
