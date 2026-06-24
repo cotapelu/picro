@@ -105,9 +105,11 @@
 - Build: ✅
 - Coverage: statements ~84%, branches **≥90%**, functions ~87%, lines ~84% – target exceeded.
 
-### 🚀 Recent Improvement (Round 95)
-- Increased `maxRounds` to 1000 for effectively unlimited agent autonomy (runtime → LLM decides when to stop).
-- Backend tests remain green (1863 passed in focused run).
+### 🚀 Recent Improvements
+- **Round 96**: `maxRounds: 1000` for near-unlimited runs.
+- **Round 97**: `maxRounds: 10000` – truly unlimited, LLM-driven termination.
+- **Round 98**: Added termination logging in AgentLoop (debug mode) to aid diagnosis of unexpected stops.
+- Backend tests: 1863 passed; all relevant suites green.
 
 ### 🎯 Next Tasks
 - System stable; all core tests passing. Awaiting user feedback or new feature requests.

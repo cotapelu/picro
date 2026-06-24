@@ -912,6 +912,10 @@ export class AgentLoop {
                 totalToolExecutionTime,
               } as any);
             }
+            // Debug: log termination reason
+            if (this.config.debug) {
+              console.info(`[AgentLoop] Terminated after ${this.state.round} rounds. stopReason=${finalResultCandidate.stopReason} success=${finalResultCandidate.success}`);
+            }
             await this.emitter.emit({
               type: "agent:end",
               timestamp: Date.now(),
@@ -998,6 +1002,10 @@ export class AgentLoop {
           totalLLMRequestTime,
           totalToolExecutionTime,
         } as any);
+      }
+      // Debug: log termination reason (error)
+      if (this.config.debug) {
+        console.info(`[AgentLoop] Terminated with error after ${this.state.round} rounds. error=${errorResult.error}`);
       }
       await this.emitter.emit({
         type: "agent:end",
