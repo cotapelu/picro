@@ -192,8 +192,8 @@ describe('AgentSession Integration', () => {
       await session.prompt('Test');
 
       expect(events.length).toBeGreaterThan(0);
-      expect(events.some(e => e.type === 'agent:start')).toBe(true);
-      expect(events.some(e => e.type === 'agent:end')).toBe(true);
+      expect(events.some(e => e.type === 'agent_start')).toBe(true);
+      expect(events.some(e => e.type === 'agent_end')).toBe(true);
     });
   });
 

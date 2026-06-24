@@ -137,6 +137,9 @@ export function useRuntime(runtime: ExtendedRuntime) {
             setMessages(prev => [...prev, streamingMsg]);
             if (uiMsg.role === 'assistant') {
               streamingMessageIdRef.current = uiMsg.id;
+            } else if (uiMsg.role === 'user') {
+              // User message starts: clear previous assistant tracking so tool events from earlier turns don't update wrong message
+              streamingMessageIdRef.current = null;
             }
           }
           break;
@@ -166,9 +169,11 @@ export function useRuntime(runtime: ExtendedRuntime) {
           if (uiMsg) {
             const stopReason = turn.stopReason;
             const isError = stopReason === 'error' || stopReason === 'aborted';
+            // Mark streaming as ended, but keep the ID so tool execution events can still update this message
             setMessages(prev => prev.map(msg => msg.id === id ? { ...uiMsg, streaming: false, error: isError ? (stopReason || 'Error') : undefined } : msg));
           }
-          streamingMessageIdRef.current = null;
+          // Do NOT clear streamingMessageIdRef here; tool execution events may follow for this assistant turn.
+          // It will be cleared when the next user message starts, or when a new assistant message starts.
           break;
         }
         case 'tool_execution_start': {

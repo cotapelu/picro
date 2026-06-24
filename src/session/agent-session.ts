@@ -1488,50 +1488,89 @@ export class AgentSession {
       }
     }
 
-    // Forward events to session listeners for InteractiveMode (convert colon to underscore)
+    // Forward events to session listeners for UI (convert colon events to underscore)
     if (
       event.type === 'message:start' ||
       event.type === 'message:end' ||
+      event.type === 'message:update' ||
       event.type === 'agent:start' ||
       event.type === 'agent:end' ||
       event.type === 'turn:start' ||
       event.type === 'turn:end' ||
       event.type === 'tool:call:start' ||
       event.type === 'tool:call:end' ||
+      event.type === 'tool:progress' ||
+      event.type === 'tool:error' ||
+      event.type === 'error' ||
       event.type === 'memory:retrieve'
     ) {
-      const converted: any = {
-        type: event.type.replace(':', '_'),
-        timestamp: event.timestamp,
-      };
-      // Include relevant fields based on event type
-      if (event.type === 'agent:start') {
-        converted.prompt = event.initialPrompt;
-      } else if (event.type === 'agent:end') {
-        converted.result = event.result;
-      } else if (event.type === 'turn:start' || event.type === 'turn:end') {
-        converted.round = event.round;
-        if (event.type === 'turn:end') converted.toolCallsExecuted = event.toolCallsExecuted;
-        if (event.type === 'turn:start') converted.promptLength = event.promptLength;
-      } else if (event.type === 'tool:call:start') {
-        converted.toolName = event.toolName;
-        converted.toolCallId = event.toolCallId;
-        converted.input = event.arguments;
-      } else if (event.type === 'tool:call:end') {
-        converted.toolName = event.result?.toolName;
-        converted.toolCallId = event.result?.toolCallId;
-        converted.result = event.result?.result || event.result?.error;
-        converted.isError = event.result?.isError;
-      } else if (event.type === 'memory:retrieve') {
-        converted.query = event.query;
-        converted.memoriesRetrieved = event.memoriesRetrieved;
-      } else {
-        // message:start / message:end
-        converted.turn = event.turn || event.message;
-        converted.message = converted.turn;
+      const converted: any = { timestamp: event.timestamp };
+      let type = event.type.replace(':', '_');
+
+      switch (event.type) {
+        case 'message:start':
+        case 'message:end':
+        case 'message:update':
+          converted.turn = event.message || event.turn;
+          converted.message = converted.turn;
+          break;
+        case 'agent:start':
+          type = 'agent_start';
+          converted.prompt = event.initialPrompt;
+          break;
+        case 'agent:end':
+          type = 'agent_end';
+          converted.result = event.result;
+          break;
+        case 'turn:start':
+        case 'turn:end':
+          converted.round = event.round;
+          if (event.type === 'turn:end') converted.toolCallsExecuted = event.toolCallsExecuted;
+          if (event.type === 'turn:start') converted.promptLength = event.promptLength;
+          break;
+        case 'tool:call:start':
+          type = 'tool_execution_start';
+          converted.toolCallId = event.toolCallId;
+          converted.toolName = event.toolName;
+          converted.args = event.arguments;
+          break;
+        case 'tool:call:end':
+          type = 'tool_execution_end';
+          converted.toolCallId = event.result?.toolCallId;
+          converted.toolName = event.result?.toolName;
+          converted.result = event.result?.result || event.result?.error;
+          converted.isError = event.result?.isError;
+          break;
+        case 'tool:progress':
+          type = 'tool_execution_update';
+          converted.toolCallId = event.toolCallId;
+          converted.partialResult = event.partialResult;
+          if (event.details) converted.details = event.details;
+          break;
+        case 'tool:error':
+          type = 'tool_execution_end';
+          converted.toolCallId = event.toolCallId;
+          converted.toolName = event.toolName;
+          converted.result = event.errorMessage;
+          converted.isError = true;
+          break;
+        case 'error':
+          type = 'error';
+          converted.error = event.message || event.errorMessage || event.error;
+          break;
+        case 'memory:retrieve':
+          type = 'memory_retrieve';
+          converted.query = event.query;
+          converted.memoriesRetrieved = event.memoriesRetrieved;
+          break;
       }
+
+      converted.type = type;
       this._emit(converted);
     }
+
+    // Process event internally (uses colon event types)
+    this._processAgentEvent(event);
 
     // Process event
     this._processAgentEvent(event);
@@ -1613,8 +1652,10 @@ export class AgentSession {
       }
     }
 
-    // Emit to listeners
-    this._emit(event);
+    // Emit to listeners (skip colon events and raw error—already converted)
+    if (!event.type.includes(':') && event.type !== 'error') {
+      this._emit(event);
+    }
 
     // Handle session persistence
     if (event.type === "message:end" && event.turn) {
