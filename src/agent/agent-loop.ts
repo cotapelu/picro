@@ -328,15 +328,12 @@ export class AgentLoop {
    * Core execution loop used by both run and stream.
    * @param isStreaming - true for streaming, false for non-streaming
    */
-  private async *executeLoop(
+  private _initializeExecution(
     initialPrompt: string,
-    steeringQueue: MessageQueue,
-    followUpQueue: MessageQueue,
-    isStreaming: boolean,
+    initialTurns: ConversationTurn[],
+    resetState: boolean,
     signal?: AbortSignal,
-    initialTurns: ConversationTurn[] = [],
-    resetState: boolean = true,
-  ): AsyncGenerator<any, AgentRunResult> {
+  ): AbortSignal {
     this.abortController = new AbortController();
     const combinedSignal = signal
       ? this.combineSignals(signal, this.abortController.signal)
@@ -359,6 +356,19 @@ export class AgentLoop {
       this.state.history.push(...initialTurns);
     }
     this.state.isRunning = true;
+    return combinedSignal;
+  }
+
+  private async *executeLoop(
+    initialPrompt: string,
+    steeringQueue: MessageQueue,
+    followUpQueue: MessageQueue,
+    isStreaming: boolean,
+    signal?: AbortSignal,
+    initialTurns: ConversationTurn[] = [],
+    resetState: boolean = true,
+  ): AsyncGenerator<any, AgentRunResult> {
+    const combinedSignal = this._initializeExecution(initialPrompt, initialTurns, resetState, signal);
 
     const runStartTime = Date.now();
     let totalContextBuildingTime = 0;
