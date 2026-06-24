@@ -81,6 +81,7 @@
 | 75     | 2026-06-18 | Optimization: reduce maxRounds to 5 for faster convergence and less token usage | 2953+      | 0           | 0         |
 | 74     | 2026-06-18 | Full alignment with reference implementation: tool registration, system prompt improvements, test fixes | 2953       | 0           | 0         |
 | 73     | 2026-06-16 | Final stability validation & documentation sync | 2920+      | 0           | 0         |
+| 88     | 2026-06-24 | Fix tool execution regression: remove obsolete .js files, update ls.ts handler, fix Agent._llmComplete string/array handling | 2976+      | 0           | 0         |
 
 
 ## Quality Indicators
@@ -94,6 +95,8 @@
 
 - Initial implementation of follow-up support caused one test failure due to edge case in `shouldContinue` handling. Fixed quickly.
 - Multi-turn conversation bug ("nhát gừng") fully resolved in Round 86 with integration test added in Round 87.
+- Tool execution stability improved by removing obsolete `.js` files and fixing `ls` handler to output full paths.
+- LLM response handling now supports both string and array content types, fixing retry and branch tests.
 - No performance regressions detected.
 - Code complexity remains manageable; `AgentLoop` is the only fragile module but well‑tested.
 
