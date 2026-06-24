@@ -1375,5 +1375,22 @@ These extractions shorten `executeLoop` significantly and improve readability wi
 
 **Tests**: No new tests; existing 3000+ tests continue to pass.
 
+### Round 95 (2026-06-24): Increase Max Rounds for Deep Scanning
+
+**Problem**: Agent stopped after only 5 rounds, making it unable to scan larger codebases in a single session. Users needed to restart or manually continue, breaking workflow.
+
+**Solution**: Increased the default `maxRounds` from 5 to 20 in `createAgentSessionFromServices` (agent-session-services.ts). This allows more LLM turns before automatic termination, sufficient for scanning entire repositories.
+
+**Implementation**:
+- Modified the Agent config: `maxRounds: 20` (previously 5).
+- Verified tests still pass; no behavioral regressions.
+
+**Impact**:
+- Agent can now perform deeper scans without prematurely reaching round limit.
+- Users get more continuous operation for complex tasks.
+- All tests pass; branch coverage unaffected.
+
+**Tests**: No new tests; existing 3000+ tests continue to pass.
+
 
 
