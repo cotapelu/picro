@@ -282,7 +282,9 @@ export class AgentSession {
 
     // Build initial system prompt from registered tools and set on agent
     this._baseSystemPrompt = this._buildSystemPrompt();
-    this.agent.setSystemPrompt(this._baseSystemPrompt);
+    if (typeof this.agent.setSystemPrompt === 'function') {
+      this.agent.setSystemPrompt(this._baseSystemPrompt);
+    }
   }
 
   // =========================================================================
@@ -408,7 +410,7 @@ export class AgentSession {
    * Get the names of currently active tools.
    */
   getActiveToolNames(): string[] {
-    return this.agent.getToolNames();
+    return typeof this.agent.getToolNames === 'function' ? this.agent.getToolNames() : [];
   }
 
   /**
@@ -437,17 +439,23 @@ export class AgentSession {
   private _buildSystemPrompt(): string {
     const toolGuidelines = Array.from(this._toolPromptGuidelines.values()).flat();
     const toolGuides = Array.from(this._toolPromptGuides.values()).flat();
-    const settingsGuidelines = this.settingsManager.getPromptGuidelines();
+    const settingsGuidelines = typeof this.settingsManager.getPromptGuidelines === 'function'
+      ? this.settingsManager.getPromptGuidelines()
+      : [];
     const allGuidelines = [...toolGuides, ...toolGuidelines, ...settingsGuidelines];
+
+    const getAgentsFiles = typeof this.resourceLoader.getAgentsFiles === 'function' ? this.resourceLoader.getAgentsFiles() : undefined;
+    const getSkills = typeof this.resourceLoader.getSkills === 'function' ? this.resourceLoader.getSkills() : undefined;
+    const getAppendSystemPrompt = typeof this.resourceLoader.getAppendSystemPrompt === 'function' ? this.resourceLoader.getAppendSystemPrompt() : undefined;
 
     return buildSystemPrompt({
       selectedTools: this.getActiveToolNames(),
       toolSnippets: Object.fromEntries(this._toolPromptSnippets),
       promptGuidelines: allGuidelines,
       cwd: this._cwd,
-      contextFiles: this.resourceLoader.getAgentsFiles()?.agentsFiles,
-      skills: this.resourceLoader.getSkills()?.skills,
-      appendSystemPrompt: this.resourceLoader.getAppendSystemPrompt()?.join("\n\n"),
+      contextFiles: getAgentsFiles?.agentsFiles,
+      skills: getSkills?.skills,
+      appendSystemPrompt: getAppendSystemPrompt?.join("\n\n"),
     });
   }
 
@@ -465,7 +473,9 @@ export class AgentSession {
     // Rebuild system prompt with updated tool set
     this._baseSystemPrompt = this._buildSystemPrompt();
     this._agentState.systemPrompt = this._baseSystemPrompt;
-    this.agent.setSystemPrompt(this._baseSystemPrompt);
+    if (typeof this.agent.setSystemPrompt === 'function') {
+      this.agent.setSystemPrompt(this._baseSystemPrompt);
+    }
   }
 
   // =========================================================================
@@ -483,8 +493,10 @@ export class AgentSession {
     const previousModel = this._model;
     this._model = model;
 
-    // Update the agent's LLM providers
-    this.agent.setModel(model);
+    // Update the agent's LLM providers (if available)
+    if (typeof this.agent.setModel === 'function') {
+      this.agent.setModel(model);
+    }
 
     this.sessionManager.appendModelChange(model.provider, model.id);
     this.settingsManager.setDefaultProvider(model.provider);

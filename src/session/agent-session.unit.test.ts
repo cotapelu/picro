@@ -157,6 +157,8 @@ describe('AgentSession branch coverage', () => {
       buildSessionContext: vi.fn().mockReturnValue({ messages: [] }),
     } as any;
     const settingsManager = SettingsManager.inMemory({});
+    // Mock getPromptGuidelines for system prompt building
+    settingsManager.getPromptGuidelines = vi.fn().mockReturnValue([]);
     const modelRegistry = new DefaultModelRegistry();
     return new AgentSession({
       agent,
