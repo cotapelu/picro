@@ -7,6 +7,7 @@
  */
 
 import type { AgentSessionRuntimeInterface } from '../../../../runtime.js';
+import { estimateContextTokens } from '../../../../session/compaction.js';
 
 export interface FooterData {
   cwdBasename: string;
@@ -32,6 +33,9 @@ export interface FooterData {
     ahead?: number;
     behind?: number;
   };
+  contextTokens?: number;
+  contextWindow?: number;
+  contextPercent?: number;
 }
 
 export interface FooterDataProvider {
@@ -116,6 +120,26 @@ export class DefaultFooterDataProvider implements FooterDataProvider {
         }
       } catch {}
 
+      // context usage
+      let contextTokens = 0;
+      let contextWindow = 0;
+      let contextPercent = 0;
+      try {
+        const session = runtime.session as any;
+        const model = session?.model;
+        if (model?.contextWindow) {
+          contextWindow = model.contextWindow;
+          const sessionManager = session?.sessionManager;
+          if (sessionManager?.buildSessionContext) {
+            const ctx = sessionManager.buildSessionContext();
+            contextTokens = estimateContextTokens(ctx.messages, ctx.systemPrompt);
+            contextPercent = Math.round((contextTokens / contextWindow) * 100);
+          }
+        }
+      } catch (e) {
+        // ignore context computation errors
+      }
+
       // performance stats (optional)
       let performance: { avgCpuUserMS: number; avgRSSMB: number } | undefined;
       try {
@@ -171,6 +195,9 @@ export class DefaultFooterDataProvider implements FooterDataProvider {
         extensionStatuses: this.data.extensionStatuses,
         performance,
         git: gitInfo,
+        contextTokens,
+        contextWindow,
+        contextPercent,
       };
       this.notify();
     } catch (err) {

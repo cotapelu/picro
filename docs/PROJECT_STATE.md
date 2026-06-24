@@ -109,7 +109,8 @@
 - **Round 96**: `maxRounds: 1000` for near-unlimited runs.
 - **Round 97**: `maxRounds: 10000` – truly unlimited, LLM-driven termination.
 - **Round 98**: Added termination logging in AgentLoop (debug mode) to aid diagnosis of unexpected stops.
-- **Round 99**: Function length reduction: extracted tool post-processing and finalization helpers; `executeLoop` shortened significantly.
+- **Round 99**: Function length reduction: extracted `_processTurnWithTools`, `_processTurnWithoutTools`, and `_finalizeAssistantTurn`; `executeLoop` shortened significantly.
+- **Round 100**: Footer now displays context usage (% of model context window) to improve observability.
 - Backend tests: 1863 passed; all relevant suites green.
 
 ### 🎯 Next Tasks

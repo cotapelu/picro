@@ -4,6 +4,8 @@ import { Box, Text } from 'ink';
 import { useTheme } from '../../hooks/useTheme.js';
 import type { FooterDataProvider, FooterData } from './FooterDataProvider.js';
 
+// FooterData now includes contextPercent from FooterDataProvider
+
 function formatNumber(num: number): string {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
   if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
@@ -46,6 +48,7 @@ export const Footer: React.FC<FooterProps> = ({ provider, hints = [] }) => {
     extensionStatuses,
     performance,
     git,
+    contextPercent,
   } = data;
 
   const leftParts: string[] = [cwdBasename];
@@ -77,6 +80,9 @@ export const Footer: React.FC<FooterProps> = ({ provider, hints = [] }) => {
   if (performance) {
     rightParts.push(`CPU:${performance.avgCpuUserMS.toFixed(1)}ms`);
     rightParts.push(`RSS:${performance.avgRSSMB.toFixed(1)}MB`);
+  }
+  if (contextPercent !== undefined) {
+    rightParts.push(`ctx:${contextPercent}%`);
   }
   if (hints.length > 0) {
     rightParts.push(hints.join(' | '));

@@ -91,7 +91,8 @@
 | 96     | 2026-06-24 | Enhanced termination logging: include totalToolCalls and totalTokens for better diagnostics | 3000+      | 0           | 0         |
 | 97     | 2026-06-24 | Extract `_emitLlmRequest` helper from executeLoop (first step of function length reduction) | 3000+      | 0           | 0         |
 | 98     | 2026-06-24 | Termination logging: add debug logs with stopReason, totalToolCalls, totalTokens to diagnose unexpected stops | 3000+      | 0           | 0         |
-| 99     | 2026-06-24 | Function length reduction: extracted `_processTurnWithTools`, `_processTurnWithoutTools`, and `_finalizeAssistantTurn`; significantly shortened `executeLoop` | 3000+      | 0           | 0         |
+| 99     | 2026-06-24 | Function length reduction: extracted `_processTurnWithTools`, `_processTurnWithoutTools`, and `_finalizeAssistantTurn`; shortened `executeLoop` further | 3000+      | 0           | 0         |
+| 100    | 2026-06-24 | Footer context usage: show context tokens % in footer for better observability | 3000+      | 0           | 0         |
 
 
 ## Quality Indicators
