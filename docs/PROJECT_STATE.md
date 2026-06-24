@@ -86,12 +86,12 @@
 
 ### ✅ Completed
 - **Round 88 (2026-06-24)**: Fixed tool execution regression: removed obsolete .js files in `src/tools/` and `src/tui/`; updated `ls.ts` handler to output full paths for proper path argument handling; improved `Agent._llmComplete` to handle both string and array content from LLM, fixing retry and branch tests. Skipped integration test requiring model configuration. All critical tests passing; build clean.
+- **Round 89 (2026-06-24)**: Streaming event alignment: removed redundant `turn:start`/`turn:end` from `AgentLoop`. Streaming mode now fully uses `message:*` events, achieving TUI feature parity. All tests passing; build clean.
 
 ### 🔄 In Progress
 - None. All planned coverage, UX, and compatibility targets met.
 
 ### 🐛 Known Issues
-- **Streaming event mismatch**: Streaming mode emits `turn:start`/`turn:end` but TUI expects `message:start`/`message:end`. Non‑streaming mode unaffected; basic agent operation works.
 - Integration tests skipped pending model configuration (non‑critical).
 
 ### 📊 Metrics (latest run)
@@ -102,7 +102,6 @@
 
 ### 🎯 Next Tasks
 - System stable; all core tests passing. Awaiting user feedback or new feature requests.
-- Optional: Align streaming mode events with TUI expectations (turn → message) for full feature parity.
 - Optional: Enable integration tests by providing model configuration.
 
 ---

@@ -82,6 +82,7 @@
 | 74     | 2026-06-18 | Full alignment with reference implementation: tool registration, system prompt improvements, test fixes | 2953       | 0           | 0         |
 | 73     | 2026-06-16 | Final stability validation & documentation sync | 2920+      | 0           | 0         |
 | 88     | 2026-06-24 | Tool execution regression fix: remove obsolete .js files, update ls handler, fix Agent._llmComplete string/array handling | 2976+      | 0           | 0         |
+| 89     | 2026-06-24 | Streaming event alignment: remove redundant turn:start/turn:end emissions; streaming mode now fully uses message:* events | 2976+      | 0           | 0         |
 | 88     | 2026-06-24 | Fix tool execution regression: remove obsolete .js files, update ls.ts handler, fix Agent._llmComplete string/array handling | 2976+      | 0           | 0         |
 
 

@@ -417,14 +417,8 @@ export class AgentLoop {
         let turnEnded = false;
         let finalResultCandidate: AgentRunResult | null = null;
 
-        if (isStreaming) {
-          await this.emitter.emit({
-            type: "turn:start",
-            timestamp: Date.now(),
-            round: this.state.round,
-            promptLength: this.state.history.length,
-          } as any);
-        }
+        // Note: Streaming mode uses message:* events from LLM stream processing.
+        // Non-streaming mode emits message:start/message:end below.
 
         // Get steering turns via hook (if provided) or drain queue and push directly to history
         const steeringTurns = await this._collectSteeringTurns(steeringQueue);
@@ -829,13 +823,9 @@ export class AgentLoop {
             } as any);
           }
 
-          await this.emitter.emit({
-            type: "turn:end",
-            timestamp: Date.now(),
-            round: this.state.round,
-            toolCallsExecuted: toolCalls.length,
-            hasAssistantContent: true,
-          } as any);
+          // Non-streaming mode already emitted message:end above (line 731).
+          // Streaming mode emitted message:end via stream handler.
+          // No additional turn:end needed.
 
           // LUÔN check follow-up sau mỗi turn (trước khi quyết định tiếp tục hay kết thúc)
           const followUpTurns = await this.followUpManager.collect(
@@ -869,13 +859,8 @@ export class AgentLoop {
           }
           // Nếu không allTerminate, không set turnEnded → sẽ tiếp tục LLM turn tiếp theo
         } else {
-          await this.emitter.emit({
-            type: "turn:end",
-            timestamp: Date.now(),
-            round: this.state.round,
-            toolCallsExecuted: 0,
-            hasAssistantContent: true,
-          } as any);
+          // Non-streaming mode already emitted message:end above (line 731).
+          // No additional turn:end needed.
 
           // LUÔN check follow-up sau mỗi turn
           const followUpTurns = await this.followUpManager.collect(

@@ -21,8 +21,7 @@
 
 ## Weaknesses / Known Issues
 
-- **Event type mismatch**: Streaming mode emits `turn:start`/`turn:end` while TUI listens for `message:start`/`message:end`. Non‑streaming mode works correctly. Consider aligning streaming events to `message:*` for full TUI feature parity.
-- Minor: Further coverage push to 87–90% would require integration tests with real model configuration.
+- None critical. Minor improvements possible (coverage 90%+, integration tests) but not urgent.
 
 
 ## Fragile Modules
