@@ -298,7 +298,7 @@ export async function createAgentSessionFromServices(
   // Create Agent with built-in tools only (model can be undefined)
   // AgentSession will register customTools separately
   const agent = new Agent(undefined, builtInTools, {
-    maxRounds: 20, // Increased for deeper codebase scanning tasks
+    maxRounds: 1000, // Effectively unlimited - agent decides when to stop based on LLM signals
     verbose: false,
     toolTimeout: DEFAULT_TOOL_TIMEOUT,
     cacheResults: true,

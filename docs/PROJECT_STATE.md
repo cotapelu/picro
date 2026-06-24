@@ -105,6 +105,10 @@
 - Build: ✅
 - Coverage: statements ~84%, branches **≥90%**, functions ~87%, lines ~84% – target exceeded.
 
+### 🚀 Recent Improvement (Round 95)
+- Increased `maxRounds` to 1000 for effectively unlimited agent autonomy (runtime → LLM decides when to stop).
+- Backend tests remain green (1863 passed in focused run).
+
 ### 🎯 Next Tasks
 - System stable; all core tests passing. Awaiting user feedback or new feature requests.
 
