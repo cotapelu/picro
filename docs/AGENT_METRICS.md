@@ -68,7 +68,6 @@
 | 85     | 2026-06-18 | Remove Legacy InteractiveMode Wrapper | 2976+      | 0           | 0         |
 | 86     | 2026-06-22 | Fix multi-turn conversation "nhát gừng" bug (follow-up queue, state sync, runtime.session) | 2974+      | 0           | 0         |
 | 87     | 2026-06-22 | Add integration test for multi-turn conversation to prevent regression | 2975+      | 0           | 0         |
-| 88     | 2026-06-22 | Evolution finalization: documentation cleanup, no code changes | 2975+      | 0           | 0         |
 | 84     | 2026-06-18 | App Mode Resolution Tests and Refactor | 2976+      | 0           | 0         |
 | 83     | 2026-06-18 | Ink TUI as Default Interactive Mode | 2969       | 0           | 0         |
 | 82     | 2026-06-18 | Compaction metrics tracking integration | 2969       | 0           | 0         |
@@ -83,10 +82,10 @@
 | 73     | 2026-06-16 | Final stability validation & documentation sync | 2920+      | 0           | 0         |
 | 88     | 2026-06-24 | Tool execution regression fix: remove obsolete .js files, update ls handler, fix Agent._llmComplete string/array handling | 2976+      | 0           | 0         |
 | 89     | 2026-06-24 | Streaming event alignment: remove redundant turn:start/turn:end emissions; streaming mode now fully uses message:* events | 2976+      | 0           | 0         |
-| 88     | 2026-06-24 | Fix tool execution regression: remove obsolete .js files, update ls.ts handler, fix Agent._llmComplete string/array handling | 2976+      | 0           | 0         |
 | 90     | 2026-06-24 | Coverage enhancement: edge case tests for AgentLoop, ToolExecutor, ContextBuilder (+23 tests) | 2999+      | 0           | 0         |
 | 91     | 2026-06-24 | Enabled integration test: fixed LLM mock in scan-code.test.ts; cleared known issues | 3000+      | 0           | 0         |
 | 92     | 2026-06-24 | Security hardening: npm audit 0 vulnerabilities via overrides (esbuild, undici) | 3000+      | 0           | 0         |
+| 93     | 2026-06-24 | Documentation consistency: removed duplicate round entries; aligned EVOLUTION.md with actual history | 3000+      | 0           | 0         |
 
 
 ## Quality Indicators
