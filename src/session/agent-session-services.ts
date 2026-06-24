@@ -19,7 +19,7 @@ import { AgentSession } from "../session/agent-session.js";
 import { DEFAULT_TOOL_TIMEOUT } from "./defaults.js";
 import { discoverAndLoadExtensions } from "../extensions/loader.js";
 import { ExtensionRunner, createExtensionRuntime } from "../extensions/runner.js";
-import type { ToolDefinition } from "../agent/types.js";
+import type { ToolDefinition, ToolContext } from "../agent/types.js";
 
 import {
   createBashToolDefinition,
@@ -230,18 +230,31 @@ export async function createAgentSessionServices(
  * Wrap built-in tool's execute method as handler
  */
 function wrapBuiltinTool(tool: any): ToolDefinition {
+  // Determine parameters: use tool.parameters if present, else tool.schema
+  const parameters = tool.parameters ?? tool.schema;
+  // Determine handler: use tool.handler if present, else if tool.execute exists, wrap it.
+  let handler;
+  if (tool.handler) {
+    handler = tool.handler;
+  } else if (tool.execute) {
+    handler = async (args: Record<string, unknown>, context: ToolContext) => {
+      return tool.execute(args, context);
+    };
+  } else {
+    throw new Error(`Tool ${tool.name} has no handler or execute method`);
+  }
+
   const def: ToolDefinition = {
     name: tool.name,
     description: tool.description,
-    parameters: tool.schema,
-    handler: async (input: any, context: any) => {
-      return tool.execute(input, context);
-    },
+    parameters,
+    handler,
   };
   // Preserve optional fields if present
   if (tool.promptSnippet) def.promptSnippet = tool.promptSnippet;
   if (tool.promptGuides) def.promptGuides = tool.promptGuides;
   if (tool.label) def.label = tool.label;
+  if (tool.executionMode) def.executionMode = tool.executionMode;
   return def;
 }
 
