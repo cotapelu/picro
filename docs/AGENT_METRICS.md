@@ -87,6 +87,8 @@
 | 92     | 2026-06-24 | Security hardening: npm audit 0 vulnerabilities via overrides (esbuild, undici) | 3000+      | 0           | 0         |
 | 93     | 2026-06-24 | Documentation consistency: removed duplicate round entries; aligned EVOLUTION.md with actual history | 3000+      | 0           | 0         |
 | 94     | 2026-06-24 | Function length reduction: extracted initialization and memory retrieval helpers from AgentLoop.executeLoop; progressing toward Funcs≤20 target | 3000+      | 0           | 0         |
+| 95     | 2026-06-24 | Unlimited agent runtime: maxRounds=10000; termination debug logging added for diagnostics | 3000+      | 0           | 0         |
+| 96     | 2026-06-24 | Enhanced termination logging: include totalToolCalls and totalTokens for better diagnostics | 3000+      | 0           | 0         |
 
 
 ## Quality Indicators

@@ -914,7 +914,7 @@ export class AgentLoop {
             }
             // Debug: log termination reason
             if (this.config.debug) {
-              console.info(`[AgentLoop] Terminated after ${this.state.round} rounds. stopReason=${finalResultCandidate.stopReason} success=${finalResultCandidate.success}`);
+              console.info(`[AgentLoop] Terminated after ${this.state.round} rounds. stopReason=${finalResultCandidate.stopReason} success=${finalResultCandidate.success} totalToolCalls=${this.state.totalToolCalls} totalTokens=${this.state.totalTokens}`);
             }
             await this.emitter.emit({
               type: "agent:end",
@@ -1005,7 +1005,7 @@ export class AgentLoop {
       }
       // Debug: log termination reason (error)
       if (this.config.debug) {
-        console.info(`[AgentLoop] Terminated with error after ${this.state.round} rounds. error=${errorResult.error}`);
+        console.info(`[AgentLoop] Terminated with error after ${this.state.round} rounds. error=${errorResult.error} totalToolCalls=${this.state.totalToolCalls} totalTokens=${this.state.totalTokens}`);
       }
       await this.emitter.emit({
         type: "agent:end",
