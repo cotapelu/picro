@@ -39,6 +39,7 @@ export const BUILTIN_SLASH_COMMANDS: SlashCommandInfo[] = [
   { name: "paste", description: "Paste image from clipboard" },
   { name: "arminsayshi", description: "Armin says hi" },
   { name: "dementedelves", description: "Earendil demented elves" },
+  { name: "debug", description: "Write debug log to temporary file" },
 ];
 
 export function getSlashCommand(name: string): SlashCommandInfo | undefined {

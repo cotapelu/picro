@@ -12,7 +12,7 @@ describe('Slash Commands', () => {
       const names = BUILTIN_SLASH_COMMANDS.map(c => c.name);
       // All commands are listed for discoverability, even if not all are implemented yet
       expect(names.sort()).toEqual([
-        'arminsayshi', 'changelog', 'clone', 'compact', 'copy', 'dementedelves', 'export', 'fork', 'help', 'hotkeys', 'import', 'login', 'logout', 'model', 'name', 'new', 'paste', 'quit', 'reload', 'resume', 'scoped-models', 'session', 'settings', 'share', 'stats', 'thinking', 'tree'
+        'arminsayshi', 'changelog', 'clone', 'compact', 'copy', 'debug', 'dementedelves', 'export', 'fork', 'help', 'hotkeys', 'import', 'login', 'logout', 'model', 'name', 'new', 'paste', 'quit', 'reload', 'resume', 'scoped-models', 'session', 'settings', 'share', 'stats', 'thinking', 'tree'
       ]);
     });
 

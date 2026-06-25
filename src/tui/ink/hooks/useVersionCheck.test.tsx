@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
 // Mock VERSION before importing the hook
-vi.mock('../../config.js', () => ({
+vi.mock('../../../config', () => ({
   VERSION: '1.2.3',
 }));
 

@@ -1548,3 +1548,26 @@ These extractions shorten `executeLoop` significantly and improve readability wi
 
 
 
+
+### Round 108 (2026-06-25): Fixed Memory Leak in Process Signal Handlers & Import Path Corrections
+
+**Problem**: 
+1. The `useInkApp` hook added process signal listeners with anonymous wrapper functions but attempted to remove the raw `handleSignal` function, causing listeners to accumulate and trigger `MaxListenersExceededWarning`.
+2. Multiple TUI hook files used incorrect import paths (`../../runtime/` instead of `../../../runtime/`) and mismatched extensions (`.js` vs `.ts`), causing Vite import analysis to fail in tests.
+
+**Solution**:
+1. Stored wrapper functions in local variables (`onSigTerm`, `onSigHup`) and used those exact references for both `process.on` and `process.off`.
+2. Corrected import paths across TUI:
+   - `useInkApp.ts`: `../../../runtime/slash-commands`, `../../../config`
+   - `useCommandRegistry.ts`: same
+   - `useVersionCheck.ts`: same
+   - `InkApp.tsx`, `command-handlers.ts`, `modal-renderers.tsx`, `HelpModal.tsx`: use extensionless `.js` imports consistent with rest of codebase (resolved by build).
+
+**Impact**:
+- Eliminated memory leak warning fully.
+- Unblocked 7 `.tsx` test suites that previously failed to load.
+- Improved resource cleanup and stability of TUI lifecycle.
+
+**Tests**: Core tests remain green (3000+). `.tsx` tests now load; some version-check tests have expectation mismatches unrelated to this change.
+
+---

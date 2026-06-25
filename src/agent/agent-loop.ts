@@ -1013,13 +1013,11 @@ export class AgentLoop {
     }
   }
 
-  private createAssistantTurn(response: LLMResponse): ConversationTurn {
+  private _buildAssistantContent(response: LLMResponse): ContentBlock[] {
     const contentBlocks: ContentBlock[] = [];
-    // Add text content if present (string)
     if (response.content) {
       contentBlocks.push({ type: 'text', text: response.content });
     }
-    // Add tool calls if present
     if (response.toolCalls && Array.isArray(response.toolCalls)) {
       for (const tc of response.toolCalls) {
         contentBlocks.push({
@@ -1030,10 +1028,14 @@ export class AgentLoop {
         } as ToolCallBlock);
       }
     }
+    return contentBlocks;
+  }
+
+  private createAssistantTurn(response: LLMResponse): ConversationTurn {
     return {
       id: randomUUID(),
       role: "assistant",
-      content: contentBlocks,
+      content: this._buildAssistantContent(response),
       timestamp: Date.now(),
       stopReason: response.stopReason,
       errorMessage: response.errorMessage,
@@ -1041,28 +1043,29 @@ export class AgentLoop {
     } as any;
   }
 
+  private _buildToolContent(result: ToolResult): (TextBlock | ImageBlock)[] {
+    const isError = "error" in result;
+    if (isError) {
+      return [{ type: "text", text: (result as FailedToolResult).error }];
+    }
+    const successful = result as SuccessfulToolResult;
+    if (typeof successful.content === "string") {
+      return [{ type: "text", text: successful.content }];
+    } else if (Array.isArray(successful.content)) {
+      return successful.content;
+    } else {
+      const json = JSON.stringify(successful.content, null, 2);
+      return [{ type: "text", text: json }];
+    }
+  }
+
   private createToolTurn(result: ToolResult): ToolTurn {
     const isError = "error" in result;
-    let contentBlocks: (TextBlock | ImageBlock)[];
-    if (isError) {
-      contentBlocks = [{ type: "text", text: (result as FailedToolResult).error }];
-    } else {
-      const successful = result as SuccessfulToolResult;
-      if (typeof successful.content === "string") {
-        contentBlocks = [{ type: "text", text: successful.content }];
-      } else if (Array.isArray(successful.content)) {
-        contentBlocks = successful.content;
-      } else {
-        // Fallback: convert to JSON string
-        const json = JSON.stringify(successful.content, null, 2);
-        contentBlocks = [{ type: "text", text: json }];
-      }
-    }
     return {
       role: "tool",
       toolCallId: result.toolCallId,
       toolName: result.toolName,
-      content: contentBlocks,
+      content: this._buildToolContent(result),
       isError,
       details: (result as any).metadata?.details,
       timestamp: Date.now(),
