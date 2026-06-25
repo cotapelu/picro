@@ -1514,6 +1514,21 @@ These extractions shorten `executeLoop` significantly and improve readability wi
 **Tests**: All core tests pass (2871+).
 
 
+### Round 106 (2026-06-24): Extract Tool Termination and Debug Timing Helpers
+
+**Problem**: `_processTurnWithTools` contained inline logic for termination check and debug timing.
+
+**Solution**:
+- Extracted `_allToolsTerminate` to encapsulate termination condition.
+- Extracted `_emitDebugRoundTiming` to handle debug emissions.
+
+**Impact**:
+- `_processTurnWithTools` shortened by ~15 lines.
+- Improved readability and separation of concerns.
+
+**Tests**: All core tests pass (2871+).
+
+
 ---
 
 

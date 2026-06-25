@@ -96,6 +96,7 @@
 | 101    | 2026-06-24 | System validation: unlimited rounds (10000), termination logging, context footer; backend tests pass; ready for large scans | 3000+      | 0           | 0         |
 | 104    | 2026-06-24 | Minor refactor: extracted `_applyMemoryBoosting` to reduce `_retrieveMemoriesWithBoosting` length; improved readability | 3000+      | 0           | 0         |
 | 105    | 2026-06-24 | Extract `_formatMemoryEvent` from `_retrieveMemories` for better separation of concerns | 3000+      | 0           | 0         |
+| 106    | 2026-06-24 | Extracted `_allToolsTerminate` and `_emitDebugRoundTiming` to shorten `_processTurnWithTools` | 3000+      | 0           | 0         |
 
 
 ## Quality Indicators

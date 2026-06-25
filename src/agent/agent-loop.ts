@@ -1165,6 +1165,31 @@ export class AgentLoop {
     return paired.map(p => p.mem);
   }
 
+  private _allToolsTerminate(toolResults: ToolResult[]): boolean {
+    return toolResults.length > 0 && toolResults.every((r: any) => r.terminate === true);
+  }
+
+  private async _emitDebugRoundTiming(
+    roundStartTime: number,
+    toolExecutionTime: number,
+    isStreaming: boolean,
+  ): Promise<void> {
+    if (this.config.debug && !isStreaming) {
+      const roundEndTime = Date.now();
+      const totalRoundTime = roundEndTime - roundStartTime;
+      await this.emitter.emit({
+        type: "debug:round:timing",
+        timestamp: Date.now(),
+        round: this.state.round,
+        contextBuildingTime: 0,
+        memoryRetrievalTime: 0,
+        llmRequestTime: 0,
+        toolExecutionTime,
+        totalRoundTime,
+      } as any);
+    }
+  }
+
   private async _emitLlmRequest(llmContext: Context): Promise<number> {
     const llmStartTime = Date.now();
     await this.emitter.emit({
@@ -1236,20 +1261,7 @@ export class AgentLoop {
     }
     this.lastTurnToolResults = toolResults;
 
-    if (this.config.debug && !isStreaming) {
-      const roundEndTime = Date.now();
-      const totalRoundTime = roundEndTime - roundStartTime;
-      await this.emitter.emit({
-        type: "debug:round:timing",
-        timestamp: Date.now(),
-        round: this.state.round,
-        contextBuildingTime: 0,
-        memoryRetrievalTime: 0,
-        llmRequestTime: 0,
-        toolExecutionTime,
-        totalRoundTime,
-      } as any);
-    }
+    await this._emitDebugRoundTiming(roundStartTime, toolExecutionTime, isStreaming);
 
     const followUpTurns = await this.followUpManager.collect(
       followUpQueue,
@@ -1262,8 +1274,7 @@ export class AgentLoop {
       return { needNextTurn: true, toolExecutionTime };
     }
 
-    const allTerminate = toolResults.length > 0 && toolResults.every((r: any) => r.terminate === true);
-    if (allTerminate) {
+    if (this._allToolsTerminate(toolResults)) {
       return {
         needNextTurn: false,
         finalResult: {
