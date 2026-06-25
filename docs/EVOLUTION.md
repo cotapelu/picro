@@ -1694,3 +1694,19 @@ ContextBuilder computed available tokens for history as `maxTokens - reservedTok
 - Consistent with observability improvements (token count, context percent).
 
 **Testing**: Build passes; manual TUI testing verified warning display at various context levels.
+
+### Round 116 (2026-06-25): Extract prepareNextTurn Hook Logic
+
+**Problem**: `AgentLoop.executeLoop` contained inline prepareNextTurn hook handling, adding to its complexity and mixing concerns.
+
+**Solution**:
+- Extracted hook invocation and state reset into `_runPreRoundHooks()` method.
+- Keeps `executeLoop` focused on loop control flow and round timing.
+- Improved separation of concerns; easier to test hook behavior independently.
+
+**Impact**:
+- Small reduction in `executeLoop` complexity.
+- Clearer code organization.
+- No functional changes.
+
+**Testing**: Build passes; all existing tests pass (3000+).
