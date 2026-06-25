@@ -1190,6 +1190,43 @@ export class AgentLoop {
     }
   }
 
+  private _createTerminatedResult(
+    toolExecutionTime: number,
+  ): { needNextTurn: false; finalResult: AgentRunResult; toolExecutionTime: number } {
+    return {
+      needNextTurn: false,
+      finalResult: {
+        finalAnswer: "",
+        totalRounds: this.state.round,
+        totalToolCalls: this.state.totalToolCalls,
+        totalTokens: this.state.totalTokens,
+        toolResults: this.state.toolResults,
+        success: true,
+        stopReason: "stop",
+        error: undefined,
+        finalState: { ...this.state },
+      },
+      toolExecutionTime,
+    };
+  }
+
+  private async _handleFollowUpAfterTools(
+    followUpQueue: MessageQueue,
+    toolExecutionTime: number,
+  ): Promise<{ handled: true; needNextTurn: boolean; toolExecutionTime: number } | { handled: false }> {
+    const followUpTurns = await this.followUpManager.collect(
+      followUpQueue,
+      this.config.getFollowUpMessages,
+      this.config.debug,
+    );
+    if (followUpTurns.length > 0) {
+      this.state.history.push(...followUpTurns);
+      this.lastTurnNewMessages.push(...followUpTurns);
+      return { handled: true, needNextTurn: true, toolExecutionTime };
+    }
+    return { handled: false };
+  }
+
   private async _emitLlmRequest(llmContext: Context): Promise<number> {
     const llmStartTime = Date.now();
     await this.emitter.emit({
@@ -1263,33 +1300,13 @@ export class AgentLoop {
 
     await this._emitDebugRoundTiming(roundStartTime, toolExecutionTime, isStreaming);
 
-    const followUpTurns = await this.followUpManager.collect(
-      followUpQueue,
-      this.config.getFollowUpMessages,
-      this.config.debug,
-    );
-    if (followUpTurns.length > 0) {
-      this.state.history.push(...followUpTurns);
-      this.lastTurnNewMessages.push(...followUpTurns);
-      return { needNextTurn: true, toolExecutionTime };
+    const followUpResult = await this._handleFollowUpAfterTools(followUpQueue, toolExecutionTime);
+    if (followUpResult.handled) {
+      return { needNextTurn: followUpResult.needNextTurn, toolExecutionTime: followUpResult.toolExecutionTime };
     }
 
     if (this._allToolsTerminate(toolResults)) {
-      return {
-        needNextTurn: false,
-        finalResult: {
-          finalAnswer: "",
-          totalRounds: this.state.round,
-          totalToolCalls: this.state.totalToolCalls,
-          totalTokens: this.state.totalTokens,
-          toolResults: this.state.toolResults,
-          success: true,
-          stopReason: "stop",
-          error: undefined,
-          finalState: { ...this.state },
-        },
-        toolExecutionTime,
-      };
+      return this._createTerminatedResult(toolExecutionTime);
     }
 
     return { needNextTurn: true, toolExecutionTime };

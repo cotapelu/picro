@@ -99,6 +99,7 @@
 | 106    | 2026-06-24 | Extracted `_allToolsTerminate` and `_emitDebugRoundTiming` to shorten `_processTurnWithTools` | 3000+      | 0           | 0         |
 
 
+| 107    | 2026-06-24 | Extracted `_createTerminatedResult` and `_handleFollowUpAfterTools` to further shorten `_processTurnWithTools` | 3000+      | 0           | 0         |
 ## Quality Indicators
 
 - **Test Failure Rate**: 0% (3000+ tests passing)

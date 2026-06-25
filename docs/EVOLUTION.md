@@ -1529,6 +1529,21 @@ These extractions shorten `executeLoop` significantly and improve readability wi
 **Tests**: All core tests pass (2871+).
 
 
+### Round 107 (2026-06-24): Extract Follow-up and Termination Result Helpers
+
+**Problem**: `_processTurnWithTools` still ~90 lines; contains follow-up handling and terminated result construction.
+
+**Solution**:
+- Extracted `_handleFollowUpAfterTools` to encapsulate follow-up queue processing.
+- Extracted `_createTerminatedResult` for termination outcome.
+
+**Impact**:
+- `_processTurnWithTools` reduced further.
+- Clearer responsibilities; easier to test and maintain.
+
+**Tests**: Core tests pass (2871+).
+
+
 ---
 
 
