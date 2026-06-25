@@ -1659,3 +1659,21 @@ ContextBuilder computed available tokens for history as `maxTokens - reservedTok
 
 
 ---
+
+### Round 113 (2026-06-25): Extract buildLlmContext for Maintainability
+
+**Problem**: `AgentLoop.buildLlmContext` was ~80 lines, mixing ContextBuilder path, legacy path, and system prompt extraction. Violates Funcs≤20 principle and hard to test.
+
+**Solution**:
+- Extracted `_buildContextWithContextBuilder` (ContextBuilder path, returns tokenCount).
+- Extracted `_buildContextLegacy` (fallback path without tokenCount).
+- Extracted `_extractSystemPromptFromTurns` (system prompt extraction logic).
+- Original `buildLlmContext` now just dispatches to appropriate helper.
+
+**Impact**:
+- All extracted methods ≤20 lines.
+- Clear separation of concerns.
+- Easier to unit test each path independently.
+- Improved code readability and maintainability.
+
+**Testing**: All existing tests pass; no functional changes.
