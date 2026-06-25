@@ -242,6 +242,29 @@ export class AgentLoop {
     }
   }
 
+  /** Retrieve memories for current round if enabled */
+  private async _retrieveMemoriesForRound(): Promise<{
+    memories: MemoryEntry[];
+    memoryRetrievalTime: number;
+  }> {
+    const enableMemoryInjection = this.contextBuilder?.getConfig().enableMemoryInjection ?? false;
+    if (!enableMemoryInjection || !this.memoryStore) {
+      return { memories: [], memoryRetrievalTime: 0 };
+    }
+    const lastUserTurn = [...this.state.history]
+      .reverse()
+      .find((t) => t.role === "user");
+    const query =
+      lastUserTurn?.content
+        .filter((c) => c.type === "text")
+        .map((c) => c.text)
+        .join("") || "";
+    const result = await this._retrieveMemoriesWithBoosting(query);
+    this.metrics.memoryRetrievals++;
+    this.memoryLatencyAccumulator += result.retrievalTime;
+    return { memories: result.memories, memoryRetrievalTime: result.retrievalTime };
+  }
+
   private async _buildContextWithContextBuilder(
     turns: ConversationTurn[],
     memories: MemoryEntry[],
@@ -491,25 +514,9 @@ export class AgentLoop {
           }
         }
 
-        // Memory retrieval - ONLY if enabled
-        let memories: MemoryEntry[] = [];
-        let memoryRetrievalTime = 0;
-        const enableMemoryInjection = this.contextBuilder?.getConfig().enableMemoryInjection ?? false;
-        if (enableMemoryInjection && this.memoryStore) {
-          const lastUserTurn = [...this.state.history]
-            .reverse()
-            .find((t) => t.role === "user");
-          const query =
-            lastUserTurn?.content
-              .filter((c) => c.type === "text")
-              .map((c) => c.text)
-              .join("") || "";
-          const result = await this._retrieveMemoriesWithBoosting(query);
-          memories = result.memories;
-          this.metrics.memoryRetrievals++;
-          this.memoryLatencyAccumulator += result.retrievalTime;
-          memoryRetrievalTime = result.retrievalTime;
-          totalMemoryRetrievalTime += result.retrievalTime;
+        const { memories, memoryRetrievalTime } = await this._retrieveMemoriesForRound();
+        if (memoryRetrievalTime > 0) {
+          totalMemoryRetrievalTime += memoryRetrievalTime;
         }
 
         // Build LLM context from current history (includes steering if any)
