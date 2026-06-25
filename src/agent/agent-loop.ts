@@ -1120,29 +1120,31 @@ export class AgentLoop {
     query: string,
   ): Promise<{ memories: MemoryEntry[]; retrievalTime: number }> {
     const memResult = await this._retrieveMemories(query);
-    let memories = memResult.memories;
-    // Apply smart boosting if enabled
-    if (this.config.memoryBoosting && memResult.scores) {
-      const scores = memResult.scores;
-      if (scores.length === memories.length) {
-        const paired = memories.map((mem, idx) => ({ mem, score: scores[idx] }));
-        paired.forEach(item => {
-          const action = (item.mem as any).metadata?.action;
-          if (action === 'read_file') {
-            item.score *= 1.2;
-          } else if (action === 'edit_file') {
-            item.score *= 1.1;
-          } else if (action === 'tool_result') {
-            if (this._containsCode(item.mem.content)) {
-              item.score *= 1.3;
-            }
-          }
-        });
-        paired.sort((a, b) => b.score - a.score);
-        memories = paired.map(p => p.mem);
-      }
-    }
+    const memories = this._applyMemoryBoosting(memResult.memories, memResult.scores || []);
     return { memories, retrievalTime: memResult.retrievalTime };
+  }
+
+  private _applyMemoryBoosting(
+    memories: MemoryEntry[],
+    scores: number[],
+  ): MemoryEntry[] {
+    if (!this.config.memoryBoosting) return memories;
+    if (scores.length !== memories.length) return memories;
+    const paired = memories.map((mem, idx) => ({ mem, score: scores[idx] }));
+    paired.forEach(item => {
+      const action = (item.mem as any).metadata?.action;
+      if (action === 'read_file') {
+        item.score *= 1.2;
+      } else if (action === 'edit_file') {
+        item.score *= 1.1;
+      } else if (action === 'tool_result') {
+        if (this._containsCode(item.mem.content)) {
+          item.score *= 1.3;
+        }
+      }
+    });
+    paired.sort((a, b) => b.score - a.score);
+    return paired.map(p => p.mem);
   }
 
   private async _emitLlmRequest(llmContext: Context): Promise<number> {

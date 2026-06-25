@@ -94,6 +94,7 @@
 | 99     | 2026-06-24 | Function length reduction: extracted `_processTurnWithTools`, `_processTurnWithoutTools`, and `_finalizeAssistantTurn`; shortened `executeLoop` further | 3000+      | 0           | 0         |
 | 100    | 2026-06-24 | Footer context usage: show context tokens % in footer for better observability | 3000+      | 0           | 0         |
 | 101    | 2026-06-24 | System validation: unlimited rounds (10000), termination logging, context footer; backend tests pass; ready for large scans | 3000+      | 0           | 0         |
+| 104    | 2026-06-24 | Minor refactor: extracted `_applyMemoryBoosting` to reduce `_retrieveMemoriesWithBoosting` length; improved readability | 3000+      | 0           | 0         |
 
 
 ## Quality Indicators

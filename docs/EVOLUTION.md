@@ -1489,6 +1489,18 @@ These extractions shorten `executeLoop` significantly and improve readability wi
 
 **Tests**: No new tests.
 
+### Round 104 (2026-06-24): Extract Memory Boosting Helper
+
+**Problem**: `_retrieveMemoriesWithBoosting` ~25 lines; could be more modular.
+
+**Solution**: Extracted `_applyMemoryBoosting` to handle score adjustment and sorting.
+
+**Impact**:
+- Reduced `_retrieveMemoriesWithBoosting` to ~10 lines.
+- Improved readability; no behavior change.
+
+**Tests**: All core tests pass (2871+).
+
 ---
 
 
