@@ -36,6 +36,7 @@ export interface FooterData {
   contextTokens?: number;
   contextWindow?: number;
   contextPercent?: number;
+  contextWarning?: 'none' | 'warning' | 'critical';
   lastTokenCount?: number; // tokens in the most recent LLM request
 }
 
@@ -125,6 +126,7 @@ export class DefaultFooterDataProvider implements FooterDataProvider {
       let contextTokens = 0;
       let contextWindow = 0;
       let contextPercent = 0;
+      let contextWarning: 'none' | 'warning' | 'critical' = 'none';
       try {
         const session = runtime.session as any;
         const model = session?.model;
@@ -135,6 +137,8 @@ export class DefaultFooterDataProvider implements FooterDataProvider {
             const ctx = sessionManager.buildSessionContext();
             contextTokens = estimateContextTokens(ctx.messages, ctx.systemPrompt);
             contextPercent = Math.round((contextTokens / contextWindow) * 100);
+            if (contextPercent >= 95) contextWarning = 'critical';
+            else if (contextPercent >= 80) contextWarning = 'warning';
           }
         }
       } catch (e) {
@@ -211,6 +215,7 @@ export class DefaultFooterDataProvider implements FooterDataProvider {
         contextTokens,
         contextWindow,
         contextPercent,
+        contextWarning,
         lastTokenCount,
       };
       this.notify();
