@@ -1710,3 +1710,19 @@ ContextBuilder computed available tokens for history as `maxTokens - reservedTok
 - No functional changes.
 
 **Testing**: Build passes; all existing tests pass (3000+).
+
+### Round 117 (2026-06-25): Extract Memory Retrieval Logic
+
+**Problem**: `AgentLoop.executeLoop` contained inline memory retrieval code, mixing token tracking and metrics accumulation with control flow.
+
+**Solution**:
+- Extracted memory retrieval into `_retrieveMemoriesForRound()` method.
+- Method returns `{ memories, memoryRetrievalTime }`.
+- Keeps timing accumulation in `executeLoop` but retrieval logic isolated.
+
+**Impact**:
+- Slight reduction in `executeLoop` length.
+- Clearer separation: retrieval logic now testable in isolation.
+- No functional changes.
+
+**Testing**: Build passes; all tests pass (3000+).
