@@ -103,6 +103,7 @@
 | 108    | 2026-06-25 | Fixed memory leak in process signal handlers of useInkApp hook | 3000+      | 0           | 0         |
 | 109    | 2026-06-25 | Extracted `_buildAssistantContent` and `_buildToolContent` from AgentLoop methods; reduced function lengths | 3000+      | 0           | 0         |
 | 110    | 2026-06-25 | Fixed ContextBuilder token overflow – accounts for basePrompt + memories before truncating history | 3000+      | 0           | 0         |
+| 111    | 2026-06-25 | Disable memory injection by default – prevents token explosion (626k tokens) by not loading global memory storage | 3000+      | 0           | 0         |
 ## Quality Indicators
 
 - **Test Failure Rate**: 0% (3000+ tests passing)

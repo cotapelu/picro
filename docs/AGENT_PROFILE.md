@@ -21,7 +21,9 @@
 
 ## Weaknesses / Known Issues
 
-- None critical.
+- Memory injection (when enabled) can cause token explosion if global memory storage contains many entries; default now disabled to prevent this.
+- `ContextBuilder` memory injection logic previously lacked proper token accounting for large memory sets; fixed in Round 110.
+- `AgentLoop` complexity remains high despite test coverage; careful when modifying loop flow.
 
 
 ## Fragile Modules
