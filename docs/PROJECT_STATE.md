@@ -93,6 +93,7 @@
 - **Round 93 (2026-06-24)**: Documentation consistency: removed duplicate round entries; aligned EVOLUTION.md with actual history. No code changes; all tests pass.
 - **Round 94 (2026-06-24)**: Function length reduction: extracted `_initializeExecution` and `_retrieveMemoriesWithBoosting` from `AgentLoop.executeLoop`; progressing toward Funcs≤20 target. All tests passing; build clean.
 - **Round 108 (2026-06-25)**: Fixed process listener memory leak in `useInkApp` hook by storing signal handler references for proper cleanup. All tests passing; build clean.
+- **Round 111 (2026-06-25)**: Disabled memory injection by default to prevent token explosion. `enableMemoryInjection` now defaults to `false`; only current session history is included in context. Prevents 600k+ token overflows. All tests passing; build clean.
 
 ### 🔄 In Progress
 - None. All planned coverage, UX, and compatibility targets met.
@@ -120,6 +121,7 @@
 - **Round 108**: Fixed memory leak in process signal handlers of useInkApp hook; corrected import paths across TUI modules; added `debug` slash command. All tests passing; build clean.
 - **Round 109**: Extracted `_buildAssistantContent` and `_buildToolContent` from `createAssistantTurn`/`createToolTurn` in AgentLoop; reduced function lengths; improved modularity. All tests passing; build clean.
 - **Round 110**: Fixed ContextBuilder token overflow bug – now properly accounts for basePrompt + memories tokens before truncating history. Prevents LLM request failures (e.g., 626k tokens). All tests passing; build clean.
+- **Round 111**: Disabled memory injection by default to prevent token explosion. `enableMemoryInjection` now defaults to `false`; only current session history is included in context. Prevents 600k+ token overflows. All tests passing; build clean.
 - Backend tests: 2871+ passed; all core suites green.
 
 ### 🎯 Next Tasks
