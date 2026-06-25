@@ -1392,5 +1392,90 @@ These extractions shorten `executeLoop` significantly and improve readability wi
 
 **Tests**: No new tests; existing 3000+ tests continue to pass.
 
+### Round 96 (2026-06-24): Unlimited Agent Runtime
+
+**Problem**: Agent stopped after limited rounds (5) preventing large scans.
+
+**Solution**: Increased `maxRounds` to 1000 (later 10000) for near‑unlimited operation.
+
+**Implementation**:
+- Modified agent config in `createAgentSessionFromServices`.
+- Verified tests pass.
+
+**Impact**:
+- Agent can run continuously for extensive codebase scanning.
+- Termination now primarily controlled by LLM stop signals.
+
+**Tests**: No new tests; existing suite passes.
+
+---
+
+### Round 97 (2026-06-24): Truly Unlimited Rounds
+
+**Problem**: 1000 rounds still finite; user wants agent to decide when to stop.
+
+**Solution**: Set `maxRounds` to 10000 (effectively unlimited).
+
+**Impact**: Agent runs until LLM signals stop or error occurs.
+
+**Tests**: Pass.
+
+---
+
+### Round 98 (2026-06-24): Termination Debug Logging
+
+**Problem**: Agent sometimes stops unexpectedly; no visibility into why.
+
+**Solution**: Added debug logging of termination reason (stopReason, totalToolCalls, totalTokens) in `AgentLoop`.
+
+**Implementation**:
+- Modified `agent-loop.ts` to log at `agent:end` when `debug=true`.
+
+**Impact**: Operators can see why agent stopped via logs.
+
+**Tests**: Pass.
+
+---
+
+### Round 99 (2026-06-24): Function Length Reduction (Part 1)
+
+**Problem**: `AgentLoop.executeLoop` too long (~300+ lines), violates Funcs≤20.
+
+**Solution**: Extracted helpers: `_emitLlmRequest`, `_finalizeAssistantTurn`, `_processTurnWithTools`, `_processTurnWithoutTools`.
+
+**Impact**: `executeLoop` shortened by ~150 lines.
+
+**Tests**: Agent‑loop tests still pass (55+).
+
+---
+
+### Round 100 (2026-06-24): Footer Context Usage Display
+
+**Problem**: No visibility into context window usage during scans.
+
+**Solution**: Compute and display context tokens % in TUI footer.
+
+**Implementation**:
+- Extended `FooterDataProvider` to calculate `estimateContextTokens`.
+- Added `ctx:XX%` to footer.
+
+**Impact**: Users can monitor context pressure.
+
+**Tests**: Backend tests pass; build clean.
+
+---
+
+### Round 101 (2026-06-24): System Stability Verification
+
+**Problem**: Need to ensure system ready for extensive scans.
+
+**Solution**: Verified unlimited rounds, termination logging, and context footer work together.
+
+**Impact**: System confirmed stable; all core tests passing (1863+).
+
+**Tests**: No new tests.
+
+---
+
 
 
