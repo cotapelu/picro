@@ -335,23 +335,25 @@ export const InputBox: React.FC<InputBoxProps> = ({
     const afterRest = afterRestGraphemes.map(g => g.segment).join('');
 
     return (
-      <Box>
-        <Text color="cyan">&gt; </Text>
+      <Text>
+        <Text color={theme.accent} bold>
+          &gt;
+        </Text>
         {isSlashMode && (
           <Text bold color={theme.accent}>[CMD] </Text>
         )}
         <Text>{beforeCursor}</Text>
-        <Text inverse>{cursorGrapheme}</Text>
+        <Text reverse>{cursorGrapheme}</Text>
         <Text>{afterRest}</Text>
         {value.length === 0 && cursorPosition === 0 && (
           <Text color={theme.dim}>{placeholder}</Text>
         )}
-      </Box>
+      </Text>
     );
   };
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" borderStyle="single" borderColor={theme.border} paddingX={1} paddingY={0}>
       {renderInputLine()}
       {multiline && value.includes('\n') && (
         <Box marginTop={1}>
