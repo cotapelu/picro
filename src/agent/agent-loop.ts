@@ -460,23 +460,26 @@ export class AgentLoop {
           }
         }
 
-        // Memory retrieval - use last user message as query if available
+        // Memory retrieval - ONLY if enabled
         let memories: MemoryEntry[] = [];
         let memoryRetrievalTime = 0;
-        const lastUserTurn = [...this.state.history]
-          .reverse()
-          .find((t) => t.role === "user");
-        const query =
-          lastUserTurn?.content
-            .filter((c) => c.type === "text")
-            .map((c) => c.text)
-            .join("") || "";
-        const result = await this._retrieveMemoriesWithBoosting(query);
-        memories = result.memories;
-        this.metrics.memoryRetrievals++;
-        this.memoryLatencyAccumulator += result.retrievalTime;
-        memoryRetrievalTime = result.retrievalTime;
-        totalMemoryRetrievalTime += result.retrievalTime;
+        const enableMemoryInjection = this.config.enableMemoryInjection ?? false;
+        if (enableMemoryInjection && this.memoryStore) {
+          const lastUserTurn = [...this.state.history]
+            .reverse()
+            .find((t) => t.role === "user");
+          const query =
+            lastUserTurn?.content
+              .filter((c) => c.type === "text")
+              .map((c) => c.text)
+              .join("") || "";
+          const result = await this._retrieveMemoriesWithBoosting(query);
+          memories = result.memories;
+          this.metrics.memoryRetrievals++;
+          this.memoryLatencyAccumulator += result.retrievalTime;
+          memoryRetrievalTime = result.retrievalTime;
+          totalMemoryRetrievalTime += result.retrievalTime;
+        }
 
         // Build LLM context from current history (includes steering if any)
         const llmContext = await this.buildLlmContext(
