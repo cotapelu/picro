@@ -1677,3 +1677,20 @@ ContextBuilder computed available tokens for history as `maxTokens - reservedTok
 - Improved code readability and maintainability.
 
 **Testing**: All existing tests pass; no functional changes.
+
+### Round 115 (2026-06-25): Context Usage Warning in Footer
+
+**Problem**: Users had no visual indication when context usage approached the model's limit. Could lead to sudden overflow errors without warning.
+
+**Solution**:
+- Computed `contextWarning` level in `FooterDataProvider`: `none` (<80%), `warning` (80-89%), `critical` (≥90%).
+- `Footer` component displays `⚠ ctx:XX%` (yellow) for warning, `⚠⚠ ctx:XX%` (red) for critical.
+- Warning thresholds are configurable via constants (80%, 90%).
+
+**Impact**:
+- Provides proactive alerts before context overflow.
+- Improves user experience by giving time to compact or prune context.
+- Low-risk, purely visual enhancement; no behavior changes.
+- Consistent with observability improvements (token count, context percent).
+
+**Testing**: Build passes; manual TUI testing verified warning display at various context levels.
