@@ -133,7 +133,7 @@ export class Agent {
         reservedTokens: this.config.contextBuilder?.reservedTokens ?? 4096,
         minMessages: this.config.contextBuilder?.minMessages ?? 1,
         enableMemoryInjection:
-          this.config.enableMemoryInjection ?? false,
+          this.config.contextBuilder?.enableMemoryInjection ?? false,
       });
     } else {
       this.contextBuilder = undefined;
@@ -768,12 +768,11 @@ export class Agent {
       cacheResults: config?.cacheResults ?? false,
       toolExecutionStrategy: config?.toolExecutionStrategy ?? "parallel",
       loopStrategy: config?.loopStrategy,
-      enableMemoryInjection: config?.enableMemoryInjection ?? false,
       contextBuilder: {
         maxTokens: config?.contextBuilder?.maxTokens ?? 128000,
         reservedTokens: config?.contextBuilder?.reservedTokens ?? 4096,
         minMessages: config?.contextBuilder?.minMessages ?? 5,
-        enableMemoryInjection: config?.enableMemoryInjection ?? false,
+        enableMemoryInjection: config?.contextBuilder?.enableMemoryInjection ?? false,
       },
       executor: {
         timeout: config?.executor?.timeout ?? 30000,

@@ -463,7 +463,7 @@ export class AgentLoop {
         // Memory retrieval - ONLY if enabled
         let memories: MemoryEntry[] = [];
         let memoryRetrievalTime = 0;
-        const enableMemoryInjection = this.config.enableMemoryInjection ?? false;
+        const enableMemoryInjection = this.contextBuilder?.getConfig().enableMemoryInjection ?? false;
         if (enableMemoryInjection && this.memoryStore) {
           const lastUserTurn = [...this.state.history]
             .reverse()

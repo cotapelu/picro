@@ -568,7 +568,6 @@ export interface AgentConfig {
   // Context & memory
   transformContext?: (turns: ConversationTurn[], signal?: AbortSignal) => Promise<ConversationTurn[]>;
   memoryStore?: MemoryStore;
-  enableMemoryInjection?: boolean; // default false
   compaction?: CompactionConfig;
   contextBuilder?: ContextBuilderConfig; // legacy – still supported
   // Loop strategy
