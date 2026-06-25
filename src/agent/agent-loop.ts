@@ -123,6 +123,7 @@ export class AgentLoop {
       totalToolCalls: 0,
       totalTokens: 0,
       promptLength: 0,
+      lastTokenCount: 0,
       isRunning: false,
       isCancelled: false,
       toolResults: [],
@@ -200,11 +201,40 @@ export class AgentLoop {
     memories: MemoryEntry[],
     signal?: AbortSignal,
   ): Promise<Context> {
+    // Use ContextBuilder if available and no custom convertToLlm
+    if (this.contextBuilder && !this.config.convertToLlm) {
+      // Build system prompt from config or system turn
+      let systemPrompt = this.config.systemPrompt;
+      if (!systemPrompt) {
+        const systemTurn = turns.find((t) => t.role === "system");
+        if (systemTurn) {
+          systemPrompt = systemTurn.content
+            .filter((c) => c.type === "text")
+            .map((c) => c.text)
+            .join("");
+        }
+      }
+      // Use ContextBuilder to construct full prompt and estimate tokens
+      const result = this.contextBuilder.build(
+        systemPrompt || "",
+        turns,
+        memories.length > 0 ? memories : undefined
+      );
+      // Convert messages for LLM (same as convertTurnsToMessages)
+      const llmMessages = this.convertTurnsToMessages(turns);
+      return {
+        messages: llmMessages as any,
+        systemPrompt,
+        tools: this.tools as any,
+        tokenCount: result.tokenCount,
+      };
+    }
+
+    // Fallback: custom transform or legacy path (no tokenCount)
     let processed = turns;
     if (this.config.transformContext) {
       processed = await this.config.transformContext(turns, signal);
     } else if (memories.length > 0) {
-      // Inject memories as system messages if no custom transform
       const memoryTurns: ConversationTurn[] = memories.map((mem) => ({
         role: "system",
         content: [{ type: "text", text: mem.content }],
@@ -220,7 +250,6 @@ export class AgentLoop {
       llmMessages = this.convertTurnsToMessages(processed);
     }
 
-    // Prefer systemPrompt from config (set by AgentSession). Fallback to system turn for compatibility.
     let systemPrompt = this.config.systemPrompt;
     if (!systemPrompt) {
       const systemTurn = processed.find((t) => t.role === "system");
@@ -236,6 +265,7 @@ export class AgentLoop {
       messages: llmMessages as any,
       systemPrompt,
       tools: this.tools as any,
+      // No tokenCount available in legacy path
     };
   }
 
@@ -487,6 +517,10 @@ export class AgentLoop {
           memories,
           combinedSignal,
         );
+        // Record token count for this request
+        if (llmContext.tokenCount !== undefined) {
+          this.state.lastTokenCount = llmContext.tokenCount;
+        }
 
         // LLM request timing
         const llmStartTime = await this._emitLlmRequest(llmContext);

@@ -411,6 +411,7 @@ export interface AgentRuntimeState {
   totalToolCalls: number;
   totalTokens: number;
   promptLength: number;
+  lastTokenCount: number; // tokens in last LLM request
   isRunning: boolean;
   isCancelled: boolean;
   toolResults: ToolResult[];

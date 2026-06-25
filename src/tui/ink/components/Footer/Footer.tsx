@@ -49,6 +49,7 @@ export const Footer: React.FC<FooterProps> = ({ provider, hints = [] }) => {
     performance,
     git,
     contextPercent,
+    lastTokenCount,
   } = data;
 
   const leftParts: string[] = [cwdBasename];
@@ -83,6 +84,9 @@ export const Footer: React.FC<FooterProps> = ({ provider, hints = [] }) => {
   }
   if (contextPercent !== undefined) {
     rightParts.push(`ctx:${contextPercent}%`);
+  }
+  if (lastTokenCount !== undefined) {
+    rightParts.push(`last:${formatNumber(lastTokenCount)}t`);
   }
   if (hints.length > 0) {
     rightParts.push(hints.join(' | '));

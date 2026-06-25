@@ -36,6 +36,7 @@ export interface FooterData {
   contextTokens?: number;
   contextWindow?: number;
   contextPercent?: number;
+  lastTokenCount?: number; // tokens in the most recent LLM request
 }
 
 export interface FooterDataProvider {
@@ -140,6 +141,18 @@ export class DefaultFooterDataProvider implements FooterDataProvider {
         // ignore context computation errors
       }
 
+      // last token count from agent state (most recent request)
+      let lastTokenCount: number | undefined;
+      try {
+        const session = runtime.session as any;
+        const agent = session?.agent;
+        if (agent?.getState) {
+          const state = agent.getState();
+          lastTokenCount = state.lastTokenCount;
+        }
+      } catch {}
+
+
       // performance stats (optional)
       let performance: { avgCpuUserMS: number; avgRSSMB: number } | undefined;
       try {
@@ -198,6 +211,7 @@ export class DefaultFooterDataProvider implements FooterDataProvider {
         contextTokens,
         contextWindow,
         contextPercent,
+        lastTokenCount,
       };
       this.notify();
     } catch (err) {
