@@ -1501,6 +1501,19 @@ These extractions shorten `executeLoop` significantly and improve readability wi
 
 **Tests**: All core tests pass (2871+).
 
+### Round 105 (2026-06-24): Extract Memory Event Formatting Helper
+
+**Problem**: `_retrieveMemories` ~40 lines; includes emission logic that can be separated.
+
+**Solution**: Extracted `_formatMemoryEvent` to build the memory retrieval event payload.
+
+**Impact**:
+- Reduced `_retrieveMemories` to ~15 lines.
+- Clearer separation of concerns; readability improved.
+
+**Tests**: All core tests pass (2871+).
+
+
 ---
 
 

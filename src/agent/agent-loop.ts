@@ -912,23 +912,41 @@ export class AgentLoop {
       result.memories = retrieval.memories;
       result.scores = retrieval.scores;
       result.retrievalTime = Date.now() - memoryStart;
-      await this.emitter.emit({
-        type: "memory:retrieve",
-        timestamp: Date.now(),
-        round: this.state.round,
-        query: currentPrompt,
-        memoriesRetrieved: result.memories.length,
-        scores: retrieval.scores,
-        memories: result.memories.map((mem, index) => ({
-          content: mem.content,
-          relevance: mem.relevance,
-          index,
-        })),
-      } as any);
+      const event = this._formatMemoryEvent(retrieval, this.state.round);
+      event.timestamp = Date.now();
+      event.query = currentPrompt;
+      await this.emitter.emit(event as any);
     } catch (e) {
       console.warn("Memory retrieval failed:", e);
     }
     return result;
+  }
+
+  private _formatMemoryEvent(
+    retrieval: { memories: MemoryEntry[]; scores?: number[] },
+    round: number,
+  ): {
+    type: string;
+    timestamp: number;
+    round: number;
+    query: string;
+    memoriesRetrieved: number;
+    scores?: number[];
+    memories: { content: string; relevance: number; index: number }[];
+  } {
+    return {
+      type: "memory:retrieve",
+      timestamp: 0,
+      round,
+      query: '', // actual query set by caller
+      memoriesRetrieved: retrieval.memories.length,
+      scores: retrieval.scores,
+      memories: retrieval.memories.map((mem, index) => ({
+        content: mem.content,
+        relevance: mem.relevance ?? 0,
+        index,
+      })),
+    };
   }
 
   /** Simple heuristic: detect if content likely contains code */
