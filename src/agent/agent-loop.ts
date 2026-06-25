@@ -210,6 +210,38 @@ export class AgentLoop {
   }
 
   /** Build context using ContextBuilder (with tokenCount) */
+  private async _runPreRoundHooks(): Promise<void> {
+    if (!this.config.prepareNextTurn || !this.lastTurnAssistant) return;
+    try {
+      const overrides = await this.config.prepareNextTurn({
+        lastAssistantMessage: this.lastTurnAssistant,
+        toolResults: this.lastTurnToolResults,
+        newMessages: this.lastTurnNewMessages,
+        round: this.state.round - 1,
+        state: { ...this.state } as any,
+      });
+      if (overrides?.reasoningLevel !== undefined) {
+        this.config.reasoningLevel = overrides.reasoningLevel;
+      }
+      if (overrides?.model) {
+        if (this.config.setModel) {
+          this.config.setModel(overrides.model);
+        } else {
+          this.state.metadata.nextModel = overrides.model;
+        }
+      }
+      if (overrides?.context) {
+        this.state.history = overrides.context;
+      }
+    } catch (e) {
+      if (this.config.debug) console.error("prepareNextTurn hook error:", e);
+    } finally {
+      this.lastTurnAssistant = null;
+      this.lastTurnToolResults = [];
+      this.lastTurnNewMessages = [];
+    }
+  }
+
   private async _buildContextWithContextBuilder(
     turns: ConversationTurn[],
     memories: MemoryEntry[],
@@ -435,39 +467,7 @@ export class AgentLoop {
         const roundStartTime = Date.now();
         this.state.round++;
 
-        // Invoke prepareNextTurn hook if configured and previous turn exists
-        if (this.config.prepareNextTurn && this.lastTurnAssistant) {
-          try {
-            const overrides = await this.config.prepareNextTurn({
-              lastAssistantMessage: this.lastTurnAssistant,
-              toolResults: this.lastTurnToolResults,
-              newMessages: this.lastTurnNewMessages,
-              round: this.state.round - 1,
-              state: { ...this.state } as any,
-            });
-            if (overrides?.reasoningLevel !== undefined) {
-              this.config.reasoningLevel = overrides.reasoningLevel;
-            }
-            if (overrides?.model) {
-              if (this.config.setModel) {
-                this.config.setModel(overrides.model);
-              } else {
-                this.state.metadata.nextModel = overrides.model;
-              }
-            }
-            if (overrides?.context) {
-              this.state.history = overrides.context;
-            }
-          } catch (e) {
-            if (this.config.debug)
-              console.error("prepareNextTurn hook error:", e);
-          } finally {
-            // Reset after processing to avoid re-running
-            this.lastTurnAssistant = null;
-            this.lastTurnToolResults = [];
-            this.lastTurnNewMessages = [];
-          }
-        }
+        await this._runPreRoundHooks();
         let turnEnded = false;
         let finalResultCandidate: AgentRunResult | null = null;
 
