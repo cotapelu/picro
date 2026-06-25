@@ -63,17 +63,11 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
       prompt += "</project_context>\n";
     }
 
-    // Append skills section (always if available)
-    if (skills && skills.length > 0) {
+    // Append skills section (only if read tool is available)
+    const hasRead = !selectedTools || selectedTools.includes("read");
+    if (hasRead && skills && skills.length > 0) {
       prompt += formatSkillsForPrompt(skills);
     }
-
-    // Always enforce action protocol even with custom prompts
-    prompt += "\n\nACTION PROTOCOL (MANDATORY):\n";
-    prompt += "- IMMEDIATELY call tools when you need to perform actions. Do NOT describe actions in natural language first.\n";
-    prompt += "- DO NOT output: \"I will use X tool\" or \"Let me scan\". Instead, directly call the tool.\n";
-    prompt += "- Only provide explanations after tool execution if the user asks for reasoning.\n";
-    prompt += "- Keep responses concise; avoid any commentary when action is required.\n";
 
     // Add date and working directory last
     prompt += `\nCurrent date: ${date}`;
@@ -121,7 +115,6 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 
   const guidelines = Array.from(guidelinesSet).map((g) => `- ${g}`).join("\n");
 
-  // Pi documentation paths (using reference paths)
   const readmePath = "README.md";
   const docsPath = "docs/";
   const examplesPath = "examples/";
@@ -165,8 +158,9 @@ Pi documentation (read only when the user asks about pi itself, its SDK, extensi
     prompt += "</project_context>\n";
   }
 
-  // Append skills section (always if available)
-  if (skills && skills.length > 0) {
+  // Append skills section (only if read tool is available)
+  const hasReadForSkills = !selectedTools || selectedTools.includes("read");
+  if (hasReadForSkills && skills && skills.length > 0) {
     prompt += formatSkillsForPrompt(skills);
   }
 
