@@ -114,6 +114,7 @@
 - **Round 101**: Stability verification; unlimited rounds, termination logging, context footer working. System ready for extensive scans.
 - **Round 104**: Extracted `_applyMemoryBoosting` from `_retrieveMemoriesWithBoosting`; improved modularity.
 - **Round 105**: Extracted `_formatMemoryEvent` and `_allToolsTerminate`; further function length reduction.
+- **Round 106**: Extracted `_emitDebugRoundTiming` and `_allToolsTerminate` from `_processTurnWithTools`; improved readability.
 - Backend tests: 2871+ passed; all core suites green.
 
 ### 🎯 Next Tasks
