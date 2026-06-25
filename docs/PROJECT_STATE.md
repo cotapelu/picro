@@ -94,6 +94,7 @@
 - **Round 94 (2026-06-24)**: Function length reduction: extracted `_initializeExecution` and `_retrieveMemoriesWithBoosting` from `AgentLoop.executeLoop`; progressing toward Funcs≤20 target. All tests passing; build clean.
 - **Round 108 (2026-06-25)**: Fixed process listener memory leak in `useInkApp` hook by storing signal handler references for proper cleanup. All tests passing; build clean.
 - **Round 111 (2026-06-25)**: Disabled memory injection by default to prevent token explosion. `enableMemoryInjection` now defaults to `false`; only current session history is included in context. Prevents 600k+ token overflows. All tests passing; build clean.
+- **Round 112 (2026-06-25)**: Added last token count display in TUI footer (`last:XXk t`). Improves observability of per-request token usage. All tests passing; build clean.
 
 ### 🔄 In Progress
 - None. All planned coverage, UX, and compatibility targets met.

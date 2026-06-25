@@ -1616,15 +1616,14 @@ ContextBuilder computed available tokens for history as `maxTokens - reservedTok
 **Problem**: Memory injection was enabled by default (`enableMemoryInjection: true`). This caused the agent to retrieve and inject **all memories** from global storage into every prompt. Since memory storage accumulates interactions across all sessions and lacks session-level filtering, this routinely added hundreds of thousands of tokens, causing immediate context overflow (626k+ tokens) even for simple queries.
 
 **Solution**:
-- Changed `enableMemoryInjection` default to `false` in `AgentConfig`.
+- Changed `enableMemoryInjection` default to `false` in `ContextBuilderConfig`.
 - Memory retrieval now only occurs when explicitly enabled (opt-in).
 - Current session history (the only required context) continues to be included properly.
 
 **Implementation**:
-- Added `enableMemoryInjection?: boolean` to `AgentConfig` (`src/agent/types.ts`).
-- Set `enableMemoryInjection: false` default in `Agent._resolveConfig` (`src/agent/agent.ts`).
-- `AgentLoop` respects `this.config.enableMemoryInjection` before calling `_retrieveMemoriesWithBoosting`.
-- `ContextBuilder` already respects the flag and will not inject memories when false.
+- Set `enableMemoryInjection: false` default in `ContextBuilder` constructor (`src/agent/context-manager.ts`).
+- `AgentLoop` checks `contextBuilder.getConfig().enableMemoryInjection` before retrieving memories.
+- `Agent` config forwarding uses `contextBuilder.enableMemoryInjection`.
 
 **Impact**:
 - Eliminates token explosion by default; prompts now fit comfortably within context windows.
@@ -1634,5 +1633,29 @@ ContextBuilder computed available tokens for history as `maxTokens - reservedTok
 - Low-risk configuration change; fully backward compatible.
 
 **Tests**: All existing tests pass; no changes required because tests don't rely on memory injection being enabled.
+
+---
+
+### Round 112 (2026-06-25): Show Last Token Count in TUI Footer
+
+**Problem**: No visibility into actual token usage per LLM request. Makes it hard to monitor context size and diagnose overflow issues.
+
+**Solution**:
+- Added `lastTokenCount` field to `AgentRuntimeState` to track tokens in the most recent request.
+- Modified `ContextBuilder.build()` to return `tokenCount` (already computed) and captured it in `AgentLoop.buildLlmContext`.
+- `AgentLoop` updates `state.lastTokenCount` after building each context.
+- `FooterDataProvider` now reads `lastTokenCount` from agent state and includes it in footer data.
+- `Footer` component displays formatted token count: `last:XXk t` (e.g., `last:12.3k t`).
+
+**Impact**:
+- Provides immediate feedback on per-request token usage directly in TUI.
+- Helps users understand and manage context size.
+- Aids in debugging token-related issues.
+- Low-risk, non-invasive addition; no breaking changes.
+
+**Testing**: Build passes; integration verified through existing test suite (3000+ tests).
+
+---
+
 
 ---

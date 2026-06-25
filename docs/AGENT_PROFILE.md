@@ -25,6 +25,10 @@
 - `ContextBuilder` memory injection logic previously lacked proper token accounting for large memory sets; fixed in Round 110.
 - `AgentLoop` complexity remains high despite test coverage; careful when modifying loop flow.
 
+## Recent Improvements
+
+- **Token count visibility**: TUI footer now displays `last:XXk t` showing token count of the most recent LLM request. Helps monitor context size and catch overflow early.
+
 
 ## Fragile Modules
 
