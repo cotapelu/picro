@@ -98,6 +98,19 @@ export function useRuntime(runtime: ExtendedRuntime) {
           setSteeringMessages(Array.isArray(event.steering) ? event.steering : []);
           setFollowUpMessages(Array.isArray(event.followUp) ? event.followUp : []);
           break;
+        case 'user_message': {
+          const uiMsg = convertAgentMessage(event.message);
+          if (uiMsg) {
+            setMessages(prev => {
+              // Avoid duplicate: check if message with same id already exists
+              if (prev.some(m => m.id === uiMsg.id)) {
+                return prev;
+              }
+              return [...prev, uiMsg];
+            });
+          }
+          break;
+        }
         case 'compaction_start':
           setIsCompacting(true);
           break;
@@ -131,6 +144,10 @@ export function useRuntime(runtime: ExtendedRuntime) {
         case 'message_start': {
           const turn = event.message;
           if (!turn) break;
+          // DEBUG log
+          if (typeof turn.id === 'string') {
+            console.log(`[DEBUG] message_start: id=${turn.id}, role=${turn.role}, round=${event.round}`);
+          }
           const uiMsg = convertAgentMessage(turn);
           if (uiMsg) {
             const streamingMsg: Message = { ...uiMsg, streaming: true };
@@ -138,7 +155,6 @@ export function useRuntime(runtime: ExtendedRuntime) {
             if (uiMsg.role === 'assistant') {
               streamingMessageIdRef.current = uiMsg.id;
             } else if (uiMsg.role === 'user') {
-              // User message starts: clear previous assistant tracking so tool events from earlier turns don't update wrong message
               streamingMessageIdRef.current = null;
             }
           }
@@ -163,6 +179,8 @@ export function useRuntime(runtime: ExtendedRuntime) {
             // already added at start
             break;
           }
+          // DEBUG log
+          console.log(`[DEBUG] message_end: id=${turn.id}, role=${turn.role}, stopReason=${turn.stopReason}`);
           const id = streamingMessageIdRef.current;
           if (!id) break;
           const uiMsg = convertAgentMessage(turn);

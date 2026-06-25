@@ -4,6 +4,7 @@
  * Different from pi-agent-legacy: class-based, simpler flow.
  */
 
+import { randomUUID } from "node:crypto";
 import type {
   ConversationTurn,
   AgentRuntimeState,
@@ -355,7 +356,19 @@ export class AgentLoop {
     if (initialTurns.length > 0) {
       this.state.history.push(...initialTurns);
     }
+    // Set running state before emitting events
     this.state.isRunning = true;
+    // Fire-and-forget user message events
+    for (const turn of initialTurns) {
+      if (turn.role === 'user') {
+        this.emitter.emit({
+          type: 'user_message',
+          message: turn,
+          timestamp: Date.now(),
+          round: 0,
+        } as any).catch(() => {});
+      }
+    }
     return combinedSignal;
   }
 
@@ -434,6 +447,17 @@ export class AgentLoop {
         const steeringTurns = await this._collectSteeringTurns(steeringQueue);
         if (steeringTurns.length > 0) {
           this.state.history.push(...steeringTurns);
+          // Fire-and-forget user message events
+          for (const turn of steeringTurns) {
+            if (turn.role === 'user') {
+              this.emitter.emit({
+                type: 'user_message',
+                message: turn,
+                timestamp: Date.now(),
+                round: this.state.round,
+              } as any).catch(() => {});
+            }
+          }
         }
 
         // Memory retrieval - use last user message as query if available
@@ -1007,6 +1031,7 @@ export class AgentLoop {
       }
     }
     return {
+      id: randomUUID(),
       role: "assistant",
       content: contentBlocks,
       timestamp: Date.now(),

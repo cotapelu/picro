@@ -13,6 +13,7 @@
  * but with different internal architecture.
  */
 
+import { randomUUID } from "node:crypto";
 import type {
   AgentRuntimeState,
   ThinkingLevel,
@@ -635,6 +636,7 @@ export class AgentSession {
     }
 
     const userTurn: ConversationTurn = {
+      id: randomUUID(),
       role: "user",
       content: userContent,
       timestamp: Date.now(),
@@ -1429,6 +1431,7 @@ export class AgentSession {
     }
 
     const turn: ConversationTurn = {
+      id: randomUUID(),
       role: "user",
       content,
       timestamp: Date.now(),
@@ -1453,6 +1456,7 @@ export class AgentSession {
     }
 
     const turn: ConversationTurn = {
+      id: randomUUID(),
       role: "user",
       content,
       timestamp: Date.now(),

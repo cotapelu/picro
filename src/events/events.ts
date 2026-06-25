@@ -191,6 +191,18 @@ export interface ErrorEvent extends BaseAgentEvent {
 }
 
 // ============================================================================
+// User Message Event (for UI display when user message is added to context)
+// ============================================================================
+
+/**
+ * Emitted when a user message is added to the context (before LLM call).
+ */
+export interface UserMessageEvent extends BaseAgentEvent {
+  type: 'user_message';
+  message: any; // ConversationTurn
+}
+
+// ============================================================================
 // Debug Events (optional, only when debug mode enabled)
 // ============================================================================
 
@@ -243,7 +255,8 @@ export type AgentEvent =
   | MemoryRetrievalEvent
   | ErrorEvent
   | DebugRoundTimingEvent
-  | DebugRunTimingEvent;
+  | DebugRunTimingEvent
+  | UserMessageEvent;
 
 // ============================================================================
 // Event Handler Type

@@ -3,8 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { render, Box, Text, useInput } from 'ink';
 import type { AgentSessionRuntimeInterface } from '../../runtime.js';
 import { createFooterDataProvider, type FooterDataProvider } from '../components/Footer/FooterDataProvider.js';
-import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands.js';
-import { VERSION } from '../../config.js';
+import { BUILTIN_SLASH_COMMANDS } from '../../../runtime/slash-commands';
+import { VERSION } from '../../../config';
 
 // Re-export modal type for external use
 export type ModalState =
@@ -474,8 +474,10 @@ export function useInkApp(runtime: AgentSessionRuntimeInterface, runtimeDeps: an
       }
       process.exit(0);
     };
-    process.on('SIGTERM', () => handleSignal('SIGTERM'));
-    process.on('SIGHUP', () => handleSignal('SIGHUP'));
+    const onSigTerm = () => handleSignal('SIGTERM');
+    const onSigHup = () => handleSignal('SIGHUP');
+    process.on('SIGTERM', onSigTerm);
+    process.on('SIGHUP', onSigHup);
 
     // Version check
     const checkVersion = async () => {
@@ -503,8 +505,8 @@ export function useInkApp(runtime: AgentSessionRuntimeInterface, runtimeDeps: an
 
     return () => {
       unsubscribe?.();
-      process.off('SIGTERM', handleSignal);
-      process.off('SIGHUP', handleSignal);
+      process.off('SIGTERM', onSigTerm);
+      process.off('SIGHUP', onSigHup);
     };
   }, [runtime, addToast]);
 

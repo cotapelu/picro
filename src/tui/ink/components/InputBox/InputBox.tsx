@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Text, useInput, useFocus } from 'ink';
 import { useTheme } from '../../hooks/useTheme.js';
+import { segmentGraphemes, getGraphemeAt } from '../../utils/grapheme-segmenter.js';
 
 function getCommonPrefix(strings: string[]): string {
   if (strings.length === 0) return '';
@@ -207,32 +208,52 @@ export const InputBox: React.FC<InputBoxProps> = ({
       return;
     }
 
-    // Backspace
+    // Backspace (delete grapheme before cursor)
     if (key.backspace || input === '\x7f') {
       if (cursorPosition > 0) {
-        const newValue = value.slice(0, cursorPosition - 1) + value.slice(cursorPosition);
+        const beforeCursor = value.slice(0, cursorPosition);
+        const graphemes = segmentGraphemes(beforeCursor);
+        const lastGrapheme = graphemes[graphemes.length - 1];
+        const graphemeLength = lastGrapheme?.length ?? 1;
+        const newValue = value.slice(0, cursorPosition - graphemeLength) + value.slice(cursorPosition);
         onChange(newValue);
-        setCursorPosition(cursorPosition - 1);
+        setCursorPosition(cursorPosition - graphemeLength);
       }
       return;
     }
 
-    // Delete
+    // Delete (delete grapheme after cursor)
     if (key.delete) {
       if (cursorPosition < value.length) {
-        const newValue = value.slice(0, cursorPosition) + value.slice(cursorPosition + 1);
+        const afterCursor = value.slice(cursorPosition);
+        const graphemes = segmentGraphemes(afterCursor);
+        const firstGrapheme = graphemes[0];
+        const graphemeLength = firstGrapheme?.length ?? 1;
+        const newValue = value.slice(0, cursorPosition) + value.slice(cursorPosition + graphemeLength);
         onChange(newValue);
       }
       return;
     }
 
-    // Cursor left/right
+    // Cursor left/right (move by grapheme)
     if (key.leftArrow) {
-      if (cursorPosition > 0) setCursorPosition(cursorPosition - 1);
+      if (cursorPosition > 0) {
+        const beforeCursor = value.slice(0, cursorPosition);
+        const graphemes = segmentGraphemes(beforeCursor);
+        const lastGrapheme = graphemes[graphemes.length - 1];
+        const step = lastGrapheme?.length ?? 1;
+        setCursorPosition(prev => Math.max(0, prev - step));
+      }
       return;
     }
     if (key.rightArrow) {
-      if (cursorPosition < value.length) setCursorPosition(cursorPosition + 1);
+      if (cursorPosition < value.length) {
+        const afterCursor = value.slice(cursorPosition);
+        const graphemes = segmentGraphemes(afterCursor);
+        const firstGrapheme = graphemes[0];
+        const step = firstGrapheme?.length ?? 1;
+        setCursorPosition(prev => Math.min(value.length, prev + step));
+      }
       return;
     }
 
@@ -282,15 +303,18 @@ export const InputBox: React.FC<InputBoxProps> = ({
       return;
     }
 
-    // Printable characters
-    if (input.length === 1 && !key.ctrl && !key.meta) {
+    // Printable characters (including paste)
+    if (!key.ctrl && !key.meta && !input.startsWith('\x1b')) {
       const newValue = value.slice(0, cursorPosition) + input + value.slice(cursorPosition);
       onChange(newValue);
-      setCursorPosition(cursorPosition + 1);
-      if (input === '/' && cursorPosition === 0) {
+      // Cursor moves forward by the number of code units in input
+      setCursorPosition(prev => prev + input.length);
+
+      // Slash command handling
+      if (input.length === 1 && input === '/' && cursorPosition === 0) {
         onSlashCommand?.('/');
       } else if (onSlashCommand && value.slice(0, cursorPosition).startsWith('/')) {
-        const newPrefix = newValue.slice(0, cursorPosition + 1);
+        const newPrefix = newValue.slice(0, cursorPosition + input.length);
         if (newPrefix.startsWith('/')) {
           onSlashCommand(newPrefix);
         }
@@ -303,6 +327,12 @@ export const InputBox: React.FC<InputBoxProps> = ({
     const beforeCursor = value.slice(0, cursorPosition);
     const afterCursor = value.slice(cursorPosition);
     const isSlashMode = value.startsWith('/');
+    // Use grapheme segmentation for proper Unicode rendering
+    const afterGraphemes = segmentGraphemes(afterCursor);
+    const cursorGraphemeObj = afterGraphemes[0];
+    const cursorGrapheme = cursorGraphemeObj?.segment ?? ' ';
+    const afterRestGraphemes = afterGraphemes.slice(1);
+    const afterRest = afterRestGraphemes.map(g => g.segment).join('');
 
     return (
       <Box>
@@ -311,8 +341,8 @@ export const InputBox: React.FC<InputBoxProps> = ({
           <Text bold color={theme.accent}>[CMD] </Text>
         )}
         <Text>{beforeCursor}</Text>
-        <Text inverse>{afterCursor.charAt(0) || ' '}</Text>
-        <Text>{afterCursor.slice(1)}</Text>
+        <Text inverse>{cursorGrapheme}</Text>
+        <Text>{afterRest}</Text>
         {value.length === 0 && cursorPosition === 0 && (
           <Text color={theme.dim}>{placeholder}</Text>
         )}

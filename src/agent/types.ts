@@ -52,6 +52,7 @@ export interface ToolCallBlock {
 export type ContentBlock = TextBlock | ImageBlock | ThinkingBlock | ToolCallBlock;
 
 export interface BaseTurn {
+  id?: string;
   timestamp: number;
 }
 

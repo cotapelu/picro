@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import React from 'react';
 import { Box, Text } from 'ink';
-import { BUILTIN_SLASH_COMMANDS } from '../../../runtime/slash-commands.js';
+import { BUILTIN_SLASH_COMMANDS } from '../../../runtime/slash-commands';
 
 interface HelpModalProps {
   onClose: () => void;
