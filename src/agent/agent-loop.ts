@@ -203,39 +203,43 @@ export class AgentLoop {
   ): Promise<Context> {
     // Use ContextBuilder if available and no custom convertToLlm
     if (this.contextBuilder && !this.config.convertToLlm) {
-      // Build system prompt from config or system turn
-      let systemPrompt = this.config.systemPrompt;
-      if (!systemPrompt) {
-        const systemTurn = turns.find((t) => t.role === "system");
-        if (systemTurn) {
-          systemPrompt = systemTurn.content
-            .filter((c) => c.type === "text")
-            .map((c) => c.text)
-            .join("");
-        }
-      }
-      // Use ContextBuilder to construct full prompt and estimate tokens
-      const result = this.contextBuilder.build(
-        systemPrompt || "",
-        turns,
-        memories.length > 0 ? memories : undefined
-      );
-      // Convert messages for LLM (same as convertTurnsToMessages)
-      const llmMessages = this.convertTurnsToMessages(turns);
-      return {
-        messages: llmMessages as any,
-        systemPrompt,
-        tools: this.tools as any,
-        tokenCount: result.tokenCount,
-      };
+      return this._buildContextWithContextBuilder(turns, memories);
     }
-
     // Fallback: custom transform or legacy path (no tokenCount)
+    return this._buildContextLegacy(turns, memories, signal);
+  }
+
+  /** Build context using ContextBuilder (with tokenCount) */
+  private async _buildContextWithContextBuilder(
+    turns: ConversationTurn[],
+    memories: MemoryEntry[],
+  ): Promise<Context> {
+    const systemPrompt = this.config.systemPrompt || this._extractSystemPromptFromTurns(turns);
+    const result = this.contextBuilder!.build(
+      systemPrompt || "",
+      turns,
+      memories.length > 0 ? memories : undefined
+    );
+    const llmMessages = this.convertTurnsToMessages(turns);
+    return {
+      messages: llmMessages as any,
+      systemPrompt,
+      tools: this.tools as any,
+      tokenCount: result.tokenCount,
+    };
+  }
+
+  /** Build context via legacy path (no tokenCount) */
+  private async _buildContextLegacy(
+    turns: ConversationTurn[],
+    memories: MemoryEntry[],
+    signal?: AbortSignal,
+  ): Promise<Context> {
     let processed = turns;
     if (this.config.transformContext) {
       processed = await this.config.transformContext(turns, signal);
     } else if (memories.length > 0) {
-      const memoryTurns: ConversationTurn[] = memories.map((mem) => ({
+      const memoryTurns = memories.map((mem): ConversationTurn => ({
         role: "system",
         content: [{ type: "text", text: mem.content }],
         timestamp: Date.now(),
@@ -243,30 +247,27 @@ export class AgentLoop {
       processed = [...memoryTurns, ...processed];
     }
 
-    let llmMessages: LlmMessage[];
-    if (this.config.convertToLlm) {
-      llmMessages = await this.config.convertToLlm(processed);
-    } else {
-      llmMessages = this.convertTurnsToMessages(processed);
-    }
+    const llmMessages = this.config.convertToLlm
+      ? await this.config.convertToLlm(processed)
+      : this.convertTurnsToMessages(processed);
 
-    let systemPrompt = this.config.systemPrompt;
-    if (!systemPrompt) {
-      const systemTurn = processed.find((t) => t.role === "system");
-      if (systemTurn) {
-        systemPrompt = (systemTurn as any).content
-          .filter((c: any) => c.type === "text")
-          .map((c: any) => c.text)
-          .join("");
-      }
-    }
+    const systemPrompt = this.config.systemPrompt || this._extractSystemPromptFromTurns(processed);
 
     return {
       messages: llmMessages as any,
       systemPrompt,
       tools: this.tools as any,
-      // No tokenCount available in legacy path
     };
+  }
+
+  /** Extract system prompt from a turn array */
+  private _extractSystemPromptFromTurns(turns: ConversationTurn[]): string {
+    const systemTurn = turns.find((t) => t.role === "system");
+    if (!systemTurn) return "";
+    return systemTurn.content
+      .filter((c) => c.type === "text")
+      .map((c) => c.text)
+      .join("");
   }
 
   /**
