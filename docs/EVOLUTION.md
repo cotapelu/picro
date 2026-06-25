@@ -1589,3 +1589,24 @@ These extractions shorten `executeLoop` significantly and improve readability wi
 **Tests**: All AgentLoop tests pass (70+). Core suite green (3000+).
 
 ---
+
+### Round 110 (2026-06-25): Fixed ContextBuilder Token Overflow
+
+**Problem**: 
+ContextBuilder computed available tokens for history as `maxTokens - reservedTokens` but did not subtract basePrompt and memories tokens. This caused total prompt to exceed maxTokens when memories were large, leading to LLM errors like "626380 input tokens" (limit 262144) immediately after a simple user message.
+
+**Solution**:
+- Compute `baseTokens` from basePrompt.
+- Compute `memoriesTokens` from formatted memories string.
+- Set `availableForHistory = maxTokens - reservedTokens - baseTokens - memoriesTokens`.
+- Truncate history to fit that exact budget.
+- Added safety fallback: if final token count still exceeds limit, rebuild without memories.
+
+**Impact**:
+- Prevents context overflow errors from oversized prompts.
+- Ensures prompt always within model's context window.
+- More robust memory injection; gracefully degrades by dropping memories if necessary.
+
+**Tests**: All ContextBuilder tests pass (8). Core suite green.
+
+---
