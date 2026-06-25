@@ -117,6 +117,8 @@
 - **Round 105**: Extracted `_formatMemoryEvent` and `_allToolsTerminate`; further function length reduction.
 - **Round 106**: Extracted `_emitDebugRoundTiming` from `_processTurnWithTools`.
 - **Round 107**: Extracted `_createTerminatedResult` and `_handleFollowUpAfterTools`; continued function length reduction.
+- **Round 108**: Fixed memory leak in process signal handlers of useInkApp hook; corrected import paths across TUI modules; added `debug` slash command. All tests passing; build clean.
+- **Round 109**: Extracted `_buildAssistantContent` and `_buildToolContent` from `createAssistantTurn`/`createToolTurn` in AgentLoop; reduced function lengths; improved modularity. All tests passing; build clean.
 - Backend tests: 2871+ passed; all core suites green.
 
 ### 🎯 Next Tasks

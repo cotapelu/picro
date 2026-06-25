@@ -36,27 +36,45 @@ export class ContextBuilder {
     history: ConversationTurn[],
     memories?: MemoryEntry[],
   ): { prompt: string; tokenCount: number } {
-    // Step 1: Truncate history to fit context window
-    const availableTokens = this.config.maxTokens - this.config.reservedTokens;
-    const truncatedHistory = this.truncateHistory(history, availableTokens);
+    const maxTokens = this.config.maxTokens;
+    const reservedTokens = this.config.reservedTokens;
 
-    // Step 2: Build history text
-    const historyText = this.formatHistory(truncatedHistory);
+    // Estimate base prompt tokens
+    const baseTokens = this.estimateTokenCount(basePrompt);
 
-    // Step 3: Inject memories if provided
-    let fullPrompt = basePrompt;
+    // Estimate memories tokens (if any)
+    let memoryText = '';
+    let memoriesTokens = 0;
     if (this.config.enableMemoryInjection && memories && memories.length > 0) {
-      const memoryText = this.formatMemories(memories);
-      fullPrompt += `\n\n${memoryText}`;
+      memoryText = this.formatMemories(memories);
+      memoriesTokens = this.estimateTokenCount(memoryText);
     }
 
-    // Step 4: Append history
+    // Compute remaining tokens for history
+    const usedTokens = baseTokens + memoriesTokens;
+    const availableForHistory = maxTokens - reservedTokens - usedTokens;
+
+    // Truncate history to fit remaining space (or empty if negative)
+    const truncatedHistory = availableForHistory > 0 ? this.truncateHistory(history, availableForHistory) : [];
+    const historyText = this.formatHistory(truncatedHistory);
+
+    // Build full prompt
+    let fullPrompt = basePrompt;
+    if (memoryText) {
+      fullPrompt += `\n\n${memoryText}`;
+    }
     if (historyText) {
       fullPrompt += `\n\n[Conversation History]\n${historyText}`;
     }
 
-    // Step 5: Estimate tokens
+    // Estimate final token count
     const tokenCount = this.estimateTokenCount(fullPrompt);
+
+    // Safety: if still over limit, strip memories and re-truncate history
+    if (tokenCount > maxTokens) {
+      // Recursively rebuild without memories
+      return this.build(basePrompt, history, []);
+    }
 
     return { prompt: fullPrompt, tokenCount };
   }

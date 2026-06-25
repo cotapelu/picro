@@ -2,7 +2,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import type { AgentSessionRuntimeInterface } from '../runtime.js';
-import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands';
+import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands.js';
 import { CommandPalette } from './modals/CommandPalette.js';
 import { ThinkingModal } from './modals/ThinkingModal.js';
 import { LoginModal } from './modals/LoginModal.js';

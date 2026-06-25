@@ -1560,7 +1560,11 @@ export class AgentSession {
           break;
         case 'error':
           type = 'error';
-          converted.error = event.message || event.errorMessage || event.error;
+          const rawErr = event.message || event.errorMessage || event.error;
+          // Sanitize generic 'error' messages to provide more context
+          converted.error = typeof rawErr === 'string' && rawErr.toLowerCase() === 'error'
+            ? 'Unknown error (see logs for details)'
+            : rawErr;
           break;
         case 'memory:retrieve':
           type = 'memory_retrieve';

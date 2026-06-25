@@ -57,7 +57,11 @@ export function createProxyStream(
         try {
           const data = await response.json();
           if (typeof data === 'object' && data !== null && 'error' in data) {
-            errorMsg = (data as { error: string }).error || errorMsg;
+            const rawError = (data as { error: string }).error;
+            // If the proxy returns a generic 'error', provide more context
+            errorMsg = rawError && rawError.toLowerCase() === 'error'
+              ? `Proxy error: ${response.status} ${response.statusText} (server returned generic error)`
+              : rawError || errorMsg;
           }
         } catch {
           // ignore

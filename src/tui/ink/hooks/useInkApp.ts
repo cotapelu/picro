@@ -3,8 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { render, Box, Text, useInput } from 'ink';
 import type { AgentSessionRuntimeInterface } from '../../runtime.js';
 import { createFooterDataProvider, type FooterDataProvider } from '../components/Footer/FooterDataProvider.js';
-import { BUILTIN_SLASH_COMMANDS } from '../../../runtime/slash-commands';
-import { VERSION } from '../../../config';
+import { BUILTIN_SLASH_COMMANDS } from '../../../runtime/slash-commands.js';
+import { VERSION } from '../../../config.js';
 
 // Re-export modal type for external use
 export type ModalState =

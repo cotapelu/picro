@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import { useEffect } from 'react';
-import { VERSION } from '../../../config';
+import { VERSION } from '../../../config.js';
 
 interface UseVersionCheckOpts {
   addToast: (message: string, type?: 'info' | 'success' | 'error') => void;

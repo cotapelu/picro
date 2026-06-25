@@ -33,9 +33,9 @@ import { BashOutputModal } from './modals/BashOutputModal.js';
 import { InputModal } from './modals/InputModal.js';
 import { SelectModal } from './modals/SelectModal.js';
 import { Modal } from './modals/Modal.js';
-import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands';
+import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands.js';
 import { track } from '../../runtime/telemetry.js';
-import { VERSION } from '../../config';
+import { VERSION } from '../../config.js';
 
 
 interface InkAppInnerProps {

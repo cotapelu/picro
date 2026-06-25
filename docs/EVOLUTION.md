@@ -1571,3 +1571,21 @@ These extractions shorten `executeLoop` significantly and improve readability wi
 **Tests**: Core tests remain green (3000+). `.tsx` tests now load; some version-check tests have expectation mismatches unrelated to this change.
 
 ---
+
+### Round 109 (2026-06-25): Extract Helper Methods in AgentLoop
+
+**Problem**: `createAssistantTurn` and `createToolTurn` methods were ~25-30 lines each, mixing content building logic with turn construction, hurting readability.
+
+**Solution**:
+- Extracted `_buildAssistantContent` to handle response → content blocks conversion.
+- Extracted `_buildToolContent` to handle tool result → content blocks conversion.
+- Simplified `createAssistantTurn` and `createToolTurn` to thin wrappers.
+
+**Impact**:
+- Reduced average function length in AgentLoop.
+- Improved separation of concerns: content building isolated.
+- Easier to test content conversion logic independently if needed.
+
+**Tests**: All AgentLoop tests pass (70+). Core suite green (3000+).
+
+---

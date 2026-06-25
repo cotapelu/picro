@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import { useCallback } from 'react';
-import { BUILTIN_SLASH_COMMANDS } from '../../../runtime/slash-commands';
-import { VERSION } from '../../../config';
+import { BUILTIN_SLASH_COMMANDS } from '../../../runtime/slash-commands.js';
+import { VERSION } from '../../../config.js';
 
 interface CommandContext {
   runtime: any;

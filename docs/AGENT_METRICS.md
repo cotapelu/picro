@@ -101,6 +101,7 @@
 
 | 107    | 2026-06-24 | Extracted `_createTerminatedResult` and `_handleFollowUpAfterTools` to further shorten `_processTurnWithTools` | 3000+      | 0           | 0         |
 | 108    | 2026-06-25 | Fixed memory leak in process signal handlers of useInkApp hook | 3000+      | 0           | 0         |
+| 109    | 2026-06-25 | Extracted `_buildAssistantContent` and `_buildToolContent` from AgentLoop methods; reduced function lengths | 3000+      | 0           | 0         |
 ## Quality Indicators
 
 - **Test Failure Rate**: 0% (3000+ tests passing)
