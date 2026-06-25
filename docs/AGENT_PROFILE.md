@@ -28,6 +28,9 @@
 ## Recent Improvements
 
 - **Token count visibility**: TUI footer now displays `last:XXk t` showing token count of the most recent LLM request. Helps monitor context size and catch overflow early.
+- **Context usage warning**: Footer shows ⚠/⚠⚠ when context usage exceeds 80%/90% thresholds, with yellow/red color coding. Proactive overflow prevention.
+- **Code maintainability**: Extracted large methods in `AgentLoop` and `AgentSession` to ≤20 lines each, improving readability and testability.
+- **Memory safety**: Memory injection disabled by default, eliminating token explosion from global memory storage.
 
 
 ## Fragile Modules
