@@ -1023,6 +1023,20 @@
    - Validate all TUI unit/integration tests pass.
    - High impact: native, fully‑customizable user interface.
 
+### Round 103 (2026-06-24): Aborted Extract LLM Invocation
+
+**Goal**: Further reduce `executeLoop` length by extracting `_invokeLlm`.
+
+**Attempt**:
+- Created `_invokeLlm` async generator handling both streaming and non‑streaming.
+- Integrated into `executeLoop` with iterator consumption and post‑invoke sanity checks.
+
+**Outcome**:
+- Introduced regressions: many tests failed due to missing responses and type flow issues.
+- Complexity too high for low‑risk bar; rollback performed.
+
+**Decision**: Pause further `AgentLoop` refactoring; the function remains as in Round 102 and tests pass. Will revisit with a simpler extraction strategy or class decomposition.
+
 ## Anticipated Technical Debt
 
 - Complexity of `AgentLoop` increasing; may need to extract outer/inner loop logic into separate classes.
