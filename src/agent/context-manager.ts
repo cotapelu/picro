@@ -22,7 +22,7 @@ export class ContextBuilder {
       maxTokens: config?.maxTokens ?? 128000,
       reservedTokens: config?.reservedTokens ?? 4096,
       minMessages: config?.minMessages ?? 5,
-      enableMemoryInjection: config?.enableMemoryInjection ?? false,
+      enableMemoryInjection: config?.enableMemoryInjection ?? true,
       memoryTopK: config?.memoryTopK ?? 5,
     };
   }
