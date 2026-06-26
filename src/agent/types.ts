@@ -654,6 +654,9 @@ export interface SessionMetrics {
   memoryAvgLatencyMs: number;
   compactions: number;
   compactionTokensSaved: number;
+  // New: history and tool results limits
+  historyEvictions: number;
+  toolResultsEvictions: number;
 }
 
 export const createSessionMetrics = (): SessionMetrics => ({
@@ -671,6 +674,8 @@ export const createSessionMetrics = (): SessionMetrics => ({
   memoryAvgLatencyMs: 0,
   compactions: 0,
   compactionTokensSaved: 0,
+  historyEvictions: 0,
+  toolResultsEvictions: 0,
 });
 
 export type LLMStreamEvent =
