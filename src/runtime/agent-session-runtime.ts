@@ -126,6 +126,13 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
   }
 
   /**
+   * Prompt the agent (high-level API)
+   */
+  async prompt(text: string, options?: { images?: unknown[] }): Promise<void> {
+    return this._session.prompt(text, options);
+  }
+
+  /**
    * Copy text to clipboard
    */
   async copyToClipboard(text: string): Promise<void> {

@@ -44,6 +44,10 @@ export interface InteractiveModeOptions {
    * Custom render function (if you want to override default layout)
    */
   customRenderer?: (state: InteractiveState, width: number, height: number) => string;
+  /**
+   * Initial state override (optional)
+   */
+  initialState?: Partial<InteractiveState>;
 }
 
 /**
@@ -200,7 +204,11 @@ export class InteractiveMode {
         ]);
       },
       setInputValue: (value: string | ((prev: InputState) => InputState)) => {
-        this.state.update('input', value);
+        if (typeof value === 'string') {
+          this.state.update('input', (prev: InputState) => ({ ...prev, value }));
+        } else {
+          this.state.update('input', value);
+        }
       },
       setMessages: (updater: (prev: Message[]) => Message[]) => {
         this.state.update('messages', updater);

@@ -31,7 +31,7 @@ export interface AgentSessionInterface {
   getToolDefinition(name: string): any;
 
   // Model handling
-  cycleModel(direction?: "next" | "prev"): { model: any; thinkingLevel?: string } | undefined;
+  cycleModel(direction?: "forward" | "backward"): Promise<{ model: any; thinkingLevel?: string } | undefined>;
   setModel(model: any): Promise<void>;
   setAutoCompactionEnabled(enabled: boolean): void;
   getContextUsage(): { tokens: number; contextWindow: number; percent: number } | undefined;
@@ -68,8 +68,6 @@ export interface AgentSessionInterface {
   // Reload resources
   reload?(): Promise<void>;
 
-  // Extension runner reference (for binding extensions)
-  _extensionRunner?: any;
 }
 
 /**
