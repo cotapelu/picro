@@ -204,11 +204,15 @@ export class AgentLoop {
     memories: MemoryEntry[],
     signal?: AbortSignal,
   ): Promise<Context> {
+    // If custom transformContext is provided, use legacy path (respects transformContext)
+    if (this.config.transformContext) {
+      return this._buildContextLegacy(turns, memories, signal);
+    }
     // Use ContextBuilder if available and no custom convertToLlm
     if (this.contextBuilder && !this.config.convertToLlm) {
       return this._buildContextWithContextBuilder(turns, memories);
     }
-    // Fallback: custom transform or legacy path (no tokenCount)
+    // Fallback to legacy path
     return this._buildContextLegacy(turns, memories, signal);
   }
 

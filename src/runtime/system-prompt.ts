@@ -158,9 +158,8 @@ Pi documentation (read only when the user asks about pi itself, its SDK, extensi
     prompt += "</project_context>\n";
   }
 
-  // Append skills section (only if read tool is available)
-  const hasReadForSkills = !selectedTools || selectedTools.includes("read");
-  if (hasReadForSkills && skills && skills.length > 0) {
+  // Append skills section if provided
+  if (skills && skills.length > 0) {
     prompt += formatSkillsForPrompt(skills);
   }
 
