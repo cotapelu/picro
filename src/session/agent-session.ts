@@ -604,73 +604,88 @@ export class AgentSession {
     images?: any[];
     streamingBehavior?: "steer" | "followUp";
   }): Promise<void> {
-    // If streaming, queue via steer() or followUp()
+    // If streaming, queue and return early
     if (this.isStreaming) {
-      if (!options?.streamingBehavior) {
-        throw new Error(
-          "Agent is already processing. Specify streamingBehavior ('steer' or 'followUp') to queue the message."
-        );
-      }
-
-      if (options.streamingBehavior === "followUp") {
-        await this._queueFollowUp(text, options?.images);
-      } else {
-        await this._queueSteer(text, options?.images);
-      }
+      await this._handleStreamingPrompt(text, options);
       return;
     }
 
-    // Validate model
+    this._validatePromptPrerequisites();
+    const userTurn = this._buildUserTurn(text, options?.images);
+    const initialTurns = this._prepareInitialTurns(userTurn);
+    this._flushPendingBashMessages();
+
+    this._isPromptRunning = true;
+    try {
+      await this._executeAgentRun(initialTurns);
+    } finally {
+      this._isPromptRunning = false;
+    }
+    await this.waitForRetry();
+  }
+
+  /** Handle prompt when already streaming – queue appropriately */
+  private async _handleStreamingPrompt(
+    text: string,
+    options?: { expandPromptTemplates?: boolean; images?: any[]; streamingBehavior?: "steer" | "followUp" }
+  ): Promise<void> {
+    if (!options?.streamingBehavior) {
+      throw new Error(
+        "Agent is already processing. Specify streamingBehavior ('steer' or 'followUp') to queue the message."
+      );
+    }
+    if (options.streamingBehavior === "followUp") {
+      await this._queueFollowUp(text, options?.images);
+    } else {
+      await this._queueSteer(text, options?.images);
+    }
+  }
+
+  /** Validate model and auth before running prompt */
+  private _validatePromptPrerequisites(): void {
     if (!this._model) {
       throw new Error(formatNoModelSelectedMessage());
     }
-
     if (!this.modelRegistry.hasConfiguredAuth(this._model)) {
       throw new Error(formatNoApiKeyFoundMessage(this._model.provider));
     }
+  }
 
-    // Build user message
+  /** Build user conversation turn from text and optional images */
+  private _buildUserTurn(text: string, images?: any[]): ConversationTurn {
     const userContent: any[] = [{ type: "text", text }];
-    if (options?.images) {
-      userContent.push(...options.images);
+    if (images) {
+      userContent.push(...images);
     }
-
-    const userTurn: ConversationTurn = {
+    return {
       id: randomUUID(),
       role: "user",
       content: userContent,
       timestamp: Date.now(),
     };
+  }
 
-    // Add pending next turn messages
+  /** Prepare initial turns including any pending next-turn messages */
+  private _prepareInitialTurns(userTurn: ConversationTurn): ConversationTurn[] {
     const initialTurns: ConversationTurn[] = [userTurn];
     for (const msg of this._pendingNextTurnMessages) {
       initialTurns.push(msg);
     }
     this._pendingNextTurnMessages = [];
+    return initialTurns;
+  }
 
-    // Flush any pending bash messages before starting new turn
-    this._flushPendingBashMessages();
-
-    // Run the agent with the constructed turns (supports images)
-    this._isPromptRunning = true;
-    try {
-      const hasHistory = this._agentState?.history?.length > 0;
-      if (hasHistory) {
-        // Enqueue all turns into steering queue for resume to pick up
-        for (const turn of initialTurns) {
-          this.agent.steer(turn);
-        }
-        await this.agent.resume();
-      } else {
-        await this.agent.run(initialTurns);
+  /** Execute the agent run (with history or fresh) */
+  private async _executeAgentRun(initialTurns: ConversationTurn[]): Promise<void> {
+    const hasHistory = this._agentState?.history?.length > 0;
+    if (hasHistory) {
+      for (const turn of initialTurns) {
+        this.agent.steer(turn);
       }
-    } catch (err: any) {
-      throw err;
-    } finally {
-      this._isPromptRunning = false;
+      await this.agent.resume();
+    } else {
+      await this.agent.run(initialTurns);
     }
-    await this.waitForRetry();
   }
 
   /**

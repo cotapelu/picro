@@ -49,6 +49,8 @@ export const Footer: React.FC<FooterProps> = ({ provider, hints = [] }) => {
     performance,
     git,
     contextPercent,
+    contextWarning,
+    lastTokenCount,
   } = data;
 
   const leftParts: string[] = [cwdBasename];
@@ -82,7 +84,17 @@ export const Footer: React.FC<FooterProps> = ({ provider, hints = [] }) => {
     rightParts.push(`RSS:${performance.avgRSSMB.toFixed(1)}MB`);
   }
   if (contextPercent !== undefined) {
-    rightParts.push(`ctx:${contextPercent}%`);
+    let ctxText = `ctx:${contextPercent}%`;
+    if (contextWarning === 'critical') {
+      rightParts.push(<Text key="ctx" color="red">{'⚠⚠ ' + ctxText}</Text>);
+    } else if (contextWarning === 'warning') {
+      rightParts.push(<Text key="ctx" color="yellow">{'⚠ ' + ctxText}</Text>);
+    } else {
+      rightParts.push(ctxText);
+    }
+  }
+  if (lastTokenCount !== undefined) {
+    rightParts.push(`last:${formatNumber(lastTokenCount)}t`);
   }
   if (hints.length > 0) {
     rightParts.push(hints.join(' | '));

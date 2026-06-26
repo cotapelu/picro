@@ -21,7 +21,16 @@
 
 ## Weaknesses / Known Issues
 
-- None critical.
+- Memory injection (when enabled) can cause token explosion if global memory storage contains many entries; default now disabled to prevent this.
+- `ContextBuilder` memory injection logic previously lacked proper token accounting for large memory sets; fixed in Round 110.
+- `AgentLoop` complexity remains high despite test coverage; careful when modifying loop flow.
+
+## Recent Improvements
+
+- **Token count visibility**: TUI footer now displays `last:XXk t` showing token count of the most recent LLM request. Helps monitor context size and catch overflow early.
+- **Context usage warning**: Footer shows ⚠/⚠⚠ when context usage exceeds 80%/90% thresholds, with yellow/red color coding. Proactive overflow prevention.
+- **Code maintainability**: Extracted large methods in `AgentLoop` and `AgentSession` to ≤20 lines each, improving readability and testability.
+- **Memory safety**: Memory injection disabled by default, eliminating token explosion from global memory storage.
 
 
 ## Fragile Modules

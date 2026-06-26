@@ -132,6 +132,8 @@ export interface Context {
   systemPrompt?: string;
   messages: Message[];
   tools?: Tool[];
+  /** Estimated token count for the full context */
+  tokenCount?: number;
 }
 
 export interface Tool {

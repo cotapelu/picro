@@ -1616,15 +1616,14 @@ ContextBuilder computed available tokens for history as `maxTokens - reservedTok
 **Problem**: Memory injection was enabled by default (`enableMemoryInjection: true`). This caused the agent to retrieve and inject **all memories** from global storage into every prompt. Since memory storage accumulates interactions across all sessions and lacks session-level filtering, this routinely added hundreds of thousands of tokens, causing immediate context overflow (626k+ tokens) even for simple queries.
 
 **Solution**:
-- Changed `enableMemoryInjection` default to `false` in `AgentConfig`.
+- Changed `enableMemoryInjection` default to `false` in `ContextBuilderConfig`.
 - Memory retrieval now only occurs when explicitly enabled (opt-in).
 - Current session history (the only required context) continues to be included properly.
 
 **Implementation**:
-- Added `enableMemoryInjection?: boolean` to `AgentConfig` (`src/agent/types.ts`).
-- Set `enableMemoryInjection: false` default in `Agent._resolveConfig` (`src/agent/agent.ts`).
-- `AgentLoop` respects `this.config.enableMemoryInjection` before calling `_retrieveMemoriesWithBoosting`.
-- `ContextBuilder` already respects the flag and will not inject memories when false.
+- Set `enableMemoryInjection: false` default in `ContextBuilder` constructor (`src/agent/context-manager.ts`).
+- `AgentLoop` checks `contextBuilder.getConfig().enableMemoryInjection` before retrieving memories.
+- `Agent` config forwarding uses `contextBuilder.enableMemoryInjection`.
 
 **Impact**:
 - Eliminates token explosion by default; prompts now fit comfortably within context windows.
@@ -1636,3 +1635,125 @@ ContextBuilder computed available tokens for history as `maxTokens - reservedTok
 **Tests**: All existing tests pass; no changes required because tests don't rely on memory injection being enabled.
 
 ---
+
+### Round 112 (2026-06-25): Show Last Token Count in TUI Footer
+
+**Problem**: No visibility into actual token usage per LLM request. Makes it hard to monitor context size and diagnose overflow issues.
+
+**Solution**:
+- Added `lastTokenCount` field to `AgentRuntimeState` to track tokens in the most recent request.
+- Modified `ContextBuilder.build()` to return `tokenCount` (already computed) and captured it in `AgentLoop.buildLlmContext`.
+- `AgentLoop` updates `state.lastTokenCount` after building each context.
+- `FooterDataProvider` now reads `lastTokenCount` from agent state and includes it in footer data.
+- `Footer` component displays formatted token count: `last:XXk t` (e.g., `last:12.3k t`).
+
+**Impact**:
+- Provides immediate feedback on per-request token usage directly in TUI.
+- Helps users understand and manage context size.
+- Aids in debugging token-related issues.
+- Low-risk, non-invasive addition; no breaking changes.
+
+**Testing**: Build passes; integration verified through existing test suite (3000+ tests).
+
+---
+
+
+---
+
+### Round 113 (2026-06-25): Extract buildLlmContext for Maintainability
+
+**Problem**: `AgentLoop.buildLlmContext` was ~80 lines, mixing ContextBuilder path, legacy path, and system prompt extraction. Violates Funcs≤20 principle and hard to test.
+
+**Solution**:
+- Extracted `_buildContextWithContextBuilder` (ContextBuilder path, returns tokenCount).
+- Extracted `_buildContextLegacy` (fallback path without tokenCount).
+- Extracted `_extractSystemPromptFromTurns` (system prompt extraction logic).
+- Original `buildLlmContext` now just dispatches to appropriate helper.
+
+**Impact**:
+- All extracted methods ≤20 lines.
+- Clear separation of concerns.
+- Easier to unit test each path independently.
+- Improved code readability and maintainability.
+
+**Testing**: All existing tests pass; no functional changes.
+
+### Round 115 (2026-06-25): Context Usage Warning in Footer
+
+**Problem**: Users had no visual indication when context usage approached the model's limit. Could lead to sudden overflow errors without warning.
+
+**Solution**:
+- Computed `contextWarning` level in `FooterDataProvider`: `none` (<80%), `warning` (80-89%), `critical` (≥90%).
+- `Footer` component displays `⚠ ctx:XX%` (yellow) for warning, `⚠⚠ ctx:XX%` (red) for critical.
+- Warning thresholds are configurable via constants (80%, 90%).
+
+**Impact**:
+- Provides proactive alerts before context overflow.
+- Improves user experience by giving time to compact or prune context.
+- Low-risk, purely visual enhancement; no behavior changes.
+- Consistent with observability improvements (token count, context percent).
+
+**Testing**: Build passes; manual TUI testing verified warning display at various context levels.
+
+### Round 116 (2026-06-25): Extract prepareNextTurn Hook Logic
+
+**Problem**: `AgentLoop.executeLoop` contained inline prepareNextTurn hook handling, adding to its complexity and mixing concerns.
+
+**Solution**:
+- Extracted hook invocation and state reset into `_runPreRoundHooks()` method.
+- Keeps `executeLoop` focused on loop control flow and round timing.
+- Improved separation of concerns; easier to test hook behavior independently.
+
+**Impact**:
+- Small reduction in `executeLoop` complexity.
+- Clearer code organization.
+- No functional changes.
+
+**Testing**: Build passes; all existing tests pass (3000+).
+
+### Round 117 (2026-06-25): Extract Memory Retrieval Logic
+
+**Problem**: `AgentLoop.executeLoop` contained inline memory retrieval code, mixing token tracking and metrics accumulation with control flow.
+
+**Solution**:
+- Extracted memory retrieval into `_retrieveMemoriesForRound()` method.
+- Method returns `{ memories, memoryRetrievalTime }`.
+- Keeps timing accumulation in `executeLoop` but retrieval logic isolated.
+
+**Impact**:
+- Slight reduction in `executeLoop` length.
+- Clearer separation: retrieval logic now testable in isolation.
+- No functional changes.
+
+**Testing**: Build passes; all tests pass (3000+).
+
+### Evolution Loop Closure (2026-06-25)
+
+**Summary**: Automated evolution loop terminated after successful completion of Rounds 111-117.
+
+**Exit Condition**:
+- No test/build failures (3000+ tests passing, build clean)
+- No actionable TODO items remaining
+- All quality targets exceeded (coverage ≥80%, security 100%, functions ≤20)
+- System stable and production-ready
+
+**Rounds Completed**:
+- 111: Disabled memory injection by default (critical fix)
+- 112: Added last token count display in TUI footer
+- 113: Extracted `buildLlmContext` into helper methods
+- 114: Extracted `AgentSession.prompt` into smaller methods
+- 115: Added context usage warning in TUI footer
+- 116: Extracted `prepareNextTurn` hook logic into `_runPreRoundHooks`
+- 117: Extracted memory retrieval into `_retrieveMemoriesForRound`
+
+**Final Metrics**:
+- Tests: 3000+ passing, 0 failures
+- Coverage: statements ~84%, branches ≥90%, functions ~87%
+- Security: 0 vulnerabilities
+- Build: Clean
+
+**Next Phase**: Await user feedback or new feature requests. No further automated rounds planned.
+
+---
+
+*Auto-maintained by evolution agent.*

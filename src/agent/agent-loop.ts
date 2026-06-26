@@ -123,6 +123,7 @@ export class AgentLoop {
       totalToolCalls: 0,
       totalTokens: 0,
       promptLength: 0,
+      lastTokenCount: 0,
       isRunning: false,
       isCancelled: false,
       toolResults: [],
@@ -200,12 +201,100 @@ export class AgentLoop {
     memories: MemoryEntry[],
     signal?: AbortSignal,
   ): Promise<Context> {
+    // Use ContextBuilder if available and no custom convertToLlm
+    if (this.contextBuilder && !this.config.convertToLlm) {
+      return this._buildContextWithContextBuilder(turns, memories);
+    }
+    // Fallback: custom transform or legacy path (no tokenCount)
+    return this._buildContextLegacy(turns, memories, signal);
+  }
+
+  /** Build context using ContextBuilder (with tokenCount) */
+  private async _runPreRoundHooks(): Promise<void> {
+    if (!this.config.prepareNextTurn || !this.lastTurnAssistant) return;
+    try {
+      const overrides = await this.config.prepareNextTurn({
+        lastAssistantMessage: this.lastTurnAssistant,
+        toolResults: this.lastTurnToolResults,
+        newMessages: this.lastTurnNewMessages,
+        round: this.state.round - 1,
+        state: { ...this.state } as any,
+      });
+      if (overrides?.reasoningLevel !== undefined) {
+        this.config.reasoningLevel = overrides.reasoningLevel;
+      }
+      if (overrides?.model) {
+        if (this.config.setModel) {
+          this.config.setModel(overrides.model);
+        } else {
+          this.state.metadata.nextModel = overrides.model;
+        }
+      }
+      if (overrides?.context) {
+        this.state.history = overrides.context;
+      }
+    } catch (e) {
+      if (this.config.debug) console.error("prepareNextTurn hook error:", e);
+    } finally {
+      this.lastTurnAssistant = null;
+      this.lastTurnToolResults = [];
+      this.lastTurnNewMessages = [];
+    }
+  }
+
+  /** Retrieve memories for current round if enabled */
+  private async _retrieveMemoriesForRound(): Promise<{
+    memories: MemoryEntry[];
+    memoryRetrievalTime: number;
+  }> {
+    const enableMemoryInjection = this.contextBuilder?.getConfig().enableMemoryInjection ?? false;
+    if (!enableMemoryInjection || !this.memoryStore) {
+      return { memories: [], memoryRetrievalTime: 0 };
+    }
+    const lastUserTurn = [...this.state.history]
+      .reverse()
+      .find((t) => t.role === "user");
+    const query =
+      lastUserTurn?.content
+        .filter((c) => c.type === "text")
+        .map((c) => c.text)
+        .join("") || "";
+    const result = await this._retrieveMemoriesWithBoosting(query);
+    this.metrics.memoryRetrievals++;
+    this.memoryLatencyAccumulator += result.retrievalTime;
+    return { memories: result.memories, memoryRetrievalTime: result.retrievalTime };
+  }
+
+  private async _buildContextWithContextBuilder(
+    turns: ConversationTurn[],
+    memories: MemoryEntry[],
+  ): Promise<Context> {
+    const systemPrompt = this.config.systemPrompt || this._extractSystemPromptFromTurns(turns);
+    const result = this.contextBuilder!.build(
+      systemPrompt || "",
+      turns,
+      memories.length > 0 ? memories : undefined
+    );
+    const llmMessages = this.convertTurnsToMessages(turns);
+    return {
+      messages: llmMessages as any,
+      systemPrompt,
+      tools: this.tools as any,
+      tokenCount: result.tokenCount,
+    };
+  }
+
+  /** Build context via legacy path (no tokenCount) */
+  private async _buildContextLegacy(
+    turns: ConversationTurn[],
+    memories: MemoryEntry[],
+    signal?: AbortSignal,
+  ): Promise<Context> {
     let processed = turns;
     if (this.config.transformContext) {
       processed = await this.config.transformContext(turns, signal);
     } else if (memories.length > 0) {
-      // Inject memories as system messages if no custom transform
-      const memoryTurns: ConversationTurn[] = memories.map((mem) => ({
+      const memoryTurns = memories.map((mem): ConversationTurn => ({
         role: "system",
         content: [{ type: "text", text: mem.content }],
         timestamp: Date.now(),
@@ -213,30 +302,27 @@ export class AgentLoop {
       processed = [...memoryTurns, ...processed];
     }
 
-    let llmMessages: LlmMessage[];
-    if (this.config.convertToLlm) {
-      llmMessages = await this.config.convertToLlm(processed);
-    } else {
-      llmMessages = this.convertTurnsToMessages(processed);
-    }
+    const llmMessages = this.config.convertToLlm
+      ? await this.config.convertToLlm(processed)
+      : this.convertTurnsToMessages(processed);
 
-    // Prefer systemPrompt from config (set by AgentSession). Fallback to system turn for compatibility.
-    let systemPrompt = this.config.systemPrompt;
-    if (!systemPrompt) {
-      const systemTurn = processed.find((t) => t.role === "system");
-      if (systemTurn) {
-        systemPrompt = (systemTurn as any).content
-          .filter((c: any) => c.type === "text")
-          .map((c: any) => c.text)
-          .join("");
-      }
-    }
+    const systemPrompt = this.config.systemPrompt || this._extractSystemPromptFromTurns(processed);
 
     return {
       messages: llmMessages as any,
       systemPrompt,
       tools: this.tools as any,
     };
+  }
+
+  /** Extract system prompt from a turn array */
+  private _extractSystemPromptFromTurns(turns: ConversationTurn[]): string {
+    const systemTurn = turns.find((t) => t.role === "system");
+    if (!systemTurn) return "";
+    return systemTurn.content
+      .filter((c) => c.type === "text")
+      .map((c) => c.text)
+      .join("");
   }
 
   /**
@@ -404,39 +490,7 @@ export class AgentLoop {
         const roundStartTime = Date.now();
         this.state.round++;
 
-        // Invoke prepareNextTurn hook if configured and previous turn exists
-        if (this.config.prepareNextTurn && this.lastTurnAssistant) {
-          try {
-            const overrides = await this.config.prepareNextTurn({
-              lastAssistantMessage: this.lastTurnAssistant,
-              toolResults: this.lastTurnToolResults,
-              newMessages: this.lastTurnNewMessages,
-              round: this.state.round - 1,
-              state: { ...this.state } as any,
-            });
-            if (overrides?.reasoningLevel !== undefined) {
-              this.config.reasoningLevel = overrides.reasoningLevel;
-            }
-            if (overrides?.model) {
-              if (this.config.setModel) {
-                this.config.setModel(overrides.model);
-              } else {
-                this.state.metadata.nextModel = overrides.model;
-              }
-            }
-            if (overrides?.context) {
-              this.state.history = overrides.context;
-            }
-          } catch (e) {
-            if (this.config.debug)
-              console.error("prepareNextTurn hook error:", e);
-          } finally {
-            // Reset after processing to avoid re-running
-            this.lastTurnAssistant = null;
-            this.lastTurnToolResults = [];
-            this.lastTurnNewMessages = [];
-          }
-        }
+        await this._runPreRoundHooks();
         let turnEnded = false;
         let finalResultCandidate: AgentRunResult | null = null;
 
@@ -460,25 +514,9 @@ export class AgentLoop {
           }
         }
 
-        // Memory retrieval - ONLY if enabled
-        let memories: MemoryEntry[] = [];
-        let memoryRetrievalTime = 0;
-        const enableMemoryInjection = this.contextBuilder?.getConfig().enableMemoryInjection ?? false;
-        if (enableMemoryInjection && this.memoryStore) {
-          const lastUserTurn = [...this.state.history]
-            .reverse()
-            .find((t) => t.role === "user");
-          const query =
-            lastUserTurn?.content
-              .filter((c) => c.type === "text")
-              .map((c) => c.text)
-              .join("") || "";
-          const result = await this._retrieveMemoriesWithBoosting(query);
-          memories = result.memories;
-          this.metrics.memoryRetrievals++;
-          this.memoryLatencyAccumulator += result.retrievalTime;
-          memoryRetrievalTime = result.retrievalTime;
-          totalMemoryRetrievalTime += result.retrievalTime;
+        const { memories, memoryRetrievalTime } = await this._retrieveMemoriesForRound();
+        if (memoryRetrievalTime > 0) {
+          totalMemoryRetrievalTime += memoryRetrievalTime;
         }
 
         // Build LLM context from current history (includes steering if any)
@@ -487,6 +525,10 @@ export class AgentLoop {
           memories,
           combinedSignal,
         );
+        // Record token count for this request
+        if (llmContext.tokenCount !== undefined) {
+          this.state.lastTokenCount = llmContext.tokenCount;
+        }
 
         // LLM request timing
         const llmStartTime = await this._emitLlmRequest(llmContext);
