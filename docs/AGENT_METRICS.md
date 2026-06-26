@@ -116,6 +116,7 @@
 | 121    | 2026-06-26 | Fixed TUI event handling – aborted stopReason now displays 'aborted'; all tests passing (3000+) | 3000+      | 0           | 0         |
 | 122    | 2026-06-26 | Reduced read-tool default truncation limits to 100KB/2000 lines, aligning with bash tool and further reducing memory footprint | 3000+      | 0           | 0         |
 | 123    | 2026-06-26 | Added unit tests for AgentLoop memory safeguards (MAX_TOOL_TURNS, MAX_TOOL_RESULTS) increasing coverage | 3000+      | 0           | 0         |
+| 124    | 2026-06-26 | Added integration tests simulating large scans (1000+ tool calls) verifying eviction and OOM prevention | 3000+      | 0           | 0         |
 
 ## Quality Indicators
 
