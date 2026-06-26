@@ -187,8 +187,8 @@ export function useRuntime(runtime: ExtendedRuntime) {
           if (uiMsg) {
             const stopReason = turn.stopReason;
             const isError = stopReason === 'error' || stopReason === 'aborted';
-            // Use errorMessage if available, otherwise fallback to a generic message
-            const errorMessage = (turn as any).errorMessage || (isError ? 'Unknown error' : undefined);
+            // Use errorMessage if available; for aborted, use 'aborted' as default
+            const errorMessage = (turn as any).errorMessage || (stopReason === 'aborted' ? 'aborted' : isError ? 'Unknown error' : undefined);
             // Mark streaming as ended, but keep the ID so tool execution events can still update this message
             setMessages(prev => prev.map(msg => msg.id === id ? { ...uiMsg, streaming: false, error: errorMessage } : msg));
           }

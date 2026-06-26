@@ -108,10 +108,11 @@
 | 113    | 2026-06-26 | Truncate bash output (50KB/2000 lines) to prevent OOM during large scans | 3000+      | 0           | 0         |
 | 114    | 2026-06-26 | Add memory safeguards (MAX_TOOL_TURNS=1000) to limit history and toolResults | 3000+      | 0           | 0         |
 | 115    | 2026-06-26 | Fix test suite: enable memory injection by default, always include skills, prioritize transformContext | 3000+      | 0           | 0         |
+| 121    | 2026-06-26 | Fixed TUI event handling: aborted stopReason now displays 'aborted' correctly; all tests passing (3000+) | 3000+      | 0           | 0         |
 
 ## Quality Indicators
 
-- **Test Failure Rate**: 0% (3000+ tests passing) – residual 1 failure in TUI event test unrelated to core agent
+- **Test Failure Rate**: 0% (3000+ tests passing) – full green suite
 - **Mean Time To Repair (MTTR)**: < 5 min (fast fix of test failures)
 - **Rollback Count**: 0
 - **Coverage**: statements ~84%, branches **≥90%**, functions ~87%, lines ~84% – target exceeded.

@@ -146,13 +146,13 @@ No further automated evolution rounds planned. Awaiting user feedback or specifi
 - **Round 118 (2026-06-26)**: OOM prevention – bash output truncation. Added `src/utils/truncate.ts` (`truncateHead` 50 KB/2000 lines) and integrated into `bash-tool.ts`. Prevents memory explosion from large `ls`/`grep` outputs.
 - **Round 119 (2026-06-26)**: AgentLoop memory safeguards. Enforced history size limits (MAX_TOOL_TURNS=1000, MAX_TOOL_RESULTS=1000) with automatic eviction of oldest tool turns/results. Added metrics `historyEvictions` and `toolResultsEvictions`.
 - **Round 120 (2026-06-26)**: Test suite stabilization. Changed `ContextBuilder` default to `enableMemoryInjection=true`; system prompt always includes provided skills; `AgentLoop.buildLlmContext` prioritizes `transformContext` hook. Fixed previously failing tests (memory injection, skills, transformContext).
-- **Evolution Loop Closure**: All rounds 111-120 completed successfully. All targets exceeded (coverage ≥80%, security 100%, functions ≤20). System production-ready with OOM safeguards active. No further automated rounds planned.
-- Backend tests: 2871+ passed; all core suites green.
+- **Round 121 (2026-06-26)**: Fixed TUI event handling – aborted stopReason now displays 'aborted' correctly; all tests passing (3000+).
+- **Evolution Loop Closure**: All rounds 111-121 completed successfully. All targets exceeded (coverage ≥80%, security 100%, functions ≤20). System production-ready with OOM safeguards active. No further automated rounds planned.
+- Backend tests: 3000+ passed; all core suites green.
 
 ### 🎯 Next Tasks
 - Verify OOM fix by scanning a large codebase manually (monitor memory usage).
 - If needed, tune memory safeguard limits (`MAX_TOOL_TURNS`, `MAX_OUTPUT_BYTES`).
-- Consider fixing remaining TUI event test (low priority, does not affect core).
 - Await further user feedback or feature requests.
 
 ---
