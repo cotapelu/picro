@@ -139,6 +139,9 @@ No further automated evolution rounds planned. Awaiting user feedback or specifi
 - **Round 113**: Refactored `buildLlmContext` into smaller helper methods (`_buildContextWithContextBuilder`, `_buildContextLegacy`, `_extractSystemPromptFromTurns`). All methods ≤20 lines. Improved maintainability.
 - **Round 114**: Extracted `AgentSession.prompt` into smaller methods (`_handleStreamingPrompt`, `_validatePromptPrerequisites`, `_buildUserTurn`, `_prepareInitialTurns`, `_executeAgentRun`). Reduced complexity, easier testing.
 - **Round 115**: Added context usage warning in TUI footer with ⚠/⚠⚠ indicators and color coding (yellow/red) when usage >= 80%. Improves user awareness of approaching context limits.
+- **Round 116**: Extracted `prepareNextTurn` hook logic into `_runPreRoundHooks()` method; reduces `executeLoop` complexity.
+- **Round 117**: Extracted memory retrieval logic into `_retrieveMemoriesForRound()`; isolates token tracking and metrics.
+- **Evolution Loop Closure**: All rounds 111-117 completed successfully. All targets exceeded (coverage ≥80%, security 100%, functions ≤20). System production-ready. No further automated rounds planned.
 - Backend tests: 2871+ passed; all core suites green.
 
 ### 🎯 Next Tasks
