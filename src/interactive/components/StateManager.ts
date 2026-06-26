@@ -1,17 +1,15 @@
 // StateManager - Simple state container for interactive UI
-import type { InteractiveState, Toast, ModalState, InputState, Message, StatusBarState } from './types';
+import type { InteractiveState } from './types.js';
 
 export interface StateChange<T> {
   previous: T;
   current: T;
-  property: keyof T;
+  property: string;
 }
-
-export type StateSubscriber<T extends keyof InteractiveState> = (change: StateChange<InteractiveState[T]>) => void;
 
 export class StateManager {
   private state: InteractiveState;
-  private subscribers: Map<keyof InteractiveState, Set<StateSubscriber<any>>> = new Map();
+  private subscribers: Map<string, Set<(change: StateChange<unknown>) => void>> = new Map();
 
   constructor(initialState: InteractiveState) {
     this.state = initialState;
@@ -65,26 +63,26 @@ export class StateManager {
    */
   subscribe<K extends keyof InteractiveState>(
     key: K,
-    callback: StateSubscriber<K>
+    callback: (change: StateChange<InteractiveState[K]>) => void
   ): () => void {
     if (!this.subscribers.has(key)) {
       this.subscribers.set(key, new Set());
     }
-    this.subscribers.get(key)!.add(callback as StateSubscriber<any>);
+    this.subscribers.get(key)!.add(callback as any);
 
     // Return unsubscribe function
     return () => {
-      this.subscribers.get(key)?.delete(callback as StateSubscriber<any>);
+      this.subscribers.get(key)?.delete(callback as any);
     };
   }
 
   /**
    * Subscribe to any state change
    */
-  subscribeAll(callback: (changes: StateChange<keyof InteractiveState>[]) => void): () => void {
-    const allChanges: StateChange<keyof InteractiveState>[] = [];
+  subscribeAll(callback: (changes: StateChange<string>[]) => void): () => void {
+    const allChanges: StateChange<string>[] = [];
 
-    const wrappedCallback = (prop: keyof InteractiveState, prev: any, curr: any) => {
+    const wrappedCallback = (prop: string, prev: any, curr: any) => {
       allChanges.push({ previous: prev, current: curr, property: prop });
       callback(allChanges);
       allChanges.length = 0;
@@ -93,7 +91,8 @@ export class StateManager {
     // Subscribe to all keys
     const unsubscribes: (() => void)[] = [];
     for (const key of Object.keys(this.state) as (keyof InteractiveState)[]) {
-      unsubscribes.push(this.subscribe(key, wrappedCallback));
+      const handler = (change: any) => wrappedCallback(change.property, change.previous, change.current);
+      unsubscribes.push(this.subscribe(key, handler));
     }
 
     return () => {
@@ -110,10 +109,10 @@ export class StateManager {
   ): void {
     const subs = this.subscribers.get(key);
     if (subs) {
-      const change: StateChange<InteractiveState[K]> = { previous, current, property: key };
+      const change = { previous, current, property: key as string };
       for (const sub of subs) {
         try {
-          sub(change);
+          sub(change as any);
         } catch (err) {
           console.error(`State subscriber error for ${String(key)}:`, err);
         }

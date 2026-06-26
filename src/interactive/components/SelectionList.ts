@@ -1,5 +1,6 @@
 // SelectionList component - for selecting from a list (like sessions, models)
-import type { BoxProps } from './types';
+// BoxProps not used; if needed import fromtypes if defined there
+
 
 export interface SelectionListItem {
   id: string;
@@ -59,7 +60,7 @@ export function renderSelectionList(props: SelectionListProps): string {
     if (props.formatItem) {
       line = props.formatItem(item, globalIndex, isSelected);
     } else {
-      line = formatDefault(item, globalIndex, isSelected, props.showIndex);
+      line = formatDefault(item, globalIndex, isSelected, !!props.showIndex);
     }
 
     // Truncate to width
@@ -98,18 +99,19 @@ export function moveSelection(
   current: number,
   direction: 'up' | 'down',
   itemCount: number,
-  wrap = false
+  wrap?: boolean
 ): number {
+  const wrapMode = wrap ?? false;
   if (itemCount === 0) return -1;
 
   if (direction === 'up') {
     if (current <= 0) {
-      return wrap ? itemCount - 1 : 0;
+      return wrapMode ? itemCount - 1 : 0;
     }
     return current - 1;
   } else {
     if (current >= itemCount - 1) {
-      return wrap ? 0 : itemCount - 1;
+      return wrapMode ? 0 : itemCount - 1;
     }
     return current + 1;
   }

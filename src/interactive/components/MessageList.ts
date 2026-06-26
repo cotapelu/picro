@@ -1,5 +1,5 @@
 // MessageList component - renders conversation messages
-import type { Message } from './types';
+import type { Message } from './types.js';
 
 export function renderMessage(message: Message, width = 80, showTimestamp = true): string {
   const roleLabel = getRoleLabel(message.role);

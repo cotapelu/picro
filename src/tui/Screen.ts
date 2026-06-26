@@ -1,7 +1,7 @@
 // Screen - Main TUI screen manager
 // Handles terminal setup, render loop, input, cleanup
 
-import type { Component } from './Component';
+import type { Component } from './Component.js';
 
 export interface ScreenOptions {
   /**
@@ -22,8 +22,8 @@ export class Screen {
   private components: Component[] = [];
   private running = false;
   private options: Required<ScreenOptions>;
-  private stdin: NodeJS.ReadStream;
-  private stdout: NodeJS.WriteStream;
+  public stdin: NodeJS.ReadStream;
+  public stdout: NodeJS.WriteStream;
   private rawMode = false;
   private inputBuffer: string = '';
   private onInputCallback?: (key: string) => void;
@@ -129,7 +129,7 @@ export class Screen {
   /**
    * Clear screen
    */
-  private clear(): void {
+  public clear(): void {
     this.stdout.write('\x1b[2J\x1b[H');
   }
 

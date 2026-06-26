@@ -1,5 +1,5 @@
 // Box - Layout container with border/padding
-import { ContainerComponent } from './Component';
+import { ContainerComponent } from './Component.js';
 
 export interface BoxProps {
   /**

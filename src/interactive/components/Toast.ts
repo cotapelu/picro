@@ -1,5 +1,5 @@
 // Toast component - renders toast notifications as text
-import type { Toast as ToastType, ToastType as ToastTypeEnum } from './types';
+import type { Toast as ToastType, ToastType as ToastTypeEnum } from './types.js';
 
 const DEFAULT_DURATION = 3000;
 

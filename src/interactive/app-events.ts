@@ -2,6 +2,7 @@
 // Pure logic for compaction queue, retry handling
 
 import type { AgentSessionRuntimeInterface } from '../runtime/index.js';
+import type { InputState } from './components/types.js';
 
 export interface AppEventHandlers {
   onCompactionStart?: (event: any) => void;
@@ -15,6 +16,10 @@ export interface AppEventHandlers {
   onMessageEnd?: (event: any) => void;
   onToolExecutionStart?: (event: any) => void;
   onToolExecutionEnd?: (event: any) => void;
+  addToast: (message: string, type?: 'info' | 'success' | 'error') => void;
+  setInputValue: (value: string | ((prev: InputState) => InputState)) => void;
+  setMessages: (updater: (prev: any[]) => any[]) => void;
+  sendMessage: (text: string) => Promise<void>;
 }
 
 /**
@@ -23,12 +28,7 @@ export interface AppEventHandlers {
  */
 export function subscribeToRuntimeEvents(
   runtime: AgentSessionRuntimeInterface,
-  handlers: AppEventHandlers & {
-    addToast: (message: string, type?: 'info' | 'success' | 'error') => void;
-    setInputValue: (value: string) => void;
-    setMessages: (updater: (prev: any[]) => any[]) => void;
-    sendMessage: (text: string) => Promise<void>;
-  }
+  handlers: AppEventHandlers
 ): () => void {
   const session = runtime.session as any;
 
@@ -81,7 +81,7 @@ export function subscribeToRuntimeEvents(
 export async function flushCompactionQueue(
   queuedMessages: Array<{ text: string }>,
   sendMessage: (text: string) => Promise<void>,
-  setInputValue: (value: string) => void,
+  setInputValue: (value: string | ((prev: string) => string)) => void,
   addToast: (message: string, type?: 'info' | 'success' | 'error') => void
 ): Promise<void> {
   if (queuedMessages.length === 0) return;

@@ -416,10 +416,15 @@ async function main(): Promise<void> {
     }
 
     try {
-      // Use Ink-based TUI (custom)
-      // @ts-ignore - tui-bootstrap.js has no types
-      const { runTui } = await import('./tui-bootstrap.js');
-      await runTui(runtime);
+      // Use pure TypeScript TUI
+      const { InteractiveMode } = await import('./interactive/interactive-mode.js');
+      const mode = new InteractiveMode({
+        cwd: cwd,
+        agentDir: agentDir,
+        model: resolvedModel,
+        thinkingLevel: parsed.thinking,
+      });
+      await mode.start();
     } catch (err: any) {
       console.error('Interactive mode error:', err.message || err);
     }

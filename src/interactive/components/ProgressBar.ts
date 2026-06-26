@@ -87,7 +87,7 @@ function ansiColorize(text: string, colorName: string): string {
   return text;
 }
 
-export function createSpinner(text = '', width = 40): string {
+export function createSpinner(text = '', width = 40): () => string {
   const spinner = `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏`;
   const frames = spinner.split('');
   let frameIndex = 0;

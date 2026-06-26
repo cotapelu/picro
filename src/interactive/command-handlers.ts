@@ -15,7 +15,7 @@ export interface CommandContext {
 /**
  * Handle all slash commands - returns result for FE to handle UI updates
  */
-export async function handleCommand(ctx: CommandContext, commandId: string, slashArgs?: string): Promise<CommandResult | 'insert' | 'paste' | void> {
+export async function handleCommand(ctx: CommandContext, commandId: string, slashArgs?: string): Promise<CommandResult | 'insert' | void> {
   const { runtime, cwd } = ctx;
   const builtInCmds = BUILTIN_SLASH_COMMANDS;
 
@@ -196,7 +196,7 @@ export async function handleCommand(ctx: CommandContext, commandId: string, slas
           }),
         });
         if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
-        const data = await response.json();
+        const data = await response.json() as { html_url: string };
         await runtime.copyToClipboard(data.html_url);
         return { type: 'toast', message: 'Gist URL copied to clipboard', toastType: 'success' };
       } catch (err: any) {
@@ -413,4 +413,5 @@ export const BUILTIN_SLASH_COMMANDS = [
 export type CommandResult =
   | { type: 'toast'; message: string; toastType?: 'info' | 'success' | 'error' }
   | { type: 'modal'; modal: any }
-  | { type: 'none' };
+  | { type: 'none' }
+  | { type: 'paste'; filepath: string };

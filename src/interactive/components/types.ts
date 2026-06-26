@@ -51,14 +51,6 @@ export interface InteractiveState {
   cwd: string;
 }
 
-// Command result types
-export type CommandResult =
-  | { type: 'toast'; message: string; toastType?: ToastType }
-  | { type: 'modal'; modal: Omit<ModalState, 'onConfirm' | 'onCancel'>; confirmLabel?: string; cancelLabel?: string }
-  | { type: 'none' }
-  | 'insert'
-  | 'paste';
-
 // Event types from runtime
 export type RuntimeEventType =
   | 'agent_start'

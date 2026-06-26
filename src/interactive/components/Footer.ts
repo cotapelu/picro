@@ -1,5 +1,5 @@
 // Footer component - input hints and shortcuts
-import type { InteractiveState } from './types';
+import type { InteractiveState } from './types.js';
 
 export interface FooterProps {
   /**

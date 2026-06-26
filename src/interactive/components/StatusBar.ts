@@ -1,5 +1,5 @@
 // StatusBar component - renders bottom status line
-import type { StatusBarState } from './types';
+import type { StatusBarState } from './types.js';
 
 export function renderStatusBar(state: StatusBarState, width = 80): string {
   const leftWidth = state.left.length;

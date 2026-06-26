@@ -1,9 +1,0 @@
-
-> @picro/picro@0.0.1 test
-> vitest run --coverage --reporter=json
-
-(node:966700) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGTERM listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
-(Use `node --trace-warnings ...` to show where the warning was created)
-(node:966700) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGHUP listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
-(node:969981) [DEP0147] DeprecationWarning: In future versions of Node.js, fs.rmdir(path, { recursive: true }) will be removed. Use fs.rm(path, { recursive: true }) instead
-(Use `node --trace-deprecation ...` to show where the warning was created)

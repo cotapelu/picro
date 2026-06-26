@@ -1,6 +1,6 @@
 // Text - Simple text rendering with styles
-import { Component } from './Component';
-import { colorize, reset } from './colors';
+import { Component } from './Component.js';
+import { colorize, reset } from './colors.js';
 
 export interface TextProps {
   /**

@@ -1,9 +1,9 @@
 // Modal component - renders different modal types as text
-import type { ModalState, CommandResult } from './types';
+import type { ModalState } from './types.js';
 
 export interface ModalRenderer {
   type: string;
-  render: (props: Record<string, any>) => string;
+  render: (props: any) => string;
   confirmLabel?: string;
   cancelLabel?: string;
 }
@@ -12,7 +12,7 @@ export interface ModalRenderer {
 const modalRenderers: Record<string, ModalRenderer> = {
   help: {
     type: 'help',
-    render: () => `
+    render: (_props: any) => `
 ╔════════════════════════════════════════════════╗
 ║                   HELP                        ║
 ╠════════════════════════════════════════════════╣
@@ -29,7 +29,7 @@ const modalRenderers: Record<string, ModalRenderer> = {
   },
   thinking: {
     type: 'thinking',
-    render: (props: { current?: string; options?: string[] }) => `
+    render: (props: any) => `
 ╔════════════════════════════════════════════════╗
 ║               THINKING LEVEL                  ║
 ╠════════════════════════════════════════════════╣
@@ -43,11 +43,11 @@ const modalRenderers: Record<string, ModalRenderer> = {
   },
   confirmation: {
     type: 'confirmation',
-    render: (props: { title?: string; message: string }) => `
+    render: (props: any) => `
 ╔════════════════════════════════════════════════╗
 ║ ${(props.title || 'Confirm').padEnd(40)} ║
 ╠════════════════════════════════════════════════╣
-║ ${props.message.split('\n').map(line => line.padEnd(40)).join('\n')} ║
+║ ${props.message.split('\n').map((line: string) => line.padEnd(40)).join('\n')} ║
 ╚════════════════════════════════════════════════╝
 `,
     confirmLabel: 'Yes',
@@ -68,7 +68,7 @@ const modalRenderers: Record<string, ModalRenderer> = {
   },
   'session-selector': {
     type: 'session-selector',
-    render: (props: { sessions?: any[] }) => `
+    render: (props: any) => `
 ╔════════════════════════════════════════════════╗
 ║               SESSION SELECTOR                ║
 ╠════════════════════════════════════════════════╣
@@ -84,7 +84,7 @@ ${props.sessions?.length
   },
   'model-selector': {
     type: 'model-selector',
-    render: (props: { models?: any[]; current?: string }) => `
+    render: (props: any) => `
 ╔════════════════════════════════════════════════╗
 ║               MODEL SELECTOR                  ║
 ╠════════════════════════════════════════════════╣

@@ -1,5 +1,5 @@
 // Input component - manages input state and history
-import type { InputState } from './types';
+import type { InputState } from './types.js';
 
 export function createInputState(initialValue = '', options: Partial<InputState> = {}): InputState {
   return {

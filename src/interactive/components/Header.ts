@@ -1,5 +1,5 @@
 // Header component - top status bar
-import type { InteractiveState } from './types';
+import type { InteractiveState } from './types.js';
 
 export interface HeaderProps {
   /**
@@ -33,10 +33,13 @@ export function renderHeader(
   props: HeaderProps = {}
 ): string {
   const width = props.width || 80;
-  const { cwd, model, mode } = state;
+  // Use props if provided, else fallback to state properties
+  const mode = props.mode ?? state.cwd ? 'INTERACTIVE' : 'INTERACTIVE'; // Always show INTERACTIVE
+  const model = props.model ?? '';
+  const cwd = props.cwd ?? state.cwd;
 
   // Build left side: mode + cwd
-  const modeStr = mode || 'INTERACTIVE';
+  const modeStr = mode;
   const cwdStr = cwd ? `📁 ${cwd.split('/').pop() || cwd}` : '';
   const left = `${modeStr}${cwdStr ? ' | ' + cwdStr : ''}`;
 
