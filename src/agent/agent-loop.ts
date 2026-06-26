@@ -77,6 +77,9 @@ export class AgentLoop {
   private followUpManager = new FollowUpManager();
   private metrics: SessionMetrics = createSessionMetrics();
   private memoryLatencyAccumulator = 0; // for calculating avg latency
+  // Memory safeguards to prevent OOM from accumulating too many tool outputs
+  private readonly MAX_TOOL_TURNS = 1000; // keep at most 1000 tool role turns
+  private readonly MAX_TOOL_RESULTS = 1000; // keep at most 1000 tool results
 
   constructor(
     config: AgentConfig,
@@ -1318,7 +1321,41 @@ export class AgentLoop {
     this.lastTurnAssistant = assistantTurn as AssistantTurn;
     this.lastTurnNewMessages = [assistantTurn];
     this.lastTurnToolResults = [];
+    this._enforceHistoryLimits();
     return assistantTurn as AssistantTurn;
+  }
+
+  private _enforceHistoryLimits(): void {
+    // Count tool turns
+    const toolTurns = this.state.history.filter(t => t.role === 'tool');
+    if (toolTurns.length > this.MAX_TOOL_TURNS) {
+      const excess = toolTurns.length - this.MAX_TOOL_TURNS;
+      // Remove oldest tool turns
+      const toRemove = new Set<number>();
+      let removed = 0;
+      for (let i = 0; i < this.state.history.length && removed < excess; i++) {
+        if (this.state.history[i].role === 'tool') {
+          toRemove.add(i);
+          removed++;
+        }
+      }
+      this.state.history = this.state.history.filter((_, idx) => !toRemove.has(idx));
+      this.metrics.historyEvictions += removed;
+      if (this.config.debug) {
+        console.warn(`[AgentLoop] History limit: removed ${removed} old tool turns (kept ${this.MAX_TOOL_TURNS})`);
+      }
+    }
+  }
+
+  private _enforceToolResultsLimit(): void {
+    if (this.state.toolResults.length > this.MAX_TOOL_RESULTS) {
+      const excess = this.state.toolResults.length - this.MAX_TOOL_RESULTS;
+      this.state.toolResults = this.state.toolResults.slice(excess);
+      this.metrics.toolResultsEvictions += excess;
+      if (this.config.debug) {
+        console.warn(`[AgentLoop] toolResults limit: removed ${excess} old results (kept ${this.MAX_TOOL_RESULTS})`);
+      }
+    }
   }
 
   private async _processTurnWithTools(
@@ -1351,6 +1388,7 @@ export class AgentLoop {
     this.metrics.toolFailures += toolResults.filter(r => r.isError).length;
     this.metrics.toolTotalLatencyMs += toolExecutionTime;
     this.state.toolResults.push(...toolResults);
+    this._enforceToolResultsLimit();
 
     if (this.config.autoSaveMemories && this.memoryStore) {
       const lastUserTurn = [...this.state.history].reverse().find(t => t.role === "user");
