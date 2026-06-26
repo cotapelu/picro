@@ -38,8 +38,9 @@ export interface ReadToolDetails {
 // Constants
 // ============================================================================
 
-const DEFAULT_MAX_LINES = 10000;
-const DEFAULT_MAX_BYTES = 512 * 1024; // 512KB
+const DEFAULT_MAX_LINES = 2000; // Align with bash truncation
+const DEFAULT_MAX_BYTES = 100 * 1024; // 100KB – reduces memory footprint
+
 
 // ============================================================================
 // Helper Functions
