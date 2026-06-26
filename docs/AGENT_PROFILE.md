@@ -24,7 +24,6 @@
 
 - Memory injection enabled by default for test compatibility; production deployments should set `enableMemoryInjection: false` in `ContextBuilder` config to prevent token explosion.
 - `AgentLoop` complexity remains high despite test coverage; careful when modifying loop flow.
-- TUI event handling (`useRuntime`) has one failing test related to aborted stopReason; unrelated to core agent.
 - Event type discrepancy: streaming mode uses `turn:*` events but TUI expects `message:*`; non‑streaming unaffected.
 
 ## Recent Improvements
@@ -32,7 +31,7 @@
 - **Token count visibility**: TUI footer now displays `last:XXk t` showing token count of the most recent LLM request. Helps monitor context size and catch overflow early.
 - **Context usage warning**: Footer shows ⚠/⚠⚠ when context usage exceeds 80%/90% thresholds, with yellow/red color coding. Proactive overflow prevention.
 - **Code maintainability**: Extracted large methods in `AgentLoop` and `AgentSession` to ≤20 lines each, improving readability and testability.
-- **Memory safety**: Memory injection disabled by default, eliminating token explosion from global memory storage.
+- **Memory safety**: Memory injection is configurable; production should set `enableMemoryInjection=false` to avoid token explosion from global memory storage. Default re-enabled for test compatibility.
 
 
 ## Fragile Modules
