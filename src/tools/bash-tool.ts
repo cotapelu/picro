@@ -10,7 +10,8 @@ import { randomBytes } from "node:crypto";
 import { createWriteStream, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ToolDefinition, ToolHandler, ToolContext } from "../agent/types.js";
+import { truncateHead } from '../utils/truncate.js';
+import type { ToolDefinition, ToolHandler, ToolContext } from '../agent/index.js';
 
 /**
  * Generate a unique temp file path for bash output.
@@ -187,16 +188,19 @@ async function executeBash(
       if (child.pid) {
         untrackDetachedChildPid(child.pid);
       }
-      
-      const { text, truncated } = truncateOutput(output, maxBytes);
-      
+
+      // Truncate output if exceeds maxBytes
+      const truncateResult = truncateHead(output, { maxBytes: maxBytes });
+
       resolve({
-        output: text,
+        output: truncateResult.content,
         exitCode: code,
-        truncated,
+        truncated: truncateResult.truncated,
         details: {
           timedOut,
           fullOutputLength: output.length,
+          truncatedBytes: truncateResult.outputBytes,
+          truncatedLines: truncateResult.outputLines,
         },
       });
     });
