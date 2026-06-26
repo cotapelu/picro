@@ -6,7 +6,6 @@
 
 import type {
   ConversationTurn,
-  MemoryEntry,
   ContextBuilderConfig,
 } from "./types.js";
 
@@ -22,8 +21,6 @@ export class ContextBuilder {
       maxTokens: config?.maxTokens ?? 128000,
       reservedTokens: config?.reservedTokens ?? 4096,
       minMessages: config?.minMessages ?? 5,
-      enableMemoryInjection: config?.enableMemoryInjection ?? true,
-      memoryTopK: config?.memoryTopK ?? 5,
     };
   }
 
@@ -33,8 +30,7 @@ export class ContextBuilder {
    */
   build(
     basePrompt: string,
-    history: ConversationTurn[],
-    memories?: MemoryEntry[],
+    history: ConversationTurn[]
   ): { prompt: string; tokenCount: number } {
     const maxTokens = this.config.maxTokens;
     const reservedTokens = this.config.reservedTokens;
@@ -42,16 +38,8 @@ export class ContextBuilder {
     // Estimate base prompt tokens
     const baseTokens = this.estimateTokenCount(basePrompt);
 
-    // Estimate memories tokens (if any)
-    let memoryText = '';
-    let memoriesTokens = 0;
-    if (this.config.enableMemoryInjection && memories && memories.length > 0) {
-      memoryText = this.formatMemories(memories);
-      memoriesTokens = this.estimateTokenCount(memoryText);
-    }
-
     // Compute remaining tokens for history
-    const usedTokens = baseTokens + memoriesTokens;
+    const usedTokens = baseTokens;
     const availableForHistory = maxTokens - reservedTokens - usedTokens;
 
     // Truncate history to fit remaining space (or empty if negative)
@@ -60,9 +48,6 @@ export class ContextBuilder {
 
     // Build full prompt
     let fullPrompt = basePrompt;
-    if (memoryText) {
-      fullPrompt += `\n\n${memoryText}`;
-    }
     if (historyText) {
       fullPrompt += `\n\n[Conversation History]\n${historyText}`;
     }
@@ -70,10 +55,10 @@ export class ContextBuilder {
     // Estimate final token count
     const tokenCount = this.estimateTokenCount(fullPrompt);
 
-    // Safety: if still over limit, strip memories and re-truncate history
+    // Safety: if still over limit, recursively rebuild with more truncation
     if (tokenCount > maxTokens) {
-      // Recursively rebuild without memories
-      return this.build(basePrompt, history, []);
+      // Recursively rebuild
+      return this.build(basePrompt, truncatedHistory);
     }
 
     return { prompt: fullPrompt, tokenCount };
@@ -133,18 +118,7 @@ export class ContextBuilder {
     return history.map((turn) => this.serializeTurn(turn)).join("\n\n");
   }
 
-  /**
-   * Format memories for injection.
-   */
-  private formatMemories(memories: MemoryEntry[]): string {
-    const topMemories = memories
-      .filter((m) => (m.relevance !== undefined ? m.relevance > 0.1 : true))
-      .slice(0, this.config.memoryTopK)
-      .map((m, i) => `[Memory ${i + 1}] ${m.content}`)
-      .join("\n");
 
-    return `[Relevant Memories]\n${topMemories}`;
-  }
 
   /**
    * Truncate history to fit token limit.

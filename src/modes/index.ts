@@ -5,3 +5,4 @@
 
 export * from "./print-mode.js";
 export * from "./rpc-mode.js";
+export * from "./interactive-mode.js"; // interactive-mode.tsx

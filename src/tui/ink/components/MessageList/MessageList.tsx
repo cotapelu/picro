@@ -1,5 +1,5 @@
 /** @jsxImportSource react */
-import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useState, useMemo } from 'react';
 import { Box, Text } from 'ink';
 import { MessageItem } from '../MessageItem/MessageItem.js';
 import type { Message } from '../../types.js';
@@ -17,9 +17,30 @@ interface MessageListProps {
   imageWidthCells?: number;
 }
 
+// Maximum number of messages to render at once (performance optimization)
+const MAX_VISIBLE_MESSAGES = 50;
+
+/**
+ * Estimate terminal line count for a message (quick heuristic)
+ */
+function estimateMessageLines(msg: Message): number {
+  // Rough estimate: content length / terminal width (80 cols) + metadata lines
+  const content = msg.content || '';
+  const lines = content.split('\n').length;
+  const toolLines = (msg.toolCalls || []).length * 2; // tool calls take ~2 lines each
+  const metaLines = msg.role === 'system' ? 1 : 0;
+  return lines + toolLines + metaLines + 1; // +1 for separator
+}
+
 export const MessageList = forwardRef<MessageListRef, MessageListProps>(
   ({ messages, theme, hideThinkingBlock = false, hiddenThinkingLabel, showImages = true, imageWidthCells = 60 }, ref) => {
     const [autoScroll, setAutoScroll] = useState(true);
+
+    // Virtualization: only render last N messages to keep UI responsive
+    const visibleMessages = useMemo(() => {
+      if (messages.length <= MAX_VISIBLE_MESSAGES) return messages;
+      return messages.slice(-MAX_VISIBLE_MESSAGES);
+    }, [messages]);
 
     // Expose scrollToBottom to parent
     useImperativeHandle(ref, () => ({
@@ -70,7 +91,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
           </Box>
         ) : (
           <Box flexDirection="column" width="100%">
-            {messages.map((msg, index) => (
+            {visibleMessages.map((msg, index) => (
               <React.Fragment key={`${msg.id || index}-${msg.timestamp || Date.now()}`}>
                 {renderSeparator(index)}
                 <MessageItem
@@ -84,6 +105,13 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
                 />
               </React.Fragment>
             ))}
+            {messages.length > MAX_VISIBLE_MESSAGES && (
+              <Box marginTop={1}>
+                <Text dimColor>
+                  {`...and ${messages.length - MAX_VISIBLE_MESSAGES} older messages hidden`}
+                </Text>
+              </Box>
+            )}
           </Box>
         )}
       </Box>

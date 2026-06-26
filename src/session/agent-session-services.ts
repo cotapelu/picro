@@ -308,7 +308,6 @@ export async function createAgentSessionFromServices(
       maxTokens: 128000,
       reservedTokens: 4096,
       minMessages: 5,
-      enableMemoryInjection: true,
     },
     executor: {
       timeout: DEFAULT_TOOL_TIMEOUT,

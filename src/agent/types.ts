@@ -489,8 +489,6 @@ export interface ContextBuilderConfig {
   maxTokens: number;
   reservedTokens: number;
   minMessages: number;
-  enableMemoryInjection: boolean;
-  memoryTopK?: number; // default 5
 }
 
 /**
@@ -513,24 +511,6 @@ export interface CompactionConfig {
   summarize?: boolean;
   /** Optional model ID to use for summarization (defaults to current model) */
   summaryModelId?: string;
-}
-
-export interface MemoryEntry {
-  content: string;
-  relevance?: number;
-  created_at?: string;
-}
-
-/**
- * Memory store interface (minimal for compilation)
- */
-export interface MemoryStore {
-  recall(query: string, options?: { topK?: number }): Promise<{ memories: any[]; scores: number[] }>;
-  remember(action: string, content: string, metadata?: any): Promise<string>;
-  getAll?(): Promise<any[]>;
-  count?(): Promise<number>;
-  clear?(): Promise<void>;
-  init?(): Promise<void>;
 }
 
 /**
@@ -566,9 +546,8 @@ export interface AgentConfig {
   // Thinking / reasoning
   reasoningLevel?: ThinkingLevel;
   thinkingBudgets?: Record<ThinkingLevel, number>;
-  // Context & memory
+  // Context & compaction
   transformContext?: (turns: ConversationTurn[], signal?: AbortSignal) => Promise<ConversationTurn[]>;
-  memoryStore?: MemoryStore;
   compaction?: CompactionConfig;
   contextBuilder?: ContextBuilderConfig; // legacy – still supported
   // Loop strategy

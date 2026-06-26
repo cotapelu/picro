@@ -1,1386 +1,116 @@
 /** @jsxImportSource react */
-import React, { useCallback } from 'react';
-import { render, Box, Text, useInput } from 'ink';
+import React from 'react';
+import { render, Box, Text } from 'ink';
 import type { AgentSessionRuntimeInterface } from '../../runtime.js';
-import type { Message } from './types.js';
 import { ThemeProvider, useTheme } from './hooks/useTheme.js';
-import { useRuntime } from './hooks/useRuntime.js';
-import { useModal } from './hooks/useModal.js';
+import { useInkAppState } from './hooks/useInkAppState.js';
+import { ErrorBoundary, useGlobalErrorHandler } from './ErrorBoundary.js';
 import { Header } from './components/Header/Header.js';
 import { MessageList } from './components/MessageList/MessageList.js';
 import { InputBox } from './components/InputBox/InputBox.js';
 import { Footer } from './components/Footer/Footer.js';
-import { createFooterDataProvider, type FooterDataProvider } from './components/Footer/FooterDataProvider.js';
-import { ErrorBoundary, useGlobalErrorHandler } from './ErrorBoundary.js';
 import { ModalRenderers } from './modal-renderers.js';
-import { createExtensionUIContext } from './extension-context.js';
-import { handleCommand } from './command-handlers.js';
-import { CommandPalette } from './modals/CommandPalette.js';
-import { ThinkingModal } from './modals/ThinkingModal.js';
-import { LoginModal } from './modals/LoginModal.js';
-import { HelpModal } from './modals/HelpModal.js';
-import { SessionSelectorModal } from './modals/SessionSelectorModal.js';
-import { ConfirmationModal } from './modals/ConfirmationModal.js';
-import { SettingsSelectorModal } from './modals/SettingsSelectorModal.js';
-import { ModelSelectorModal } from './modals/ModelSelectorModal.js';
-import { ScopedModelsSelectorModal } from './modals/ScopedModelsSelectorModal.js';
-import { UserMessageSelectorModal } from './modals/UserMessageSelectorModal.js';
-import { SessionInfoModal } from './modals/SessionInfoModal.js';
-import { ChangelogModal } from './modals/ChangelogModal.js';
-import { HotkeysModal } from './modals/HotkeysModal.js';
-import { TreeSelectorModal } from './modals/TreeSelectorModal.js';
-import { BashOutputModal } from './modals/BashOutputModal.js';
-import { InputModal } from './modals/InputModal.js';
-import { SelectModal } from './modals/SelectModal.js';
-import { Modal } from './modals/Modal.js';
-import { BUILTIN_SLASH_COMMANDS } from '../../runtime/slash-commands.js';
-import { track } from '../../runtime/telemetry.js';
-import { VERSION } from '../../config.js';
-
 
 interface InkAppInnerProps {
   runtime: AgentSessionRuntimeInterface;
+  state: ReturnType<typeof useInkAppState>;
 }
 
-type ModalState =
-  | { type: 'command-palette'; filter?: string; isSlash?: boolean }
-  | { type: 'thinking' }
-  | { type: 'login' }
-  | { type: 'editor'; initialValue: string; onSave: (value: string) => Promise<void>; onCancel?: () => void }
-  | { type: 'help' }
-  | { type: 'session-selector' }
-  | { type: 'confirmation'; title: string; message: string; onConfirm: () => Promise<void> | void; onCancel?: () => void }
-  | { type: 'settings' }
-  | { type: 'model-selector' }
-  | { type: 'scoped-models' }
-  | { type: 'user-message-selector' }
-  | { type: 'session-info' }
-  | { type: 'changelog' }
-  | { type: 'hotkeys' }
-  | { type: 'tree-selector' }
-  | { type: 'tree-summarization'; branchId: string }
-  | { type: 'bash-output'; command: string; output: string; error?: boolean }
-  | { type: 'stats'; stats: { sampleCount: number; timeSpanMS: number; avgCpuUserMS: number; avgCpuSystemMS: number; avgRSSMB: number; avgHeapUsedMB: number; peakRSSMB: number; peakHeapUsedMB: number } }
-  | { type: 'armin' }
-  | { type: 'earendil' }
-  | { type: 'custom' }
-  | { type: 'input'; title: string; placeholder?: string; onSubmit: (value: string) => void; onCancel?: () => void }
-  | { type: 'select'; title: string; options: readonly string[]; onSelect: (option: string) => void; onCancel?: () => void }
-  | null;
-
-const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
-  const { messages, status: runtimeStatus, thinkingLevel, sendMessage, isCompacting, retryAttempt, steeringMessages, followUpMessages, toolOutputExpanded, setToolOutputExpanded, hideThinkingBlock, setHideThinkingBlock, hiddenThinkingLabel, setHiddenThinkingLabel, currentModel, setMessages } = useRuntime(runtime as any);
-  // Image display settings
-  const showImages = runtime.session.settings?.get?.('terminal.showImages') ?? true;
-  const imageWidthCells = runtime.session.settings?.get?.('terminal.imageWidthCells') ?? 60;
-  const [retryCountdown, setRetryCountdown] = React.useState(0);
-  const [retryMaxAttempts, setRetryMaxAttempts] = React.useState(3);
-  const [retryEscapeHandler, setRetryEscapeHandler] = React.useState<(() => void) | null>(null);
-  const [autoCompactionEscapeHandler, setAutoCompactionEscapeHandler] = React.useState<(() => void) | null>(null);
-  const [workingMessage, setWorkingMessageState] = React.useState<string>('');
-  const [workingVisible, setWorkingVisibleState] = React.useState<boolean>(false);
-
-  // Missing state for parity with InteractiveMode
-  const streamingComponent = React.useRef<any>(null);
-  const streamingMessage = React.useRef<any>(null);
-  const pendingTools = React.useRef<Map<string, any>>(new Map());
-  const [compactionQueuedMessages, setCompactionQueuedMessages] = React.useState<Array<{text: string, mode: 'steer'|'followUp'}>>([]);
-  const autoCompactionLoader = React.useRef<any>(null);
-  const retryLoader = React.useRef<any>(null);
-  const bashComponent = React.useRef<any>(null);
-  const pendingBashComponents = React.useRef<any[]>([]);
-  const [changelogMarkdown, setChangelogMarkdown] = React.useState<string | undefined>(undefined);
-  const [startupNoticesShown, setStartupNoticesShown] = React.useState<boolean>(false);
-  const [anthropicSubscriptionWarningShown, setAnthropicSubscriptionWarningShown] = React.useState<boolean>(false);
-  const lastStatusSpacer = React.useRef<any>(null);
-  const lastStatusText = React.useRef<any>(null);
-  const signalCleanupHandlers = React.useRef<Array<() => void>>([]);
-  const unsubscribeRef = React.useRef<(() => void) | null>(null);
-  const compactionQueueRef = React.useRef<Array<{text: string, mode: 'steer' | 'followUp'}>>([]);
-
-  // Extension shortcuts registry
-  const extensionShortcutsRef = React.useRef<Map<string, (input: string, key: any) => boolean | void>>(new Map());
-  const widgetDisposersRef = React.useRef<Map<string, () => void>>(new Map());
-  const headerDisposeRef = React.useRef<(() => void) | null>(null);
-  const footerDisposeRef = React.useRef<(() => void) | null>(null);
-
-  // Helper to match keyId string like "ctrl+p"
-  const matchesKey = (input: string, key: any, keyId: string): boolean => {
-    const parts = keyId.toLowerCase().split('+');
-    const modifiers = parts.slice(0, -1);
-    const expectedChar = parts[parts.length - 1];
-    if (input !== expectedChar) return false;
-    if (modifiers.includes('ctrl') !== !!key.ctrl) return false;
-    if (modifiers.includes('shift') !== !!key.shift) return false;
-    if (modifiers.includes('alt') !== !!key.alt) return false;
-    return true;
-  };
-
-  // Setup extension shortcuts from runner
-  const setupExtensionShortcuts = React.useCallback((runner: any) => {
-    const shortcuts = runner.getShortcuts?.() ?? new Map<string, any>();
-    const newMap = new Map<string, (input: string, key: any) => boolean | void>();
-    for (const [keyId, shortcut] of shortcuts.entries()) {
-      newMap.set(keyId, shortcut.handler as any);
-    }
-    extensionShortcutsRef.current = newMap;
-  }, []);
-
-  // Retry countdown timer (decrements every second when active)
-  React.useEffect(() => {
-    if (retryCountdown <= 0) return;
-    const interval = setInterval(() => {
-      setRetryCountdown(prev => Math.max(0, prev - 1));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [retryCountdown]);
-
-  // Sync compaction queue to ref for event handlers
-  React.useEffect(() => {
-    compactionQueueRef.current = compactionQueuedMessages;
-  }, [compactionQueuedMessages]);
-
-  // Compute status display
-  let displayStatus = runtimeStatus || 'Ready';
-  if (workingVisible) {
-    displayStatus = workingMessage || 'Working...';
-  } else if (isCompacting) {
-    displayStatus = 'Compacting... (Esc to cancel)';
-  } else if (retryAttempt > 0) {
-    displayStatus = `Retrying (${retryAttempt}/${retryMaxAttempts}) in ${retryCountdown}s... (Esc to cancel)`;
-  }
-  const { toggleTheme, isDark, theme, setThemeMode } = useTheme();
-  const [inputValue, setInputValue] = React.useState('');
-  const inputValueRef = React.useRef(inputValue);
-  React.useEffect(() => {
-    inputValueRef.current = inputValue;
-  }, [inputValue]);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const { activeModal, setActiveModal } = useModal();
-  const [showDebug, setShowDebug] = React.useState(false);
-  const messageListRef = React.useRef<{ scrollToBottom: () => void } | null>(null);
-  const [toasts, setToasts] = React.useState<Array<{ id: number; message: string; type: 'info' | 'success' | 'error' }>>([]);
-  const toastIdRef = React.useRef(0);
-  const lastCtrlCTimeRef = React.useRef<number>(0);
-  const lastEscapeTimeRef = React.useRef<number>(0);
-  const [modelRefresh, setModelRefresh] = React.useState(0); // used to trigger footer re-render on model change
-
-  // Close command palette if slash removed
-  React.useEffect(() => {
-    if (activeModal?.type === 'command-palette' && activeModal.isSlash && !inputValue.startsWith('/')) {
-      setActiveModal(null);
-    }
-  }, [inputValue, activeModal]);
-
-  const addToast = useCallback((message: string, type: 'info' | 'success' | 'error' = 'info') => {
-    const id = ++toastIdRef.current;
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4000); // auto-dismiss after 4s
-  }, []);
-
-  // Footer data provider for centralized state
-  const footerProvider = React.useMemo<FooterDataProvider>(() => createFooterDataProvider(), []);
-
-  // Subscribe to runtime events to update footer data
-  React.useEffect(() => {
-    const session = runtime.session as any;
-    const updateFooter = () => { footerProvider.updateFromRuntime(runtime); };
-    // Initial update
-    updateFooter();
-    // Subscribe to events that affect footer
-    const unsubscribe = session?.subscribe?.((event: any) => {
-      switch (event.type) {
-        // Footer updates
-        case 'agent_end':
-        case 'compaction_end':
-        case 'model_change':
-        case 'session_tree':
-          updateFooter();
-          break;
-        // Retry handling
-        case 'auto_retry_start':
-          // setRetryAttempt is managed by useRuntime
-          setRetryMaxAttempts(event.maxAttempts ?? 3);
-          setRetryCountdown(((event.delayMs ?? 3000) / 1000));
-          const retryHandler = () => {
-            (runtime.session as any).abortRetry?.();
-            setRetryEscapeHandler(null);
-          };
-          setRetryEscapeHandler(retryHandler);
-          break;
-        case 'auto_retry_end':
-          setRetryCountdown(0);
-          setRetryEscapeHandler(null);
-          if (event.success) {
-            (async () => {
-              const queued = compactionQueueRef.current;
-              if (queued.length > 0) {
-                setCompactionQueuedMessages([]);
-                for (const msg of queued) {
-                  try {
-                    await sendMessage(msg.text);
-                  } catch (err) {
-                    console.error('Flush after retry failed:', err);
-                    const idx = queued.indexOf(msg);
-                    const remaining = queued.slice(idx).map(m => m.text);
-                    setInputValue(prev => prev ? `${prev}\n\n${remaining.join('\n\n')}` : remaining.join('\n\n'));
-                    addToast(`Failed to send queued message: ${(err as Error).message}`, 'error');
-                    break;
-                  }
-                }
-              }
-            })();
-          }
-          break;
-        // Compaction handling
-        case 'compaction_start':
-          // isCompacting is managed by useRuntime
-          const compactionHandler = () => {
-            (runtime.session as any).abortCompaction?.();
-            setAutoCompactionEscapeHandler(null);
-          };
-          setAutoCompactionEscapeHandler(compactionHandler);
-          break;
-        case 'compaction_end':
-          setAutoCompactionEscapeHandler(null);
-          // Add CompactionSummaryMessage if available
-          if (event.result?.summary) {
-            const summaryMsg: Message = {
-              id: `compaction-${Date.now()}`,
-              role: 'compactionSummary',
-              content: event.result.summary.toString() || '[Compaction]',
-              timestamp: Date.now(),
-              tokensBefore: event.result.tokensBefore,
-            };
-            setMessages(prev => [...prev, summaryMsg]);
-          }
-          // Flush queued messages if not aborted
-          if (!event.aborted) {
-            (async () => {
-              const queued = compactionQueueRef.current;
-              if (queued.length > 0) {
-                setCompactionQueuedMessages([]);
-                for (const msg of queued) {
-                  try {
-                    await sendMessage(msg.text);
-                  } catch (err) {
-                    console.error('Flush after compaction failed:', err);
-                    const idx = queued.indexOf(msg);
-                    const remaining = queued.slice(idx).map(m => m.text);
-                    setInputValue(prev => prev ? `${prev}\n\n${remaining.join('\n\n')}` : remaining.join('\n\n'));
-                    addToast(`Failed to send queued message: ${(err as Error).message}`, 'error');
-                    break;
-                  }
-                }
-              }
-            })();
-          }
-          break;
-        default:
-          break;
-      }
-    });
-    unsubscribeRef.current = unsubscribe;
-    return () => {
-      unsubscribe?.();
-      unsubscribeRef.current = null;
-    };
-  }, [runtime, footerProvider]);
-
-  // Command handler for slash commands (both manual and from palette)
-  const handleDequeue = useCallback(() => {
-    try {
-      const session = runtime.session as any;
-      let count = 0;
-      const parts: string[] = [];
-      if (typeof session.clearQueue === 'function') {
-        const { steering, followUp } = session.clearQueue();
-        count += steering.length + followUp.length;
-        parts.push(...steering, ...followUp);
-      }
-      // Include local queued messages
-      if (compactionQueuedMessages.length > 0) {
-        count += compactionQueuedMessages.length;
-        parts.push(...compactionQueuedMessages.map(m => m.text));
-        setCompactionQueuedMessages([]);
-      }
-      if (parts.length > 0) {
-        const text = parts.join('\n');
-        setInputValue(prev => prev ? `${prev}\n\n${text}` : text);
-      }
-      addToast(`Dequeued ${count} messages`, 'info');
-    } catch (err: any) {
-      console.error('Dequeue error:', err);
-      addToast('Dequeue failed', 'error');
-    }
-  }, [runtime, compactionQueuedMessages, setInputValue, addToast]);
-
-  const handlePaste = useCallback(async () => {
-    try {
-      let pngBuffer: Buffer;
-      try {
-        const { execFileSync } = await import('node:child_process');
-        pngBuffer = execFileSync('wl-paste', ['--no-size', '--type', 'image/png']);
-      } catch (e1) {
-        try {
-          pngBuffer = execFileSync('xclip', ['-selection', 'clipboard', '-t', 'image/png', '-o']);
-        } catch (e2) {
-          addToast('No image in clipboard or missing wl-paste/xclip', 'error');
-          return;
-        }
-      }
-      const fs = await import('node:fs');
-      const path = await import('node:path');
-      const timestamp = Date.now();
-      const filename = `pasted-${timestamp}.png`;
-      const filepath = path.join(runtime.cwd, filename);
-      fs.writeFileSync(filepath, pngBuffer);
-      setInputValue(prev => prev + filename);
-      addToast(`Pasted image as ${filename}`, 'success');
-    } catch (err: any) {
-      console.error('Paste error:', err);
-      addToast('Paste failed', 'error');
-    }
-  }, [runtime.cwd, setInputValue, addToast]);
-
-  const handleEditor = useCallback(async (value: string) => {
-    try {
-      const editor = process.env.EDITOR || process.env.VISUAL || 'vim';
-      const fs = await import('node:fs');
-      const path = await import('node:path');
-      const os = await import('node:os');
-      const { spawnSync } = await import('node:child_process');
-      const tmpdir = os.tmpdir();
-      const dir = fs.mkdtempSync(path.join(tmpdir, 'picro-'));
-      const filepath = path.join(dir, 'edit.txt');
-      try {
-        fs.writeFileSync(filepath, value || '', 'utf-8');
-        spawnSync(editor, [filepath], { stdio: 'inherit', cwd: runtime.cwd });
-        const newText = fs.readFileSync(filepath, 'utf-8');
-        setInputValue(newText);
-        addToast('Edited externally', 'success');
-      } finally {
-        fs.rmSync(dir, { recursive: true, force: true });
-      }
-    } catch (err: any) {
-      console.error('External edit error:', err);
-      addToast('External edit failed', 'error');
-    }
-  }, [runtime.cwd, setInputValue, addToast]);
-
-  const handleSelectCommand = useCallback(async (commandId: string, slashArgs?: string) => {
-    try {
-      const result = await handleCommand({
-        runtime,
-        addToast,
-        setActiveModal,
-        messages,
-        footerProvider,
-        inputValue,
-        setInputValue,
-      }, commandId, slashArgs);
-
-      if (result === 'insert') {
-        const textToInsert = slashArgs ?? '/' + commandId;
-        setInputValue(prev => prev + textToInsert + ' ');
-      } else if (result !== 'paste') {
-        // Built-in commands (or any non-insert/paste) should clear the input
-        setInputValue('');
-      }
-      // 'paste' result is handled by command handler (toast shown)
-    } catch (err: any) {
-      console.error('Command error:', err.message || err);
-      addToast(`Command error: ${err.message || err}`, 'error');
-    }
-  }, [runtime, addToast, setActiveModal, messages, footerProvider, inputValue, setInputValue]);
-
-  // Queue message during compaction/retry
-  const queueCompactionMessage = useCallback((text: string) => {
-    setCompactionQueuedMessages(prev => [...prev, { text, mode: 'steer' as const }]);
-    addToast('Queued message for after compaction', 'info');
-  }, [addToast]);
-
-  // Handle input submission
-  const handleSubmit = useCallback(async () => {
-    if (inputValue.trim() === '' || isSubmitting) return;
-
-    const userInput = inputValue.trim();
-    setInputValue('');
-    setIsSubmitting(true);
-
-    // Bash mode: !cmd or !!cmd
-    if (userInput.startsWith('!')) {
-      const withoutContext = userInput.startsWith('!!');
-      const cmd = withoutContext ? userInput.slice(2).trim() : userInput.slice(1).trim();
-      if (cmd) {
-        try {
-          const { execSync } = await import('node:child_process');
-          const output = execSync(cmd, { encoding: 'utf-8', stdio: 'pipe' });
-          setActiveModal({ type: 'bash-output', command: cmd, output });
-        } catch (err: any) {
-          setActiveModal({ type: 'bash-output', command: cmd, output: err.message || 'Error', error: true });
-        }
-      }
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Slash command handling
-    if (userInput.startsWith('/')) {
-      const commandId = userInput.slice(1).split(' ')[0];
-      try {
-        await handleSelectCommand(commandId, userInput);
-      } catch (err: any) {
-        console.error('Slash command error:', err.message || err);
-      } finally {
-        setIsSubmitting(false);
-      }
-      return;
-    }
-
-    // If compaction or retry is active, queue message for later
-    if (isCompacting || retryAttempt > 0) {
-      queueCompactionMessage(userInput);
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      await sendMessage(userInput);
-    } catch (err: any) {
-      console.error('Send error:', err.message || err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [inputValue, isSubmitting, sendMessage, handleSelectCommand, isCompacting, retryAttempt, queueCompactionMessage]);
-
-  // Version check on mount
-  React.useEffect(() => {
-    const checkVersion = async () => {
-      try {
-        const response = await fetch('https://registry.npmjs.org/@picro/picro/latest', { signal: AbortSignal.timeout(5000) });
-        if (response.ok) {
-          const data = await response.json();
-          const latest = data.version;
-          const current = VERSION;
-          if (latest && latest !== current) {
-            addToast(`New version available: ${latest} (current: ${current})`, 'info');
-            // Auto-open changelog modal
-            setActiveModal({ type: 'changelog' });
-          }
-        }
-      } catch {
-        // ignore network errors
-      }
-    };
-    checkVersion();
-  }, [addToast]);
-
-
-
-  const handleThinkingChange = useCallback((level: string) => {
-    setActiveModal(null);
-    runtime.setThinkingLevel(level as any);
-  }, [runtime]);
-
-  const handleLogin = useCallback(async (apiKey: string) => {
-    const defaultProvider = runtime.settings?.getDefaultProvider() || 'openai';
-    await runtime.authStorage.setApiKey(defaultProvider, apiKey);
-    addToast('Logged in successfully', 'success');
-    setActiveModal(null);
-  }, [runtime, addToast]);
-
-  const handleDebugCommand = useCallback(() => {
-    try {
-      const rt = runtime as any;
-      const session = rt.session;
-      const { messages } = session;
-      const stats = session.getSessionStats?.();
-      const debugLogPath = require('node:path').join(require('node:os').tmpdir(), `picro-debug-${Date.now()}.log`);
-      const lines: string[] = [
-        `Picro Debug Log`,
-        `Generated: ${new Date().toISOString()}`,
-        `CWD: ${rt.cwd}`,
-        `Session: ${stats?.sessionFile || 'in-memory'}`,
-        `Model: ${session.model?.provider}/${session.model?.id}`,
-        `Thinking level: ${session.thinkingLevel}`,
-        `Messages: ${messages.length} total`,
-        `  User: ${stats?.userMessages || 0}`,
-        `  Assistant: ${stats?.assistantMessages || 0}`,
-        `  ToolCalls: ${stats?.toolCalls || 0}`,
-        `  ToolResults: ${stats?.toolResults || 0}`,
-        `Tokens: in=${stats?.tokens?.input || 0}, out=${stats?.tokens?.output || 0}, total=${stats?.tokens?.total || 0}`,
-        `Cost: $${stats?.cost?.toFixed(4) || 0}`,
-        '',
-        '=== Full Message History (JSONL) ===',
-      ];
-      for (const msg of messages) {
-        lines.push(JSON.stringify(msg));
-      }
-      require('node:fs').writeFileSync(debugLogPath, lines.join('\n'), 'utf-8');
-      addToast(`Debug log written to ${debugLogPath}`, 'success');
-    } catch (err: any) {
-      addToast(`Debug failed: ${err.message}`, 'error');
-    }
-  }, [runtime, addToast]);
-
-  const navigateTree = useCallback(async (branchId: string, options?: { summarize?: boolean; customInstructions?: string }) => {
-    try {
-      const session = runtime.session as any;
-      if (typeof session.navigateTree === 'function') {
-        const result = await session.navigateTree(branchId, options);
-        if (result.cancelled) {
-          addToast('Branch navigation cancelled', 'info');
-        } else {
-          addToast(`Switched to branch: ${branchId}` + (options?.summarize ? ' (summarized)' : ''), 'success');
-        }
-        return result;
-      } else {
-        addToast('Tree navigation not supported', 'error');
-        return { cancelled: true };
-      }
-    } catch (err: any) {
-      addToast(`Tree navigation failed: ${(err as Error).message}`, 'error');
-      return { cancelled: true };
-    }
-  }, [runtime, addToast]);
-
-  const handleTreeSelect = useCallback(async (branchId: string) => {
-    // Close tree selector modal
-    setActiveModal(null);
-    // Show summarization options
-    setActiveModal({
-      type: 'select',
-      title: 'Branch Navigation',
-      options: ['No summary', 'Summarize with default', 'Summarize with custom prompt...'],
-      onSelect: async (option: string) => {
-        setActiveModal(null);
-        const session = runtime.session as any;
-        if (option === 'No summary') {
-          try {
-            await session.navigateTree(branchId, { summarize: false });
-            addToast('Navigated to branch', 'success');
-          } catch (err: any) {
-            addToast(`Navigation failed: ${err.message}`, 'error');
-          }
-        } else if (option === 'Summarize with default') {
-          setWorkingVisibleState(true);
-          setWorkingMessageState('Summarizing branch...');
-          try {
-            await session.navigateTree(branchId, { summarize: true });
-            addToast('Navigated with summary', 'success');
-          } catch (err: any) {
-            addToast(`Navigation failed: ${err.message}`, 'error');
-          } finally {
-            setWorkingVisibleState(false);
-            setWorkingMessageState('');
-          }
-        } else if (option === 'Summarize with custom prompt...') {
-          // Open input modal for custom instructions
-          setActiveModal({
-            type: 'input',
-            title: 'Custom Summarization Instructions',
-            placeholder: 'Enter instructions for summarizing the branch...',
-            onSubmit: async (customInstructions: string) => {
-              setActiveModal(null);
-              const text = customInstructions.trim();
-              if (!text) {
-                addToast('No instructions provided', 'info');
-                return;
-              }
-              setWorkingVisibleState(true);
-              setWorkingMessageState('Summarizing branch...');
-              try {
-                await session.navigateTree(branchId, { summarize: true, customInstructions: text });
-                addToast('Navigated with custom summary', 'success');
-              } catch (err: any) {
-                addToast(`Navigation failed: ${err.message}`, 'error');
-              } finally {
-                setWorkingVisibleState(false);
-                setWorkingMessageState('');
-              }
-            },
-            onCancel: () => {
-              // nothing
-            }
-          });
-        }
-      },
-      onCancel: () => {
-        // nothing
-      }
-    });
-  }, [runtime, setActiveModal, setWorkingVisibleState, setWorkingMessageState, addToast]);
-
-  // Path autocomplete using fd
-  const handlePathComplete = useCallback(async (partial: string): Promise<string[]> => {
-    if (!runtime.cwd) return [];
-    try {
-      const { execFile } = await import('node:child_process');
-      return new Promise<string[]>((resolve) => {
-        execFile('fd', ['--color', 'never', '--base-path', '.', '--', partial + '*'], { cwd: runtime.cwd }, (err, stdout) => {
-          if (err) {
-            resolve([]);
-            return;
-          }
-          const files = stdout.trim().split('\n').filter(Boolean);
-          resolve(files);
-        });
-      });
-    } catch (e) {
-      console.error('fd autocomplete error:', e);
-      return [];
-    }
-  }, [runtime.cwd]);
-
-  // External editor (Ctrl+E)
-  const handleExternalEdit = useCallback(async (text: string): Promise<string> => {
-    const editor = process.env.EDITOR || process.env.VISUAL || 'vim';
-    const fs = await import('node:fs');
-    const path = await import('node:path');
-    const os = await import('node:os');
-    const { spawnSync } = await import('node:child_process');
-    const tmpdir = os.tmpdir();
-    const dir = fs.mkdtempSync(path.join(tmpdir, 'picro-'));
-    const filepath = path.join(dir, 'edit.txt');
-    try {
-      fs.writeFileSync(filepath, text, 'utf-8');
-      spawnSync(editor, [filepath], { stdio: 'inherit', cwd: runtime.cwd });
-      const newText = fs.readFileSync(filepath, 'utf-8');
-      return newText;
-    } finally {
-      fs.rmSync(dir, { recursive: true, force: true });
-    }
-  }, [runtime.cwd]);
-
-  // Render active modal
-  const modelId = currentModel?.id || (runtime.session as any)?.model?.id || 'No model';
-  const themeLabel = isDark ? 'dark' : 'light';
-
-  // Resource counts state (populated on startup)
-  const [resourceCounts, setResourceCounts] = React.useState<{ extensions: number; skills: number; prompts: number; themes: number }>({ extensions: 0, skills: 0, prompts: 0, themes: 0 });
-
-  // showLoadedResources: compute counts and optionally show toast
-  const showLoadedResources = React.useCallback((opts?: { force?: boolean; showDiagnosticsWhenQuiet?: boolean }) => {
-    try {
-      const ses = runtime.session as any;
-      const loader = ses._resourceLoader;
-      let ext = 0, skill = 0, prompt = 0, theme = 0;
-      if (loader) {
-        try {
-          const extRes = loader.getExtensions?.();
-          if (extRes?.extensions?.length) ext = extRes.extensions.length;
-          const skillsRes = loader.getSkills?.();
-          if (skillsRes?.skills?.length) skill = skillsRes.skills.length;
-          const promptsRes = loader.getPromptTemplates?.();
-          if (promptsRes?.length) prompt = promptsRes.length;
-          const themesRes = loader.getThemes?.();
-          if (themesRes?.themes?.length) theme = themesRes.themes.length;
-        } catch {}
-      }
-      setResourceCounts({ extensions: ext, skills: skill, prompts: prompt, themes: theme });
-
-      const settings = runtime.settings as any;
-      const quiet = settings?.get?.('quietStartup') ?? false;
-      if (opts?.force || !quiet) {
-        addToast(`Loaded: ${ext} extensions, ${skill} skills, ${prompt} prompts, ${theme} themes`, 'info');
-      }
-    } catch (err) {
-      console.error('Error loading resources:', err);
-    }
-  }, [runtime, addToast]);
-
-  // Show loaded resources on startup
-  React.useEffect(() => {
-    showLoadedResources({ force: false });
-  }, [showLoadedResources]);
-
-  // Extension widget management (above editor)
-  const [extensionWidgetsAbove, setExtensionWidgetsAbove] = React.useState<Map<string, React.ReactNode>>(new Map<string, React.ReactNode>());
-  const [extensionWidgetsBelow, setExtensionWidgetsBelow] = React.useState<Map<string, React.ReactNode>>(new Map<string, React.ReactNode>());
-
-  const setExtensionWidget = React.useCallback((key: string, content: any, options?: { placement?: 'above' | 'below'; dispose?: () => void }) => {
-    const placement = options?.placement || 'above';
-    // Removal case
-    if (content == null) {
-      if (placement === 'above') {
-        setExtensionWidgetsAbove(prev => {
-          const next = new Map(prev);
-          next.delete(key);
-          return next;
-        });
-      } else {
-        setExtensionWidgetsBelow(prev => {
-          const next = new Map(prev);
-          next.delete(key);
-          return next;
-        });
-      }
-      widgetDisposersRef.current.delete(key);
-      return;
-    }
-
-    // Convert content to ReactNode
-    let node: React.ReactNode;
-    if (typeof content === 'string') {
-      node = <Text>{content}</Text>;
-    } else if (typeof content === 'function') {
-      // Factory: create element
-      const element = React.createElement(content);
-      node = element;
-    } else if (Array.isArray(content)) {
-      node = <>{content.map((line, i) => <Text key={i}>{line}</Text>)}</>;
-    } else {
-      node = content as React.ReactNode;
-    }
-
-    if (placement === 'above') {
-      const prevDispose = widgetDisposersRef.current.get(key);
-      if (prevDispose) {
-        prevDispose();
-        widgetDisposersRef.current.delete(key);
-      }
-      setExtensionWidgetsAbove(prev => {
-        const next = new Map(prev);
-        next.set(key, node);
-        return next;
-      });
-      if (options?.dispose) {
-        widgetDisposersRef.current.set(key, options.dispose);
-      }
-    } else {
-      const prevDispose = widgetDisposersRef.current.get(key);
-      if (prevDispose) {
-        prevDispose();
-        widgetDisposersRef.current.delete(key);
-      }
-      setExtensionWidgetsBelow(prev => {
-        const next = new Map(prev);
-        next.set(key, node);
-        return next;
-      });
-      if (options?.dispose) {
-        widgetDisposersRef.current.set(key, options.dispose);
-      }
-    }
-  }, []);
-  // Custom editor component support
-  const [customEditor, setCustomEditor] = React.useState<React.ComponentType<any> | null>(null);
-
-  // Autocomplete provider management
-  type AutocompleteProvider = (ctx: {sessionId: string; cwd: string; filter: string}) => Promise<Array<{label: string; description?: string; insertText?: string}>>;
-  const [autocompleteProviderFactories, setAutocompleteProviderFactories] = React.useState<AutocompleteProvider[]>([]);
-  const addAutocompleteProvider = React.useCallback((factory: any) => {
-    setAutocompleteProviderFactories(prev => [...prev, factory]);
-  }, [setAutocompleteProviderFactories]);
-  const registerAutocompleteProvider = React.useCallback((factory: AutocompleteProvider) => {
-    setAutocompleteProviderFactories(prev => [...prev, factory]);
-  }, []);
-
-  const handleAutocomplete = useCallback(async (filter: string): Promise<string[]> => {
-    const ctx = { sessionId: '', cwd: runtime.cwd, filter };
-    const suggestions: string[] = [];
-    for (const factory of autocompleteProviderFactories) {
-      try {
-        const result = await factory(ctx);
-        for (const item of result) {
-          suggestions.push(item.insertText || item.label);
-        }
-      } catch {
-        // ignore provider errors
-      }
-    }
-    return suggestions;
-  }, [runtime.cwd, autocompleteProviderFactories]);
-
-  // Shortcut callbacks for InputBox
-  const onCommandPalette = React.useCallback(() => {
-    setActiveModal({ type: 'command-palette' });
-  }, [setActiveModal]);
-
-  const onThinking = React.useCallback(() => {
-    setActiveModal({ type: 'thinking' });
-  }, [setActiveModal]);
-
-  const onThemeToggle = React.useCallback(() => {
-    toggleTheme();
-    try {
-      runtime.settings?.set('theme', isDark ? 'light' : 'dark');
-      runtime.settings?.save?.();
-    } catch {}
-  }, [toggleTheme, isDark, runtime.settings]);
-
-  const onToolOutputToggle = React.useCallback(() => {
-    setToolOutputExpanded(prev => !prev);
-    addToast('Tool output ' + (!toolOutputExpanded ? 'expanded' : 'collapsed'));
-  }, [toolOutputExpanded, addToast]);
-
-  const onThinkingBlockToggle = React.useCallback(() => {
-    setHideThinkingBlock(prev => !prev);
-    addToast('Thinking blocks: ' + (!hideThinkingBlock ? 'hidden' : 'visible'));
-  }, [hideThinkingBlock, addToast]);
-
-  const onLogin = React.useCallback(() => {
-    setActiveModal({ type: 'login' });
-  }, [setActiveModal]);
-
-  const onSessionSelector = React.useCallback(() => {
-    setActiveModal({ type: 'session-selector' });
-  }, [setActiveModal]);
-
-  const onDebug = React.useCallback(() => {
-    try {
-      const rt = runtime as any;
-      const session = rt.session;
-      const { messages } = session;
-      const stats = session.getSessionStats?.();
-      const debugLogPath = require('node:path').join(require('node:os').tmpdir(), `picro-debug-${Date.now()}.log`);
-      const lines: string[] = [
-        `Picro Debug Log`,
-        `Generated: ${new Date().toISOString()}`,
-        `CWD: ${rt.cwd}`,
-        `Session: ${stats?.sessionFile || 'in-memory'}`,
-        `Model: ${session.model?.provider}/${session.model?.id}`,
-        `Thinking level: ${session.thinkingLevel}`,
-        `Messages: ${messages.length} total`,
-        `  User: ${stats?.userMessages || 0}`,
-        `  Assistant: ${stats?.assistantMessages || 0}`,
-        `  ToolCalls: ${stats?.toolCalls || 0}`,
-        `  ToolResults: ${stats?.toolResults || 0}`,
-        `Tokens: in=${stats?.tokens?.input || 0}, out=${stats?.tokens?.output || 0}, total=${stats?.tokens?.total || 0}`,
-        `Cost: $${stats?.cost?.toFixed(4) || 0}`,
-        '',
-        '=== Full Message History (JSONL) ===',
-      ];
-      for (const msg of messages) {
-        lines.push(JSON.stringify(msg));
-      }
-      require('node:fs').writeFileSync(debugLogPath, lines.join('\n'), 'utf-8');
-      addToast(`Debug log written to ${debugLogPath}`, 'success');
-    } catch (err: any) {
-      addToast(`Debug failed: ${err.message}`, 'error');
-    }
-  }, [runtime, addToast]);
-
-  const onEditor = React.useCallback((value: string) => {
-    setActiveModal({ type: 'editor', initialValue: value, onSave: async (val) => setInputValue(val) });
-  }, [setActiveModal]);
-
-  const onPaste = React.useCallback(async () => {
-    try {
-      const clipboardy = await import('clipboardy');
-      const text = await clipboardy.default.read();
-      setInputValue(prev => prev + text);
-      addToast('Pasted from clipboard', 'info');
-    } catch (err: any) {
-      addToast('Paste failed: ' + (err.message || err), 'error');
-    }
-  }, [addToast]);
-
-  const onInterrupt = React.useCallback(() => {
-    const now = Date.now();
-    if (now - lastCtrlCTimeRef.current < 1000) {
-      process.exit(0);
-    } else {
-      lastCtrlCTimeRef.current = now;
-      try {
-        (runtime.session as any)?.abort?.();
-        addToast('Interrupted', 'info');
-      } catch {
-        // ignore
-      }
-    }
-  }, [runtime, addToast]);
-
-  // Input editor (default or custom) props
-  const [customHeader, setCustomHeader] = React.useState<React.ReactNode>(null);
-  const [customFooter, setCustomFooter] = React.useState<React.ReactNode>(null);
-
-  const setCustomHeaderFactory = React.useCallback((factory?: () => React.ReactNode) => {
-    if (factory) {
-      const element = React.createElement(factory);
-      if (headerDisposeRef.current) {
-        headerDisposeRef.current();
-        headerDisposeRef.current = null;
-      }
-      if ((element as any).dispose && typeof (element as any).dispose === 'function') {
-        headerDisposeRef.current = (element as any).dispose;
-      }
-      setCustomHeader(element);
-    } else {
-      if (headerDisposeRef.current) {
-        headerDisposeRef.current();
-        headerDisposeRef.current = null;
-      }
-      setCustomHeader(null);
-    }
-  }, [setCustomHeader]);
-
-  const setCustomFooterFactory = React.useCallback((factory?: () => React.ReactNode) => {
-    if (factory) {
-      const element = React.createElement(factory);
-      if (footerDisposeRef.current) {
-        footerDisposeRef.current();
-        footerDisposeRef.current = null;
-      }
-      if ((element as any).dispose && typeof (element as any).dispose === 'function') {
-        footerDisposeRef.current = (element as any).dispose;
-      }
-      setCustomFooter(element);
-    } else {
-      if (footerDisposeRef.current) {
-        footerDisposeRef.current();
-        footerDisposeRef.current = null;
-      }
-      setCustomFooter(null);
-    }
-  }, [setCustomFooter]);
-
-  // Custom overlay (for extensions)
-  const [customOverlay, setCustomOverlay] = React.useState<{factory: Function; resolve: (value: any) => void} | null>(null);
-  const showCustomOverlay = React.useCallback((factory: Function, options?: any): Promise<any> => {
-    return new Promise(resolve => {
-      setCustomOverlay({ factory, resolve });
-    });
-  }, []);
-
-  // Extension UI dialog helpers
-  const showConfirm = (title: string, message: string, opts?: any): Promise<boolean> => {
-    return new Promise(resolve => {
-      setActiveModal({
-        type: 'confirmation',
-        title,
-        message,
-        onConfirm: () => { resolve(true); setActiveModal(null); },
-        onCancel: () => { resolve(false); setActiveModal(null); },
-      });
-    });
-  };
-
-  const showInput = (title: string, placeholder?: string, opts?: any): Promise<string | undefined> => {
-    return new Promise(resolve => {
-      setActiveModal({
-        type: 'input',
-        title,
-        placeholder,
-        onSubmit: (value: string) => { resolve(value); setActiveModal(null); },
-        onCancel: () => { resolve(undefined); setActiveModal(null); },
-      });
-    });
-  };
-
-  const showSelect = (title: string, options: readonly string[], opts?: any): Promise<string | undefined> => {
-    return new Promise(resolve => {
-      setActiveModal({
-        type: 'select',
-        title,
-        options,
-        onSelect: (option: string) => { resolve(option); setActiveModal(null); },
-        onCancel: () => { resolve(undefined); setActiveModal(null); },
-      });
-    });
-  };
-
-  // Create ExtensionUIContext factory - implements full ExtensionUIContext interface
-  const createExtensionUIContext = () => ({
-    select: showSelect,
-    confirm: showConfirm,
-    input: showInput,
-    notify: (message: string, type: 'info' | 'warning' | 'error' = 'info') => addToast(message, type as any),
-    onTerminalInput: (handler: any) => {
-      // In a TUI, we can add a global key handler; for now return no-op unsubscribe
-      return () => {};
-    },
-    setStatus: (key: string, text: string | undefined) => {
-      // Could use footer provider's extension statuses; TUI specific.
-      // For now, ignore or log.
-    },
-    setWorkingMessage: (message?: string) => setWorkingMessageState(message || ''),
-    setWorkingVisible: (visible: boolean) => setWorkingVisibleState(visible),
-    setWorkingIndicator: (options?: any) => {
-      // Could adjust loading animation options
-    },
-    setHiddenThinkingLabel: (label?: string) => {
-      setHiddenThinkingLabel(label || 'Thinking...');
-    },
-    setWidget: (key: string, content: any, options?: any) => {
-      setExtensionWidget(key, content, options);
-    },
-    setFooter: setCustomFooter,
-    setHeader: setCustomHeader,
-    setTitle: (title: string) => { try { process.title = title; } catch {} },
-    custom: showCustomOverlay,
-    pasteToEditor: (text: string) => setInputValue(prev => prev + text),
-    setEditorText: (text: string) => setInputValue(text),
-    getEditorText: () => inputValue,
-    editor: async (title: string, prefill?: string) => {
-      // Open an editor modal and return the result
-      return new Promise<string | undefined>((resolve) => {
-        setActiveModal({
-          type: 'editor',
-          initialValue: prefill || '',
-          onSave: (val) => resolve(val),
-          onCancel: () => resolve(undefined),
-        });
-      });
-    },
-    addAutocompleteProvider: (factory: any) => {
-      registerAutocompleteProvider(factory);
-    },
-    setEditorComponent: setCustomEditor,
-    get theme() { return theme; },
-    getAllThemes: () => {
-      // Should get from theme system; returning empty for now
-      return [];
-    },
-    getTheme: (name: string) => null,
-    setTheme: async (themeOrName: any) => {
-      const name = typeof themeOrName === 'string' ? themeOrName : themeOrName?.name;
-      if (name === 'dark' || name === 'light') {
-        setThemeMode(name);
-        try {
-          await runtime.settings?.set?.('theme', name);
-          await runtime.settings?.save?.();
-          return { success: true };
-        } catch (e) {
-          return { success: false, error: (e as Error).message };
-        }
-      }
-      return { success: false, error: 'Invalid theme' };
-    },
-    getToolsExpanded: () => toolOutputExpanded,
-    setToolsExpanded: (expanded: boolean) => setToolOutputExpanded(expanded),
-  });
-
-  // Bind extensions on mount
-  React.useEffect(() => {
-    const session = runtime.session as any;
-    if (session?.bindExtensions && !session.__picroBound) {
-      const uiCtx = createExtensionUIContext();
-      session.bindExtensions({
-        uiContext: uiCtx,
-        commandContextActions: {
-          waitForIdle: async () => {
-            // Wait for agent to be idle
-            await (runtime.session as any).agent?.waitForIdle?.();
-          },
-          newSession: async (options?: any) => {
-            try {
-              const result = await runtime.newSession(options);
-              return result;
-            } catch (err) {
-              console.error('Extension newSession failed:', err);
-              return { cancelled: true };
-            }
-          },
-          fork: async (entryId: string, options?: any) => {
-            try {
-              const result = await runtime.fork(entryId, options);
-              return result;
-            } catch (err) {
-              console.error('Extension fork failed:', err);
-              return { cancelled: true };
-            }
-          },
-          navigateTree: async (targetId: string, options?: any) => {
-            try {
-              const session = runtime.session as any;
-              if (typeof session.navigateTree === 'function') {
-                const result = await session.navigateTree(targetId, options);
-                if (!result.cancelled) {
-                  // Refresh UI: rebuild chat
-                  // Can't directly trigger here; expect session event to handle
-                }
-                return result;
-              } else {
-                return { cancelled: true };
-              }
-            } catch (err) {
-              console.error('Extension navigateTree failed:', err);
-              return { cancelled: true };
-            }
-          },
-          switchSession: async (sessionPath: string, options?: any) => {
-            try {
-              const result = await runtime.switchSession(sessionPath, options);
-              return result;
-            } catch (err) {
-              console.error('Extension switchSession failed:', err);
-              return { cancelled: true };
-            }
-          },
-          reload: async () => {
-            try {
-              // Reload resources: currently only settings reload is available
-              await runtime.settings?.reload?.();
-              // Could also reload extensions, skills, prompts, themes if supported
-            } catch (err) {
-              console.error('Extension reload failed:', err);
-            }
-          }
-        },
-        shutdownHandler: () => {
-          // Mark shutdown requested; actual shutdown handled by InkApp
-          console.log('Extension requested shutdown');
-        },
-        onError: (err: any) => {
-          console.error('Extension error:', err);
-          // Could show UI notification via toast
-        }
-      });
-      session.__picroBound = true;
-      // Register extension shortcuts
-      if (session._extensionRunner?.getShortcuts) {
-        setupExtensionShortcuts(session._extensionRunner);
-      }
-    }
-  }, [runtime]);
-
-  // Check for latest version on startup
-  React.useEffect(() => {
-    const checkVersion = async () => {
-      try {
-        const res = await fetch('https://registry.npmjs.org/picro');
-        if (!res.ok) return;
-        const data = await res.json();
-        const latest = data?.['dist-tags']?.latest;
-        if (latest && latest !== VERSION) {
-          addToast(`New version ${latest} available (current: ${VERSION})`, 'info');
-        }
-      } catch (e) {
-        // ignore
-      }
-    };
-    checkVersion();
-  }, [addToast]);
-
-  // Check for Anthropic subscription auth warning
-  React.useEffect(() => {
-    try {
-      const authStorage = (runtime as any).authStorage;
-      const apiKey = authStorage?.getApiKey?.('anthropic');
-      if (apiKey && typeof apiKey === 'string' && apiKey.startsWith('sk-ant-oat')) {
-        addToast('Anthropic subscription auth active - extra usage applies', 'warning');
-      }
-    } catch {}
-  }, [runtime, addToast]);
-
-  // Memoized callbacks for input props to prevent infinite loops
-  const onSlashCommand = React.useCallback((prefix: string) => {
-    setActiveModal({ type: 'command-palette', filter: prefix, isSlash: true });
-  }, [setActiveModal]);
-
-  const onTab = React.useCallback(() => {
-    setActiveModal({ type: 'command-palette', filter: '', isSlash: false });
-  }, [setActiveModal]);
-
-  const onPathCompleteMemo = React.useCallback(handlePathComplete, [handlePathComplete]);
-  const onExternalEditMemo = React.useCallback(handleExternalEdit, [handleExternalEdit]);
-  const onAutocompleteMemo = React.useCallback(handleAutocomplete, [handleAutocomplete]);
-
-  // Input editor (default or custom) props
-  const inputProps = {
-    value: inputValue,
-    onChange: setInputValue,
-    onSubmit: handleSubmit,
-    placeholder: 'Type your message...',
-    disabled: isSubmitting || activeModal !== null,
-    onSlashCommand,
-    onTab,
-    cwd: runtime.cwd,
-    onPathComplete: onPathCompleteMemo,
-    onAutocomplete: onAutocompleteMemo,
-    // pass shortcuts
-    extensionShortcuts: extensionShortcutsRef,
+const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime, state }) => {
+  const {
+    messages,
+    status,
+    isStreaming,
+    isCompacting,
+    retryAttempt,
+    toolOutputExpanded,
+    hideThinkingBlock,
+    hiddenThinkingLabel,
+    steeringMessages,
+    followUpMessages,
+    currentModel,
+    thinkingLevel,
+    // UI state
+    workingVisible,
+    workingMessage,
+    retryCountdown,
+    retryMaxAttempts,
+    displayStatus,
+    activeModal,
+    setActiveModal,
+    toasts,
+    inputValue,
+    setInputValue,
+    isSubmitting,
+    messageListRef,
+    extensionWidgetsAbove,
+    extensionWidgetsBelow,
+    customEditor,
+    customHeader,
+    customFooter,
+    customOverlay,
+    // Handlers
+    handleSubmit,
+    handleSelectCommand,
+    handleDequeue,
+    onEscape,
     onCommandPalette,
     onThinking,
-    onThemeToggle,
     onToolOutputToggle,
     onThinkingBlockToggle,
-    onLogin,
+    onLoginTrigger,
     onSessionSelector,
-    onDebug,
-    onEditor: handleEditor,
-    onPaste: handlePaste,
+    onDebugTrigger,
+    onEditorTrigger,
+    onPasteTrigger,
+    onThemeToggle,
     onInterrupt,
-    onDequeue: handleDequeue,
-    onEscape: () => {
-      const session = runtime.session as any;
-      if (retryEscapeHandler) {
-        retryEscapeHandler();
-        return;
-      }
-      if (autoCompactionEscapeHandler) {
-        autoCompactionEscapeHandler();
-        return;
-      }
-      if (session.isBashRunning) {
-        session.abortBash();
-        return;
-      }
-      if (activeModal) {
-        setActiveModal(null);
-        return;
-      }
+    // Helpers
+    footerProvider,
+    addToast,
+  } = state;
 
-      // If editor has text, clear it
-      const text = inputValue.trim();
-      if (text) {
-        setInputValue('');
-        return;
-      }
+  const showImages = runtime.session.settings?.get?.('terminal.showImages') ?? true;
+  const imageWidthCells = runtime.session.settings?.get?.('terminal.imageWidthCells') ?? 60;
+  const modelId = currentModel?.id || (runtime.session as any)?.model?.id || 'No model';
+  const { isDark } = useTheme();
 
-      // Empty editor: double-escape detection for tree/fork
-      const now = Date.now();
-      const lastTime = lastEscapeTimeRef.current;
-      if (now - lastTime < 500) {
-        // Double-escape triggered
-        lastEscapeTimeRef.current = 0;
-        const action = runtime.session.settingsManager?.getDoubleEscapeAction?.() ?? 'tree';
-        if (action === 'tree') {
-          setActiveModal({ type: 'tree-selector' });
-        } else if (action === 'fork') {
-          setActiveModal({ type: 'user-message-selector' });
-        }
-      } else {
-        // First escape, record time for potential double-tap
-        lastEscapeTimeRef.current = now;
-      }
-    },
-  };  // Signal handlers for graceful shutdown
-  React.useEffect(() => {
-    const handleSignal = async (signal: string) => {
-      console.log(`Received ${signal}, shutting down gracefully...`);
-      try {
-        await runtime.dispose?.();
-      } catch (err) {
-        console.error('Error during shutdown:', err);
-      }
-      process.exit(0);
-    };
-    process.on('SIGTERM', () => handleSignal('SIGTERM'));
-    process.on('SIGHUP', () => handleSignal('SIGHUP'));
-    const handleCont = () => {
-      console.log('Resumed from suspend');
-    };
-    process.on('SIGCONT', handleCont);
-    return () => {
-      process.off('SIGTERM', handleSignal);
-      process.off('SIGHUP', handleSignal);
-      process.off('SIGCONT', handleCont);
-    };
-  }, [runtime]);
-
-
-  // Helper function for /export command
-  const generateSessionHtml = (messages: any[], options: { title: string; includeStyles: boolean; includeImages: boolean; cwd: string }) => {
-    const { title, includeStyles, includeImages, cwd } = options;
-    const escapedTitle = escapeHtml(title);
-    let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapedTitle}</title>`;
-    if (includeStyles) {
-      html += `<style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #333; }
-        .header { background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .message { margin-bottom: 24px; padding: 16px; border-radius: 8px; }
-        .user { background: #e3f2fd; border-left: 4px solid #2196f3; }
-        .assistant { background: #e8f5e9; border-left: 4px solid #4caf50; }
-        .tool { background: #fff3e0; border-left: 4px solid #ff9800; }
-        .bash-execution { background: #fce4ec; border-left: 4px solid #e91e63; }
-        .role { font-weight: bold; margin-bottom: 8px; }
-        .content { white-space: pre-wrap; word-wrap: break-word; }
-        .tool-call { background: #f3e5f5; padding: 12px; border-radius: 4px; margin: 8px 0; font-family: monospace; }
-        .thinking { color: #666; font-style: italic; border-left: 2px solid #ccc; padding-left: 12px; margin: 8px 0; }
-        img { max-width: 100%; height: auto; }
-        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
-      </style>`;
-    }
-    html += `</head><body>`;
-    html += `<div class="header"><h1>${escapedTitle}</h1>`;
-    html += `<p><strong>Exported:</strong> ${new Date().toLocaleString()}</p>`;
-    html += `<p><strong>CWD:</strong> ${escapeHtml(cwd)}</p>`;
-    html += `<p><strong>Messages:</strong> ${messages.length}</p>`;
-    html += `</div>`;
-
-    for (const msg of messages) {
-      let roleClass = 'user';
-      let roleName = 'User';
-      if (msg.role === 'assistant') { roleClass = 'assistant'; roleName = 'Assistant'; }
-      else if (msg.role === 'tool') { roleClass = 'tool'; roleName = 'Tool'; }
-      else if (msg.role === 'bashExecution') { roleClass = 'bash-execution'; roleName = 'Bash'; }
-      else if (msg.role === 'compactionSummary') { roleClass = 'tool'; roleName = 'Compaction'; }
-      else if (msg.role === 'branchSummary') { roleClass = 'tool'; roleName = 'Branch'; }
-      else if (msg.role === 'custom') { roleClass = 'tool'; roleName = msg.customType || 'Custom'; }
-
-      html += `<div class="message ${roleClass}">`;
-      html += `<div class="role">${escapeHtml(roleName)}</div>`;
-      html += `<div class="content">`;
-
-      // Handle content blocks
-      if (Array.isArray(msg.content)) {
-        for (const block of msg.content) {
-          if (block.type === 'text') {
-            html += `<p>${escapeHtml(block.text)}</p>`;
-          } else if (block.type === 'thinking' && includeStyles) {
-            html += `<div class="thinking">${escapeHtml(block.thinking)}</div>`;
-          }
-        }
-      } else {
-        html += `<p>${escapeHtml(String(msg.content || ''))}</p>`;
-      }
-
-      // Tool calls
-      if (msg.toolCalls && msg.toolCalls.length > 0) {
-        for (const tool of msg.toolCalls) {
-          html += `<div class="tool-call">`;
-          html += `<strong>Tool:</strong> ${escapeHtml(tool.name)}<br>`;
-          html += `<strong>Arguments:</strong> <pre>${escapeHtml(JSON.stringify(tool.arguments, null, 2))}</pre>`;
-          html += `</div>`;
-        }
-      }
-
-      html += `</div></div>`;
-    }
-
-    html += `<div class="footer">`;
-    html += `<p>Generated by Picro Agent</p>`;
-    html += `</div></body></html>`;
-
-    return html;
-  };
-
-  const escapeHtml = (text: string): string => {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  };
+  // Overlay
+  if (customOverlay) {
+    const OverlayComponent = customOverlay.factory;
+    return (
+      <Box flexDirection="column" width="100%" height="100%">
+        <Box flexGrow={1}>
+          <OverlayComponent />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
-    <Box flexDirection="column" width="100%" position="relative">
+    <Box flexDirection="column" width="100%" height="100%">
+      {/* Extension widgets above */}
+      {extensionWidgetsAbove.size > 0 && (
+        <Box flexDirection="column">
+          {Array.from(extensionWidgetsAbove.entries()).map(([key, node]) => (
+            <Box key={key}>{node}</Box>
+          ))}
+        </Box>
+      )}
       {customHeader || (
         <Header
-          title="Picro Agent"
-          status={runtimeStatus || 'Ready'}
+          modelId={modelId}
           thinkingLevel={thinkingLevel}
-          model={modelId}
-          theme={themeLabel}
-          showArmin={true}
-          resourceCounts={resourceCounts}
+          isDark={isDark}
+          tokenUsage={footerProvider.getTokenUsage()}
+          onThemeToggle={onThemeToggle}
+          onCommandPalette={onCommandPalette}
+          onThinking={onThinking}
+          onSettings={() => setActiveModal({ type: 'settings' })}
         />
       )}
-      <Box flexGrow={1} overflow="hidden" position="relative">
-        {/* Pending messages indicator */}
-        {(steeringMessages.length > 0 || followUpMessages.length > 0 || compactionQueuedMessages.length > 0) && (
-          <Box borderBottom paddingX={1}>
-            <Text color="yellow" dim>
-              Queued: {steeringMessages.length} steer, {followUpMessages.length} follow-up, {compactionQueuedMessages.length} local (Ctrl+Alt+E to edit)
-            </Text>
-          </Box>
-        )}
+      {/* Main content area */}
+      <Box flexDirection="column" flexGrow={1} overflow="hidden">
         <MessageList
           ref={messageListRef}
           messages={messages}
@@ -1389,52 +119,68 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
           showImages={showImages}
           imageWidthCells={imageWidthCells}
         />
-        {showDebug && (
-          <Box position="absolute" top={0} right={0}>
-            <Text color="yellow">Debug</Text>
+        {/* Extension widgets below message list but above input */}
+        {extensionWidgetsBelow.size > 0 && (
+          <Box flexDirection="column" paddingX={1} borderTop="thin">
+            {Array.from(extensionWidgetsBelow.entries()).map(([key, node]) => (
+              <Box key={key}>{node}</Box>
+          ))}
           </Box>
         )}
+        {/* Status line for compaction/retry/working */}
+        {(isCompacting || retryAttempt > 0 || workingVisible) && (
+          <Box paddingX={1}>
+            <Text color={workingVisible ? 'cyan' : isCompacting ? 'yellow' : 'orange'}>
+              {displayStatus}
+            </Text>
+          </Box>
+        )}
+        <InputBox
+          value={inputValue}
+          onChange={setInputValue}
+          onSubmit={handleSubmit}
+          placeholder="Type your message..."
+          disabled={isSubmitting || activeModal !== null}
+          onSlashCommand={onCommandPalette}
+          onTab={onCommandPalette}
+          cwd={runtime.cwd}
+          extensionShortcuts={state.extensionShortcutsRef}
+          onCommandPalette={onCommandPalette}
+          onThinking={onThinking}
+          onThemeToggle={onThemeToggle}
+          onToolOutputToggle={onToolOutputToggle}
+          onThinkingBlockToggle={onThinkingBlockToggle}
+          onLogin={onLoginTrigger}
+          onSessionSelector={onSessionSelector}
+          onDebug={onDebugTrigger}
+          onEditor={onEditorTrigger}
+          onPaste={onPasteTrigger}
+          onInterrupt={onInterrupt}
+          onEscape={onEscape}
+          onPathComplete={state.onAutocomplete} // autocomplete uses same handler as path
+          onAutocomplete={state.onAutocomplete}
+        />
       </Box>
-      {extensionWidgetsAbove.size > 0 && (
-        <Box flexDirection="column" paddingX={1} borderTop="thin">
-          {Array.from(extensionWidgetsAbove.entries()).map(([key, node]) => (
-            <Box key={key}>{node}</Box>
-          ))}
-        </Box>
+      {customFooter || (
+        <Footer
+          provider={footerProvider}
+          hints={[
+            'Ctrl+P: Commands',
+            'Ctrl+T: Thinking',
+            'Ctrl+Shift+T: Toggle Theme',
+            'Ctrl+R: Resume Session',
+            'Ctrl+Alt+E: Edit',
+            'Ctrl+D: Debug',
+            'Ctrl+C: Quit'
+          ]}
+        />
       )}
-      {customEditor
-        ? React.createElement(customEditor, inputProps)
-        : <InputBox {...inputProps} />}
-      {extensionWidgetsBelow.size > 0 && (
-        <Box flexDirection="column" paddingX={1} borderTop="thin">
-          {Array.from(extensionWidgetsBelow.entries()).map(([key, node]) => (
-            <Box key={key}>{node}</Box>
-          ))}
-        </Box>
-      )}
-      {/* Status line for compaction/retry/working */}
-      {(isCompacting || retryAttempt > 0 || workingVisible) && (
-        <Box paddingX={1}>
-          <Text color={workingVisible ? 'cyan' : isCompacting ? 'yellow' : 'orange'}>
-            {displayStatus}
-          </Text>
-        </Box>
-      )}
-      {customFooter || <Footer provider={footerProvider} hints={[
-        'Ctrl+P: Commands',
-        'Ctrl+T: Thinking',
-        'Ctrl+Shift+T: Toggle Theme',
-        'Ctrl+R: Resume Session',
-        'Ctrl+Alt+E: Edit',
-        'Ctrl+D: Debug',
-        'Ctrl+C: Quit'
-      ]} />}
       {activeModal && (
         <ModalRenderers
           activeModal={activeModal}
           runtime={runtime}
           onSelectCommand={handleSelectCommand}
-          onTreeSelect={handleTreeSelect}
+          onTreeSelect={state.handleTreeSelect}
           onClose={() => setActiveModal(null)}
           setActiveModal={setActiveModal}
           addToast={addToast}
@@ -1458,6 +204,9 @@ const InkAppInner: React.FC<InkAppInnerProps> = ({ runtime }) => {
 export const InkApp: React.FC<{ runtime: AgentSessionRuntimeInterface }> = ({ runtime }) => {
   // Set up global error handling for unhandled errors and rejections
   useGlobalErrorHandler();
+
+  const state = useInkAppState(runtime);
+
   // Determine initial theme from settings
   let initialMode: 'dark' | 'light' = 'dark';
   try {
@@ -1481,7 +230,7 @@ export const InkApp: React.FC<{ runtime: AgentSessionRuntimeInterface }> = ({ ru
       }
     }}>
       <ThemeProvider initialMode={initialMode}>
-        <InkAppInner runtime={runtime} />
+        <InkAppInner runtime={runtime} state={state} />
       </ThemeProvider>
     </ErrorBoundary>
   );
@@ -1493,4 +242,3 @@ export const runInkApp = async (runtime: AgentSessionRuntimeInterface): Promise<
   );
   await waitUntilExit();
 };
-

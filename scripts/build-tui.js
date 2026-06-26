@@ -16,7 +16,7 @@ import { join } from 'path';
 
   await esbuild.build({
     entryPoints: files,
-    bundle: false,
+    bundle: true,  // ← Bundle to reduce startup overhead
     platform: 'node',
     target: 'node20',
     format: 'esm',
@@ -27,6 +27,8 @@ import { join } from 'path';
       '.tsx': 'tsx',
       '.ts': 'ts',
     },
+    // Keep external node modules to reduce bundle size
+    external: ['react', 'react-dom', 'ink', '@earendil-works/pi-coding-agent', 'openai'],
     // Output .js files
     outExtension: { '.js': '.js' },
     // Avoid adding banners

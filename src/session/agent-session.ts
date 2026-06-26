@@ -1594,9 +1594,6 @@ export class AgentSession {
 
     // Process event internally (uses colon event types)
     this._processAgentEvent(event);
-
-    // Process event
-    this._processAgentEvent(event);
   };
 
   // =========================================================================

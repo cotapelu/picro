@@ -687,76 +687,7 @@ describe("AgentLoop", () => {
     });
   });
 
-  describe("run with memoryStore", () => {
-    it("emits memory:retrieve on successful recall", async () => {
-      const memoryStore = {
-        recall: async () => ({
-          memories: [
-            {
-              content: "mem1",
-              relevance: 1,
-              timestamp: Date.now(),
-              metadata: {},
-            },
-          ],
-          scores: [0.9],
-        }),
-      };
-      loop = new AgentLoop(
-        config,
-        emitter,
-        toolExecutor,
-        contextBuilder,
-        strategy,
-        defaultLLMComplete,
-        defaultLLMStream,
-        memoryStore as any,
-        [],
-      );
-      const memorySpy = vi.fn();
-      emitter.on("memory:retrieve", memorySpy as any);
-      await loop.run("test", new MessageQueue(), new MessageQueue());
-      expect(memorySpy).toHaveBeenCalled();
-      const event = memorySpy.mock.calls[0][0];
-      expect(event.memories.length).toBe(1);
-    });
 
-    it("handles memory recall failure gracefully", async () => {
-      const memoryStore = {
-        recall: async () => {
-          throw new Error("db down");
-        },
-      };
-      loop = new AgentLoop(
-        config,
-        emitter,
-        toolExecutor,
-        contextBuilder,
-        strategy,
-        defaultLLMComplete,
-        defaultLLMStream,
-        memoryStore as any,
-        [],
-      );
-      const consoleWarn = vi
-        .spyOn(console, "warn")
-        .mockImplementation(() => {});
-      const result = await loop.run(
-        "test",
-        new MessageQueue(),
-        new MessageQueue(),
-      );
-      if (!result.success) {
-        console.error("Run failed:", result.error);
-      }
-      expect(result.success).toBe(true);
-      expect(consoleWarn).toHaveBeenCalledWith(
-        "Memory retrieval failed:",
-        expect.any(Error),
-      );
-      consoleWarn.mockRestore();
-    });
-  });
 
   describe("run with steering queue", () => {
     it("drains steering queue into history", async () => {
@@ -824,76 +755,7 @@ describe("AgentLoop", () => {
     });
   });
 
-  describe("autoSaveMemory", () => {
-    it("saves user input, assistant response, and tool results", async () => {
-      const memoryStore = {
-        remember: vi.fn().mockResolvedValue(undefined),
-      } as any;
-      loop = new AgentLoop(
-        config,
-        emitter,
-        toolExecutor,
-        contextBuilder,
-        strategy,
-        defaultLLMComplete,
-        defaultLLMStream,
-        memoryStore,
-        [],
-      );
-      const response: LLMResponse = {
-        content: "Assistant says",
-        stopReason: "stop",
-        usage: {
-          input: 1,
-          output: 1,
-          totalTokens: 2,
-          cost: { input: 0, output: 0, total: 0 },
-        },
-        toolCalls: [],
-        raw: {},
-      };
-      const toolResults: any[] = [
-        { toolName: "test", content: "ok", toolCallId: "123", metadata: {} },
-      ];
-      await (loop as any).autoSaveMemory("prompt", response, toolResults);
-      expect(memoryStore.remember).toHaveBeenCalledTimes(3);
-    });
 
-    it("handles errors without crashing", async () => {
-      const memoryStore = {
-        remember: vi.fn().mockRejectedValue(new Error("fail")),
-      } as any;
-      loop = new AgentLoop(
-        config,
-        emitter,
-        toolExecutor,
-        contextBuilder,
-        strategy,
-        defaultLLMComplete,
-        defaultLLMStream,
-        memoryStore,
-        [],
-      );
-      const consoleWarn = vi
-        .spyOn(console, "warn")
-        .mockImplementation(() => {});
-      const response: LLMResponse = {
-        content: "hi",
-        stopReason: "stop",
-        usage: {
-          input: 1,
-          output: 1,
-          totalTokens: 2,
-          cost: { input: 0, output: 0, total: 0 },
-        },
-        toolCalls: [],
-        raw: {},
-      };
-      await (loop as any).autoSaveMemory("p", response, []);
-      expect(consoleWarn).toHaveBeenCalled();
-      consoleWarn.mockRestore();
-    });
-  });
 
   describe("createAssistantTurn", () => {
     it("creates turn with content string", () => {

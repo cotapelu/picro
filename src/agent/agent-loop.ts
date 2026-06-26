@@ -15,8 +15,6 @@ import type {
   ToolResult,
   ToolContext,
   LLMStreamEvent,
-  MemoryEntry,
-  MemoryStore,
   LoopStrategy,
   AgentTool,
   ConvertToLlmFn,
@@ -59,7 +57,6 @@ export class AgentLoop {
   private contextBuilder?: ContextBuilder | null;
   private strategy: LoopStrategy;
   private abortController: AbortController | null = null;
-  private memoryStore?: MemoryStore;
   private tools: AgentTool[];
   private llmComplete: (
     context: Context,
@@ -76,7 +73,6 @@ export class AgentLoop {
 
   private followUpManager = new FollowUpManager();
   private metrics: SessionMetrics = createSessionMetrics();
-  private memoryLatencyAccumulator = 0; // for calculating avg latency
   // Memory safeguards to prevent OOM from accumulating too many tool outputs
   private readonly MAX_TOOL_TURNS = 1000; // keep at most 1000 tool role turns
   private readonly MAX_TOOL_RESULTS = 1000; // keep at most 1000 tool results
@@ -89,7 +85,6 @@ export class AgentLoop {
     strategy: LoopStrategy,
     llmComplete: (context: Context, options?: any) => Promise<LLMResponse>,
     llmStream: (context: Context, options?: any) => Promise<AsyncIterable<any>>,
-    memoryStore?: MemoryStore,
     tools: AgentTool[] = [],
   ) {
     this.config = config;
@@ -97,7 +92,6 @@ export class AgentLoop {
     this.toolExecutor = toolExecutor;
     this.contextBuilder = contextBuilder;
     this.strategy = strategy;
-    this.memoryStore = memoryStore;
     this.tools = tools;
     this.llmComplete = llmComplete;
     this.llmStream = llmStream;
@@ -198,22 +192,21 @@ export class AgentLoop {
       .filter(Boolean);
   }
 
-  // Build LLM Context from turns and optionally memories
+  // Build LLM Context from turns
   private async buildLlmContext(
     turns: ConversationTurn[],
-    memories: MemoryEntry[],
     signal?: AbortSignal,
   ): Promise<Context> {
     // If custom transformContext is provided, use legacy path (respects transformContext)
     if (this.config.transformContext) {
-      return this._buildContextLegacy(turns, memories, signal);
+      return this._buildContextLegacy(turns, signal);
     }
     // Use ContextBuilder if available and no custom convertToLlm
     if (this.contextBuilder && !this.config.convertToLlm) {
-      return this._buildContextWithContextBuilder(turns, memories);
+      return this._buildContextWithContextBuilder(turns);
     }
     // Fallback to legacy path
-    return this._buildContextLegacy(turns, memories, signal);
+    return this._buildContextLegacy(turns, signal);
   }
 
   /** Build context using ContextBuilder (with tokenCount) */
@@ -250,37 +243,15 @@ export class AgentLoop {
   }
 
   /** Retrieve memories for current round if enabled */
-  private async _retrieveMemoriesForRound(): Promise<{
-    memories: MemoryEntry[];
-    memoryRetrievalTime: number;
-  }> {
-    const enableMemoryInjection = this.contextBuilder?.getConfig().enableMemoryInjection ?? false;
-    if (!enableMemoryInjection || !this.memoryStore) {
-      return { memories: [], memoryRetrievalTime: 0 };
-    }
-    const lastUserTurn = [...this.state.history]
-      .reverse()
-      .find((t) => t.role === "user");
-    const query =
-      lastUserTurn?.content
-        .filter((c) => c.type === "text")
-        .map((c) => c.text)
-        .join("") || "";
-    const result = await this._retrieveMemoriesWithBoosting(query);
-    this.metrics.memoryRetrievals++;
-    this.memoryLatencyAccumulator += result.retrievalTime;
-    return { memories: result.memories, memoryRetrievalTime: result.retrievalTime };
-  }
+
 
   private async _buildContextWithContextBuilder(
     turns: ConversationTurn[],
-    memories: MemoryEntry[],
   ): Promise<Context> {
     const systemPrompt = this.config.systemPrompt || this._extractSystemPromptFromTurns(turns);
     const result = this.contextBuilder!.build(
       systemPrompt || "",
-      turns,
-      memories.length > 0 ? memories : undefined
+      turns
     );
     const llmMessages = this.convertTurnsToMessages(turns);
     return {
@@ -294,19 +265,11 @@ export class AgentLoop {
   /** Build context via legacy path (no tokenCount) */
   private async _buildContextLegacy(
     turns: ConversationTurn[],
-    memories: MemoryEntry[],
     signal?: AbortSignal,
   ): Promise<Context> {
     let processed = turns;
     if (this.config.transformContext) {
       processed = await this.config.transformContext(turns, signal);
-    } else if (memories.length > 0) {
-      const memoryTurns = memories.map((mem): ConversationTurn => ({
-        role: "system",
-        content: [{ type: "text", text: mem.content }],
-        timestamp: Date.now(),
-      }));
-      processed = [...memoryTurns, ...processed];
     }
 
     const llmMessages = this.config.convertToLlm
@@ -478,7 +441,6 @@ export class AgentLoop {
 
     const runStartTime = Date.now();
     let totalContextBuildingTime = 0;
-    let totalMemoryRetrievalTime = 0;
     let totalLLMRequestTime = 0;
     let totalToolExecutionTime = 0;
     // No pendingTurns needed - steering messages directly pushed to history
@@ -521,15 +483,9 @@ export class AgentLoop {
           }
         }
 
-        const { memories, memoryRetrievalTime } = await this._retrieveMemoriesForRound();
-        if (memoryRetrievalTime > 0) {
-          totalMemoryRetrievalTime += memoryRetrievalTime;
-        }
-
         // Build LLM context from current history (includes steering if any)
         const llmContext = await this.buildLlmContext(
           this.state.history,
-          memories,
           combinedSignal,
         );
         // Record token count for this request
@@ -669,7 +625,6 @@ export class AgentLoop {
                 timestamp: Date.now(),
                 totalRunTime,
                 totalContextBuildingTime,
-                totalMemoryRetrievalTime,
                 totalLLMRequestTime,
                 totalToolExecutionTime,
               } as any);
@@ -704,7 +659,6 @@ export class AgentLoop {
                 timestamp: Date.now(),
                 totalRunTime,
                 totalContextBuildingTime,
-                totalMemoryRetrievalTime,
                 totalLLMRequestTime,
                 totalToolExecutionTime,
               } as any);
@@ -838,7 +792,6 @@ export class AgentLoop {
                 timestamp: Date.now(),
                 totalRunTime,
                 totalContextBuildingTime,
-                totalMemoryRetrievalTime,
                 totalLLMRequestTime,
                 totalToolExecutionTime,
               } as any);
@@ -888,7 +841,6 @@ export class AgentLoop {
           timestamp: Date.now(),
           totalRunTime,
           totalContextBuildingTime,
-          totalMemoryRetrievalTime,
           totalLLMRequestTime,
           totalToolExecutionTime,
         } as any);
@@ -929,7 +881,6 @@ export class AgentLoop {
           timestamp: Date.now(),
           totalRunTime,
           totalContextBuildingTime,
-          totalMemoryRetrievalTime,
           totalLLMRequestTime,
           totalToolExecutionTime,
         } as any);
@@ -974,96 +925,11 @@ export class AgentLoop {
     return [];
   }
 
-  private async _retrieveMemories(
-    currentPrompt: string,
-  ): Promise<{ memories: MemoryEntry[]; retrievalTime: number; scores?: number[] }> {
-    const result: { memories: MemoryEntry[]; retrievalTime: number; scores?: number[] } = {
-      memories: [],
-      retrievalTime: 0,
-    };
-    if (!this.memoryStore) return result;
-    const memoryStart = Date.now();
-    try {
-      const retrieval = await this.memoryStore.recall(currentPrompt);
-      result.memories = retrieval.memories;
-      result.scores = retrieval.scores;
-      result.retrievalTime = Date.now() - memoryStart;
-      const event = this._formatMemoryEvent(retrieval, this.state.round);
-      event.timestamp = Date.now();
-      event.query = currentPrompt;
-      await this.emitter.emit(event as any);
-    } catch (e) {
-      console.warn("Memory retrieval failed:", e);
-    }
-    return result;
-  }
 
-  private _formatMemoryEvent(
-    retrieval: { memories: MemoryEntry[]; scores?: number[] },
-    round: number,
-  ): {
-    type: string;
-    timestamp: number;
-    round: number;
-    query: string;
-    memoriesRetrieved: number;
-    scores?: number[];
-    memories: { content: string; relevance: number; index: number }[];
-  } {
-    return {
-      type: "memory:retrieve",
-      timestamp: 0,
-      round,
-      query: '', // actual query set by caller
-      memoriesRetrieved: retrieval.memories.length,
-      scores: retrieval.scores,
-      memories: retrieval.memories.map((mem, index) => ({
-        content: mem.content,
-        relevance: mem.relevance ?? 0,
-        index,
-      })),
-    };
-  }
 
-  /** Simple heuristic: detect if content likely contains code */
-  private _containsCode(content: string): boolean {
-    if (content.includes('```')) return true;
-    if (content.includes('<?php') || content.includes('<?=')) return true;
-    const lines = content.split('\n');
-    const codePatterns = [
-      'function ', 'class ', 'def ', 'public ', 'private ', 'protected ',
-      'const ', 'let ', 'var ', 'import ', 'export ', '#include', 'package '
-    ];
-    for (const line of lines) {
-      const trimmed = line.trimStart();
-      if (codePatterns.some(pat => trimmed.startsWith(pat))) return true;
-    }
-    return false;
-  }
 
-  private async autoSaveMemory(
-    prompt: string,
-    response: LLMResponse,
-    results: ToolResult[],
-  ): Promise<void> {
-    if (!this.memoryStore) return;
-    try {
-      await this.memoryStore.remember("user_input", prompt);
-      if (response.content) {
-        await this.memoryStore.remember("assistant_response", response.content);
-      }
-      for (const result of results) {
-        const content = `tool: ${result.toolName} => ${this.getResultText(result)}`;
-        await this.memoryStore.remember("tool_result", content, {
-          toolName: result.toolName,
-          isError: "error" in result,
-          timestamp: Date.now(),
-        });
-      }
-    } catch (e) {
-      console.warn("Auto-save memory failed:", e);
-    }
-  }
+
+
 
   private _buildAssistantContent(response: LLMResponse): ContentBlock[] {
     const contentBlocks: ContentBlock[] = [];
@@ -1160,23 +1026,7 @@ export class AgentLoop {
 
   /** Get accumulated session metrics */
   public async getMetrics(): Promise<SessionMetrics> {
-    const base = this.metrics;
-    let memoryCacheHits = 0;
-    let memoryCacheMisses = 0;
-    if (this.memoryStore && typeof (this.memoryStore as any).getMetrics === 'function') {
-      const mem = await (this.memoryStore as any).getMetrics();
-      memoryCacheHits = mem.cacheHits || 0;
-      memoryCacheMisses = mem.cacheMisses || 0;
-    }
-    const avgMemoryLatency = this.metrics.memoryRetrievals > 0
-      ? this.memoryLatencyAccumulator / this.metrics.memoryRetrievals
-      : 0;
-    return {
-      ...base,
-      memoryCacheHits,
-      memoryCacheMisses,
-      memoryAvgLatencyMs: avgMemoryLatency,
-    };
+    return this.metrics;
   }
 
   /** Record a successful compaction and tokens saved */
@@ -1214,36 +1064,7 @@ export class AgentLoop {
     return parts.join("\n");
   }
 
-  private async _retrieveMemoriesWithBoosting(
-    query: string,
-  ): Promise<{ memories: MemoryEntry[]; retrievalTime: number }> {
-    const memResult = await this._retrieveMemories(query);
-    const memories = this._applyMemoryBoosting(memResult.memories, memResult.scores || []);
-    return { memories, retrievalTime: memResult.retrievalTime };
-  }
 
-  private _applyMemoryBoosting(
-    memories: MemoryEntry[],
-    scores: number[],
-  ): MemoryEntry[] {
-    if (!this.config.memoryBoosting) return memories;
-    if (scores.length !== memories.length) return memories;
-    const paired = memories.map((mem, idx) => ({ mem, score: scores[idx] }));
-    paired.forEach(item => {
-      const action = (item.mem as any).metadata?.action;
-      if (action === 'read_file') {
-        item.score *= 1.2;
-      } else if (action === 'edit_file') {
-        item.score *= 1.1;
-      } else if (action === 'tool_result') {
-        if (this._containsCode(item.mem.content)) {
-          item.score *= 1.3;
-        }
-      }
-    });
-    paired.sort((a, b) => b.score - a.score);
-    return paired.map(p => p.mem);
-  }
 
   private _allToolsTerminate(toolResults: ToolResult[]): boolean {
     return toolResults.length > 0 && toolResults.every((r: any) => r.terminate === true);
@@ -1393,16 +1214,6 @@ export class AgentLoop {
     this.metrics.toolTotalLatencyMs += toolExecutionTime;
     this.state.toolResults.push(...toolResults);
     this._enforceToolResultsLimit();
-
-    if (this.config.autoSaveMemories && this.memoryStore) {
-      const lastUserTurn = [...this.state.history].reverse().find(t => t.role === "user");
-      const query = lastUserTurn?.content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("") || "";
-      if (isStreaming) {
-        await this.autoSaveMemory(query, finalMessage, toolResults);
-      } else if (response) {
-        await this.autoSaveMemory(query, response, toolResults);
-      }
-    }
 
     const toolTurns: ToolTurn[] = [];
     for (const result of toolResults) {

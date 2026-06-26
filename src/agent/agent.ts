@@ -11,7 +11,6 @@ import type {
   AgentRunResult,
   AgentTool,
   LoopStrategy,
-  MemoryStore,
   LLMResponse,
   ToolHandler,
   ToolRegistry,
@@ -51,7 +50,6 @@ export class Agent {
   private readonly runner: AgentLoop;
   private readonly steeringQueue: MessageQueue;
   private readonly followUpQueue: MessageQueue;
-  private memoryStore?: MemoryStore;
   private model?: Model;
   private llmComplete?: (
     context: Context,
@@ -69,7 +67,7 @@ export class Agent {
    * Constructs a new Agent instance.
    * @param model - The AI model configuration.
    * @param tools - Array of tool definitions.
-   * @param config - Optional configuration (maxRounds, verbose, memoryStore, etc.).
+   * @param config - Optional configuration (maxRounds, verbose, etc.).
    */
   constructor(
     model?: Model,
@@ -132,8 +130,6 @@ export class Agent {
         maxTokens: this.config.contextBuilder?.maxTokens ?? 128000,
         reservedTokens: this.config.contextBuilder?.reservedTokens ?? 4096,
         minMessages: this.config.contextBuilder?.minMessages ?? 1,
-        enableMemoryInjection:
-          this.config.contextBuilder?.enableMemoryInjection ?? false,
       });
     } else {
       this.contextBuilder = undefined;
@@ -164,10 +160,6 @@ export class Agent {
       mapQueue(this.config.followUpMode ?? "all"),
     );
 
-    if (this.config.memoryStore) {
-      this.memoryStore = this.config.memoryStore;
-    }
-
     // Runner – pass wrappers that forward to the current llmComplete/llmStream providers.
     this.runner = new AgentLoop(
       this.config,
@@ -184,7 +176,6 @@ export class Agent {
         // llmStream may return AsyncIterable directly or a Promise of it.
         return this.llmStream(context, options) as Promise<AsyncIterable<any>>;
       },
-      this.memoryStore,
       this.tools,
     );
 
@@ -328,14 +319,12 @@ export class Agent {
       reasoningLevel: input.reasoningLevel,
       thinkingBudgets: input.thinkingBudgets,
       transformContext: input.transformContext,
-      memoryStore: input.memoryStore,
       compaction: input.compaction,
       contextBuilder: input.contextBuilder,
       executor: input.executor,
       loopStrategy: input.loopStrategy,
       debug: input.debug,
       sessionId: input.sessionId,
-      autoSaveMemories: input.autoSaveMemories,
       maxRetries: input.maxRetries,
       retryDelayMs: input.retryDelayMs,
     };
@@ -772,7 +761,6 @@ export class Agent {
         maxTokens: config?.contextBuilder?.maxTokens ?? 128000,
         reservedTokens: config?.contextBuilder?.reservedTokens ?? 4096,
         minMessages: config?.contextBuilder?.minMessages ?? 5,
-        enableMemoryInjection: config?.contextBuilder?.enableMemoryInjection ?? false,
       },
       executor: {
         timeout: config?.executor?.timeout ?? 30000,
@@ -790,7 +778,6 @@ export class Agent {
       transformContext: config?.transformContext,
       steeringMode: config?.steeringMode ?? "one-at-a-time",
       followUpMode: config?.followUpMode ?? "one-at-a-time",
-      autoSaveMemories: config?.autoSaveMemories,
       debug: config?.debug ?? false,
       compaction: config?.compaction ?? { enabled: true, autoCompact: true },
     };

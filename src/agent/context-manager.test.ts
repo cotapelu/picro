@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from "vitest";
 import { ContextBuilder } from "./context-manager.js";
-import type { ConversationTurn, MemoryEntry } from "./types.js";
+import type { ConversationTurn } from "./types.js";
 
 // Helper to create a user turn
 function user(text: string): ConversationTurn {
@@ -41,11 +41,6 @@ function tool(
   };
 }
 
-// Helper to create a memory entry
-function memory(content: string, relevance = 0.5): MemoryEntry {
-  return { content, relevance, timestamp: Date.now() } as any; // cast as needed
-}
-
 describe("ContextBuilder", () => {
   let builder: ContextBuilder;
 
@@ -67,33 +62,6 @@ describe("ContextBuilder", () => {
       expect(prompt).toContain("Hello");
       expect(prompt).toContain("Hi there");
       expect(tokenCount).toBeGreaterThan(0);
-    });
-
-    it("should inject memories when enabled", () => {
-      const base = "Base";
-      const history: ConversationTurn[] = [user("Hi")];
-      const memories: MemoryEntry[] = [
-        memory("Remember the project is about AI"),
-        memory("Use Python for scripting"),
-      ];
-
-      const { prompt } = builder.build(base, history, memories);
-
-      expect(prompt).toContain("Relevant Memories");
-      expect(prompt).toContain("AI");
-      expect(prompt).toContain("Python");
-    });
-
-    it("should not inject memories when disabled", () => {
-      const builderNoMem = new ContextBuilder({ enableMemoryInjection: false });
-      const base = "Base";
-      const history: ConversationTurn[] = [user("Hi")];
-      const memories: MemoryEntry[] = [memory("Secret")];
-
-      const { prompt } = builderNoMem.build(base, history, memories);
-
-      expect(prompt).not.toContain("Relevant Memories");
-      expect(prompt).not.toContain("Secret");
     });
 
     it("should truncate history to fit maxTokens", () => {

@@ -25,7 +25,6 @@ function defaultConfig(overrides: Partial<AgentConfig> = {}): AgentConfig {
       maxTokens: 128000,
       reservedTokens: 4096,
       minMessages: 5,
-      enableMemoryInjection: true,
     },
     executor: {
       timeout: 30000,
@@ -115,7 +114,6 @@ describe("AgentLoop Coverage", () => {
           throw new Error("llmComplete not used");
         },
         streamProvider,
-        undefined,
         [],
       );
 
@@ -167,7 +165,6 @@ describe("AgentLoop Coverage", () => {
           throw new Error("llmComplete not used");
         },
         streamProvider,
-        undefined,
         [],
       );
 
@@ -185,168 +182,6 @@ describe("AgentLoop Coverage", () => {
 
       expect(finalResult.success).toBe(false);
       expect(finalResult.error).toMatch(/Stream failed/);
-    });
-  });
-
-  describe("autoSaveMemory", () => {
-    it("saves user input, assistant response, and tool results when autoSaveMemories and tool calls present", async () => {
-      const memoryStore = {
-        remember: vi.fn().mockResolvedValue(undefined),
-      };
-      const configWithAutoSave = defaultConfig({
-        autoSaveMemories: true,
-      });
-      // Register a simple tool
-      const echoTool = {
-        name: "echo",
-        description: "Echo",
-        parameters: {
-          type: "object",
-          properties: { message: { type: "string" } },
-        },
-        handler: async (args: any) => `Echo: ${args.message}`,
-      };
-      toolExecutor.registerTool(echoTool as any);
-
-      // LLM that triggers a tool call
-      let callCount = 0;
-      const llmComplete = async (
-        context: Context,
-        options?: any,
-      ): Promise<LLMResponse> => {
-        callCount++;
-        if (callCount === 1) {
-          return {
-            content: "Using tool",
-            stopReason: "toolUse",
-            usage: {
-              input: 10,
-              output: 5,
-              totalTokens: 15,
-              cost: { input: 0, output: 0, total: 0 },
-            },
-            toolCalls: [
-              { id: "t1", name: "echo", arguments: { message: "hello" } },
-            ],
-          } as LLMResponse;
-        } else {
-          return {
-            content: "Final answer",
-            stopReason: "stop",
-            usage: {
-              input: 10,
-              output: 10,
-              totalTokens: 20,
-              cost: { input: 0, output: 0, total: 0 },
-            },
-            toolCalls: [],
-          } as LLMResponse;
-        }
-      };
-
-      // Use ReActLoopStrategy to continue after tool call
-      const reactStrategy = new ReActLoopStrategy();
-
-      loop = new AgentLoop(
-        configWithAutoSave,
-        emitter,
-        toolExecutor,
-        contextBuilder,
-        reactStrategy,
-        llmComplete,
-        async () => {
-          throw new Error("stream not used");
-        },
-        memoryStore as any,
-        [],
-      );
-
-      await loop.run("prompt", new MessageQueue(), new MessageQueue());
-
-      // autoSaveMemory should have been called at least once (after tool execution)
-      expect(memoryStore.remember).toHaveBeenCalled();
-      const calls = memoryStore.remember.mock.calls;
-      const types = calls.map((c) => c[0]);
-      // Should include user_input, assistant_response, and tool_result
-      expect(types).toContain("user_input");
-      expect(types).toContain("assistant_response");
-      expect(types).toContain("tool_result");
-    });
-
-    it("does not crash if memoryStore.remember throws", async () => {
-      const memoryStore = {
-        remember: vi.fn().mockRejectedValue(new Error("DB error")),
-      };
-      const configWithAutoSave = defaultConfig({
-        autoSaveMemories: true,
-      });
-      // Register a tool to ensure tool calls occur
-      const echoTool = {
-        name: "echo",
-        description: "Echo",
-        parameters: {
-          type: "object",
-          properties: { message: { type: "string" } },
-        },
-        handler: async (args: any) => `Echo: ${args.message}`,
-      };
-      toolExecutor.registerTool(echoTool as any);
-
-      let callCount = 0;
-      const llmComplete = async (
-        context: Context,
-        options?: any,
-      ): Promise<LLMResponse> => {
-        callCount++;
-        if (callCount === 1) {
-          return {
-            content: "Using tool",
-            stopReason: "toolUse",
-            usage: {
-              input: 10,
-              output: 5,
-              totalTokens: 15,
-              cost: { input: 0, output: 0, total: 0 },
-            },
-            toolCalls: [
-              { id: "t1", name: "echo", arguments: { message: "hello" } },
-            ],
-          } as LLMResponse;
-        } else {
-          return {
-            content: "Final",
-            stopReason: "stop",
-            usage: {
-              input: 10,
-              output: 10,
-              totalTokens: 20,
-              cost: { input: 0, output: 0, total: 0 },
-            },
-            toolCalls: [],
-          } as LLMResponse;
-        }
-      };
-      const reactStrategy = new ReActLoopStrategy();
-
-      loop = new AgentLoop(
-        configWithAutoSave,
-        emitter,
-        toolExecutor,
-        contextBuilder,
-        reactStrategy,
-        llmComplete,
-        async () => {
-          throw new Error("stream not used");
-        },
-        memoryStore as any,
-        [],
-      );
-
-      // Should not throw despite remember failing
-      await expect(
-        loop.run("prompt", new MessageQueue(), new MessageQueue()),
-      ).resolves.toBeDefined();
-      expect(memoryStore.remember).toHaveBeenCalled();
     });
   });
 });

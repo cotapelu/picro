@@ -115,19 +115,7 @@ describe("Agent (unit)", () => {
       expect(agent.getToolNames()).toContain("myTool");
     });
 
-    it("should assign memoryStore when provided in config", () => {
-      const memStore = {
-        get: () => null,
-        put: () => {},
-        delete: async () => {},
-      };
-      const agent = new Agent(
-        undefined as any,
-        [],
-        defaultConfig({ memoryStore: memStore as any }),
-      );
-      expect((agent as any).memoryStore).toBe(memStore);
-    });
+
   });
 
   describe("tool management", () => {

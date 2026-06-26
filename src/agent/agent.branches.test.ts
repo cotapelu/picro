@@ -83,14 +83,7 @@ describe('Agent branches', () => {
       expect(agent.getToolNames()).toContain('myTool');
     });
 
-    it('sets memoryStore when provided', () => {
-      const store = {} as any;
-      const agent = new Agent(undefined as any, [], {
-        ...defaultConfig(),
-        memoryStore: store,
-      });
-      expect((agent as any).memoryStore).toBe(store);
-    });
+
 
     it('creates logger emitter when enableLogging true and verbose true', async () => {
       const agent = new Agent(undefined as any, [], {

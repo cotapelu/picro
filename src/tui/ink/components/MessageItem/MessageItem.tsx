@@ -21,7 +21,7 @@ interface MessageItemProps {
   imageWidthCells?: number;
 }
 
-export const MessageItem: React.FC<MessageItemProps> = ({
+const MessageItemComponent: React.FC<MessageItemProps> = ({
   message,
   onToolToggle,
   expandedTools = new Set(),
@@ -121,4 +121,6 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     </Box>
   );
 };
+
+export const MessageItem = React.memo(MessageItemComponent);
 

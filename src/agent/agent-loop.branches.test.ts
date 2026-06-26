@@ -361,38 +361,7 @@ describe("AgentLoop Branch Coverage", () => {
     });
   });
 
-  describe("Memory retrieval failure propagation", () => {
-    it("handles memoryStore.recall throwing error without crashing", async () => {
-      const failingMemoryStore = {
-        recall: async () => {
-          throw new Error("DB down");
-        },
-      };
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-      loop = new AgentLoop(
-        config,
-        emitter,
-        toolExecutor,
-        contextBuilder,
-        strategy,
-        defaultLLMComplete,
-        createMockLLMStream(["hi"]),
-        failingMemoryStore as any,
-        [],
-      );
-      const result = await loop.run(
-        "test",
-        new MessageQueue(),
-        new MessageQueue(),
-      );
-      expect(result.success).toBe(true);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Memory retrieval failed:",
-        expect.any(Error),
-      );
-      consoleSpy.mockRestore();
-    });
-  });
+
 
   describe("Hook error handling", () => {
     it("prepareNextTurn hook error is caught and logged", async () => {
@@ -775,75 +744,4 @@ describe("AgentLoop Branch Coverage", () => {
     });
   });
 
-  describe("autoSaveMemory edge cases", () => {
-    it("handles response.content being undefined", async () => {
-      const memoryStore = {
-        remember: vi.fn().mockResolvedValue(undefined),
-      } as any;
-      loop = new AgentLoop(
-        config,
-        emitter,
-        toolExecutor,
-        contextBuilder,
-        strategy,
-        defaultLLMComplete,
-        createMockLLMStream(["hi"]),
-        memoryStore,
-        [],
-      );
-      const response: LLMResponse = {
-        content: undefined as any,
-        stopReason: "stop",
-        usage: {
-          input: 1,
-          output: 1,
-          totalTokens: 2,
-          cost: { input: 0, output: 0, total: 0 },
-        },
-        toolCalls: [],
-      };
-      await (loop as any).autoSaveMemory("prompt", response, []);
-      expect(memoryStore.remember).toHaveBeenCalledWith("user_input", "prompt");
-      // assistant_response should not be called if content undefined
-      expect(memoryStore.remember).not.toHaveBeenCalledWith(
-        "assistant_response",
-        expect.anything(),
-      );
-    });
-
-    it("handles multiple tool results with mixed error/success", async () => {
-      const memoryStore = {
-        remember: vi.fn().mockResolvedValue(undefined),
-      } as any;
-      loop = new AgentLoop(
-        config,
-        emitter,
-        toolExecutor,
-        contextBuilder,
-        strategy,
-        defaultLLMComplete,
-        createMockLLMStream(["hi"]),
-        memoryStore,
-        [],
-      );
-      const response: LLMResponse = {
-        content: "hi",
-        stopReason: "stop",
-        usage: {
-          input: 1,
-          output: 1,
-          totalTokens: 2,
-          cost: { input: 0, output: 0, total: 0 },
-        },
-        toolCalls: [],
-      };
-      const results: any[] = [
-        { toolName: "t1", content: "ok", toolCallId: "123", metadata: {} },
-        { toolName: "t2", error: "fail", toolCallId: "456", metadata: {} },
-      ];
-      await (loop as any).autoSaveMemory("p", response, results);
-      // user (1) + assistant (1) + 2 tool results = 4 calls
-      expect(memoryStore.remember).toHaveBeenCalledTimes(4);
-    });
-  });
 });

@@ -66,6 +66,26 @@ export function useRuntime(runtime: ExtendedRuntime) {
   const [followUpMessages, setFollowUpMessages] = useState<string[]>([]);
   const streamingMessageIdRef = useRef<string | null>(null);
 
+  // Batch rapid message updates to avoid excessive re-renders
+  const pendingUpdateRef = useRef<Message[] | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+
+  // Helper to batch updates via requestAnimationFrame
+  const scheduleUpdate = useCallback((updater: (prev: Message[]) => Message[]) => {
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+    }
+    pendingUpdateRef.current = updater;
+    rafIdRef.current = requestAnimationFrame(() => {
+      setMessages(prev => {
+        const updater = pendingUpdateRef.current;
+        pendingUpdateRef.current = null;
+        rafIdRef.current = null;
+        return updater ? updater(prev) : prev;
+      });
+    });
+  }, []);
+
   // Load initial messages
   useEffect(() => {
     const sessionMsgs = runtime.session.messages;
@@ -167,7 +187,8 @@ export function useRuntime(runtime: ExtendedRuntime) {
           if (!id) break;
           const uiMsg = convertAgentMessage({ ...turn, id });
           if (uiMsg) {
-            setMessages(prev => prev.map(msg => msg.id === id ? { ...uiMsg, streaming: true } : msg));
+            // Batch rapid updates to avoid excessive re-renders during streaming
+            scheduleUpdate(prev => prev.map(msg => msg.id === id ? { ...uiMsg, streaming: true } : msg));
           }
           break;
         }
@@ -200,7 +221,8 @@ export function useRuntime(runtime: ExtendedRuntime) {
           const { toolCallId, toolName, args } = event;
           const id = streamingMessageIdRef.current;
           if (!id) break;
-          setMessages(prev => prev.map(msg => {
+          // Batch tool execution updates (can be frequent)
+          scheduleUpdate(prev => prev.map(msg => {
             if (msg.id !== id) return msg;
             const existing = msg.toolCalls?.find(tc => tc.id === toolCallId);
             if (existing) {
@@ -219,7 +241,7 @@ export function useRuntime(runtime: ExtendedRuntime) {
           const { toolCallId, result, isError } = event;
           const id = streamingMessageIdRef.current;
           if (!id) break;
-          setMessages(prev => prev.map(msg => {
+          scheduleUpdate(prev => prev.map(msg => {
             if (msg.id !== id) return msg;
             return {
               ...msg,

@@ -1,7 +1,7 @@
-/** @jsxImportSource react */
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 import type { Component, ComponentType } from 'ink';
 import type { AgentSessionRuntimeInterface } from '../../runtime.js';
+import { editWithExternalEditor, getPathSuggestions } from '../../interactive/actions.js';
 
 interface UseExtensionUIStateReturn {
   extensionWidgetsAbove: Map<string, string>;
@@ -52,23 +52,7 @@ export function useExtensionUIState(runtime: AgentSessionRuntimeInterface): UseE
   }, []);
 
   const handlePathComplete = useCallback(async (partial: string): Promise<string[]> => {
-    if (!runtime.cwd) return [];
-    try {
-      const { execFile } = await import('node:child_process');
-      return new Promise<string[]>((resolve) => {
-        execFile('fd', ['--color', 'never', '--base-path', '.', '--', partial + '*'], { cwd: runtime.cwd }, (err, stdout) => {
-          if (err) {
-            resolve([]);
-            return;
-          }
-          const files = stdout.trim().split('\n').filter(Boolean);
-          resolve(files);
-        });
-      });
-    } catch (e) {
-      console.error('fd autocomplete error:', e);
-      return [];
-    }
+    return getPathSuggestions(runtime.cwd, partial);
   }, [runtime.cwd]);
 
   const handleAutocomplete = useCallback(async (filter: string): Promise<string[]> => {
@@ -88,22 +72,9 @@ export function useExtensionUIState(runtime: AgentSessionRuntimeInterface): UseE
   }, [runtime.cwd, autocompleteProviderFactories]);
 
   const handleExternalEdit = useCallback(async (text: string): Promise<string> => {
-    const editor = process.env.EDITOR || process.env.VISUAL || 'vim';
-    const fs = await import('node:fs');
-    const path = await import('node:path');
-    const os = await import('node:os');
-    const { spawnSync } = await import('node:child_process');
-    const tmpdir = os.tmpdir();
-    const dir = fs.mkdtempSync(path.join(tmpdir, 'picro-'));
-    const filepath = path.join(dir, 'edit.txt');
-    try {
-      fs.writeFileSync(filepath, text || '', 'utf-8');
-      spawnSync(editor, [filepath], { stdio: 'inherit', cwd: runtime.cwd });
-      const newText = fs.readFileSync(filepath, 'utf-8');
-      return newText;
-    } finally {
-      fs.rmSync(dir, { recursive: true, force: true });
-    }
+    const result = await editWithExternalEditor(text, runtime.cwd);
+    if (result.type === 'text') return result.text;
+    return text; // fallback to original on error
   }, [runtime.cwd]);
 
   const setupExtensionShortcuts = useCallback((runner: any) => {
