@@ -1726,3 +1726,34 @@ ContextBuilder computed available tokens for history as `maxTokens - reservedTok
 - No functional changes.
 
 **Testing**: Build passes; all tests pass (3000+).
+
+### Evolution Loop Closure (2026-06-25)
+
+**Summary**: Automated evolution loop terminated after successful completion of Rounds 111-117.
+
+**Exit Condition**:
+- No test/build failures (3000+ tests passing, build clean)
+- No actionable TODO items remaining
+- All quality targets exceeded (coverage ≥80%, security 100%, functions ≤20)
+- System stable and production-ready
+
+**Rounds Completed**:
+- 111: Disabled memory injection by default (critical fix)
+- 112: Added last token count display in TUI footer
+- 113: Extracted `buildLlmContext` into helper methods
+- 114: Extracted `AgentSession.prompt` into smaller methods
+- 115: Added context usage warning in TUI footer
+- 116: Extracted `prepareNextTurn` hook logic into `_runPreRoundHooks`
+- 117: Extracted memory retrieval into `_retrieveMemoriesForRound`
+
+**Final Metrics**:
+- Tests: 3000+ passing, 0 failures
+- Coverage: statements ~84%, branches ≥90%, functions ~87%
+- Security: 0 vulnerabilities
+- Build: Clean
+
+**Next Phase**: Await user feedback or new feature requests. No further automated rounds planned.
+
+---
+
+*Auto-maintained by evolution agent.*
