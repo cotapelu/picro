@@ -22,6 +22,20 @@ This file tracks agent performance and evolution metrics.
 - **Regressions**: None
 - **MTTR**: ~30 minutes (diagnosis and fix)
 
+### Iteration 2 (2025-06-26)
+
+- **Focus**: Implement JSON-RPC mode for external tool integration
+- **Tasks Completed**:
+  - Implemented full JSON-RPC 2.0 server in `src/modes/rpc-mode.ts`.
+  - Exposed runtime methods: agent.prompt, agent.cycleModel, agent.setThinkingLevel, agent.getMessages, agent.abort, session.*, settings.*, auth.*, clipboard.
+  - Updated `AgentSessionRuntimeInterface` to include optional `options` parameter for `fork` method, aligning interface with implementation.
+  - Added proper error handling and line-delimited request/response protocol.
+- **Test Results**: All existing tests still pass; no new tests added (future work).
+- **Rollbacks**: 0
+- **Regressions**: None
+- **MTTR**: ~45 minutes (implementation + debugging type mismatch)
+
 ## Summary
 
-Build now succeeds, all tests pass, and the agent can run in text/print mode. RPC mode remains a stub; TUI mode requires further work (e.g., implementing missing `app-events` sync). Overall stability improved dramatically.
+Build stable, tests passing. Print mode works; RPC mode now fully implemented and ready for use. TUI mode still needs validation. Next: verify TUI startup and add streaming/abort capabilities.
+

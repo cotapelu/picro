@@ -4,31 +4,32 @@ This outline tracks planned changes, refactors, and anticipated technical debt.
 
 ## Completed (v0.0.1+)
 
-- **Print Mode Implementation**: Basic print mode that sends messages and prints last assistant response. Supports text and JSON output.
-- **RPC Mode Stub**: Placeholder for future JSON-RPC over stdio.
-- **Type Corrections**: Aligned `cycleModel` signature; removed private field from interface.
-- **Build Stability**: Fixed missing test setup and removed obsolete copy step.
+- **Build Stability**: Fixed missing test setup, removed obsolete copy step, all tests pass.
+- **Print Mode**: Basic print mode with text/JSON output; extracts last assistant response.
+- **RPC Mode**: Full JSON-RPC 2.0 implementation over stdin/stdout. Exposes agent, session, settings, auth, clipboard APIs.
+- **Type Corrections**: Aligned `cycleModel` signature (`forward`/`backward`, Promise return); added optional `options` to `fork` method in runtime interface; removed private field from session interface.
 
 ## In Progress
 
-- **TUI Mode Completion**: The interactive TUI imports `./app-events.js` which exists (as `.ts`) but may need runtime checks. Need to verify TUI boots correctly.
-- **Prompt Mode Enhancements**: Currently print-mode only prints the last assistant response. Consider streaming output or full conversation export.
+- **TUI Mode Validation**: Verify interactive TUI boots correctly; fix any missing imports or event wiring.
+- **Print Mode Enhancements**: Consider streaming response or full conversation output.
 
 ## Planned
 
-- **RPC Mode Implementation**: Implement JSON-RPC protocol on stdin/stdout for external tool integration.
-- **Print Mode Streaming**: Add option to stream responses as they arrive, not just final.
 - **Cancelation Support**: Allow aborting long-running agent runs via SIGINT or internal abort.
-- **Model Cycling in Print Mode**: Expose cycleModel via CLI flags or environment for testing.
-- **Refactor AgentSessionInterface**: Clean up optional vs required methods, possibly split into smaller interfaces.
-- **Performance Tracking**: Enable and expose metrics collection in print mode.
+- **Model Cycling in Print Mode**: Expose cycleModel via CLI flags for headless usage.
+- **Refactor AgentSessionInterface**: Clean up optional vs required, split into focused interfaces.
+- **Performance Tracking**: Enable and expose metrics in print/RPC modes.
+- **Unit Tests for Modes**: Add tests for print-mode and RPC mode request handling.
 
 ## Anticipated Debt
 
-- The quick fix for `cycleModel` return type may cause issues if UI expects a non-Promise (older sync style). Should consider converting interface to Promise or keep async consistent.
-- Print mode uses a hack to extract last assistant message from history; this may miss multi-block thinking output. A better approach is to capture via events.
+- Print mode extracts last assistant message via history scan; may miss thinking blocks. Prefer event-based capture.
+- RPC mode does not yet support streaming responses; all results are wait-for-completion.
+- Interface drift risk remains; need automated contract checks.
 
 ## Risk Assessment
 
-- Low risk: Existing test suite guards core agent loop.
-- Medium risk: Print mode implementation may need adjustments once TUI is stable.
+- Low risk: Core agent loop well-tested.
+- Medium risk: RPC mode may require adjustments as new features are added; integration testing needed.
+
