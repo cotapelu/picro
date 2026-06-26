@@ -12,8 +12,10 @@
 
 ## OOM Fix and Memory Management
 
-- [x] Truncate bash output (50KB/2000 lines) – DONE (d435472)
-- [ ] Test large scan (500+ files)
+- [x] Truncate bash output (50KB/2000 lines) – DONE (d435472, ab8d79d)
+- [x] Add memory safeguards (MAX_TOOL_TURNS=1000, MAX_TOOL_RESULTS=1000) – DONE (ab8d79d)
+- [x] Fix test suite (memory injection default, skills, transformContext) – DONE (08ee401)
+- [ ] Test large scan (500+ files) – manual verification
 - [ ] Apply similar truncation to grep/find if needed
 - [ ] Consider pre-request compaction trigger (optional)
 - [ ] Monitor memory usage in production

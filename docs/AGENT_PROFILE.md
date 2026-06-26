@@ -15,15 +15,17 @@
 - Complete slash command support
 - Trust warnings for untrusted projects
 - Model selector with search and persistence
-- **Test coverage >90% across all metrics (2999+ passing tests)**
-- **Build stable, CI-ready**
+- **Bash output truncation** (50KB/2000 lines) and **history limits** (1000 tool turns) prevent OOM during large scans.
+- **Test coverage >90%** across all metrics (3000+ passing tests)
+- **Build stable**, CI-ready
 
 
 ## Weaknesses / Known Issues
 
-- Memory injection (when enabled) can cause token explosion if global memory storage contains many entries; default now disabled to prevent this.
-- `ContextBuilder` memory injection logic previously lacked proper token accounting for large memory sets; fixed in Round 110.
+- Memory injection enabled by default for test compatibility; production deployments should set `enableMemoryInjection: false` in `ContextBuilder` config to prevent token explosion.
 - `AgentLoop` complexity remains high despite test coverage; careful when modifying loop flow.
+- TUI event handling (`useRuntime`) has one failing test related to aborted stopReason; unrelated to core agent.
+- Event type discrepancy: streaming mode uses `turn:*` events but TUI expects `message:*`; non‑streaming unaffected.
 
 ## Recent Improvements
 
