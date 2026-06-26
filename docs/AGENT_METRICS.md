@@ -109,6 +109,7 @@
 | 114    | 2026-06-26 | Add memory safeguards (MAX_TOOL_TURNS=1000) to limit history and toolResults | 3000+      | 0           | 0         |
 | 115    | 2026-06-26 | Fix test suite: enable memory injection by default, always include skills, prioritize transformContext | 3000+      | 0           | 0         |
 | 121    | 2026-06-26 | Fixed TUI event handling: aborted stopReason now displays 'aborted' correctly; all tests passing (3000+) | 3000+      | 0           | 0         |
+| 122    | 2026-06-26 | Reduced read-tool default truncation limits to 100KB/2000 lines, aligning with bash tool and further reducing memory footprint | 3000+      | 0           | 0         |
 
 ## Quality Indicators
 

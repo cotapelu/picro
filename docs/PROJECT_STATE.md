@@ -147,7 +147,8 @@ No further automated evolution rounds planned. Awaiting user feedback or specifi
 - **Round 119 (2026-06-26)**: AgentLoop memory safeguards. Enforced history size limits (MAX_TOOL_TURNS=1000, MAX_TOOL_RESULTS=1000) with automatic eviction of oldest tool turns/results. Added metrics `historyEvictions` and `toolResultsEvictions`.
 - **Round 120 (2026-06-26)**: Test suite stabilization. Changed `ContextBuilder` default to `enableMemoryInjection=true`; system prompt always includes provided skills; `AgentLoop.buildLlmContext` prioritizes `transformContext` hook. Fixed previously failing tests (memory injection, skills, transformContext).
 - **Round 121 (2026-06-26)**: Fixed TUI event handling – aborted stopReason now displays 'aborted' correctly; all tests passing (3000+).
-- **Evolution Loop Closure**: All rounds 111-121 completed successfully. All targets exceeded (coverage ≥80%, security 100%, functions ≤20). System production-ready with OOM safeguards active. No further automated rounds planned.
+- **Round 122 (2026-06-26)**: Reduced read-tool default truncation limits to 100KB/2000 lines, aligning with bash tool and further reducing memory footprint.
+- **Evolution Loop Closure**: All rounds 111-122 completed successfully. All targets exceeded (coverage ≥80%, security 100%, functions ≤20). System production-ready with OOM safeguards active. No further automated rounds planned.
 - Backend tests: 3000+ passed; all core suites green.
 
 ### 🎯 Next Tasks
