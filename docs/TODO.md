@@ -18,7 +18,7 @@
 - [x] Reduce read-tool default limits to 100KB/2000 lines – DONE (f5e4ff8)
 - [x] Add unit tests for AgentLoop memory safeguards – DONE (current commit)
 - [ ] Test large scan (500+ files) – manual verification
-- [ ] Apply similar truncation to grep/find if needed (likely unnecessary due to existing limits)
+- [x] Apply similar truncation to grep/find if needed – assessed; existing limits on match/entry counts sufficient, additional truncation not required
 - [ ] Consider pre-request compaction trigger (optional)
 - [ ] Monitor memory usage in production
 
