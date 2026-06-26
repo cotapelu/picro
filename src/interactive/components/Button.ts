@@ -1,5 +1,4 @@
 // Button component - for modals and menus
-import type { BoxProps } from '../tui/Box'; // We'll use our Box or create simple text
 
 export interface ButtonProps {
   /**
