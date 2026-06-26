@@ -1,97 +1,92 @@
-# InteractiveMode Compatibility TODO
+# TODO: Fix OOM and Improve Stability
 
-## Background
-Picro cần tương thích với `InteractiveMode` từ `pi-coding-agent`. Reference implementation dùng **turn-based event model** (`turn:start`/`turn:end`) và **draining pending messages** (steering/follow-up) sau mỗi turn.
-
-## Current State
-- TUI loads nhưng input không hiển thị response.
-- AgentLoop hiện đang dùng `message:start`/`message:end` và chưa drain queue.
-- `AgentSession.isStreaming` chưa phản ánh đúng trạng thái.
-- Thiếu field `turn` trong forwarded events → InteractiveMode crash.
-
-## Required Fixes (in order)
-
-### 1. AgentRuntimeState (types)
-- [x] Add `isRunning: boolean` (already exists)
-- [ ] Remove `isStreaming` if added (optional, but cleaner)
-
-### 2. AgentLoop (`src/agent/agent-loop.ts`)
-#### Essential changes:
-- [ ] `run()` and `stream()` must set `this.state.isRunning = true` at start and `false` at end (try/finally).
-- [ ] Replace `message:start` / `message:end` events with `turn:start` / `turn:end`.
-  - Streaming branch: emit `turn:start` when assistant message begins, `turn:end` when it ends.
-  - Non-stream branch: emit `turn:start` and `turn:end` appropriately.
-- [ ] Ensure `turn:end` event payload includes `turn` (assistant message) and `toolResults`.
-- [ ] **Drain pending messages** after each turn (before checking `shouldStopAfterTurn`):
-  ```ts
-  const steering = this.config.getSteeringMessages?.() || [];
-  const followUp = this.config.getFollowUpMessages?.() || [];
-  if (steering.length || followUp.length) {
-    // Append as user turns to this.state.history
-    for (const msg of steering) { /* push user turn */ }
-    for (const msg of followUp) { /* push user turn */ }
-    continue; // Next iteration will call LLM again
-  }
-  ```
-- [ ] Call `shouldStopAfterTurn` only after draining check? Actually reference: after `turn_end`, check `shouldStopAfterTurn`; if false, drain and continue.
-
-### 3. AgentSession (`src/session/agent-session.ts`)
-#### a. Queue wiring
-- [ ] In constructor, set:
-  ```ts
-  (this.agent.getConfig() as any).getSteeringMessages = () => this._steeringMessages;
-  (this.agent.getConfig() as any).getFollowUpMessages = () => this._followUpMessages;
-  ```
-
-#### b. `isStreaming` getter
-- [ ] Simplify: `return this.agent.getState().isRunning;` (remove `_isPromptRunning` flag or keep separately if needed for other purposes).
-- [ ] Ensure `_isPromptRunning` is removed or not used for `isStreaming`.
-
-#### c. Event forwarding
-- [ ] In `_handleAgentEvent`, forward `turn:start` and `turn:end` to session listeners:
-  ```ts
-  if (event.type === 'turn:start' || event.type === 'turn:end') {
-    this._emit({
-      type: event.type.replace(':', '_'),
-      timestamp: event.timestamp,
-      round: event.round,
-      turn: event.turn,
-      message: event.turn, // alias for compatibility
-    } as any);
-  }
-  ```
-
-### 4. Agent (`src/agent/agent.ts`)
-- [ ] Add `getConfig(): any` to expose config (already added if not).
-- [ ] Ensure `config` has optional `getSteeringMessages` and `getFollowUpMessages`.
-
-### 5. Test & Verify
-- [ ] Build: `npm run build` clean.
-- [ ] Run TUI with `--mode interactive --provider nvidia --model meta/llama-3.1-70b-instruct --api-key ...`.
-- [ ] Type "hi" and verify:
-  - Response appears in TUI.
-  - No crashes (`event.turn` defined).
-  - Multiple "hi" messages are queued and processed sequentially.
-- [ ] If still issues, add debug logs to trace:
-  - `AgentLoop.executeLoop`: when assistant turn created, when draining queue.
-  - `AgentSession._handleAgentEvent`: event shapes.
-
-## Notes from Reference
-- `agentLoop` uses `AgentMessage[]` but picro uses `ConversationTurn[]`. Conversion is handled in `ContextBuilder`.
-- `shouldStopAfterTurn` hook: reference checks after `turn_end`. Picro should do same.
-- `turn_start` emitted before LLM response stream begins (or immediately for non-stream).
-- `turn_end` emitted immediately after assistant message is finalized (before tool calls? Actually reference emits `turn_end` after assistant message, then executes tools; tool results are added as new turns). Check reference: `turn_end` occurs after assistant message, then tool results are appended as separate turns.
-  - In picro, we can emit `turn_end` after assistant turn is created, then proceed to tool calls if any.
-
-## Implementation Plan (Step-by-Step)
-1. Fix AgentLoop event types and draining logic (core).
-2. Fix AgentSession forwarding and `isStreaming`.
-3. Wire queue access in constructor.
-4. Clean up debug logs.
-5. Test.
+**Last Updated:** 2026-06-26  
+**Status:** In Progress – OOM fix applied, testing needed
 
 ---
 
-**Status (2026-06-22)**: All items satisfied by current architecture. Multi-turn conversation works continuously. No further action required.
+## Problem
 
-Last updated: 2025-06-17
+When scanning large codebases, the agent crashes with:
+```
+FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory
+```
+
+**Root Cause**: Bash tool (used for `ls`, `grep`, `find`, `read`) returns full output without truncation. Large outputs (many files, long files) accumulate in memory as `ToolTurn` objects, causing heap overflow before compaction can trigger.
+
+---
+
+## Solution Implemented
+
+### 1. Truncate Bash Output
+- Added `src/utils/truncate.ts` from reference implementation (`llm-context/agent/src/harness/utils/truncate.ts`)
+- Updated `src/tools/bash-tool.ts` to use `truncateHead()` before storing output
+- Default limits: **50KB** or **2000 lines** (whichever comes first)
+- Original output length preserved in `details.fullOutputLength` for reference
+
+**Commit**: `d435472 fix: truncate bash output to prevent OOM during large scans`
+
+**Risk**: Low – Non-breaking change; output is truncated but still contains enough context (head of file/ls output). Agent can still work with truncated data.
+
+---
+
+## Remaining Tasks
+
+### 2. Test Large Scan Scenario
+- [ ] Run scan on a codebase with 500+ files
+- [ ] Monitor memory usage (should stay under 500MB)
+- [ ] Verify no OOM crashes
+- [ ] Confirm agent can still read file contents effectively (even if truncated)
+
+### 3. Consider Truncation for Other Tools
+- [ ] `grep` output may also be large – ensure truncate applied
+- [ ] `find` output – same
+- [ ] If any tool reads raw file content via `fs.readFile` (not bash), apply similar truncation
+
+### 4. Improve Compaction Trigger (Optional)
+- Current compaction runs only after `agent:end` (when assistant message completes)
+- Could add pre-request token check to trigger compaction earlier if context nearing limit
+- Reference: `pi-agent-core` does not have this either; relies on LLM overflow error
+
+### 5. InteractiveMode Compatibility
+- [ ] Fix event type mismatches (kebab-case vs snake_case)
+- [ ] Ensure `turn:start` / `turn:end` emitted correctly
+- [ ] Test TUI interactive mode end-to-end
+
+### 6. Explore Migration to pi-agent-core (Long-term)
+- Current custom `AgentLoop` works but has maintenance burden
+- Migration would align with reference and inherit fixes
+- High risk – requires extensive testing
+- **Defer until after OOM issue fully resolved and validated**
+
+---
+
+## Testing Strategy
+
+1. Unit tests for truncate function (already from reference, but add edge cases)
+2. Integration test: simulate large `ls` output, verify truncation
+3. Manual test: `scan` command on a large project
+4. Memory profiling: compare before/after
+
+---
+
+## Success Criteria
+
+- [ ] Scan 1000+ files without OOM
+- [ ] Memory usage stays bounded (< 500MB typical, < 1GB extreme)
+- [ ] Agent can still answer questions about code (truncated data is sufficient)
+- [ ] No regression in normal operations
+- [ ] Build passes, tests pass (coverage ≥80%)
+
+---
+
+## Notes
+
+- Reference implementation uses same truncate defaults (50KB/2000 lines)
+- This fix directly addresses the OOM reported by user
+- No changes to AgentLoop or compaction logic required – simple truncation at source is sufficient
+- If later we find that truncation loses critical info, we can tune `maxBytes`/`maxLines` via config
+
+---
+
+**Next Step**: Manual testing of scan with large codebase, verify memory stability.
