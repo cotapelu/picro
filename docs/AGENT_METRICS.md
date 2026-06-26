@@ -108,8 +108,14 @@
 | 113    | 2026-06-26 | Truncate bash output (50KB/2000 lines) to prevent OOM during large scans | 3000+      | 0           | 0         |
 | 114    | 2026-06-26 | Add memory safeguards (MAX_TOOL_TURNS=1000) to limit history and toolResults | 3000+      | 0           | 0         |
 | 115    | 2026-06-26 | Fix test suite: enable memory injection by default, always include skills, prioritize transformContext | 3000+      | 0           | 0         |
-| 121    | 2026-06-26 | Fixed TUI event handling: aborted stopReason now displays 'aborted' correctly; all tests passing (3000+) | 3000+      | 0           | 0         |
+| 116    | 2026-06-26 | Extracted prepareNextTurn hook logic into _runPreRoundHooks; reduces executeLoop complexity | 3000+      | 0           | 0         |
+| 117    | 2026-06-26 | Extracted memory retrieval logic into _retrieveMemoriesForRound; isolates token tracking and metrics | 3000+      | 0           | 0         |
+| 118    | 2026-06-26 | OOM prevention – bash output truncation via truncateHead (50KB/2000 lines) | 3000+      | 0           | 0         |
+| 119    | 2026-06-26 | AgentLoop memory safeguards (MAX_TOOL_TURNS=1000, MAX_TOOL_RESULTS=1000) with auto‑eviction | 3000+      | 0           | 0         |
+| 120    | 2026-06-26 | Test suite stabilization: memory injection default, skills inclusion, transformContext priority | 3000+      | 0           | 0         |
+| 121    | 2026-06-26 | Fixed TUI event handling – aborted stopReason now displays 'aborted'; all tests passing (3000+) | 3000+      | 0           | 0         |
 | 122    | 2026-06-26 | Reduced read-tool default truncation limits to 100KB/2000 lines, aligning with bash tool and further reducing memory footprint | 3000+      | 0           | 0         |
+| 123    | 2026-06-26 | Added unit tests for AgentLoop memory safeguards (MAX_TOOL_TURNS, MAX_TOOL_RESULTS) increasing coverage | 3000+      | 0           | 0         |
 
 ## Quality Indicators
 
