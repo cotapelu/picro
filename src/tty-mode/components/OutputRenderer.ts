@@ -37,6 +37,18 @@ export const LIGHT_THEME: Theme = {
   codeText: '\x1b[34m',
 };
 
+export const MATRIX_THEME: Theme = {
+  user: '\x1b[32m', // green
+  assistant: '\x1b[33m', // yellow
+  system: '\x1b[36m', // cyan
+  tool: '\x1b[90m',
+  error: '\x1b[31m',
+  success: '\x1b[32;1m',
+  info: '\x1b[34m',
+  codeBg: '\x1b[48;5;22m', // dark green background
+  codeText: '\x1b[32;1m',
+};
+
 export class OutputRenderer {
   private theme: Theme;
   private spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];

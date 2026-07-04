@@ -78,6 +78,7 @@ export interface Settings {
   transport?: "sse" | "websocket" | "polling";
   steeringMode?: "all" | "one-at-a-time";
   followUpMode?: "all" | "one-at-a-time";
+  disabledTools?: string[];
   theme?: string;
   compaction?: CompactionSettings;
   branchSummary?: BranchSummarySettings;
@@ -609,6 +610,25 @@ export class SettingsManager {
   setFollowUpMode(mode: "all" | "one-at-a-time"): void {
     this.globalSettings.followUpMode = mode;
     this.markModified("followUpMode");
+    this.save();
+  }
+
+  // Tool management
+  getDisabledTools(): string[] {
+    return this.settings.disabledTools || [];
+  }
+
+  setToolDisabled(name: string, disabled: boolean): void {
+    const current = this.settings.disabledTools || [];
+    let updated: string[];
+    if (disabled) {
+      if (current.includes(name)) return; // already disabled
+      updated = [...current, name];
+    } else {
+      updated = current.filter(t => t !== name);
+    }
+    this.globalSettings.disabledTools = updated;
+    this.markModified('disabledTools');
     this.save();
   }
 

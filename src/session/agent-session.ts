@@ -436,6 +436,23 @@ export class AgentSession {
     return this._toolDefinitions.get(name);
   }
 
+  /** Get all configured tools with description and parameters */
+  getTools(): Array<{ name: string; description: string; parameters: any }> {
+    return Array.from(this._toolDefinitions.values()).map(def => ({
+      name: def.name,
+      description: def.description,
+      parameters: def.parameters,
+    }));
+  }
+
+  getActiveTools(): string[] {
+    return this.getActiveToolNames();
+  }
+
+  setActiveTools(names: string[]): void {
+    this.setActiveToolsByName(names);
+  }
+
   /** Build system prompt from current tool snippets and guidelines */
   private _buildSystemPrompt(): string {
     const toolGuidelines = Array.from(this._toolPromptGuidelines.values()).flat();

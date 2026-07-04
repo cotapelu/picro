@@ -129,6 +129,71 @@ describe('CommandProcessor', () => {
     });
   });
 
+  describe('/tools command', () => {
+    it('should list tools', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const mockTools = [
+        { name: 'read', description: 'Read file', parameters: {} },
+        { name: 'bash', description: 'Run bash', parameters: {} },
+      ];
+      const ttyApi = {
+        getRl: () => ({ prompt: vi.fn() }),
+        getRuntime: () => ({ session: { getTools: vi.fn(() => mockTools), getActiveTools: vi.fn(() => ['read']) } }),
+      } as any;
+      await processor.execute(ttyApi, 'tools', []);
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Tools:'));
+    });
+
+    it('should enable tool', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const setActiveTools = vi.fn().mockResolvedValue(undefined);
+      const ttyApi = {
+        getRl: () => ({ prompt: vi.fn() }),
+        getRuntime: () => ({ session: { getActiveTools: vi.fn(() => []), setActiveTools } }),
+      } as any;
+      await processor.execute(ttyApi, 'tools', ['enable', 'read']);
+      expect(setActiveTools).toHaveBeenCalledWith(['read']);
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Enabled tool: read'));
+    });
+
+    it('should disable tool', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const setActiveTools = vi.fn().mockResolvedValue(undefined);
+      const ttyApi = {
+        getRl: () => ({ prompt: vi.fn() }),
+        getRuntime: () => ({ session: { getActiveTools: vi.fn(() => ['read', 'bash']), setActiveTools } }),
+      } as any;
+      await processor.execute(ttyApi, 'tools', ['disable', 'read']);
+      expect(setActiveTools).toHaveBeenCalledWith(['bash']);
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Disabled tool: read'));
+    });
+  });
+
+  describe('/theme command', () => {
+    it('should list themes', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const ttyApi = {
+        getRl: () => ({ prompt: vi.fn() }),
+        config: {},
+      } as any;
+      await processor.execute(ttyApi, 'theme', []);
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Available themes'));
+    });
+
+    it('should set theme', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const mockConfig = { set: vi.fn() };
+      const ttyApi = {
+        getRl: () => ({ prompt: vi.fn() }),
+        config: mockConfig,
+        output: { setTheme: vi.fn() },
+      } as any;
+      await processor.execute(ttyApi, 'theme', ['set', 'matrix']);
+      expect(mockConfig.set).toHaveBeenCalledWith('theme', 'matrix');
+      expect(ttyApi.output.setTheme).toHaveBeenCalled();
+    });
+  });
+
   describe('/settings command', () => {
     it('should list settings', async () => {
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});

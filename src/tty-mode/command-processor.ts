@@ -1,5 +1,6 @@
 // CommandProcessor – Slash commands registry and execution
 import type { MenuItem } from './menu-system.js';
+import { DARK_THEME, LIGHT_THEME, MATRIX_THEME } from './components/OutputRenderer.js';
 
 interface TTYModeApi {
   getRl?(): any;
@@ -64,6 +65,16 @@ export class CommandProcessor {
       name: 'settings',
       description: 'View or edit settings: list, set <key> <value>, reset',
       execute: async (api, args) => await this.handleSettings(api, args),
+    });
+    this.register({
+      name: 'tools',
+      description: 'List, enable, disable built-in tools',
+      execute: async (api, args) => await this.handleTools(api, args),
+    });
+    this.register({
+      name: 'theme',
+      description: 'Set color theme: list, set <dark|light|matrix>',
+      execute: async (api, args) => await this.handleTheme(api, args),
     });
     this.register({
       name: 'quit',
@@ -281,6 +292,105 @@ export class CommandProcessor {
     }
 
     console.log('Usage: /settings [list|set <key> <value>|reset]');
+    (api.getRl as any)?.prompt?.();
+  }
+
+  private handleTheme(api: TTYModeApi, args: string[]): void {
+    const tty = api as any;
+    const configManager = (tty as any).config as any;
+    if (!configManager) {
+      console.log('Config manager not available.');
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    if (args.length === 0 || args[0] === 'list') {
+      console.log('\nAvailable themes:');
+      console.log('  dark   - Dark background (default)');
+      console.log('  light  - Light background');
+      console.log('  matrix - Green matrix style');
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    if (args[0] === 'set' && args[1]) {
+      const allowed = ['dark', 'light', 'matrix'];
+      const theme = args[1];
+      if (!allowed.includes(theme)) {
+        console.log(`Invalid theme. Choose from: ${allowed.join(', ')}`);
+        (api.getRl as any)?.prompt?.();
+        return;
+      }
+      configManager.set('theme', theme);
+      console.log(`✅ Theme set to ${theme}. Restart TTY to apply full effect.`);
+      // Also try to update output renderer immediately if possible
+      const output = (tty as any).output as any;
+      if (output?.setTheme) {
+        const themeMap: Record<string, any> = { dark: DARK_THEME, light: LIGHT_THEME, matrix: MATRIX_THEME };
+        output.setTheme(themeMap[theme]);
+      }
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    console.log('Usage: /theme [list|set <dark|light|matrix>]');
+    (api.getRl as any)?.prompt?.();
+  }
+
+  private async handleTools(api: TTYModeApi, args: string[]): Promise<void> {
+    const runtime = api.getRuntime();
+    if (!runtime?.session) {
+      console.log('Session not available.');
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+    const session = runtime.session as any;
+
+    if (args.length === 0 || args[0] === 'list') {
+      const allTools = session.getTools?.() || [];
+      const activeTools = session.getActiveTools?.() || [];
+      if (allTools.length === 0) {
+        console.log('No tools available.');
+      } else {
+        console.log('\nTools:');
+        const rows = allTools.map((t: any) => [
+          t.name,
+          activeTools.includes(t.name) ? '✅' : '❌',
+          t.description || '-',
+        ]);
+        console.table(rows as any);
+      }
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    if (args[0] === 'enable' && args[1]) {
+      const name = args[1];
+      const current = session.getActiveTools?.() || [];
+      if (!current.includes(name)) {
+        await session.setActiveTools?.([...current, name]);
+        console.log(`✅ Enabled tool: ${name}`);
+      } else {
+        console.log(`Tool ${name} already enabled.`);
+      }
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    if (args[0] === 'disable' && args[1]) {
+      const name = args[1];
+      const current = session.getActiveTools?.() || [];
+      if (current.includes(name)) {
+        await session.setActiveTools?.(current.filter((t: string) => t !== name));
+        console.log(`✅ Disabled tool: ${name}`);
+      } else {
+        console.log(`Tool ${name} not active.`);
+      }
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    console.log('Usage: /tools [list|enable <name>|disable <name>]');
     (api.getRl as any)?.prompt?.();
   }
 

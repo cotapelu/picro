@@ -30,6 +30,9 @@ export interface AgentSessionInterface {
 
   // Tool definitions
   getToolDefinition(name: string): any;
+  getTools(): Array<{ name: string; description: string; parameters: any }>;
+  getActiveTools(): string[];
+  setActiveTools(names: string[]): void;
 
   // Model handling
   cycleModel(direction?: "forward" | "backward"): Promise<{ model: any; thinkingLevel?: string } | undefined>;
