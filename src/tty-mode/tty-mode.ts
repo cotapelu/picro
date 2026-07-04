@@ -1,76 +1,73 @@
 // TTYMode – Orchestrator for interactive TTY experience
-import { InputHandler } from './input-handler.js';
 import { MenuSystem } from './menu-system.js';
 import { CommandProcessor } from './command-processor.js';
-
-export interface TTYModeOptions {
-  prompt?: string;
-  welcomeMessage?: string;
-}
+import { InputHandler, PromptLine, OutputRenderer } from './components/index.js';
+import type { AgentSessionRuntimeInterface } from '../runtime/agent-session-interfaces.js';
 
 export class TTYMode {
-  private runtime: any;
+  private runtime: AgentSessionRuntimeInterface;
   private prompt = '> ';
   private welcomeMessage = '🧠 picro agent ready. Type your message (Ctrl+C to exit).';
 
-  private input = new InputHandler();
+  private promptLine!: PromptLine;
+  private output = new OutputRenderer();
   private menuRenderer = new MenuSystem(this as any, 'Commands');
   private commandProcessor = new CommandProcessor();
   private inMenu = false;
 
-  constructor(runtime: any, options?: TTYModeOptions) {
+  constructor(runtime: AgentSessionRuntimeInterface, options?: { prompt?: string; welcomeMessage?: string }) {
     this.runtime = runtime;
     if (options?.prompt) this.prompt = options.prompt;
     if (options?.welcomeMessage) this.welcomeMessage = options.welcomeMessage;
   }
 
   async start(): Promise<void> {
-    this.setupRawMode();
+    this.setupPromptLine();
     this.subscribeToEvents();
     console.log(this.welcomeMessage);
-    this.showPrompt();
+    this.promptLine.show();
     await this.waitForever();
   }
 
   stop(): void {
     process.stdin.setRawMode(false);
     process.stdin.removeAllListeners();
-    process.stdout.write('\n\x1b[0m\x1b[?25h');
+    this.output.clearLine();
+    this.output.showCursor();
     process.exit(0);
   }
 
   getRl(): null { return null; }
   getMenuRenderer<T = any>(): MenuSystem<T> { return this.menuRenderer as any; }
   getCommands() { return this.commandProcessor.getAll(); }
+
   setRawMode(enabled: boolean): void { if (enabled) process.stdin.setRawMode(true); else process.stdin.setRawMode(false); }
-  hideCursor(): void { process.stdout.write('\x1b[?25l'); }
-  showCursor(): void { process.stdout.write('\x1b[?25h'); }
-  clearLine(): void { process.stdout.write('\x1b[2K\r'); }
-  moveUp(lines: number = 1): void { process.stdout.write(`\x1b[${lines}A`); }
+  hideCursor(): void { this.output.hideCursor(); }
+  showCursor(): void { this.output.showCursor(); }
+  clearLine(): void { this.output.clearLine(); }
+  moveUp(lines: number = 1): void { this.output.moveUp(lines); }
   write(text: string): void { process.stdout.write(text); }
   onKeypress(handler: (key: any, char: string | undefined) => void): () => void {
-    return this.input.onKeypress(handler);
+    // Not used directly; promptLine handles keys
+    return () => {};
   }
+  setInMenu(enabled: boolean): void { this.inMenu = enabled; }
 
   // Private
-  private setupRawMode(): void {
+  private setupPromptLine(): void {
     process.stdin.setRawMode(true);
     process.stdin.resume();
     process.stdin.setEncoding('utf8');
 
-    this.input.setCallbacks(
+    this.promptLine = new PromptLine(
+      this.prompt,
       (line) => this.handleUserMessage(line),
       () => this.showCommandsMenu()
     );
-
-    process.stdin.on('keypress', (key: any, char: string | undefined) => {
-      this.input.handleKey(key, char);
-    });
   }
 
   private showPrompt(): void {
-    this.input.clear();
-    process.stdout.write(this.prompt);
+    this.promptLine.show();
   }
 
   private async handleUserMessage(text: string): Promise<void> {
@@ -85,7 +82,7 @@ export class TTYMode {
     try {
       await this.runtime.prompt(text);
     } catch (err) {
-      console.error(`❌ Error: ${(err as Error).message}`);
+      this.output.showError((err as Error).message);
       this.showPrompt();
     }
   }
@@ -93,6 +90,8 @@ export class TTYMode {
   private async handleSlashCommand(line: string): Promise<void> {
     const [cmd, ...args] = line.slice(1).split(' ');
     await this.commandProcessor.execute(this as any, cmd, args);
+    // After command execution, if not in menu, show prompt (command itself may show prompt)
+    if (!this.inMenu) this.showPrompt();
   }
 
   private showCommandsMenu(): void {
@@ -100,10 +99,13 @@ export class TTYMode {
     this.menuRenderer.show(
       items,
       async (item: any) => {
+        this.inMenu = false;
         const cmd = item.value as any;
         await cmd.execute(this as any, []);
+        if (!this.inMenu) this.showPrompt();
       },
       () => {
+        this.inMenu = false;
         this.showPrompt();
       }
     );
@@ -119,11 +121,11 @@ export class TTYMode {
           this.printAssistantResponse();
           break;
         case 'agent_start':
-          process.stdout.write('\r\x1b[2K⏳ Thinking...');
+          this.output.showThinking();
           break;
         case 'agent_end':
         case 'message_start':
-          process.stdout.write('\r\x1b[2K');
+          this.output.clearLine();
           if (!this.inMenu) this.showPrompt();
           break;
       }
@@ -139,8 +141,7 @@ export class TTYMode {
       const content = lastAssistant.content as any[] || [];
       const text = content.filter((c: any) => c.type === 'text').map((c: any) => c.text).join('\n');
       if (text) {
-        process.stdout.write('\n');
-        process.stdout.write(text + '\n');
+        this.output.showAssistantResponse(text);
       }
     }
     if (!this.inMenu) this.showPrompt();

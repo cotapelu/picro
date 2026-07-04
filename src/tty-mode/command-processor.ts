@@ -13,6 +13,7 @@ interface TTYModeApi {
   moveUp?(lines: number): void;
   write?(text: string): void;
   onKeypress?:(handler: (key: any, char: string | undefined) => void) => () => void;
+  setInMenu?(enabled: boolean): void;
 }
 
 export interface Command {
@@ -111,9 +112,11 @@ export class CommandProcessor {
     }
 
     const menu = api.getMenuRenderer<MenuItem>();
+    api.setInMenu?.(true);
     menu.show(
       models,
       (item: any) => {
+        api.setInMenu?.(false);
         const { provider } = item.value as { provider: string; model: any };
         const settings = services.settingsManager;
         if (provider) settings.setDefaultProvider(provider);
@@ -121,6 +124,7 @@ export class CommandProcessor {
         (api.getRl as any)?.prompt?.();
       },
       () => {
+        api.setInMenu?.(false);
         (api.getRl as any)?.prompt?.();
       }
     );

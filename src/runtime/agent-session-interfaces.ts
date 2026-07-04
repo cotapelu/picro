@@ -14,7 +14,7 @@ export interface AgentSessionInterface {
   prompt(text: string, options?: { images?: unknown[] }): Promise<void>;
   subscribe(listener: (event: AgentSessionRuntimeEvent) => void): () => void;
   abort(): void;
-  messages: unknown[];
+  messages: Array<{ role: string; content: unknown[] }>;
   isStreaming: boolean;
   // Thinking level
   get thinkingLevel(): "off" | "minimal" | "low" | "medium" | "high" | "xhigh";

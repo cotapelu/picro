@@ -1,5 +1,5 @@
 // MenuSystem – Interactive menu with keyboard navigation
-import type { InputHandler } from './input-handler.js';
+import { InputHandler } from './components/index.js';
 
 export interface MenuItem<T = any> {
   id: string;
