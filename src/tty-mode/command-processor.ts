@@ -56,6 +56,16 @@ export class CommandProcessor {
       execute: async (api, args) => await this.handleLogin(api, args),
     });
     this.register({
+      name: 'sessions',
+      description: 'Session management: list, switch',
+      execute: async (api, args) => await this.handleSessions(api, args),
+    });
+    this.register({
+      name: 'settings',
+      description: 'View or edit settings: list, set <key> <value>, reset',
+      execute: async (api, args) => await this.handleSettings(api, args),
+    });
+    this.register({
       name: 'quit',
       description: 'Exit interactive mode',
       execute: (api) => api.stop(),
@@ -173,6 +183,104 @@ export class CommandProcessor {
     } catch (err: any) {
       console.log(`❌ Failed: ${err?.message || err}`);
     }
+    (api.getRl as any)?.prompt?.();
+  }
+
+  private async handleSessions(api: TTYModeApi, args: string[]): Promise<void> {
+    const runtime = api.getRuntime();
+    if (!runtime) {
+      console.log('Runtime not available.');
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    if (args.length === 0 || args[0] === 'list') {
+      try {
+        const sessions = await runtime.listSessions();
+        if (sessions.length === 0) {
+          console.log('No sessions.');
+        } else {
+          console.log('\nSessions:');
+          const rows = sessions.map((s: any) => [
+            s.id,
+            s.name || '-',
+            s.cwd,
+            (s.firstMessage || '-').substring(0, 30)
+          ]);
+          console.table(rows as any); // suppress type issues
+        }
+      } catch (err: any) {
+        console.log(`List failed: ${err.message}`);
+      }
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    if (args[0] === 'switch' && args[1]) {
+      const id = args[1];
+      try {
+        const result = await runtime.switchSession(id);
+        if (result.cancelled) {
+          console.log('Switch cancelled.');
+        } else {
+          console.log(`Switched to session ${id}`);
+        }
+      } catch (err: any) {
+        console.log(`Switch failed: ${err.message}`);
+      }
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    console.log('Usage: /sessions [list|switch <id>]');
+    (api.getRl as any)?.prompt?.();
+  }
+
+  private handleSettings(api: TTYModeApi, args: string[]): void {
+    const ttyMode = api as any; // TTYMode instance
+    const configManager = (ttyMode as any).config as any; // access config
+    if (!configManager) {
+      console.log('Config manager not available.');
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    if (args.length === 0 || args[0] === 'list') {
+      const config = configManager.getAll();
+      console.log('\nSettings:');
+      Object.entries(config).forEach(([key, value]) => {
+        console.log(`  ${key}: ${JSON.stringify(value)}`);
+      });
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    if (args[0] === 'set' && args.length >= 3) {
+      const key = args[1];
+      const rawValue = args.slice(2).join(' ');
+      try {
+        // Parse simple types
+        let parsed: any = rawValue;
+        if (rawValue === 'true') parsed = true;
+        else if (rawValue === 'false') parsed = false;
+        else if (!isNaN(Number(rawValue))) parsed = Number(rawValue);
+        configManager.set(key, parsed);
+        console.log(`✅ Set ${key} = ${JSON.stringify(parsed)}`);
+      } catch (err: any) {
+        console.log(`❌ Failed: ${err.message}`);
+      }
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    if (args[0] === 'reset') {
+      configManager.reset();
+      console.log('✅ Settings reset to defaults');
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+
+    console.log('Usage: /settings [list|set <key> <value>|reset]');
     (api.getRl as any)?.prompt?.();
   }
 

@@ -103,4 +103,53 @@ describe('CommandProcessor', () => {
     expect(items[0].label).toMatch(/^\/model/);
     expect(items[1].label).toMatch(/^\/help/);
   });
+
+  describe('/settings command', () => {
+    it('should list settings', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const mockConfig = {
+        getAll: vi.fn(() => ({ historySize: 1000, persistHistory: true })),
+      };
+      const ttyApi = {
+        getRl: () => ({ prompt: vi.fn() }),
+        getRuntime: () => ({}),
+        config: mockConfig,
+      } as any;
+      await processor.execute(ttyApi, 'settings', []);
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Settings:'));
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('historySize'));
+    });
+
+    it('should set setting', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const mockConfig = {
+        set: vi.fn(),
+        getAll: vi.fn(() => ({})),
+      };
+      const ttyApi = {
+        getRl: () => ({ prompt: vi.fn() }),
+        getRuntime: () => ({}),
+        config: mockConfig,
+      } as any;
+      await processor.execute(ttyApi, 'settings', ['set', 'historySize', '2000']);
+      expect(mockConfig.set).toHaveBeenCalledWith('historySize', 2000);
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Set historySize'));
+    });
+
+    it('should reset settings', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const mockConfig = {
+        reset: vi.fn(),
+        getAll: vi.fn(() => ({})),
+      };
+      const ttyApi = {
+        getRl: () => ({ prompt: vi.fn() }),
+        getRuntime: () => ({}),
+        config: mockConfig,
+      } as any;
+      await processor.execute(ttyApi, 'settings', ['reset']);
+      expect(mockConfig.reset).toHaveBeenCalled();
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('reset to defaults'));
+    });
+  });
 });

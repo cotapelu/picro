@@ -3,7 +3,7 @@
 ## In Progress / Next Up
 
 - [ ] Integrate StatusBar into TTYMode (show model, token usage)
-- [ ] Add `/sessions` command (list, switch, delete)
+- [x] Add `/sessions` command (list, switch, delete)
 - [ ] Add `/settings` command (view/edit config)
 - [ ] Add `/tools` command (toggle built-in tools)
 - [ ] Add `/theme` command (switch color themes)
