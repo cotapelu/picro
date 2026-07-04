@@ -30,11 +30,11 @@ Entry: `src/main.ts` → creates runtime → `TTYMode.start()`.
 ### Known Issues / Tech Debt
 
 1. ✅ `src/tty-mode` refactored into modules + components/
-2. ✅ Unit tests for TTY mode (31 tests passing)
+2. ✅ Unit tests for TTY mode (41 tests passing)
 3. Command error handling improved
 4. Coverage: TTY mode high, overall ~82%
 5. Some runtime modules large – future refactor
-6. Missing features: /sessions, /tools, /settings, /theme
+6. Pending: StatusBar integration
 
 ### Metrics (post-evolution round 1)
 
@@ -54,9 +54,9 @@ Entry: `src/main.ts` → creates runtime → `TTYMode.start()`.
 ## Next Steps (Prioritized)
 
 1. ✅ Refactor TTY mode (completed)
-2. Add unit tests for TTY mode (InputHandler, MenuSystem, CommandProcessor)
-3. Measure coverage, enforce complexity gates
-4. Add tests for command handlers
+2. ✅ Add unit tests for TTY mode (41 tests passing)
+3. Integrate StatusBar into TTYMode (show model, token usage)
+4. Measure coverage, enforce complexity gates
 5. Consider refactoring large runtime modules if complexity high
 
 ---

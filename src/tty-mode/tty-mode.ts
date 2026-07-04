@@ -1,7 +1,7 @@
 // TTYMode – Orchestrator for interactive TTY experience
 import { MenuSystem } from './menu-system.js';
 import { CommandProcessor } from './command-processor.js';
-import { InputHandler, PromptLine, OutputRenderer, ConfigManager } from './components/index.js';
+import { InputHandler, PromptLine, OutputRenderer, ConfigManager, StatusBar } from './components/index.js';
 import type { AgentSessionRuntimeInterface } from '../runtime/agent-session-interfaces.js';
 
 export class TTYMode {
@@ -19,6 +19,7 @@ export class TTYMode {
   private output = new OutputRenderer();
   private menuRenderer = new MenuSystem(this as any, 'Commands');
   private commandProcessor = new CommandProcessor();
+  private statusBar = new StatusBar();
   private inMenu = false;
 
   constructor(runtime: AgentSessionRuntimeInterface, options?: { prompt?: string; welcomeMessage?: string }) {
@@ -131,6 +132,7 @@ export class TTYMode {
       switch (event.type) {
         case 'message_end':
           this.printAssistantResponse();
+          this.updateStatusBar();
           break;
         case 'agent_start':
           this.output.showThinking();
@@ -138,6 +140,7 @@ export class TTYMode {
         case 'agent_end':
         case 'message_start':
           this.output.clearLine();
+          this.updateStatusBar();
           if (!this.inMenu) this.showPrompt();
           break;
       }
@@ -157,6 +160,23 @@ export class TTYMode {
       }
     }
     if (!this.inMenu) this.showPrompt();
+  }
+
+  private updateStatusBar(): void {
+    // Check if status bar is enabled
+    if (this.config.get('showStatusBar') === false) return;
+
+    const model = (this.runtime as any).services?.settingsManager?.getDefaultProvider?.() || 'unknown';
+    const session = (this.runtime as any).session;
+    let usage: any = undefined;
+    if (session?.getContextUsage) {
+      usage = session.getContextUsage();
+    }
+
+    const cwd = (this.runtime as any).cwd || '';
+
+    // Render status bar on its own line above prompt
+    this.statusBar.print(model, usage || undefined, cwd);
   }
 
   private waitForever(): Promise<void> {
