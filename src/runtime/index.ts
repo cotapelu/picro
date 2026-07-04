@@ -19,7 +19,7 @@ export type {
   AgentSessionInterface,
   AgentSessionRuntimeInterface,
   AgentSessionRuntimeEvent,
-} from './agent-session-interfaces.js';
+} from './agent-session-runtime-interfaces.js';
 
 // Re-export core & session for convenience
 export { Agent, AgentConfig, AgentRunResult } from '../agent/index.js';

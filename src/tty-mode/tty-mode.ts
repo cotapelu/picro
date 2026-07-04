@@ -2,7 +2,7 @@
 import { MenuSystem } from './menu-system.js';
 import { CommandProcessor } from './command-processor.js';
 import { InputHandler, PromptLine, OutputRenderer, ConfigManager, StatusBar } from './components/index.js';
-import type { AgentSessionRuntimeInterface } from '../runtime/agent-session-interfaces.js';
+import type { AgentSessionRuntimeInterface } from '../runtime/agent-session-runtime-interfaces.js';
 
 export class TTYMode {
   private runtime: AgentSessionRuntimeInterface;

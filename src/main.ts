@@ -18,7 +18,7 @@ import { createAgentSessionServices } from "./session/agent-session-services.js"
 import { createAgentSessionFromServices, type SessionStartEvent } from "./session/agent-session-services.js";
 import { SessionManager } from "./session/session-manager.js";
 import { AgentSessionRuntime } from "./runtime/agent-session-runtime.js";
-import type { AgentSessionInterface } from "./runtime/agent-session-interfaces.js";
+import type { AgentSessionRuntimeInterface } from "./runtime/agent-session-runtime-interfaces.js";
 import { getAgentDir, VERSION } from "./config.js";
 import { resetTimings, time, printTimings } from "./utils/timings.js";
 import { handleConfigCommand } from "./package-manager-cli.js";
@@ -26,7 +26,7 @@ import { runMigrations, showDeprecationWarnings } from "./migrations.js";
 import type { Model } from "./llm/index.js";
 import { TTYMode } from "./tty-mode/index.js";
 
-function subscribeToSessionEvents(runtime: { session: AgentSessionInterface }) {
+function subscribeToSessionEvents(runtime: AgentSessionRuntimeInterface) {
   const session = runtime.session as any;
   console.log('[DEBUG] Subscribing to session events...');
   if (session && typeof session.subscribe === 'function') {
