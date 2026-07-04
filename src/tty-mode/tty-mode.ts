@@ -2,10 +2,10 @@
 import { MenuSystem } from './menu-system.js';
 import { CommandProcessor } from './command-processor.js';
 import { InputHandler, PromptLine, OutputRenderer, ConfigManager, StatusBar } from './components/index.js';
-import type { AgentSessionRuntimeInterface } from '../runtime/agent-session-runtime-interfaces.js';
+import { AgentSessionRuntime } from '../runtime/agent-session-runtime.js';
 
 export class TTYMode {
-  private runtime: AgentSessionRuntimeInterface;
+  private runtime: AgentSessionRuntime;
   private prompt = '> ';
   private welcomeMessage = '🧠 picro agent ready. Type your message (Ctrl+C to exit).';
 
@@ -22,7 +22,7 @@ export class TTYMode {
   private statusBar = new StatusBar();
   private inMenu = false;
 
-  constructor(runtime: AgentSessionRuntimeInterface, options?: { prompt?: string; welcomeMessage?: string }) {
+  constructor(runtime: AgentSessionRuntime, options?: { prompt?: string; welcomeMessage?: string }) {
     this.runtime = runtime;
     if (options?.prompt) this.prompt = options.prompt;
     if (options?.welcomeMessage) this.welcomeMessage = options.welcomeMessage;
