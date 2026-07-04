@@ -104,6 +104,31 @@ describe('CommandProcessor', () => {
     expect(items[1].label).toMatch(/^\/help/);
   });
 
+  describe('/sessions command', () => {
+    it('should list sessions', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const mockSessions = [
+        { id: '1', name: 'test', cwd: '/', firstMessage: 'hello' },
+      ];
+      const ttyApi = {
+        getRl: () => ({ prompt: vi.fn() }),
+        getRuntime: () => ({ listSessions: vi.fn().mockResolvedValue(mockSessions) }),
+      } as any;
+      await processor.execute(ttyApi, 'sessions', []);
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Sessions:'));
+    });
+
+    it('should switch session', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const ttyApi = {
+        getRl: () => ({ prompt: vi.fn() }),
+        getRuntime: () => ({ switchSession: vi.fn().mockResolvedValue({ cancelled: false }) }),
+      } as any;
+      await processor.execute(ttyApi, 'sessions', ['switch', '1']);
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Switched to session 1'));
+    });
+  });
+
   describe('/settings command', () => {
     it('should list settings', async () => {
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
