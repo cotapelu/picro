@@ -82,7 +82,7 @@ export {
 export { FileMutationQueue, type FileMutation, type FileMutationQueueOptions } from './file-mutation-queue.js';
 
 // CLI arguments
-export { parseArgs, type Args, type Mode, type ThinkingLevel as CliThinkingLevel, isValidThinkingLevel } from './cli-args.js';
+export { parseArgs, type Args, type ThinkingLevel as CliThinkingLevel, isValidThinkingLevel } from './cli-args.js';
 
 // Package manager
 export { DefaultPackageManager, type PackageSource, type ResolvedPackage, type PackageManagerOptions } from './package-manager.js';

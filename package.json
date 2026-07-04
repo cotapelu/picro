@@ -8,8 +8,7 @@
     "picro": "./dist/cli.js"
   },
   "scripts": {
-    "build": "tsc && npm run build:tui && chmod +x dist/cli.js",
-    "build:tui": "node scripts/build-tui.js",
+    "build": "tsc && chmod +x dist/cli.js",
     "dev": "VERBOSE=1 picro",
     "test": "vitest run",
     "test:watch": "vitest",

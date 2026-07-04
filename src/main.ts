@@ -2,36 +2,67 @@
 /**
  * Picro Agent - Main entry point.
  *
- * Orchestrates CLI parsing, session management, and interactive/print modes.
+ * Flow: Parse args → Create runtime → Send initial messages → Start TTYMode
  */
 
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { homedir } from "node:os";
 import * as readline from "node:readline";
-import { parseArgs, type Args } from "./runtime/cli-args.js";
+import { parseArgs } from "./runtime/cli-args.js";
 import { processFileArguments, type ProcessedFiles } from "./cli/file-processor.js";
 import { buildInitialMessage, type InitialMessageResult } from "./cli/initial-message.js";
 import { listModels } from "./cli/list-models.js";
 import { selectSession, type SessionsLoader } from "./cli/session-picker.js";
-import { getMissingSessionCwdIssue, MissingSessionCwdError } from "./session/session-cwd.js";
-import { createAgentSessionServices, type AgentSessionServices } from "./session/agent-session-services.js";
+import { getMissingSessionCwdIssue } from "./session/session-cwd.js";
+import { createAgentSessionServices } from "./session/agent-session-services.js";
 import { createAgentSessionFromServices, type SessionStartEvent } from "./session/agent-session-services.js";
 import { SessionManager } from "./session/session-manager.js";
 import { AgentSessionRuntime } from "./runtime/agent-session-runtime.js";
-import { getAgentDir, VERSION, getSettingsPath } from "./config.js";
+import type { AgentSessionInterface } from "./runtime/agent-session-interfaces.js";
+import { getAgentDir, VERSION } from "./config.js";
 import { resetTimings, time, printTimings } from "./utils/timings.js";
 import { handleConfigCommand } from "./package-manager-cli.js";
-import { isLocalPath } from "./utils/paths.js";
 import { runMigrations, showDeprecationWarnings } from "./migrations.js";
-import { resolveAppMode } from "./runtime/app-mode.js";
 import type { Model } from "./llm/index.js";
-// Ink TUI will be dynamically imported to avoid ESM/CJS conflicts
-import { runPrintMode } from "./modes/print-mode.js";
-import { runRpcMode } from "./modes/rpc-mode.js";
-import type { AgentSessionRuntimeDiagnostic } from "./session/agent-session-services.js";
+import { TTYMode } from "./tty-mode.js";
 
-// Load environment variables from .env
+function subscribeToSessionEvents(runtime: { session: AgentSessionInterface }) {
+  const session = runtime.session as any;
+  console.log('[DEBUG] Subscribing to session events...');
+  if (session && typeof session.subscribe === 'function') {
+    const unsub = session.subscribe((event: any) => {
+      if (process.env.VERBOSE) {
+        console.log(`[DEBUG] Event: ${event.type}`, event);
+      }
+      if (event.type === 'message_end') {
+        console.log('[DEBUG] message_end event received');
+        const msgs = session.messages as any[] || [];
+        const lastAssistant = [...msgs].reverse().find((m: any) => m.role === 'assistant');
+        if (lastAssistant) {
+          const content = lastAssistant.content as any[] || [];
+          const text = content.filter((c: any) => c.type === 'text').map((c: any) => c.text).join('\n');
+          if (text) {
+            console.log('');
+            console.log(text);
+          } else {
+            console.log('[No text in response]');
+          }
+        } else {
+          console.log('[No assistant message in history]');
+        }
+      }
+      if (event.type === 'agent_end') {
+        console.log('[DEBUG] agent_end event received');
+        const msgs = session.messages as any[] || [];
+        console.log('[DEBUG] Final messages with full content:', JSON.stringify(msgs, null, 2));
+      }
+    });
+    // Keep unsub if needed later
+  } else {
+    console.warn('[DEBUG] Session does not have subscribe method');
+  }
+}
+
 function loadEnvFile(): void {
   const envPath = join(process.cwd(), ".env");
   if (existsSync(envPath)) {
@@ -50,9 +81,6 @@ function loadEnvFile(): void {
   }
 }
 
-
-
-// Print help message
 function printHelp(): void {
   console.log(`picro - AI coding assistant
 
@@ -65,8 +93,6 @@ Options:
   --api-key <key>                API key (defaults to env vars)
   --system-prompt <text>         System prompt
   --append-system-prompt <text>  Append to system prompt
-  --mode <mode>                  Output mode: tui (default), text, json, or rpc
-  --print, -p                    Non-interactive mode: process prompt and exit
   --continue, -c                 Continue previous session
   --resume, -r                   Select a session to resume
   --session <path|id>            Use specific session file or partial UUID
@@ -102,53 +128,30 @@ Built-in Tool Names:
 `);
 }
 
-// Helper to read all stdin
-function readStdin(timeoutMs: number = 100): Promise<string> {
-  return new Promise<string>((resolve) => {
-    let data = "";
-    process.stdin.setEncoding("utf8");
-    const onData = (chunk: string) => { data += chunk; };
-    const onEnd = () => { resolve(data.trim()); };
-    process.stdin.on("data", onData);
-    process.stdin.on("end", onEnd);
-    process.stdin.resume();
-    // Timeout to prevent hanging when no data is piped
-    setTimeout(() => {
-      process.stdin.removeListener("data", onData);
-      process.stdin.removeListener("end", onEnd);
-      resolve(data.trim());
-    }, timeoutMs);
-  });
-}
-
-// Simple yes/no prompt
-function promptConfirm(message: string): Promise<boolean> {
-  return new Promise<boolean>((resolve) => {
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+async function promptConfirm(message: string): Promise<boolean> {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const ans = await new Promise<string>((resolve) => {
     rl.question(message, (ans: string) => {
       rl.close();
-      resolve(ans.toLowerCase() === "y" || ans.toLowerCase() === "yes");
+      resolve(ans.toLowerCase());
     });
   });
+  return ans === "y" || ans === "yes";
 }
 
-// Resolve a session argument to a file path
 async function resolveSessionPath(
   arg: string,
   cwd: string,
   sessionDir?: string
 ): Promise<{ type: "path" | "local" | "global" | "not_found"; path?: string; cwd?: string; arg: string }> {
   if (arg.includes("/") || arg.includes("\\") || arg.endsWith(".jsonl")) {
-    const path = resolve(arg);
-    return { type: "path", path, arg };
+    return { type: "path", path: resolve(arg), arg };
   }
-  // Try local
   const local = await SessionManager.list(cwd, sessionDir);
   const localMatch = local.find((s) => s.id.startsWith(arg));
   if (localMatch) {
     return { type: "local", path: localMatch.path, arg };
   }
-  // Try global
   const all = await SessionManager.listAll();
   const globalMatch = all.find((s) => s.id.startsWith(arg));
   if (globalMatch) {
@@ -164,7 +167,6 @@ async function main(): Promise<void> {
 
   const args = process.argv.slice(2);
 
-  // Handle config commands early
   if (await handleConfigCommand(args)) {
     return;
   }
@@ -172,12 +174,10 @@ async function main(): Promise<void> {
   const parsed = parseArgs(args);
   time("parseArgs");
 
-  // Enable verbose debugging if flag set
   if (parsed.verbose) {
     process.env.VERBOSE = "true";
   }
 
-  // Handle diagnostics errors
   if (parsed.diagnostics.some((d) => d.type === "error")) {
     for (const d of parsed.diagnostics) {
       const prefix = d.type === "error" ? "Error: " : "Warning: ";
@@ -186,7 +186,6 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // Help, version, list-models
   if (parsed.help) {
     printHelp();
     return;
@@ -196,28 +195,23 @@ async function main(): Promise<void> {
     return;
   }
 
-  const stdinIsTTY = process.stdin.isTTY;
-  const appMode = resolveAppMode(parsed, stdinIsTTY);
-  // DEBUG: Log TTY status and mode
-  if (parsed.verbose) {
-    console.log("DEBUG: stdin.isTTY=", stdinIsTTY, "appMode=", appMode);
+  // Require TTY (no pipe mode)
+  if (!process.stdin.isTTY) {
+    console.error("Error: Interactive mode requires a TTY. Pipe mode is not supported.");
+    process.exit(1);
   }
-  time("resolveAppMode");
 
-  // Setup
   const cwd = process.cwd();
   const agentDir = getAgentDir();
 
-  // Run migrations
   const { migratedAuthProviders, deprecationWarnings } = runMigrations(cwd);
   if (migratedAuthProviders.length > 0) {
     console.log(`Migrated auth config for providers: ${migratedAuthProviders.join(", ")}`);
   }
-  if (appMode === "tui" && deprecationWarnings.length > 0) {
+  if (deprecationWarnings.length > 0) {
     await showDeprecationWarnings(deprecationWarnings);
   }
 
-  // Create services (settings, model registry, resource loader, auth)
   const services = await createAgentSessionServices({
     cwd,
     agentDir,
@@ -231,43 +225,36 @@ async function main(): Promise<void> {
   });
   time("createAgentSessionServices");
 
-  // Handle --provider flag: set default provider
   if (parsed.provider) {
     services.settingsManager.setDefaultProvider(parsed.provider);
   }
 
-  // Handle --api-key flag: store API key for the specified provider
   if (parsed.apiKey) {
     const provider = parsed.provider || services.settingsManager.getDefaultProvider();
     if (!provider) {
       console.error('No provider specified for API key. Use --provider <name> or set defaultProvider in settings.');
       process.exit(1);
     }
-    // Save API key to auth storage
     await services.authStorage.setApiKey(provider, parsed.apiKey);
-    // Also set as default provider if not already
     if (!services.settingsManager.getDefaultProvider()) {
       services.settingsManager.setDefaultProvider(provider);
     }
   }
 
-  // Report diagnostics collected during service creation
   if (services.diagnostics?.length > 0) {
     for (const diag of services.diagnostics) {
       const prefix = diag.type === 'error' ? 'Error' : diag.type === 'warning' ? 'Warning' : 'Info';
       console.error(`[${prefix}] ${diag.message}`);
     }
-    // If there were errors, maybe exit? For now just print.
   }
 
-  // Handle --list-models after services ready
   if (parsed.listModels) {
     const search = typeof parsed.listModels === "string" ? parsed.listModels : undefined;
     await listModels(services.modelRegistry, search);
     return;
   }
 
-  // Determine session manager based on flags
+  // Determine session manager
   let sessionManager: SessionManager;
   const sessionStartEvent: SessionStartEvent = { type: "session_start", reason: "startup" };
 
@@ -277,7 +264,6 @@ async function main(): Promise<void> {
   } else if (parsed.fork) {
     const resolved = await resolveSessionPath(parsed.fork, cwd, services.sessionDir);
     if (resolved.type === "path" || resolved.type === "local") {
-      // For now, fork is treated like open (forkFrom not implemented)
       sessionManager = SessionManager.open(resolved.path!, services.sessionDir);
     } else {
       console.error(`No session found matching '${resolved.arg}'`);
@@ -320,7 +306,7 @@ async function main(): Promise<void> {
   }
   time("createSessionManager");
 
-  // Resolve model from args or settings
+  // Resolve model
   let resolvedModel: Model | undefined;
   if (parsed.model) {
     const providerHint = parsed.provider || services.settingsManager.getDefaultProvider();
@@ -343,7 +329,7 @@ async function main(): Promise<void> {
     }
   }
 
-  // Create session from services
+  // Create session
   const session = await createAgentSessionFromServices({
     services,
     sessionManager,
@@ -356,7 +342,10 @@ async function main(): Promise<void> {
   // Construct runtime
   const runtime = new AgentSessionRuntime(session.agent, session, services);
 
-  // Graceful shutdown on SIGTERM/SIGHUP
+  // Subscribe to events EARLY - before sending any messages
+  subscribeToSessionEvents(runtime);
+
+  // Graceful shutdown
   const shutdown = async (signal: string) => {
     console.log(`\nReceived ${signal}, shutting down gracefully...`);
     try { await runtime.dispose(); } catch (err) { console.error('Error during shutdown:', err); }
@@ -366,24 +355,18 @@ async function main(): Promise<void> {
   process.on('SIGHUP', () => shutdown('SIGHUP'));
   time("createAgentSessionRuntime");
 
-  // Check session cwd existence
+  // Check session cwd
   const missingCwdIssue = getMissingSessionCwdIssue(session.sessionManager, cwd);
   if (missingCwdIssue) {
-    if (appMode === "tui") {
-      const ok = await promptConfirm(`Session cwd "${missingCwdIssue.sessionCwd}" not found. Use current cwd "${cwd}"? (y/N): `);
-      const selectedCwd = ok ? cwd : undefined;
-      if (!selectedCwd) {
-        process.exit(0);
-      }
-      // Switch to new cwd by reopening session file with override
-      await runtime.switchSession(missingCwdIssue.sessionFile!, { cwdOverride: selectedCwd });
-    } else {
-      console.error(new MissingSessionCwdError(missingCwdIssue).message);
-      process.exit(1);
+    const ok = await promptConfirm(`Session cwd "${missingCwdIssue.sessionCwd}" not found. Use current cwd "${cwd}"? (y/N): `);
+    const selectedCwd = ok ? cwd : undefined;
+    if (!selectedCwd) {
+      process.exit(0);
     }
+    await runtime.switchSession(missingCwdIssue.sessionFile!, { cwdOverride: selectedCwd });
   }
 
-  // Prepare initial message from stdin, files
+  // Prepare initial message from files only (no stdin)
   let fileText = "";
   let fileImages: any[] = [];
   if (parsed.fileArgs.length > 0) {
@@ -392,71 +375,24 @@ async function main(): Promise<void> {
     fileImages = fileResult.images;
   }
 
-  let stdinContent: string | undefined;
-  if (!stdinIsTTY) {
-    stdinContent = await readStdin();
-  }
-
   const initialResult: InitialMessageResult = buildInitialMessage({
     parsed,
     fileText: fileText || undefined,
     fileImages: fileImages.length > 0 ? fileImages : undefined,
-    stdinContent,
+    stdinContent: undefined, // No stdin pre-read in TTY
   });
 
-  // For interactive mode, choose between Ink and pi-coding-agent TUI
-  if (appMode === "tui") {
-    // Add initial message to session (if any) to start conversation
-    if (initialResult.initialMessage) {
-      await runtime.session.prompt(initialResult.initialMessage, { images: initialResult.initialImages });
-    }
-    // Process any additional messages
-    for (const msg of parsed.messages) {
-      await runtime.session.prompt(msg);
-    }
-
-    try {
-      // Use pure TypeScript TUI
-      const { InteractiveMode } = await import('./interactive/interactive-mode.js');
-      const mode = new InteractiveMode({
-        cwd: cwd,
-        agentDir: agentDir,
-        model: resolvedModel,
-        thinkingLevel: parsed.thinking,
-      });
-      await mode.start();
-    } catch (err: any) {
-      console.error('Interactive mode error:', err.message || err);
-    }
-  } else if (appMode === "print" || appMode === "json") {
-    // If no input at all, show helpful message
-    if (!initialResult.initialMessage && parsed.messages.length === 0 && !stdinContent) {
-      console.log("No input provided. Use one of:");
-      console.log("  picro 'your question'               # text mode");
-      console.log("  echo 'question' | picro             # pipe stdin");
-      console.log("  picro --mode interactive             # interactive TUI (requires TTY)");
-      console.log("  picro --list-models                  # list models");
-      await runtime.dispose();
-      printTimings();
-      process.exit(0);
-    }
-    const exitCode = await runPrintMode(runtime, {
-      mode: appMode === "json" ? "json" : "text",
-      messages: parsed.messages,
-      initialMessage: initialResult.initialMessage,
-      initialImages: initialResult.initialImages,
-    });
-    await runtime.dispose();
-    printTimings();
-    process.exit(exitCode);
-  } else if (appMode === "rpc") {
-    try {
-      await runRpcMode(runtime);
-    } catch (err: any) {
-      console.error("RPC mode error:", err.message || err);
-      process.exit(1);
-    }
+  // Send initial and any additional CLI messages
+  if (initialResult.initialMessage) {
+    await runtime.session.prompt(initialResult.initialMessage, { images: initialResult.initialImages });
   }
+  for (const msg of parsed.messages) {
+    await runtime.session.prompt(msg);
+  }
+
+  // Start TTY interactive mode (this blocks until exit)
+  const ttyMode = new TTYMode(runtime);
+  await ttyMode.start();
 
   printTimings();
 }

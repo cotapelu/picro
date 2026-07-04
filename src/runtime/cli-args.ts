@@ -8,8 +8,6 @@
  * - Extension flags support
  */
 
-export type Mode = "text" | "json" | "rpc" | "tui" | "interactive";
-
 export type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
 
 export interface Args {
@@ -23,7 +21,6 @@ export interface Args {
   resume?: boolean;
   help?: boolean;
   version?: boolean;
-  mode?: Mode;
   noSession?: boolean;
   session?: string;
   fork?: string;
@@ -34,7 +31,6 @@ export interface Args {
   noBuiltinTools?: boolean;
   extensions?: string[];
   noExtensions?: boolean;
-  print?: boolean;
   export?: string;
   noSkills?: boolean;
   skills?: string[];
@@ -73,11 +69,6 @@ export function parseArgs(args: string[]): Args {
       result.help = true;
     } else if (arg === "--version" || arg === "-v") {
       result.version = true;
-    } else if (arg === "--mode" && i + 1 < args.length) {
-      const mode = args[++i];
-      if (mode === "text" || mode === "json" || mode === "rpc" || mode === "tui" || mode === "interactive") {
-        result.mode = mode;
-      }
     } else if (arg === "--continue" || arg === "-c") {
       result.continue = true;
     } else if (arg === "--resume" || arg === "-r") {
@@ -119,14 +110,7 @@ export function parseArgs(args: string[]): Args {
       const level = args[++i];
       if (isValidThinkingLevel(level)) {
         result.thinking = level;
-      } else {
-        result.diagnostics.push({
-          type: "warning",
-          message: `Invalid thinking level "${level}". Valid values: ${VALID_THINKING_LEVELS.join(", ")}`,
-        });
       }
-    } else if (arg === "--print" || arg === "-p") {
-      result.print = true;
     } else if (arg === "--export" && i + 1 < args.length) {
       result.export = args[++i];
     } else if ((arg === "--extension" || arg === "-e") && i + 1 < args.length) {
@@ -212,8 +196,7 @@ Options:
   --api-key <key>               API key (defaults to env vars)
   --system-prompt <text>         System prompt (default: coding assistant prompt)
   --append-system-prompt <text>  Append text or file contents to system prompt
-  --mode <mode>                  Output mode: text (default), json, or rpc
-  --print, -p                   Non-interactive mode: process prompt and exit
+
   --continue, -c                Continue previous session
   --resume, -r                   Select a session to resume
   --session <path|id>             Use specific session file or partial UUID
