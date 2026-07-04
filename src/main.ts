@@ -24,7 +24,7 @@ import { resetTimings, time, printTimings } from "./utils/timings.js";
 import { handleConfigCommand } from "./package-manager-cli.js";
 import { runMigrations, showDeprecationWarnings } from "./migrations.js";
 import type { Model } from "./llm/index.js";
-import { TTYMode } from "./tty-mode.js";
+import { TTYMode } from "./tty-mode/index.js";
 
 function subscribeToSessionEvents(runtime: { session: AgentSessionInterface }) {
   const session = runtime.session as any;
