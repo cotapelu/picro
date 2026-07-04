@@ -77,6 +77,11 @@ export class CommandProcessor {
       execute: async (api, args) => await this.handleTheme(api, args),
     });
     this.register({
+      name: 'compact',
+      description: 'Force compaction to summarize context',
+      execute: async (api) => await this.handleCompact(api),
+    });
+    this.register({
       name: 'quit',
       description: 'Exit interactive mode',
       execute: (api) => api.stop(),
@@ -334,6 +339,29 @@ export class CommandProcessor {
     }
 
     console.log('Usage: /theme [list|set <dark|light|matrix>]');
+    (api.getRl as any)?.prompt?.();
+  }
+
+  private async handleCompact(api: TTYModeApi): Promise<void> {
+    const runtime = api.getRuntime();
+    if (!runtime?.session) {
+      console.log('Session not available.');
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+    const session = runtime.session as any;
+    if (typeof session.compact !== 'function') {
+      console.log('Compaction not supported.');
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+    try {
+      console.log('⏳ Compacting...');
+      await session.compact();
+      console.log('✅ Compaction complete');
+    } catch (err: any) {
+      console.log(`❌ Compaction failed: ${err.message}`);
+    }
     (api.getRl as any)?.prompt?.();
   }
 

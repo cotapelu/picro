@@ -169,6 +169,31 @@ describe('CommandProcessor', () => {
     });
   });
 
+  describe('/compact command', () => {
+    it('should trigger compaction', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const compact = vi.fn().mockResolvedValue(undefined);
+      const ttyApi = {
+        getRl: () => ({ prompt: vi.fn() }),
+        getRuntime: () => ({ session: { compact } }),
+      } as any;
+      await processor.execute(ttyApi, 'compact', []);
+      expect(compact).toHaveBeenCalled();
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Compaction complete'));
+    });
+
+    it('should handle compaction failure', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const compact = vi.fn().mockRejectedValue(new Error('fail'));
+      const ttyApi = {
+        getRl: () => ({ prompt: vi.fn() }),
+        getRuntime: () => ({ session: { compact } }),
+      } as any;
+      await processor.execute(ttyApi, 'compact', []);
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Compaction failed'));
+    });
+  });
+
   describe('/theme command', () => {
     it('should list themes', async () => {
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
