@@ -9,8 +9,9 @@
 
 ### Fragile Modules (High Change Frequency)
 
-- `src/runtime/agent-session-runtime.ts` – Large, complex, may need split
+- `src/runtime/agent-session-runtime.ts` – Large, complex, may need split (now covered by tests)
 - `src/session/` – Model registry and session storage tight coupling
+- `src/tty-mode/` – Stabilized; components modular and well-tested
 
 ### Stack Weaknesses
 

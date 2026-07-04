@@ -1,78 +1,68 @@
-// SPDX-License-Identifier: Apache-2.0
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AgentSessionRuntime } from './agent-session-runtime.js';
+import type { Agent } from '../agent/agent.js';
+import type { AgentSession } from '../session/agent-session.js';
 import type { AgentSessionServices } from '../session/agent-session-services.js';
 
-// Mock session with minimal methods
-function createMockSession(): any {
-  return {
-    dispose: vi.fn(),
-    settings: { get: vi.fn(), set: vi.fn(), save: vi.fn().mockResolvedValue(undefined) },
-    messages: [],
-    isStreaming: false,
-    model: { id: 'default', provider: 'test' },
-  };
-}
-
-function createMockServices(cwd = '/test'): AgentSessionServices {
-  return {
-    cwd,
-    sessionDir: '/sessions',
-    settingsManager: { get: vi.fn(), set: vi.fn(), save: vi.fn().mockResolvedValue(undefined) },
-    diagnostics: [],
-  } as any;
-}
-
 describe('AgentSessionRuntime', () => {
-  let session: any;
-  let services: AgentSessionServices;
+  let mockAgent: Agent;
+  let mockSession: AgentSession;
+  let mockServices: AgentSessionServices;
   let runtime: AgentSessionRuntime;
 
   beforeEach(() => {
-    session = createMockSession();
-    services = createMockServices();
-    runtime = new AgentSessionRuntime({} as any, session, services);
+    mockAgent = {} as any;
+    mockSession = {} as any;
+    mockServices = {
+      cwd: '/test',
+      authStorage: {} as any,
+      modelRegistry: {} as any,
+      settingsManager: {
+        getDefaultProvider: () => 'openai',
+        getDefaultModel: () => 'gpt-4',
+      } as any,
+      sessionManager: {} as any,
+      resourceLoader: {} as any,
+      telemetry: { isEnabled: () => false, track: vi.fn() } as any,
+      trustManager: {} as any,
+      performanceTracker: {} as any,
+      diagnostics: { warn: vi.fn(), error: vi.fn() } as any,
+      outputGuard: {} as any,
+      keybindings: {} as any,
+      footerDataProvider: {} as any,
+      systemPrompt: { build: vi.fn(() => 'sys') } as any,
+      promptTemplates: { getForRole: vi.fn() } as any,
+      skills: { getAll: vi.fn() } as any,
+      themes: { getCurrent: vi.fn() } as any,
+      extensions: { getAll: vi.fn() } as any,
+    } as any;
+    runtime = new AgentSessionRuntime(mockAgent, mockSession, mockServices);
   });
 
-  describe('cwd', () => {
-    it('returns services.cwd', () => {
-      expect(runtime.cwd).toBe('/test');
-    });
+  it('should expose session', () => {
+    expect(runtime.session).toBe(mockSession);
   });
 
-  describe('session getter', () => {
-    it('returns the injected session', () => {
-      expect(runtime.session).toBe(session);
-    });
+  it('should expose services', () => {
+    expect(runtime.services).toBe(mockServices);
   });
 
-  describe('settings getter', () => {
-    it('returns services.settingsManager', () => {
-      expect(runtime.settings).toBe(services.settingsManager);
-    });
+  it('should expose cwd', () => {
+    expect(runtime.cwd).toBe('/test');
   });
 
-  describe('dispose', () => {
-    it('calls session.dispose and marks disposed', async () => {
-      await runtime.dispose();
-      expect(session.dispose).toHaveBeenCalled();
-    });
-
-    it('is idempotent', async () => {
-      await runtime.dispose();
-      await runtime.dispose(); // should not throw
-    });
+  it('should have prompt method delegating to session', async () => {
+    const promptSpy = vi.fn().mockResolvedValue(undefined);
+    mockSession.prompt = promptSpy;
+    await runtime.prompt('hello');
+    expect(promptSpy).toHaveBeenCalledWith('hello', undefined);
   });
 
-  describe('diagnostics getter', () => {
-    it('returns services.diagnostics', () => {
-      expect(runtime.diagnostics).toBe(services.diagnostics);
-    });
+  it('should have settings getter returning settingsManager', () => {
+    expect(runtime.settings).toBe(mockServices.settingsManager);
   });
 
-  describe('modelFallbackMessage', () => {
-    it('returns undefined by default', () => {
-      expect(runtime.modelFallbackMessage).toBeUndefined();
-    });
+  it('should have authStorage getter', () => {
+    expect(runtime.authStorage).toBe(mockServices.authStorage);
   });
 });

@@ -75,20 +75,70 @@ describe('TTYMode', () => {
     exitSpy.mockRestore();
   });
 
-  it('subscribeToEvents registers listener and emits on message_end', () => {
+  it('subscribeToEvents handles agent_start', () => {
+    const outputShowThinking = vi.fn();
+    const mockSession = {
+      subscribe: vi.fn((cb) => { cb({ type: 'agent_start' }); return () => {}; }),
+    };
+    const rt = { session: mockSession } as any;
+    const newTty = new TTYMode(rt);
+    (newTty as any).output.showThinking = outputShowThinking;
+    (newTty as any).subscribeToEvents();
+    expect(outputShowThinking).toHaveBeenCalled();
+  });
+
+  it('subscribeToEvents handles agent_end and shows prompt', () => {
+    const outputClearLine = vi.fn();
+    const promptLineShow = vi.fn();
+    let capturedCb: ((event: any) => void) | null = null;
     const mockSession = {
       subscribe: vi.fn((cb) => {
-        // simulate event
-        setTimeout(() => cb({ type: 'message_end' }), 0);
+        capturedCb = cb;
         return () => {};
       }),
-      messages: [{ role: 'assistant', content: [{ type: 'text', text: 'Hello' }] }],
+      messages: [],
     };
-    const rt = { session: mockSession };
-    const newTty = new TTYMode(rt);
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    // We need to override printAssistantResponse to capture its behavior? But we can check that showPrompt gets called.
-    // Instead we'll check that when message_end event fires, printAssistantResponse is called and showPrompt happens.
-    // Hard without internal access. We'll trust previous unit tests.
+    const rt = { session: mockSession } as any;
+    const tty = new TTYMode(rt);
+    (tty as any).promptLine = { show: promptLineShow };
+    (tty as any).output.clearLine = outputClearLine;
+    // Manually set up subscription (normally called in start())
+    (tty as any).subscribeToEvents();
+    // Trigger event
+    if (capturedCb) capturedCb({ type: 'agent_end' });
+    expect(outputClearLine).toHaveBeenCalled();
+    expect(promptLineShow).toHaveBeenCalled();
+  });
+
+  it('handleUserMessage invokes runtime.prompt for text', async () => {
+    const promptSpy = vi.fn().mockResolvedValue(undefined);
+    const rt = { prompt: promptSpy } as any;
+    const tty = new TTYMode(rt);
+    await (tty as any).handleUserMessage('hello');
+    expect(promptSpy).toHaveBeenCalledWith('hello');
+  });
+
+  it('handleUserMessage invokes slash command', async () => {
+    const cmdExecuteSpy = vi.fn().mockResolvedValue(undefined);
+    const promptLineShow = vi.fn();
+    const rt = {} as any;
+    const tty = new TTYMode(rt);
+    (tty as any).promptLine = { show: promptLineShow };
+    (tty as any).commandProcessor = { execute: cmdExecuteSpy } as any;
+    await (tty as any).handleUserMessage('/help');
+    expect(cmdExecuteSpy).toHaveBeenCalledWith(expect.anything(), 'help', []);
+    expect(promptLineShow).toHaveBeenCalled();
+  });
+
+  it('updateStatusBar prints status', () => {
+    const rt = {
+      services: { settingsManager: { getDefaultProvider: () => 'openai' } },
+      session: { getContextUsage: () => ({ tokens: 100, contextWindow: 4000, percent: 2.5 }) },
+      cwd: '/home/user',
+    } as any;
+    const tty = new TTYMode(rt);
+    const printSpy = vi.spyOn((tty as any).statusBar, 'print');
+    (tty as any).updateStatusBar();
+    expect(printSpy).toHaveBeenCalledWith('openai', { tokens: 100, contextWindow: 4000, percent: 2.5 }, '/home/user');
   });
 });

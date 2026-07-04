@@ -11,11 +11,11 @@ import lockfile from "proper-lockfile";
 
 const CONFIG_DIR_NAME = ".pi";
 
-function normalizeCwd(cwd: string): string {
+export function normalizeCwd(cwd: string): string {
   return cwd; // pi uses canonicalizePath/resolvePath but we'll keep it simple
 }
 
-function findNearestTrustEntry(data: Record<string, boolean | null>, cwd: string): { path: string; decision: boolean } | null {
+export function findNearestTrustEntry(data: Record<string, boolean | null>, cwd: string): { path: string; decision: boolean } | null {
   let currentDir = normalizeCwd(cwd);
   while (true) {
     const value = data[currentDir];
@@ -30,7 +30,7 @@ function findNearestTrustEntry(data: Record<string, boolean | null>, cwd: string
   }
 }
 
-function readTrustFile(path: string): Record<string, boolean | null> {
+export function readTrustFile(path: string): Record<string, boolean | null> {
   if (!existsSync(path)) {
     return {};
   }
@@ -54,7 +54,7 @@ function readTrustFile(path: string): Record<string, boolean | null> {
   return data;
 }
 
-function writeTrustFile(path: string, data: Record<string, boolean | null>): void {
+export function writeTrustFile(path: string, data: Record<string, boolean | null>): void {
   const sorted: Record<string, boolean | null> = {};
   for (const key of Object.keys(data).sort()) {
     const value = data[key];

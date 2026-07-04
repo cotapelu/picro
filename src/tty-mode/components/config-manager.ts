@@ -1,5 +1,5 @@
 // ConfigManager – Load and manage TTY mode configuration
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -31,6 +31,7 @@ const DEFAULT_CONFIG: TTYConfig = {
 
 export class ConfigManager {
   private config: TTYConfig;
+  private configPath!: string;
 
   constructor(customPath?: string) {
     this.config = { ...DEFAULT_CONFIG };
@@ -43,18 +44,19 @@ export class ConfigManager {
       const home = homedir();
       configPath = join(home, '.picro', 'tty-config.json');
     }
+    this.configPath = configPath;
     if (existsSync(configPath)) {
       try {
         const raw = readFileSync(configPath, 'utf-8');
         const parsed = JSON.parse(raw);
         this.config = { ...this.config, ...parsed };
-      } catch (err) {
+      } catch {
         // ignore, use defaults
       }
     }
   }
 
-  get(key: keyof TTYConfig): any {
+  get<K extends keyof TTYConfig>(key: K): TTYConfig[K] {
     return this.config[key];
   }
 
@@ -74,11 +76,12 @@ export class ConfigManager {
 
   private save(): void {
     try {
-      const home = homedir();
-      const dir = join(home, '.picro');
-      // Ensure dir exists (simplified)
-      const path = join(dir, 'tty-config.json');
-      writeFileSync(path, JSON.stringify(this.config, null, 2));
+      const dir = join(this.configPath, '..');
+      // Ensure dir exists
+      if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+      }
+      writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
     } catch {
       // ignore
     }
