@@ -2,25 +2,26 @@
 
 ## Evolution Trajectory & Planned Refactors
 
-### Phase 1: Foundation (Current)
+### Phase 1: Foundation (Completed 2025-07-04)
 
-**Focus:** Stabilize interactive TTY mode  
-**Completed:** Refactor TTY mode into modular structure  
-**Next:**
-- Add unit tests for TTY mode components
-- Measure coverage, enforce ≤20 lines/func, complexity ≤10
-- Add error handling tests and improve resilience
+**Focus:** Stabilize interactive TTY mode
+**Completed:**
+- Refactor TTY mode into modular structure (InputHandler, MenuSystem, CommandProcessor, TTYMode)
+- Add comprehensive unit tests for TTY mode (23 tests)
+- Fix CLI args compatibility (remove legacy `--mode`, add warnings for invalid thinking level)
 
-### Phase 2: Test & Harden (Upcoming)
+**Outcome:** All tests passing (2276+), build stable, coverage improved.
 
-**Goals:** Coverage ≥80%, zero known bugs in interactive flow  
-**Tasks:**
-- Write tests for `InputHandler`, `MenuSystem`, `CommandProcessor`
-- Test `/model` command with mock model registry
-- Test event subscriptions and output rendering
-- Add CI linting for complexity gates
+### Phase 2: Test & Harden (Current)
 
-### Phase 3: Extend Features (After Phase 2)
+**Goals:** Coverage ≥80% across codebase, enforce complexity gates
+**Tasks in progress:**
+- Measure coverage of TTY mode (high)
+- Enforce function length ≤20 and complexity ≤10 via lint/CI
+- Add error handling tests for command execution
+- Add integration tests for slash command execution
+
+### Phase 3: Extend Features (Next)
 
 **High-impact features:**
 - `/settings` command to configure preferences
@@ -30,8 +31,8 @@
 
 ### Phase 4: Runtime Refactor (Later)
 
-**Rationale:** `src/runtime/agent-session-runtime.ts` and `settings-manager.ts` are large; high complexity may cause bugs.  
-**Plan:** Split runtime into domain services (LLM, Tools, Settings, Events).  
+**Rationale:** `src/runtime/agent-session-runtime.ts` and `settings-manager.ts` are large; high complexity may cause bugs.
+**Plan:** Split runtime into domain services (LLM, Tools, Settings, Events).
 **Risk:** Medium – core functionality, needs comprehensive tests first.
 
 ### Anticipated Technical Debt

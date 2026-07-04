@@ -13,6 +13,7 @@ export type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhi
 export interface Args {
   provider?: string;
   model?: string;
+  mode?: string; // legacy flag, not used in TTY-only mode
   apiKey?: string;
   systemPrompt?: string;
   appendSystemPrompt?: string[];
@@ -110,6 +111,8 @@ export function parseArgs(args: string[]): Args {
       const level = args[++i];
       if (isValidThinkingLevel(level)) {
         result.thinking = level;
+      } else {
+        result.diagnostics.push({ type: "warning", message: `Invalid thinking level: ${level}. Valid levels: ${VALID_THINKING_LEVELS.join(', ')}` });
       }
     } else if (arg === "--export" && i + 1 < args.length) {
       result.export = args[++i];

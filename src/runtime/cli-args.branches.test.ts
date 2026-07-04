@@ -159,7 +159,8 @@ describe('cli-args - parseArgs branch coverage', () => {
   it('handles --no-session and other flags together', () => {
     const args = parseArgs(['--no-session', '--mode', 'json', 'message']);
     expect(args.noSession).toBe(true);
-    expect(args.mode).toBe('json');
+    // --mode no longer supported; treated as unknown flag
+    expect(args.unknownFlags.get('--mode')).toBe('json');
     expect(args.messages).toEqual(['message']);
   });
 });

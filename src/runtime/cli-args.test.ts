@@ -31,12 +31,12 @@ describe('parseArgs', () => {
     expect(args2.version).toBe(true);
   });
 
-  it('parses --mode', () => {
-    const args = parseArgs(['--mode', 'json']);
-    expect(args.mode).toBe('json');
-    // stop parsing after mode consumes next
-    expect((args as any).messages).toEqual([]);
-  });
+  // --mode removed (TTY-only); no longer supported
+  // it('parses --mode', () => {
+  //   const args = parseArgs(['--mode', 'json']);
+  //   expect(args.mode).toBe('json');
+  //   expect((args as any).messages).toEqual([]);
+  // });
 
   it('parses boolean flags', () => {
     const args = parseArgs(['--no-session', '--offline']);
