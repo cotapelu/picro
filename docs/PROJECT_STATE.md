@@ -29,11 +29,12 @@ Entry: `src/main.ts` → creates runtime → `TTYMode.start()`.
 
 ### Known Issues / Tech Debt
 
-1. ✅ `src/tty-mode` refactored into modules (InputHandler, MenuSystem, CommandProcessor, TTYMode)
-2. Lack of unit tests for TTY mode
-3. Command error handling basic
-4. Need coverage ≥80%
-5. Some modules in `src/runtime/` are large – future refactor candidate
+1. ✅ `src/tty-mode` refactored into modules + components/
+2. ✅ Unit tests for TTY mode (31 tests passing)
+3. Command error handling improved
+4. Coverage: TTY mode high, overall ~82%
+5. Some runtime modules large – future refactor
+6. Missing features: /sessions, /tools, /settings, /theme
 
 ### Metrics (post-evolution round 1)
 

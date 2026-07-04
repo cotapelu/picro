@@ -1,17 +1,16 @@
 // PromptLine – Manages the input prompt and line editing
-import { InputHandler } from './index.js';
+import type { InputHandler } from './index.js';
 
 export class PromptLine {
   private input: InputHandler;
   private prompt: string;
-  private onEnter: (line: string) => void;
-  private onSlash: () => void;
 
-  constructor(prompt: string, onEnter: (line: string) => void, onSlash: () => void) {
+  constructor(input: InputHandler, prompt: string) {
+    this.input = input;
     this.prompt = prompt;
-    this.onEnter = onEnter;
-    this.onSlash = onSlash;
-    this.input = new InputHandler();
+  }
+
+  setCallbacks(onEnter: (line: string) => void, onSlash: () => void): void {
     this.input.setCallbacks(onEnter, onSlash);
   }
 

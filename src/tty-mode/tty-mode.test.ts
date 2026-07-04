@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TTYMode } from './tty-mode.js';
-import type { InputHandler } from './input-handler.js';
+import type { InputHandler } from './components/input-handler.js';
 import type { MenuSystem } from './menu-system.js';
 import type { CommandProcessor } from './command-processor.js';
 
@@ -16,13 +16,20 @@ describe('TTYMode', () => {
     mockInput = {};
     mockCommands = { getAll: vi.fn(() => []), getMenuItems: vi.fn(() => []) };
 
-    // Stub dependencies via module re-import? Hard. Instead we'll test via public methods only.
     runtime = {
       prompt: vi.fn(),
       session: { subscribe: vi.fn(() => () => {}) },
     };
 
-    // Create TTYMode normally; its internal dependencies are real. That's fine.
+    // Ensure process.stdin has required methods (polyfill for non-TTY test env)
+    if (!process.stdin.setRawMode) (process.stdin as any).setRawMode = vi.fn();
+    if (!process.stdin.removeAllListeners) (process.stdin as any).removeAllListeners = vi.fn();
+    if (!process.stdin.resume) (process.stdin as any).resume = vi.fn();
+    if (!process.stdin.setEncoding) (process.stdin as any).setEncoding = vi.fn();
+    if (!process.stdin.on) (process.stdin as any).on = vi.fn();
+    if (!process.stdout.write) (process.stdout as any).write = vi.fn();
+    vi.spyOn(process, 'exit').mockImplementation(vi.fn());
+
     tty = new TTYMode(runtime);
   });
 
@@ -62,7 +69,7 @@ describe('TTYMode', () => {
   });
 
   it('stop calls process.exit', () => {
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {} as never);
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
     tty.stop();
     expect(exitSpy).toHaveBeenCalledWith(0);
     exitSpy.mockRestore();

@@ -7,29 +7,46 @@
 **Focus:** Stabilize interactive TTY mode
 **Completed:**
 - Refactor TTY mode into modular structure (InputHandler, MenuSystem, CommandProcessor, TTYMode)
-- Add comprehensive unit tests for TTY mode (23 tests)
+- Add comprehensive unit tests for TTY mode (31 tests)
 - Fix CLI args compatibility (remove legacy `--mode`, add warnings for invalid thinking level)
 
-**Outcome:** All tests passing (2276+), build stable, coverage improved.
+**Outcome:** All tests passing, build stable.
 
-### Phase 2: Test & Harden (Current)
+### Phase 2: Components & Polish (Completed 2025-07-04)
 
-**Goals:** Coverage ≥80% across codebase, enforce complexity gates
+**Focus:** High-end TTY UI components
+**Completed:**
+- Components: ConfigManager, StatusBar, enhanced InputHandler (history, multi-line, editing shortcuts), OutputRenderer (colors, markdown, spinner, progress, code blocks)
+- Command `/login` added (set API key)
+- Tests: 31 TTY mode tests passing
+
+**Outcome:** Professional TTY experience ready.
+
+### Phase 3: Feature Expansion (Current)
+
+**Goals:** Add missing slash commands, integrate StatusBar, improve UX
 **Tasks in progress:**
-- Measure coverage of TTY mode (high)
-- Enforce function length ≤20 and complexity ≤10 via lint/CI
-- Add error handling tests for command execution
-- Add integration tests for slash command execution
-
-### Phase 3: Extend Features (Next)
-
-**High-impact features:**
-- `/settings` command to configure preferences
-- `/tools` command to toggle tool availability
-- Command palette search (fuzzy find)
-- Model selection persistence across sessions
+- `/sessions` command (list, switch, delete)
+- `/tools` command (toggle built-in tools)
+- `/settings` command (view/edit config)
+- `/theme` command (switch color themes)
+- Integrate StatusBar into TTYMode (show model, token usage)
 
 ### Phase 4: Runtime Refactor (Later)
+
+**Rationale:** `src/runtime/agent-session-runtime.ts` and `settings-manager.ts` are large; high complexity may cause bugs.
+**Plan:** Split runtime into domain services (LLM, Tools, Settings, Events).
+**Risk:** Medium – core functionality, needs comprehensive tests first.
+
+### Anticipated Technical Debt
+
+- **Menu system** may need abstraction for future UI backends (web, VS Code extension)
+- **Command processor** could become plugin-based to allow user-defined slash commands
+- **Settings** currently simple object; may need schema validation and migrations
+
+---
+
+*Evolution plan revisited after each iteration.*
 
 **Rationale:** `src/runtime/agent-session-runtime.ts` and `settings-manager.ts` are large; high complexity may cause bugs.
 **Plan:** Split runtime into domain services (LLM, Tools, Settings, Events).

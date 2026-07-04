@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { InputHandler } from './input-handler.js';
+import { InputHandler } from './components/input-handler.js';
 
 describe('InputHandler', () => {
   let handler: InputHandler;

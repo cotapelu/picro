@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MenuSystem } from './menu-system.js';
-import { InputHandler } from './input-handler.js';
+import { InputHandler } from './components/input-handler.js';
 
 describe('MenuSystem', () => {
   let input: InputHandler;

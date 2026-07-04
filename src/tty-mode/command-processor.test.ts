@@ -60,6 +60,7 @@ describe('CommandProcessor', () => {
     };
     api.getMenuRenderer = () => mockMenu;
     api.getRl = () => ({ prompt: vi.fn() });
+    api.getRuntime = () => ({ services: { modelRegistry: {} as any, settingsManager: {} as any } }); // will override below
 
     const getProviders = vi.fn(() => ['provider1']);
     const modelRegistry = {
@@ -69,7 +70,7 @@ describe('CommandProcessor', () => {
     const settingsManager = {
       setDefaultProvider: vi.fn(),
     };
-    api.runtime = { services: { modelRegistry, settingsManager } };
+    api.getRuntime = () => ({ services: { modelRegistry, settingsManager } });
 
     await processor.execute(api, 'model', []);
 
@@ -89,7 +90,7 @@ describe('CommandProcessor', () => {
       getProviders: () => [],
       getModels: vi.fn(),
     };
-    api.runtime = { services: { modelRegistry } };
+    api.getRuntime = () => ({ services: { modelRegistry } });
     api.getRl = () => ({ prompt: vi.fn() });
 
     await processor.execute(api, 'model', []);

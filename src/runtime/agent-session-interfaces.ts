@@ -6,6 +6,7 @@
 
 import type { SessionTreeNode } from "../session/session-manager.js";
 import type { SessionStats } from "../session/agent-session-types.js";
+import type { AgentSessionServices } from "../session/agent-session-services.js";
 
 /**
  * Agent session interface - full interface for UI to interact with session
@@ -76,6 +77,7 @@ export interface AgentSessionInterface {
 export interface AgentSessionRuntimeInterface {
   session: AgentSessionInterface;
   cwd: string;
+  services: AgentSessionServices;
   // Prompting (high-level API)
   prompt(text: string, options?: { images?: unknown[] }): Promise<void>;
   // Session management

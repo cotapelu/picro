@@ -1,7 +1,7 @@
 // TTYMode – Orchestrator for interactive TTY experience
 import { MenuSystem } from './menu-system.js';
 import { CommandProcessor } from './command-processor.js';
-import { InputHandler, PromptLine, OutputRenderer } from './components/index.js';
+import { InputHandler, PromptLine, OutputRenderer, ConfigManager } from './components/index.js';
 import type { AgentSessionRuntimeInterface } from '../runtime/agent-session-interfaces.js';
 
 export class TTYMode {
@@ -9,6 +9,12 @@ export class TTYMode {
   private prompt = '> ';
   private welcomeMessage = '🧠 picro agent ready. Type your message (Ctrl+C to exit).';
 
+  private config = new ConfigManager();
+  private input = new InputHandler(
+    this.config.get('historySize'),
+    this.config.get('persistHistory'),
+    this.config.get('historyFile')
+  );
   private promptLine!: PromptLine;
   private output = new OutputRenderer();
   private menuRenderer = new MenuSystem(this as any, 'Commands');
@@ -40,6 +46,7 @@ export class TTYMode {
   getRl(): null { return null; }
   getMenuRenderer<T = any>(): MenuSystem<T> { return this.menuRenderer as any; }
   getCommands() { return this.commandProcessor.getAll(); }
+  getRuntime() { return this.runtime; }
 
   setRawMode(enabled: boolean): void { if (enabled) process.stdin.setRawMode(true); else process.stdin.setRawMode(false); }
   hideCursor(): void { this.output.hideCursor(); }
@@ -59,8 +66,13 @@ export class TTYMode {
     process.stdin.resume();
     process.stdin.setEncoding('utf8');
 
-    this.promptLine = new PromptLine(
-      this.prompt,
+    // Apply config
+    if (this.config.get('multiLine')) {
+      this.input.setMultiLine(true);
+    }
+
+    this.promptLine = new PromptLine(this.input, this.prompt);
+    this.promptLine.setCallbacks(
       (line) => this.handleUserMessage(line),
       () => this.showCommandsMenu()
     );

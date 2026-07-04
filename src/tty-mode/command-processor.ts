@@ -5,7 +5,7 @@ interface TTYModeApi {
   getRl?(): any;
   getMenuRenderer<T = any>(): any;
   stop(): void;
-  getRuntime?(): any;
+  getRuntime(): any;
   setRawMode?(enabled: boolean): void;
   hideCursor?(): void;
   showCursor?(): void;
@@ -39,6 +39,21 @@ export class CommandProcessor {
       name: 'help',
       description: 'Show this help',
       execute: (api) => this.showHelp(api),
+    });
+    this.register({
+      name: 'clear',
+      description: 'Clear the screen',
+      execute: () => this.handleClear(),
+    });
+    this.register({
+      name: 'history',
+      description: 'Show command history',
+      execute: (api) => this.handleHistory(api),
+    });
+    this.register({
+      name: 'login',
+      description: 'Set API key for provider (/login <provider> <api-key>)',
+      execute: async (api, args) => await this.handleLogin(api, args),
     });
     this.register({
       name: 'quit',
@@ -83,7 +98,7 @@ export class CommandProcessor {
   }
 
   private async handleModel(api: TTYModeApi): Promise<void> {
-    const services = (api as any).runtime?.services as any;
+    const services = api.getRuntime()?.services as any;
     if (!services?.modelRegistry) {
       console.log('Model registry not available.');
       (api.getRl as any)?.prompt?.();
@@ -135,6 +150,47 @@ export class CommandProcessor {
     this.getAll().forEach(cmd => {
       console.log(`  /${cmd.name} - ${cmd.description}`);
     });
+    (api.getRl as any)?.prompt?.();
+  }
+
+  private async handleLogin(api: TTYModeApi, args: string[]): Promise<void> {
+    if (args.length < 2) {
+      console.log('Usage: /login <provider> <api-key>');
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+    const provider = args[0];
+    const apiKey = args.slice(1).join(' ');
+    const services = api.getRuntime()?.services as any;
+    if (!services?.authStorage) {
+      console.log('Auth storage not available.');
+      (api.getRl as any)?.prompt?.();
+      return;
+    }
+    try {
+      await services.authStorage.setApiKey(provider, apiKey);
+      console.log(`✅ API key set for ${provider}`);
+    } catch (err: any) {
+      console.log(`❌ Failed: ${err?.message || err}`);
+    }
+    (api.getRl as any)?.prompt?.();
+  }
+
+  private handleClear(): void {
+    process.stdout.write('\x1b[2J\x1b[H');
+  }
+
+  private handleHistory(api: TTYModeApi): void {
+    // Get history from InputHandler via TTYMode (api)
+    const history = (api as any).getHistory?.();
+    if (history && history.length > 0) {
+      console.log('\nCommand history:');
+      history.forEach((line: string, idx: number) => {
+        console.log(`  ${idx + 1}  ${line}`);
+      });
+    } else {
+      console.log('No history yet.');
+    }
     (api.getRl as any)?.prompt?.();
   }
 }

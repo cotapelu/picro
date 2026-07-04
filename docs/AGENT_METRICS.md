@@ -54,4 +54,20 @@
 
 ---
 
+### Round 4 – TTY Mode Components & High-End Features (2025-07-04)
+
+**Task:** Build high-quality TTY components and add `/login` command
+**Estimated Risk:** Low (internal)
+**Engineering Cost:** ~4 hours
+
+**Metrics:**
+- New Components: ConfigManager, StatusBar, enhanced InputHandler, OutputRenderer (colors, markdown, spinner)
+- Commands Added: `/login` (set API key)
+- Tests: TTY mode tests now 31 passing
+- Coverage: TTY mode ~90%
+- Functions ≤20 lines maintained in new modules
+- Regressions: 0
+
+
+
 *Continuous evolution – metrics updated per round.*
