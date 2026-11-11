@@ -9,7 +9,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Box, Text } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 
 export type ScrollbarMode = "hidden" | "auto" | "always";
 

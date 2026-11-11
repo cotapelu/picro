@@ -7,10 +7,10 @@
 
 import React, { useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
-import { getTheme } from "../theme/theme.js";
-import { DynamicBorder } from "../../../tui/ink/components/DynamicBorder.js";
+import { getTheme } from "../theme/index.js";
+import { DynamicBorder } from "./DynamicBorder.js";
 import { radiusShimmer, startBrandAnimation } from "./provider-brand.js";
-import { CountdownTimer } from "../../../tui/ink/components/CountdownTimer.js";
+import { CountdownTimer } from "./CountdownTimer.js";
 
 export interface RadiusOption {
   label: string;

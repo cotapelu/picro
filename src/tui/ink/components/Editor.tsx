@@ -10,7 +10,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Text, useInput } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 import { KillRing } from "../core/KillRing.js";
 import { UndoStack } from "../core/UndoStack.js";
 import { findWordBackward, findWordForward } from "../core/WordNavigation.js";

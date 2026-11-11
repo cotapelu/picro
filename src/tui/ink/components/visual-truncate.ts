@@ -5,7 +5,7 @@
 //   - paddingX = 0 khi nằm trong Box, 1 khi nằm trong Container trần
 // Port sang TSX riêng, khon copy code truc iep.
 
-import { wrapTextWithAnsi, truncateToWidth } from "../../../tui/ink/core/index.js";
+import { wrapTextWithAnsi, truncateToWidth } from "../core/index.js";
 
 export interface VisualTruncateResult {
   /** Các dòng hiển thị giữ lại. */

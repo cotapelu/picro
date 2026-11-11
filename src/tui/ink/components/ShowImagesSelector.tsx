@@ -6,7 +6,7 @@
 
 import React from "react";
 import { Box, Text } from "ink";
-import { theme } from "../theme.js";
+import { theme } from "../theme/index.js";
 import { DynamicBorder } from "./DynamicBorder.js";
 import { SelectList } from "./SelectList.js";
 

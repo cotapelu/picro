@@ -6,7 +6,7 @@
 
 import React from "react";
 import { Box, Text, useWindowSize } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 
 interface KeybindingsProps {
   show?: boolean;

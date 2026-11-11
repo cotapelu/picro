@@ -10,7 +10,7 @@
 
 import React, { useMemo } from "react";
 import { Text } from "ink";
-import { fg, theme } from "../theme.js";
+import { fg, theme } from "../theme/index.js";
 import {
   calculateImageCellSize,
   encodeITerm2,

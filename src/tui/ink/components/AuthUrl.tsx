@@ -7,8 +7,8 @@
 
 import React, { useState } from "react";
 import { Box, Text } from "ink";
-import { getTheme } from "../theme/theme.js";
-import { getCapabilities, hyperlink } from "../../../tui/ink/core/index.js";
+import { getTheme } from "../theme/index.js";
+import { getCapabilities, hyperlink } from "../core/index.js";
 
 export interface AuthUrlProps {
   url: string;
@@ -48,7 +48,7 @@ export const AuthUrl: React.FC<AuthUrlProps> = ({ url, copyHint = "Ctrl+C", onCo
 
 export async function copyAuthUrl(url: string): Promise<boolean> {
   try {
-    const { getNativeClipboard } = await import("../../../tui/ink/core/index.js");
+    const { getNativeClipboard } = await import("../core/index.js");
     const clipboard = getNativeClipboard();
     if (clipboard?.setText) {
       await clipboard.setText(url);

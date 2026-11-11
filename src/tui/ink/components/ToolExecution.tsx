@@ -9,12 +9,12 @@
 
 import React, { useMemo, useState } from "react";
 import { Box, Text } from "ink";
-import { getTheme } from "../theme/theme.js";
-import { DynamicBorder } from "../../../tui/ink/components/DynamicBorder.js";
-import { MarkdownRenderer } from "../../../tui/ink/components/MarkdownRenderer.js";
+import { getTheme } from "../theme/index.js";
+import { DynamicBorder } from "./DynamicBorder.js";
+import { MarkdownRenderer } from "./MarkdownRenderer.js";
 import { VisualLinePreview } from "./visual-truncate.js";
-import { truncateToWidth } from "../../../tui/ink/core/index.js";
-import { Image } from "../../../tui/ink/components/Image.js";
+import { truncateToWidth } from "../core/index.js";
+import { Image } from "./Image.js";
 
 const FALLBACK_PREVIEW_LINES = 10;
 

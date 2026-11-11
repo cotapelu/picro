@@ -6,14 +6,16 @@
 
 import React from "react";
 import { Text, useWindowSize } from "ink";
-import { theme } from "../theme.js";
+import { theme } from "../theme/index.js";
 
 export interface DynamicBorderProps {
   /** Hàm tô màu cho đường kẻ. */
   color?: (text: string) => string;
 }
 
-export const DynamicBorder: React.FC<DynamicBorderProps> = ({ color = theme.fgBorder }) => {
+const defaultColor = theme.fgBorder as unknown as (text: string) => string;
+
+export const DynamicBorder: React.FC<DynamicBorderProps> = ({ color = defaultColor }) => {
   const { columns } = useWindowSize();
   return <Text>{color("─".repeat(Math.max(1, columns || 80)))}</Text>;
 };

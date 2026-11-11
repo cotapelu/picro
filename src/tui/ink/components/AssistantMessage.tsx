@@ -9,8 +9,8 @@
 
 import React, { useMemo } from "react";
 import { Box, Text } from "ink";
-import { theme, fg } from "../../../tui/ink/theme.js";
-import { MarkdownRenderer } from "../../../tui/ink/components/MarkdownRenderer.js";
+import { theme, fg } from "../theme/index.js";
+import { MarkdownRenderer } from "./MarkdownRenderer.js";
 import { createMarkdownTransform, type MarkdownTransformer } from "./markdown-transform.js";
 
 export interface AssistantContent {

@@ -6,7 +6,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Box, Text } from "ink";
-import { theme } from "../theme.js";
+import { theme } from "../theme/index.js";
 
 interface Toast {
   id: string;
@@ -28,13 +28,13 @@ const TICK_MS = 120;
 const colorOf = (type: Toast["type"]): ((text: string) => string) => {
   switch (type) {
     case "error":
-      return theme.brightRed;
+      return theme.brightRed as unknown as (text: string) => string;
     case "success":
-      return theme.brightGreen;
+      return theme.brightGreen as unknown as (text: string) => string;
     case "warning":
-      return theme.brightYellow;
+      return theme.brightYellow as unknown as (text: string) => string;
     default:
-      return theme.brightCyan;
+      return theme.brightCyan as unknown as (text: string) => string;
   }
 };
 

@@ -7,8 +7,8 @@
 
 import React, { useState } from "react";
 import { Box, Text, useInput } from "ink";
-import { getTheme } from "../theme/theme.js";
-import { DynamicBorder } from "../../../tui/ink/components/DynamicBorder.js";
+import { getTheme } from "../theme/index.js";
+import { DynamicBorder } from "./DynamicBorder.js";
 
 export interface ProjectTrustOption {
   label: string;

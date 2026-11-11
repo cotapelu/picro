@@ -7,7 +7,7 @@
 
 import React, { useMemo } from "react";
 import { Box as InkBox, Text } from "ink";
-import { theme } from "../theme.js";
+import { theme } from "../theme/index.js";
 
 export interface BoxProps {
   children?: React.ReactNode;
@@ -38,7 +38,7 @@ export const Box: React.FC<BoxProps> = ({
   paddingX = 1,
   paddingY = 1,
   width,
-  background = theme.bgBlack,
+  background = theme.bgBlack as unknown as (text: string) => string,
 }) => {
   const total = width ?? 80;
   const contentWidth = Math.max(1, total - paddingX * 2);

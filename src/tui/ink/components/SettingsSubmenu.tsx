@@ -7,7 +7,7 @@
 
 import React, { useMemo, useState } from "react";
 import { Box, Text } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 import { SelectList, type SelectItem } from "./SelectList.js";
 import { DynamicBorder } from "./DynamicBorder.js";
 import { KeyHintText } from "./KeyHintText.jsx";

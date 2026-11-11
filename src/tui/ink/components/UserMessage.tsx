@@ -7,8 +7,8 @@
 
 import React, { useMemo } from "react";
 import { Box } from "ink";
-import { getTheme } from "../theme/theme.js";
-import { MarkdownRenderer } from "../../../tui/ink/components/MarkdownRenderer.js";
+import { getTheme } from "../theme/index.js";
+import { MarkdownRenderer } from "./MarkdownRenderer.js";
 import { createMarkdownTransform, type MarkdownTransformer } from "./markdown-transform.js";
 
 const OSC133_START = "\x1b]133;A\x07";

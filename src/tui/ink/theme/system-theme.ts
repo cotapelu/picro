@@ -12,7 +12,7 @@ import {
   type RgbColor,
   type TerminalColors,
   type TerminalColorMode,
-} from "../../../tui/ink/core/index.js";
+} from "../core/index.js";
 import { type TerminalTheme, parseColor } from "./theme.js";
 import { type ThemeColorValue, THEME_TOKENS } from "./theme-tokens.js";
 

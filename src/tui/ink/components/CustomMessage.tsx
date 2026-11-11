@@ -7,8 +7,8 @@
 
 import React, { useMemo } from "react";
 import { Box, Text } from "ink";
-import { getTheme } from "../theme/theme.js";
-import { MarkdownRenderer } from "../../../tui/ink/components/MarkdownRenderer.js";
+import { getTheme } from "../theme/index.js";
+import { MarkdownRenderer } from "./MarkdownRenderer.js";
 import { createMarkdownTransform, type MarkdownTransformer } from "./markdown-transform.js";
 
 export interface CustomMessageInput<T = unknown> {

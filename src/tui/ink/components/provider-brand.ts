@@ -5,8 +5,8 @@
 //   - Chỉ áp cho dòng đang chọn; hoạt hình cập nhật theo requestRender
 // Port sang TSX riêng, khon copy code truc iep.
 
-import { type Color, foregroundAnsi, mixColors, parseColor } from "../../../tui/ink/core/index.js";
-import { getTheme } from "../theme/theme.js";
+import { type Color, foregroundAnsi, mixColors, parseColor } from "../core/index.js";
+import { getTheme } from "../theme/index.js";
 
 /** Hàm tô màu chữ theo thời gian (ms). */
 export type ProviderBrandStyle = (text: string, elapsedMs: number) => string;

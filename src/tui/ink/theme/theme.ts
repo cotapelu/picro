@@ -22,9 +22,10 @@ import {
   type RgbColor,
   type TerminalColorMode,
   type TextAttributes,
-} from "../../../tui/ink/core/index.js";
+} from "../core/index.js";
 import {
   type ResolvedThemeColorValues,
+  type ThemeColorValue,
   type ThemeBg,
   type ThemeColor,
   type ThemeColorValues,
@@ -35,8 +36,6 @@ import {
 
 export type TerminalTheme = "dark" | "light";
 export type ThemeAppearance = TerminalTheme;
-export type ThemeColorValue = string | number;
-
 export interface ThemeJson {
   $schema?: string;
   name: string;

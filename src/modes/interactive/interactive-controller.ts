@@ -64,6 +64,17 @@ export class InteractiveController {
   // Lifecycle
   // ============================================================================
 
+  /**
+   * Đăng ký nghe sự kiện của phiên, cho InteractiveMode xử lý trạng thái.
+   * Bắt chước vai trò của `session.subscribe` trong pi-mono: mỗi sự kiện
+   * được chuyển tới listener, kèm hàm hủy đăng ký.
+   */
+  subscribeEvents(listener: (event: unknown) => void): () => void {
+    const session = this.runtime.session as any;
+    if (!session?.subscribe) return () => {};
+    return session.subscribe(listener);
+  }
+
   private subscribeToRuntime(): void {
     const session = this.runtime.session as any;
     if (!session?.subscribe) return;

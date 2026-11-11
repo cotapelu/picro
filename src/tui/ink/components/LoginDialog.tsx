@@ -9,9 +9,9 @@
 
 import React, { useCallback, useState } from "react";
 import { Box, Text } from "ink";
-import { getTheme } from "../theme/theme.js";
-import { DynamicBorder } from "../../../tui/ink/components/DynamicBorder.js";
-import { TextInput } from "../../../tui/ink/components/TextInput.js";
+import { getTheme } from "../theme/index.js";
+import { DynamicBorder } from "./DynamicBorder.js";
+import { TextInput } from "./TextInput.js";
 import { AuthUrl, copyAuthUrl } from "./AuthUrl.js";
 
 export interface DeviceCodeInfo {

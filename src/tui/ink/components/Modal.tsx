@@ -5,7 +5,7 @@
 
 import React from "react";
 import { Box, Text } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 
 interface ModalProps {
   modal: {

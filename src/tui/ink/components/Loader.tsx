@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Text } from "ink";
-import { theme } from "../theme.js";
+import { theme } from "../theme/index.js";
 
 export interface LoaderProps {
   message?: string;

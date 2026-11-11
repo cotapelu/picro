@@ -8,7 +8,7 @@
 import React from "react";
 import { Box, Text, useWindowSize } from "ink";
 import { formatTokens } from "./FormatTokens.js";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 import { formatCwdForFooter } from "./FormatCwd.js";
 
 interface StatusBarProps {

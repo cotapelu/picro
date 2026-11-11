@@ -8,7 +8,7 @@
 
 import React, { useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 import { fuzzyFilter } from "../core/Fuzzy.js";
 import { matchesKey } from "../core/Keys.js";
 import { getKeybindings } from "../core/Keybindings.js";

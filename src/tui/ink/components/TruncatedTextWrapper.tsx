@@ -7,7 +7,7 @@
 
 import React, { useMemo } from "react";
 import { Text } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 
 export interface TruncatedTextWrapperProps {
   text: string;

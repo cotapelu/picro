@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Box, Text } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 
 interface HeaderProps {
   title?: string;

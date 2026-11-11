@@ -7,7 +7,7 @@
 
 import React, { useState } from "react";
 import { Box, Text } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 import { DynamicBorder } from "./DynamicBorder.js";
 import { TextInput } from "./TextInput.js";
 import { CountdownTimer } from "./CountdownTimer.js";

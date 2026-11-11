@@ -9,8 +9,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Text } from "ink";
-import { getTheme } from "../theme/theme.js";
-import { truncateToWidth } from "../../../tui/ink/core/index.js";
+import { getTheme } from "../theme/index.js";
+import { truncateToWidth } from "../core/index.js";
 
 export type StatusIndicatorKind = "working" | "retry" | "compaction" | "branchSummary";
 

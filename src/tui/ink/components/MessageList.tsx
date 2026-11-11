@@ -8,7 +8,7 @@
 import React from "react";
 import { Box, Text } from "ink";
 import { MarkdownRenderer } from "./MarkdownRenderer.js";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 
 interface Message {
   id: string;

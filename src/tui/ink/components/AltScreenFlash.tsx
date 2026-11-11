@@ -6,7 +6,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Text } from "ink";
-import { theme } from "../theme.js";
+import { theme } from "../theme/index.js";
 import { visibleWidth } from "../core/TerminalText.js";
 import { requestRenderBus } from "../core/RenderBus.js";
 

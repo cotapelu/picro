@@ -8,12 +8,12 @@
 
 import React, { useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
-import { getTheme } from "../theme/theme.js";
-import { DynamicBorder } from "../../../tui/ink/components/DynamicBorder.js";
-import { TextInput } from "../../../tui/ink/components/TextInput.js";
-import { fuzzyFilter } from "../../../tui/ink/core/Fuzzy.js";
-import { matchesKey } from "../../../tui/ink/core/Keys.js";
-import { getDistinctModelName } from "../model-search.js";
+import { getTheme } from "../theme/index.js";
+import { DynamicBorder } from "./DynamicBorder.js";
+import { TextInput } from "./TextInput.js";
+import { fuzzyFilter } from "../core/Fuzzy.js";
+import { matchesKey } from "../core/Keys.js";
+import { getDistinctModelName } from "../../../modes/interactive/model-search.js";
 
 export interface ModelItemInput {
   id: string;

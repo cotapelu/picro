@@ -7,7 +7,7 @@
 
 import React, { useMemo, useState } from "react";
 import { Box, Text } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 import { stripTerminalSequences, visibleWidth } from "../core/TerminalText.js";
 
 const graphemeSegmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });

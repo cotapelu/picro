@@ -8,10 +8,10 @@
 
 import React, { useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
-import { getTheme } from "../theme/theme.js";
-import { DynamicBorder } from "../../../tui/ink/components/DynamicBorder.js";
-import { TextInput } from "../../../tui/ink/components/TextInput.js";
-import { fuzzyFilter } from "../../../tui/ink/core/Fuzzy.js";
+import { getTheme } from "../theme/index.js";
+import { DynamicBorder } from "./DynamicBorder.js";
+import { TextInput } from "./TextInput.js";
+import { fuzzyFilter } from "../core/Fuzzy.js";
 import { getProviderBrandStyle } from "./provider-brand.js";
 
 export type AuthType = "oauth" | "api_key";

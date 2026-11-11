@@ -8,7 +8,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Text, useInput } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 
 export interface TextInputProps {
   value?: string;
@@ -18,6 +18,10 @@ export interface TextInputProps {
   onChange?: (value: string) => void;
   onEscape?: () => void;
   disabled?: boolean;
+  /** Cho phép lớp ngoài can thiệp phím điều hướng (vd cuộn transcript). */
+  onKey?: (data: string, isUp: boolean, isDown: boolean) => void;
+  /** Chiều rộng khung nhìn (chỉ để tương thích API). */
+  width?: number;
 }
 
 /** Tách chuỗi theo grapheme để con trỏ không cắt giữa ký tự. */
@@ -37,6 +41,7 @@ export const TextInput: React.FC<TextInputProps> = ({
   onChange,
   onEscape,
   disabled = false,
+  onKey,
 }) => {
   const [text, setText] = useState(value);
   const [cursor, setCursor] = useState(text.length);
@@ -78,6 +83,10 @@ export const TextInput: React.FC<TextInputProps> = ({
     }
 
     // Dịch con trỏ theo grapheme.
+    if (key.upArrow || key.downArrow) {
+      onKey?.(input, key.upArrow === true, key.downArrow === true);
+      return;
+    }
     if (key.leftArrow) {
       const g = toGraphemes(ref.current.text.slice(0, ref.current.cursor));
       setCursor(Math.max(0, ref.current.cursor - (g.at(-1)?.length ?? 1)));

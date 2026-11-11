@@ -10,11 +10,11 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
-import { getTheme } from "../theme/theme.js";
-import { DynamicBorder } from "../../../tui/ink/components/DynamicBorder.js";
-import { TextInput } from "../../../tui/ink/components/TextInput.js";
-import { truncateToWidth } from "../../../tui/ink/core/index.js";
-import { matchesKey } from "../../../tui/ink/core/Keys.js";
+import { getTheme } from "../theme/index.js";
+import { DynamicBorder } from "./DynamicBorder.js";
+import { TextInput } from "./TextInput.js";
+import { truncateToWidth } from "../core/index.js";
+import { matchesKey } from "../core/Keys.js";
 
 export type ResourceType = "extensions" | "skills" | "prompts" | "themes";
 export type ConfigWriteScope = "global" | "project";

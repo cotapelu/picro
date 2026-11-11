@@ -7,12 +7,12 @@
 
 import React, { useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
-import { getTheme } from "../theme/theme.js";
-import { DynamicBorder } from "../../../tui/ink/components/DynamicBorder.js";
-import { SelectList } from "../../../tui/ink/components/SelectList.js";
-import { TextInput } from "../../../tui/ink/components/TextInput.js";
-import { fuzzyFilter } from "../../../tui/ink/core/Fuzzy.js";
-import { matchesKey } from "../../../tui/ink/core/Keys.js";
+import { getTheme } from "../theme/index.js";
+import { DynamicBorder } from "./DynamicBorder.js";
+import { SelectList } from "./SelectList.js";
+import { TextInput } from "./TextInput.js";
+import { fuzzyFilter } from "../core/Fuzzy.js";
+import { matchesKey } from "../core/Keys.js";
 
 const LEVEL_DESCRIPTIONS: Record<string, string> = {
   off: "Không suy luận",

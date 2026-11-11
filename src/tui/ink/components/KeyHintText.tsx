@@ -6,7 +6,7 @@
 
 import React from "react";
 import { Text } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 
 export interface KeyHintTextProps {
   /** Nhãn phím, ví dụ "ctrl+c" hoặc "up/down". */

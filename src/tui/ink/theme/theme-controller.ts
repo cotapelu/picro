@@ -7,7 +7,7 @@
 //   - parseAutoThemeSetting: "auto"/"system" nghĩa là theo terminal
 // Port sang TSX riêng, khon copy code truc iep.
 
-import type { RgbColor, TerminalColors } from "../../../tui/ink/core/index.js";
+import type { RgbColor, TerminalColors } from "../core/index.js";
 import { Theme, setThemeInstance, setTheme, loadBuiltinTheme } from "./theme.js";
 import { SYSTEM_THEME_NAME, generateSystemThemeColors, terminalAppearance } from "./system-theme.js";
 import { resolveColorValue, setThemeJsonValidator, validateThemeJson, type ThemeJsonInput } from "./theme-schema.js";

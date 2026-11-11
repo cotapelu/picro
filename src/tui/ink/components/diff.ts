@@ -7,7 +7,7 @@
 //   - Tab -> 3 khoảng trắng
 // Port sang TSX riêng, khon copy code truc iep.
 
-import { getTheme } from "../theme/theme.js";
+import { getTheme } from "../theme/index.js";
 
 interface ParsedLine {
   prefix: string;

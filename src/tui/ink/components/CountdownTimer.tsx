@@ -6,7 +6,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Text } from "ink";
-import { theme, fg, bg } from "../theme.js";
+import { theme, fg, bg } from "../theme/index.js";
 
 export interface CountdownTimerProps {
   /** Thời lượng đếm ngược (ms). */
