@@ -55,9 +55,15 @@ export class ContextBuilder {
     // Estimate final token count
     const tokenCount = this.estimateTokenCount(fullPrompt);
 
-    // Safety: if still over limit, recursively rebuild with more truncation
+    // Safety: if still over limit, rebuild the prompt with the already
+    // truncated history so a long system prompt can shrink in the next pass.
     if (tokenCount > maxTokens) {
-      // Recursively rebuild
+      // If there is no history left to drop (e.g. the system prompt itself
+      // already exceeds maxTokens - reservedTokens), recursing again would
+      // pass the same empty history forever, causing a stack overflow.
+      if (truncatedHistory.length === 0) {
+        return { prompt: fullPrompt, tokenCount };
+      }
       return this.build(basePrompt, truncatedHistory);
     }
 

@@ -10,6 +10,7 @@
 import { homedir } from "node:os";
 import { isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
+import type { TerminalColorMode } from "./Colors.js";
 
 export type ImageProtocol = "kitty" | "iterm2" | null;
 
@@ -108,6 +109,13 @@ export function setCapabilities(caps: TerminalCapabilities): void {
 export function setCapabilityOverrides(overrides: Partial<TerminalCapabilities>): void {
   capabilityOverrides = { ...overrides };
   cachedCapabilities = null;
+}
+
+/** Chế độ màu theo khả năng terminal: truecolor hay 256color. */
+export function getTerminalColorMode(
+  capabilities: TerminalCapabilities = getCapabilities(),
+): TerminalColorMode {
+  return capabilities.trueColor ? "truecolor" : "256color";
 }
 
 const KITTY_PREFIX = "\x1b_G";

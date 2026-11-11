@@ -201,7 +201,19 @@ export class ToolExecutor {
      if (!tool) {
        return this.createErrorResult(toolCall, `Tool '${toolCall.name}' not found`, startTime);
      }
-     const handler = tool.handler!; // All registered tools have handler
+     // A tool can legitimately be registered as metadata-only (e.g. via
+     // AgentSession.setActiveToolsByName, which copies a metadata-only
+     // ToolDefinition into the executor). Such an entry can overwrite a
+     // previously-registered executable tool in ToolExecutor.register(),
+     // leaving a definition without a handler. Return a controlled error
+     // instead of crashing inside executeWithTimeout().
+     if (!tool.handler) {
+       return this.createErrorResult(
+         toolCall,
+         `Tool '${toolCall.name}' has no handler registered (metadata-only definition)`, startTime
+       );
+     }
+     const handler = tool.handler;
 
      // Build metadata (keep original arguments for logging)
      const metadata: ToolExecutionMetadata = {

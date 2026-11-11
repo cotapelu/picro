@@ -821,13 +821,11 @@ export class SessionManager {
   private _persist(entry: SessionEntry): void {
     if (!this.persist || !this.sessionFile) return;
 
-    const hasAssistant = this.fileEntries.some(
-      (e) => e.type === "message" && (e as SessionMessageEntry).message.role === "assistant"
-    );
-    if (!hasAssistant) {
-      this.flushed = false;
-      return;
-    }
+    // Always flush, regardless of whether any assistant message exists yet.
+    // The previous "only flush once an assistant message is present" guard
+    // caused total data loss: if the process crashed before the first LLM
+    // response, every entry appended so far (including the first user turn)
+    // was never written to disk.
 
     if (!this.flushed) {
       for (const e of this.fileEntries) {

@@ -9,9 +9,17 @@ import React, { useMemo } from "react";
 import { Box, Text } from "ink";
 import { theme, fg, bg } from "../theme.js";
 
-interface MarkdownRendererProps {
+export interface MarkdownRendererProps {
   content: string;
   width?: number;
+  /** Hàm biến đổi markdown của extension. */
+  transform?: (markdown: string, availableWidth: number) => string;
+  /** Đệm ngang cho nội dung. */
+  paddingX?: number;
+  /** In nghiêng toàn bộ khối (dùng cho thinking). */
+  italic?: boolean;
+  /** Token màu chữ cho cả khối. */
+  color?: string;
 }
 
 /** Cắt một dòng theo số cột hiển thị (không tính ANSI). */
@@ -109,9 +117,9 @@ function styleLine(line: string, index: number): string {
   return styleInline(line);
 }
 
-export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, width = 80 }) => {
+export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, width = 80, transform, paddingX = 0, italic = false, color }) => {
   const rendered = useMemo(() => {
-    const contentWidth = Math.max(20, width - 4);
+    const contentWidth = Math.max(20, width - paddingX * 2);
     const blocks = parseBlocks(content);
     const out: string[] = [];
 
@@ -125,17 +133,29 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, wid
         out.push(fg("codeBlockBorder", "```"));
         return;
       }
-      block.lines.forEach((line, i) => out.push(clipLine(styleLine(line, i), contentWidth)));
+      const sourceLines = transform ? transform(block.lines.join("\n"), contentWidth).split("\n") : block.lines;
+      sourceLines.forEach((line, i) => {
+        const styled = styleLine(line, i);
+        out.push(clipLine(italic ? italicize(styled) : styled, contentWidth));
+      });
     });
 
     return out;
-  }, [content, width]);
+  }, [content, width, transform, paddingX, italic]);
+
+  const left = " ".repeat(paddingX);
 
   return (
     <Box flexDirection="column">
       {rendered.map((line, i) => (
-        <Text key={`md-${i}`}>{line || " "}</Text>
+        <Text key={`md-${i}`}>{`${left}${color ? fg(color, line) : line}`}</Text>
       ))}
     </Box>
   );
 };
+
+/** Bọc nghiêng một dòng đã tô màu, gi nguyên mã ANSI. */
+function italicize(line: string): string {
+  if (line.length === 0) return line;
+  return `\x1b[3m${line}\x1b[23m`;
+}

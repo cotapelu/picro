@@ -1192,7 +1192,6 @@ export class AgentLoop {
     followUpQueue: MessageQueue,
     roundStartTime: number,
   ): Promise<{ needNextTurn: boolean; finalResult?: AgentRunResult; toolExecutionTime: number }> {
-    this.state.totalToolCalls += toolCalls.length;
     const toolContext: ToolContext = {
       round: this.state.round,
       runtimeState: this.state,

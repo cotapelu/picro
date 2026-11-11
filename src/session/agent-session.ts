@@ -260,11 +260,20 @@ export class AgentSession {
     if (typeof this.agent.getTools === 'function') {
       for (const tool of this.agent.getTools()) {
         if (!this._toolDefinitions.has(tool.name)) {
+          // Preserve the handler if the source definition carries one.
+          // Built-in tools are registered on the Agent with a handler (see
+          // wrapBuiltinTool); without copying it here, setActiveToolsByName()
+          // would re-register a metadata-only definition into ToolExecutor,
+          // overwriting the executable one and breaking tool execution.
+          const anyToolDef = tool as any;
           const toolDef: ToolDefinition = {
             name: tool.name,
             description: tool.description,
             parameters: tool.parameters,
           };
+          if (anyToolDef.handler) {
+            toolDef.handler = anyToolDef.handler;
+          }
           // Capture optional fields if present
           if (tool.promptSnippet) toolDef.promptSnippet = tool.promptSnippet;
           if (tool.promptGuides) toolDef.promptGuides = tool.promptGuides;
