@@ -23,7 +23,9 @@ import { resetTimings, time, printTimings } from "./utils/timings.js";
 import { handleConfigCommand } from "./package-manager-cli.js";
 import { runMigrations, showDeprecationWarnings } from "./migrations.js";
 import type { Model } from "./llm/index.js";
-import { InteractiveMode } from "./modes/interactive-mode.js";
+import { startInteractiveApp } from "./tui/ink/interactive-app.js";
+import { InteractiveController } from "./modes/interactive/interactive-controller.js";
+import { createAgentSessionRuntime } from "./runtime/agent-session-runtime.js";
 
 function subscribeToSessionEvents(runtime: AgentSessionRuntime) {
   console.log('[DEBUG] Subscribing to session events...');
@@ -383,13 +385,13 @@ async function main(): Promise<void> {
   }
 
   // Start Interactive Mode (Ink TUI) - default mode
-  const interactiveMode = new InteractiveMode({
-    cwd,
-    agentDir,
-    model: resolvedModel,
-    thinkingLevel: parsed.thinking,
+  const controller = new InteractiveController({ runtime });
+
+  startInteractiveApp({
+    runtime,
+    controller,
+    initialMessage: initialResult.initialMessage,
   });
-  await interactiveMode.start();
 
   printTimings();
 }
