@@ -2,25 +2,33 @@
 
 ## Đang thực hiện / Sắp tới
 
-- [ ] Viết lại toàn bộ `src/tui/ink/interactive-app.tsx`: điểm vào Ink, kiểm tra stdin là raw-mode TTY, fallback readline REPL khi không phải TTY
-- [ ] Viết lại toàn bộ `src/tui/ink/App.tsx`: layout chuẩn pi-mono (header cố định đầu, messages co giãn chiếm không gian còn lại, input dock cố định đáy, statusbar ngay dưới input)
-- [ ] Viết lại toàn bộ `src/tui/ink/components/Input.tsx`: prompt `> `, con trỏ blinking `█`, chỉ component này đăng ký `useInput`, xử lý Enter/Backspace/ký tự in được
-- [ ] Viết lại toàn bộ `src/tui/ink/components/VirtualMessageList.tsx`: follow-end scroll như `ScrollView follow: "end"`, không đăng ký `useInput`, không xung đột với Input
-- [ ] Viết lại toàn bộ `src/tui/ink/components/StatusBar.tsx`: 2 dòng như `FooterComponent` (dòng trên pwd dim, dòng dưới model + tokens + context + trạng thái xử lý)
-- [ ] Viết lại toàn bộ `src/tui/ink/components/Header.tsx`: tiêu đề ứng dụng + phím tắt chính như `BuiltInHeader`
-- [ ] Viết lại toàn bộ `src/tui/ink/components/Modal.tsx`: overlay modal, định vị trung tâm, border tròn, padding
-- [ ] Viết lại toàn bộ `src/tui/ink/components/Toast.tsx`: thông báo tạm thời, auto-remove sau duration, màu theo loại (info/success/error/warning)
-- [ ] Viết lại toàn bộ `src/tui/ink/components/Keybindings.tsx`: hiển thị danh sách phím tắt có sẵn
-- [ ] Viết lại toàn bộ `src/tui/ink/components/ThemeSelector.tsx`: chọn chủ đề dark/light/matrix, điều hướng ↑/↓, Enter xác nhận, Ctrl+C hủy
-- [ ] Viết lại toàn bộ `src/tui/ink/components/SettingsSelector.tsx`: danh sách cài đặt (theme, công cụ bị tắt, nhà cung cấp mặc định, mô hình mặc định, cấp độ suy nghĩ), điều hướng, xác nhận
-- [ ] Viết lại toàn bộ `src/tui/ink/components/ModelSelector.tsx`: tìm kiếm mô hình, danh sách theo nhà cung cấp, điều hướng, xác nhận
-- [ ] Viết lại toàn bộ `src/tui/ink/components/SessionSelector.tsx`: chọn phiên làm việc, tìm kiếm, sắp xếp, xóa phiên
-- [ ] Viết lại toàn bộ `src/tui/ink/components/MarkdownRenderer.tsx`: render markdown tin nhắn, hỗ trợ mã, liên kết, danh sách, bảng
-- [ ] Viết lại toàn bộ `src/tui/ink/components/MessageList.tsx`: danh sách tin nhắn chat, phân biệt user/assistant, canh lề, padding
-- [ ] Viết lại toàn bộ `src/tui/ink/components/FormatTokens.ts`: định dạng số token (k, M)
-- [ ] Viết lại toàn bộ `src/tui/ink/theme.ts`: hệ thống màu (màu cơ bản, màu sáng, in đậm, mờ, nghiêng, gạch dưới, ngược, màu nền, composite helpers)
-- [ ] Viết lại toàn bộ `src/tui/ink/test-setup.ts`: cấu hình kiểm thử môi trường Ink (mock TTY)
-- [ ] Viết lại toàn bộ `src/tui/ink/index.ts`: xuất tất cả thành phần
+### Viết lại toàn bộ TUI Ink theo chuẩn pi-mono (không copy trực tiếp code)
+
+- [ ] Viết lại `src/tui/ink/interactive-app.tsx`: điểm vào Ink, kiểm tra stdin là raw-mode TTY, fallback readline REPL khi không phải TTY
+- [ ] Viết lại `src/tui/ink/App.tsx`: layout chuẩn pi-mono (header cố định đầu, messages co giãn chiếm không gian còn lại, input dock cố định đáy, statusbar ngay dưới input)
+- [ ] Viết lại `src/tui/ink/components/Header.tsx`: tiêu đề ứng dụng + phím tắt chính như BuiltInHeader
+- [ ] Viết lại `src/tui/ink/components/Input.tsx`: prompt `> `, con trỏ blinking `█`, chỉ component này đăng ký `useInput`, xử lý Enter/Backspace/ký tự in được
+- [ ] Viết lại `src/tui/ink/components/VirtualMessageList.tsx`: follow-end scroll như ScrollView follow: "end", không đăng ký useInput, không xung đột với Input
+- [ ] Viết lại `src/tui/ink/components/StatusBar.tsx`: 2 dòng như FooterComponent (dòng trên pwd dim, dòng dưới model + tokens + context + trạng thái xử lý)
+- [ ] Viết lại `src/tui/ink/components/Modal.tsx`: overlay modal, định vị trung tâm, border tròn, padding
+- [ ] Viết lại `src/tui/ink/components/Toast.tsx`: thông báo tạm thời, auto-remove sau duration, màu theo loại (info/success/error/warning)
+- [ ] Viết lại `src/tui/ink/components/Keybindings.tsx`: hiển thị danh sách phím tắt có sẵn
+- [ ] Viết lại `src/tui/ink/components/ThemeSelector.tsx`: chọn chủ đề dark/light/matrix, điều hướng ↑/↓, Enter xác nhận, Ctrl+C hủy
+- [ ] Viết lại `src/tui/ink/components/SettingsSelector.tsx`: danh sách cài đặt (theme, công cụ bị tắt, nhà cung cấp mặc định, mô hình mặc định, cấp độ suy nghĩ), điều hướng, xác nhận
+- [ ] Viết lại `src/tui/ink/components/ModelSelector.tsx`: tìm kiếm mô hình, danh sách theo nhà cung cấp, điều hướng, xác nhận
+- [ ] Viết lại `src/tui/ink/components/SessionSelector.tsx`: chọn phiên làm việc, tìm kiếm, sắp xếp, xóa phiên
+- [ ] Viết lại `src/tui/ink/components/MarkdownRenderer.tsx`: render markdown tin nhắn, hỗ trợ mã, liên kết, danh sách, bảng
+- [ ] Viết lại `src/tui/ink/components/MessageList.tsx`: danh sách tin nhắn chat, phân biệt user/assistant, canh lề, padding
+- [ ] Viết lại `src/tui/ink/components/FormatTokens.ts`: định dạng số token (k, M)
+- [ ] Viết lại `src/tui/ink/theme.ts`: hệ thống màu (màu cơ bản, màu sáng, in đậm, mờ, nghiêng, gạch dưới, ngược, màu nền, composite helpers)
+- [ ] Viết lại `src/tui/ink/test-setup.ts`: cấu hình kiểm thử môi trường Ink (mock TTY)
+- [ ] Viết lại `src/tui/ink/index.ts`: xuất tất cả thành phần
+
+### Viết lại toàn bộ Interactive Mode theo chuẩn pi-mono (không copy trực tiếp code)
+
+- [ ] Viết lại `src/modes/interactive/interactive-controller.ts`: pure TS, xử lý lệnh slash, sự kiện runtime, API cho UI
+- [ ] Viết lại `src/modes/interactive/interactive-mode.ts`: pure TS orchestrator, kết nối runtime + Ink UI, vòng lặp chính, xử lý sự kiện agent, message, tool
+- [ ] Viết lại các thành phần interactive mode (component) nếu có
 
 ## Hoàn thành
 
@@ -40,7 +48,7 @@
 - [x] ConfigManager: cấu hình bền vững, đặt lại/khôi phục
 - [x] Thêm lệnh `/sessions` (liệt kê, chuyển phiên)
 - [x] Thêm lệnh `/settings` (xem/sửa cấu hình)
-- [x] Thêm lệnh `/tools` (bật/tắt công cụ内建)
+- [x] Thêm lệnh `/tools` (bật/tắt công cụ內建)
 - [x] Thêm lệnh `/theme` (chuyển màu chủ đề)
 - [x] Port TUI Ink từ pi-mono: viết lại tất cả thành phần (Footer, MessageList, Input, Modal, StatusBar, Toast, SessionSelector, SettingsSelector, ModelSelector, ThemeSelector)
 - [x] Viết lại InteractiveController: TypeScript thuần, xử lý lệnh slash, sự kiện runtime
