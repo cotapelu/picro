@@ -12,7 +12,8 @@ export interface Toast {
 
 export interface ModalState {
   type: 'none' | 'login' | 'help' | 'thinking' | 'confirmation' |
-        'session-selector' | 'model-selector' | 'settings' | 'custom';
+        'session-selector' | 'model-selector' | 'settings' | 'sessions' |
+        'history' | 'custom';
   props?: Record<string, any>;
   onConfirm?: (result?: any) => void;
   onCancel?: () => void;

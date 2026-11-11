@@ -271,6 +271,76 @@ export async function handleCommand(ctx: CommandContext, commandId: string, slas
         return { type: 'toast', message: 'Compaction failed', toastType: 'error' };
       }
 
+    case 'sessions':
+      try {
+        const sessionMgr = runtime.sessionManager as any;
+        const entries = sessionMgr.getEntries?.() || [];
+        const currentId = sessionMgr.getSessionId?.() || '';
+        const currentCwd = sessionMgr.getCwd?.() || cwd;
+
+        if (!args) {
+          // List sessions
+          let msg = 'Sessions:\n';
+          for (const entry of entries) {
+            const marker = entry.id === currentId ? ' (current)' : '';
+            msg += `  • ${entry.id}${marker}\n`;
+          }
+          msg += `\nCurrent cwd: ${currentCwd}`;
+          msg += '\nUsage: /sessions <session-id> to switch';
+          return { type: 'toast', message: msg, toastType: 'info' };
+        }
+
+        // Switch to session
+        const targetId = args.trim();
+        const entry = entries.find((e: any) => e.id === targetId || e.id.startsWith(targetId));
+        if (!entry) {
+          return { type: 'toast', message: `Session not found: ${targetId}`, toastType: 'error' };
+        }
+        if (entry.id === currentId) {
+          return { type: 'toast', message: 'Already on this session', toastType: 'info' };
+        }
+
+        // Try to switch session
+        const sessionFile = entry.path || entry.sessionFile;
+        if (sessionFile && runtime.switchSession) {
+          const result = await runtime.switchSession(sessionFile);
+          if (result.cancelled) {
+            return { type: 'toast', message: 'Session switch cancelled', toastType: 'info' };
+          }
+          return { type: 'toast', message: `Switched to session: ${entry.id}`, toastType: 'success' };
+        }
+
+        return { type: 'toast', message: 'Session switch not supported', toastType: 'error' };
+      } catch (err) {
+        return { type: 'toast', message: 'Sessions failed: ' + (err as Error).message, toastType: 'error' };
+      }
+
+    case 'clear':
+      // Clear screen handled by UI, return toast to indicate clear requested
+      return { type: 'toast', message: '\u001b[2J\u001b[H', toastType: 'info' };
+
+    case 'history':
+      try {
+        const history = ctx.messages || [];
+        if (history.length === 0) {
+          return { type: 'toast', message: 'No command history', toastType: 'info' };
+        }
+        let msg = 'Command history:\n';
+        const recent = history.slice(-10);
+        for (const m of recent) {
+          const role = m.role === 'user' ? '>' : m.role === 'assistant' ? '<' : '!';
+          const content = typeof m.content === 'string' ? m.content : String(m.content || '');
+          msg += `  ${role} ${content.slice(0, 60)}${content.length > 60 ? '...' : ''}\n`;
+        }
+        return { type: 'toast', message: msg, toastType: 'info' };
+      } catch (err) {
+        return { type: 'toast', message: 'History failed: ' + (err as Error).message, toastType: 'error' };
+      }
+
+    case 'exit':
+      process.exit(0);
+      return { type: 'none' };
+
     case 'theme':
       try {
         const settings = runtime.settings as any;
@@ -433,6 +503,10 @@ export const BUILTIN_SLASH_COMMANDS = [
   { name: 'new', description: 'Create new session' },
   { name: 'settings', description: 'Open settings' },
   { name: 'model', description: 'Select model' },
+  { name: 'sessions', description: 'List and switch sessions' },
+  { name: 'clear', description: 'Clear the screen' },
+  { name: 'history', description: 'Show command history' },
+  { name: 'exit', description: 'Exit interactive mode (alias for /quit)' },
   { name: 'theme', description: 'Set color theme (dark, light, matrix)' },
   { name: 'tools', description: 'List, enable, or disable tools' },
   { name: 'scoped-models', description: 'Configure scoped models' },

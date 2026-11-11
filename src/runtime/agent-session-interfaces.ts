@@ -78,6 +78,12 @@ export interface AgentSessionInterface {
  */
 export interface AgentSessionRuntimeInterface {
   session: AgentSessionInterface;
+  sessionManager: {
+    getSessionName(): string | undefined;
+    getEntries(): any[];
+    getCwd(): string;
+    setSessionName(name: string): void;
+  };
   cwd: string;
   // Prompting (high-level API)
   prompt(text: string, options?: { images?: unknown[] }): Promise<void>;

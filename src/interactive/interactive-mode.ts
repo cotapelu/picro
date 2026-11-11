@@ -252,10 +252,16 @@ export class InteractiveMode {
         // Not a built-in command, insert as normal message
         await this.sendUserMessage(text);
       } else if (typeof result === 'object' && result.type === 'toast') {
-        this.state.update('toasts', (prev: Toast[]) => [
-          ...prev,
-          { id: `toast-${Date.now()}`, message: result.message, type: result.toastType || 'info', duration: 3000, createdAt: Date.now() },
-        ]);
+        // Special handling for clear command (ANSI escape sequence)
+        if (commandId === 'clear' && result.message === '\u001b[2J\u001b[H') {
+          this.screen.clear();
+          this.screen.stdout.write('');
+        } else {
+          this.state.update('toasts', (prev: Toast[]) => [
+            ...prev,
+            { id: `toast-${Date.now()}`, message: result.message, type: result.toastType || 'info', duration: 3000, createdAt: Date.now() },
+          ]);
+        }
       }
       // Modal results will be handled via state.modal already set by handlers
     } else {
