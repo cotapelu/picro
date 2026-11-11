@@ -2,10 +2,7 @@
 
 ## In Progress / Next Up
 
-- [ ] Theme system thực sự (dark/light/matrix switching động, lưu vào settings)
-- [ ] Keybindings chi tiết hơn (vim keys h/j/k/l, search trong session, Ctrl+F find)
-- [ ] HTTP API mode (chạy như server, REST/WebSocket)
-- [ ] Integration tests cho Ink TUI
+- [ ] Integration tests for Ink TUI
 - [ ] Measure coverage, enforce ≥80%
 - [ ] Enforce function length ≤20 and complexity ≤10 via lint/CI
 
@@ -38,6 +35,7 @@
 - [x] Add markdown rendering for assistant messages
 - [x] Add keybindings (Ctrl+K, Ctrl+P, Ctrl+L, Ctrl+C)
 - [x] Add theme system (dark, light, matrix)
+- [x] Add HTTP API mode with REST and WebSocket support
 - [x] Build and test
 
 ## Deferred / Future
