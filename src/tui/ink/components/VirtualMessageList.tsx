@@ -1,7 +1,7 @@
 // VirtualMessageList - hiển thị danh sách tin nhắn trong viewport.
-// Không tự dùng useInput để tránh xung đột với component Input.
+// Không đăng ký useInput để tránh xung đột với component Input.
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Text } from "ink";
 
 interface Message {
@@ -35,15 +35,13 @@ export const VirtualMessageList: React.FC<VirtualMessageListProps> = ({
     }
   }, [scrollOffset, maxScroll]);
 
-  // Khi có tin nhắn mới, nếu đang ở cuối (offset=0) thì giữ ở cuối
-  // để xem tin nhắn mới nhất. Nếu người dùng đang cuộn lên thì không ép cuộn lại.
+  // Khi có tin nhắn mới và đang ở cuối (offset=0) thì giữ ở cuối
   useEffect(() => {
     if (scrollOffset === 0 || messages.length === 0) {
       setScrollOffset(0);
     }
   }, [messages.length, scrollOffset]);
 
-  // Lấy đoạn tin nhắn hiển thị (tính từ dưới lên trên)
   const start = Math.max(0, totalMessages - visibleCount - scrollOffset);
   const end = totalMessages - scrollOffset;
   const visibleMessages = messages.slice(start, end);

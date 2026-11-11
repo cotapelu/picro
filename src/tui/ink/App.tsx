@@ -1,5 +1,9 @@
 // App - Ink TUI chính cho picro agent
-// Chỉ chứa React/Ink UI, không chứa backend logic.
+// Layout theo nguyên tắc pi-mono:
+//   - Messages area chiếm toàn bộ không gian còn lại (flexGrow)
+//   - Input dock cố định ở đáy (flexShrink=0), không bị cuộn lên
+//   - StatusBar ở dưới input
+// Chỉ Input component đăng ký useInput; các component khác không lung tung bắt phím.
 
 import React, { useState, useEffect, useCallback } from "react";
 import {
@@ -86,10 +90,10 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
       <Box key="messages-box" flexDirection="column" flexGrow={1} padding={1}>
         <VirtualMessageList key="message-list" messages={messages} viewportHeight={availableHeight} viewportWidth={columns} />
       </Box>
-      <StatusBar key="statusbar" model={status.model} tokens={status.tokens} cwd={status.cwd} isProcessing={status.isProcessing} />
-      <Box key="input-wrapper" flexShrink={0} paddingBottom={1}>
+      <Box key="input-dock" flexShrink={0} paddingBottom={1}>
         <Input key="input" onSubmit={handleSubmit} placeholder="> " />
       </Box>
+      <StatusBar key="statusbar" model={status.model} tokens={status.tokens} cwd={status.cwd} isProcessing={status.isProcessing} />
       <Toast key="toast" toasts={toasts} />
       {modal.type !== "none" && (
         <Modal key="modal" modal={{ ...modal }} />
