@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Box, Text } from "ink";
 import { theme } from "../theme/index.js";
 
-interface Toast {
+export interface ToastLike {
   id: string;
   message: string;
   type: "info" | "success" | "error" | "warning";
@@ -17,7 +17,7 @@ interface Toast {
 }
 
 interface ToastProps {
-  toasts: Toast[];
+  toasts: ToastLike[];
 }
 
 /** Khoảng thời gian mặc định một thông báo sống. */
@@ -25,7 +25,7 @@ const DEFAULT_DURATION_MS = 3000;
 /** Khoảng cách kiểm tra hết hạn. */
 const TICK_MS = 120;
 
-const colorOf = (type: Toast["type"]): ((text: string) => string) => {
+const colorOf = (type: ToastLike["type"]): ((text: string) => string) => {
   switch (type) {
     case "error":
       return theme.brightRed as unknown as (text: string) => string;

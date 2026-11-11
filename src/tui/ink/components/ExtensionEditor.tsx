@@ -12,7 +12,7 @@ import { getTheme } from "../theme/index.js";
 import { DynamicBorder } from "./DynamicBorder.js";
 import { Editor } from "./Editor.js";
 import { KeyHintText } from "./KeyHintText.js";
-import { editInExternalEditor } from "../../../modes/interactive/external-editor.js";
+import { editInExternalEditor } from "../core/ExternalEditor.js";
 
 export interface ExtensionEditorProps {
   title: string;

@@ -9,11 +9,12 @@ import readline from "node:readline";
 import { render } from "ink";
 import { App } from "./App.js";
 import type { AgentSessionRuntimeInterface } from "../../runtime/index.js";
-import type { InteractiveController } from "../../modes/interactive/interactive-controller.js";
+import type { InteractiveControllerLike } from "./controller-bridge.js";
 
 export interface InteractiveAppProps {
   runtime: AgentSessionRuntimeInterface;
-  controller: InteractiveController;
+  /** Cầu nối duy nhất tới logic app (xem controller-bridge.ts). */
+  controller: InteractiveControllerLike;
   initialMessage?: string;
 }
 

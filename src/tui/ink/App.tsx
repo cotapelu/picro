@@ -11,7 +11,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Box } from "ink";
 import type { AgentSessionRuntimeInterface } from "../../runtime/index.js";
-import type { InteractiveController } from "../../modes/interactive/interactive-controller.js";
+import type { InteractiveControllerLike } from "./controller-bridge.js";
 import { ChatViewport } from "./components/ChatViewport.js";
 import { Header } from "./components/Header.js";
 import { MessageInput } from "./components/MessageInput.js";
@@ -23,7 +23,8 @@ import { Keybindings } from "./components/Keybindings.js";
 
 interface AppProps {
   runtime: AgentSessionRuntimeInterface;
-  controller: InteractiveController;
+  /** Cầu nối duy nhất tới logic app (xem controller-bridge.ts). */
+  controller: InteractiveControllerLike;
   initialMessage?: string;
   /** Chế độ giao diện: "compact" hoặc "full". */
   layout?: "compact" | "full";

@@ -7,8 +7,8 @@
 //     không bao giờ báo prompt hay đầu ra trợ lý
 // Port sang TSX riêng, khon copy code truc iep.
 
-import type { Terminal } from "../../tui/ink/core/Terminal.js";
-import { formatProgramStatus, type ProgramStatus } from "../../tui/ink/core/ProgramStatus.js";
+import type { Terminal } from "./Terminal.js";
+import { formatProgramStatus, type ProgramStatus } from "./ProgramStatus.js";
 
 export type BlockedStatus = { kind: NonNullable<ProgramStatus["kind"]>; message: string };
 

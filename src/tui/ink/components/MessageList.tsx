@@ -10,7 +10,7 @@ import { Box, Text } from "ink";
 import { MarkdownRenderer } from "./MarkdownRenderer.js";
 import { theme, fg, bg } from "../theme/index.js";
 
-interface Message {
+export interface ChatMessageLike {
   id: string;
   role: "user" | "assistant" | "system" | "tool";
   content: string;
@@ -18,7 +18,7 @@ interface Message {
 }
 
 interface MessageListProps {
-  messages: Message[];
+  messages: ChatMessageLike[];
   viewportHeight?: number;
   viewportWidth?: number;
 }

@@ -15,9 +15,9 @@ import type { CreateAgentSessionRuntimeFactory } from "../../runtime/agent-sessi
 import { createAgentSessionRuntime } from "../../runtime/agent-session-runtime.js";
 import { getAgentDir } from "../../config.js";
 import { InteractiveController } from "./interactive-controller.js";
-import { ProgramStatusReporter } from "./program-status-reporter.js";
+import { ProgramStatusReporter } from "../../tui/ink/core/ProgramStatusReporter.js";
 import { ProcessTerminal } from "../../tui/ink/core/Terminal.js";
-import { refreshModelCatalogs } from "./model-catalog-refresh.js";
+import { refreshModelCatalogs } from "../../tui/ink/core/ModelCatalogRefresh.js";
 import { requestRenderBus } from "../../tui/ink/core/RenderBus.js";
 
 export interface InteractiveModeOptions {
@@ -94,7 +94,7 @@ export class InteractiveMode {
     this.registerSignalHandlers();
 
     this.terminal.start(
-      (data) => this.handleTerminalInput(data),
+      (data: string) => this.handleTerminalInput(data),
       () => requestRenderBus.publish(),
     );
     this.subscribeToSession();

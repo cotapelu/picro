@@ -11,8 +11,8 @@ import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { hyperlink } from "../../tui/ink/core/TerminalImage.js";
-import { getTheme } from "../../tui/ink/theme/index.js";
+import { hyperlink } from "./TerminalImage.js";
+import { getTheme } from "../theme/index.js";
 
 export type SessionShareDestination = "radius" | "gist";
 

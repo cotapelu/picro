@@ -13,7 +13,7 @@ import { DynamicBorder } from "./DynamicBorder.js";
 import { TextInput } from "./TextInput.js";
 import { fuzzyFilter } from "../core/Fuzzy.js";
 import { matchesKey } from "../core/Keys.js";
-import { getDistinctModelName } from "../../../modes/interactive/model-search.js";
+import { getDistinctModelName } from "../core/ModelSearch.js";
 
 export interface ModelItemInput {
   id: string;
