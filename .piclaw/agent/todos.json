@@ -3,42 +3,47 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Phân tích kiến trúc so với reference",
+      "name": "Rewrite Interactive TUI",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Đọc và đề cập luồng chính từ main.ts -> runtime -> session -> agent -> llm",
-          "status": "in_progress"
+          "content": "Xem xét lại cấu trúc hiện tại",
+          "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "So sánh từng module với reference llm-context (agent, llm, session, runtime, tools, modes)",
-          "status": "pending"
+          "content": "Xây dựng core TUI (Terminal, Screen, Components base)",
+          "status": "in_progress"
         },
         {
           "id": "task-3",
-          "content": "Xác định điểm khác biệt về organization, interfaces, dependencies",
+          "content": "Xây dựng UI Components (Footer, MessageList, Input, Modal)",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Kiểm tra các mode (print, rpc, tui) và tại sao tui fail",
+          "content": "Xây dựng Selector components",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Chạy tests để xác nhận coverage và tìm bugs tiềm ẩn",
+          "content": "Xây dựng InteractiveMode orchestrator",
           "status": "pending"
         },
         {
           "id": "task-6",
-          "content": "Đề xuất fixes nếu cần",
+          "content": "Sửa main.ts để chạy Interactive Mode mặc định",
+          "status": "pending"
+        },
+        {
+          "id": "task-7",
+          "content": "Build và test",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
+  "nextTaskId": 8,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-23T15:42:17.126Z"
+  "updatedAt": "2026-11-11T01:00:35.546Z"
 }

@@ -23,7 +23,7 @@ import { resetTimings, time, printTimings } from "./utils/timings.js";
 import { handleConfigCommand } from "./package-manager-cli.js";
 import { runMigrations, showDeprecationWarnings } from "./migrations.js";
 import type { Model } from "./llm/index.js";
-import { InteractiveMode } from "./interactive/interactive-mode.js";
+import { InteractiveMode } from "./modes/interactive-mode.js";
 
 function subscribeToSessionEvents(runtime: AgentSessionRuntime) {
   console.log('[DEBUG] Subscribing to session events...');

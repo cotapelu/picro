@@ -14,8 +14,8 @@
     "declarationMap": true,
     "sourceMap": true,
     "downlevelIteration": true,
-    "lib": ["ES2022"]
+    "lib": ["ES2022", "dom"]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/tui/**/*", "src/llm/scripts/**/*", "**/*.test.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist", "src/llm/scripts/**/*", "**/*.test.ts"]
 }
