@@ -1,9 +1,9 @@
 // Input - nhập liệu người dùng
-// Bắt chước nguyên tắc pi-tui Input:
+// Bắt chước nguyên tắc pi-tui Input component:
 //   - Prompt "> " cố định đầu dòng
-//   - Con trỏ blinking (█) hiển thị khi đang focus
+//   - Con trỏ blinking (█) giả lập hardware cursor khi focus
 //   - Chỉ component này đăng ký useInput của Ink để tránh xung đột phím bấm
-//   - Xử lý Enter (submit), Backspace (xóa), ký tự in được
+//   - Xử lý Enter (submit), Backspace (xóa ký tự trước), ký tự in được
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Text, useInput } from "ink";

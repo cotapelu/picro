@@ -1,6 +1,8 @@
 // Interactive App - Ink UI entry point
 // Chỉ chứa React/Ink UI, không chứa backend logic.
 // Nhận runtime và controller từ bên ngoài.
+// Bắt chước nguyên tắc pi-mono InteractiveMode: chạy TUI fullscreen,
+// fallback sang readline khi stdin không phải raw-mode TTY.
 
 import React from "react";
 import readline from "node:readline";
@@ -16,8 +18,9 @@ export interface InteractiveAppProps {
 }
 
 /**
- * Chế độ nhập liệu đơn giản (readline) dùng khi stdin không phải raw-mode TTY.
- * Ứng dụng vẫn chạy được, gõ xong nhấn Enter để gửi tin nhắn.
+ * Chế độ nhập liệu đơn giản (readline) khi stdin không phải raw-mode TTY.
+ * Ink không khởi động được, nên dùng readline thuần để người dùng vẫn nhập liệu.
+ * Gõ xong nhấn Enter để gửi tin nhắn.
  */
 function startFallbackRepl(props: InteractiveAppProps): void {
   const { controller, initialMessage } = props;
@@ -63,7 +66,7 @@ function startFallbackRepl(props: InteractiveAppProps): void {
 
 export function startInteractiveApp(props: InteractiveAppProps): void {
   // Ink yêu cầu stdin là raw-mode TTY. Nếu không, fallback sang readline REPL
-  // thay vì crash lặng.
+  // thay vì crash lặng (giống pi-mono xử lý dead terminal).
   if (!process.stdin.isTTY) {
     startFallbackRepl(props);
     return;

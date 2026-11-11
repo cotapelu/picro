@@ -1,10 +1,10 @@
 // App - Ink TUI chính cho picro agent
-// Layout bắt chước nguyên tắc pi-mono interactive-mode:
-//   - Header cố định đầu màn hình
+// Layout bắt chước nguyên tắc pi-mono InteractiveMode + ChatViewport:
+//   - Header cố định đầu màn hình (BuiltInHeader)
 //   - Messages area chiếm toàn bộ không gian còn lại (flexGrow=1), follow end
 //   - Input dock cố định đáy (flexShrink=0), không bị cuộn lên
-//   - StatusBar ngay dưới input
-//   - Keybindings, Toast, Modal ở lớp trên cùng
+//   - StatusBar ngay dưới input (như FooterComponent)
+//   - Toast, Modal, Keybindings ở lớp trên cùng
 // Chỉ Input component đăng ký useInput; các component khác không lung tung bắt phím.
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -61,6 +61,7 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
   const { exit } = useApp();
   const { columns, rows } = useWindowSize();
 
+  // Tính toán chiều cao vùng hiển thị tin nhắn (gộp header, statusbar, input vào)
   const availableHeight = rows ? Math.max(5, rows - 8) : 20;
 
   useEffect(() => {
