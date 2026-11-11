@@ -2,7 +2,9 @@
 
 ## In Progress / Next Up
 
-- [ ] Integration tests for Ink TUI
+- [ ] Write full test cases for Ink TUI components (App, Input, MessageList, Modal, StatusBar, Toast, SessionSelector, SettingsSelector, ModelSelector, ThemeSelector, Keybindings)
+- [ ] Write test cases for InteractiveController (slash commands, runtime events)
+- [ ] Add Vietnamese diacritic input support tests
 - [ ] Measure coverage, enforce ≥80%
 - [ ] Enforce function length ≤20 and complexity ≤10 via lint/CI
 
