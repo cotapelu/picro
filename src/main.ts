@@ -26,6 +26,7 @@ import type { Model } from "./llm/index.js";
 import { startInteractiveApp } from "./tui/ink/interactive-app.js";
 import { InteractiveController } from "./modes/interactive/interactive-controller.js";
 import { createAgentSessionRuntime } from "./runtime/agent-session-runtime.js";
+import { startHttpServer } from "./modes/http/index.js";
 
 function subscribeToSessionEvents(runtime: AgentSessionRuntime) {
   console.log('[DEBUG] Subscribing to session events...');
@@ -384,14 +385,32 @@ async function main(): Promise<void> {
     await runtime.session.prompt(msg);
   }
 
-  // Start Interactive Mode (Ink TUI) - default mode
   const controller = new InteractiveController({ runtime });
 
-  startInteractiveApp({
-    runtime,
-    controller,
-    initialMessage: initialResult.initialMessage,
-  });
+  // Chọn mode: TTY (Ink) hoặc HTTP API
+  if (parsed.mode === "http" || parsed.mode === "rpc") {
+    const port = parsed.port || 3000;
+    const host = parsed.host || "0.0.0.0";
+
+    startHttpServer({
+      port,
+      host,
+      runtime,
+      controller,
+    }).then(() => {
+      console.log(`HTTP API server running on ${host}:${port}`);
+    }).catch((err) => {
+      console.error("Failed to start HTTP server:", err);
+      process.exit(1);
+    });
+  } else {
+    // Default: Ink TUI mode
+    startInteractiveApp({
+      runtime,
+      controller,
+      initialMessage: initialResult.initialMessage,
+    });
+  }
 
   printTimings();
 }

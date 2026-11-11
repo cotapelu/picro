@@ -13,7 +13,9 @@ export type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhi
 export interface Args {
   provider?: string;
   model?: string;
-  mode?: string; // legacy flag, not used in TTY-only mode
+  mode?: string; // "tty" | "http" | "rpc"
+  port?: number;
+  host?: string;
   apiKey?: string;
   systemPrompt?: string;
   appendSystemPrompt?: string[];
@@ -114,11 +116,26 @@ export function parseArgs(args: string[]): Args {
       } else {
         result.diagnostics.push({ type: "warning", message: `Invalid thinking level: ${level}. Valid levels: ${VALID_THINKING_LEVELS.join(', ')}` });
       }
+    } else if (arg === "--port" && i + 1 < args.length) {
+      result.port = parseInt(args[++i], 10);
+    } else if (arg === "--host" && i + 1 < args.length) {
+      result.host = args[++i];
+    } else if (arg === "--mode" && i + 1 < args.length) {
+      const mode = args[++i];
+      if (mode === "tty" || mode === "http" || mode === "rpc") {
+        result.mode = mode;
+      } else {
+        result.diagnostics.push({ type: "warning", message: `Invalid mode: ${mode}. Valid values: tty, http, rpc` });
+      }
+    } else if (arg === "--extension" || arg === "-e") {
+      if (i + 1 < args.length) {
+        result.extensions = result.extensions ?? [];
+        result.extensions.push(args[++i]);
+      } else {
+        result.diagnostics.push({ type: "error", message: "--extension requires a value" });
+      }
     } else if (arg === "--export" && i + 1 < args.length) {
       result.export = args[++i];
-    } else if ((arg === "--extension" || arg === "-e") && i + 1 < args.length) {
-      result.extensions = result.extensions ?? [];
-      result.extensions.push(args[++i]);
     } else if (arg === "--no-extensions" || arg === "-ne") {
       result.noExtensions = true;
     } else if (arg === "--skills" && i + 1 < args.length) {
@@ -224,6 +241,9 @@ Options:
   --list-models [search]         List available models (with optional search)
   --verbose                      Force verbose startup
   --offline                      Disable startup network operations
+  --port <port>                  HTTP server port (default: 3000)
+  --host <host>                  HTTP server host (default: 0.0.0.0)
+  --mode <mode>                  Server mode: tty (default), http, rpc
   --help, -h                     Show this help
   --version, -v                  Show version number
 
