@@ -1,8 +1,8 @@
 // ThemeSelector - port ý tưởng từ pi-mono theme-selector.ts
 // Chọn theme: dark, light, matrix
-import React, { useState } from 'react';
-import { Box, Text, useInput } from 'ink';
-import type { AgentSessionRuntimeInterface } from '../../../runtime/index.js';
+import React, { useState } from "react";
+import { Box, Text, useInput } from "ink";
+import type { AgentSessionRuntimeInterface } from "../../../runtime/index.js";
 
 interface ThemeSelectorProps {
   runtime: AgentSessionRuntimeInterface;
@@ -14,13 +14,13 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ runtime, onSelect,
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const themes = [
-    { id: 'dark', label: 'Dark' },
-    { id: 'light', label: 'Light' },
-    { id: 'matrix', label: 'Matrix' },
+    { id: "dark", label: "Dark" },
+    { id: "light", label: "Light" },
+    { id: "matrix", label: "Matrix" },
   ];
 
   useInput((inputString, key) => {
-    if (key.ctrl && inputString === '\u0003') {
+    if (key.ctrl && inputString === "\u0003") {
       onCancel();
       return;
     }
@@ -53,7 +53,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ runtime, onSelect,
       <Box flexDirection="column">
         {themes.map((t, i) => (
           <Box key={t.id} flexDirection="row" justifyContent="space-between">
-            <Text color={i === currentIndex ? 'cyan' : 'white'}>{t.label}</Text>
+            <Text color={i === currentIndex ? "cyan" : "white"}>{t.label}</Text>
             {i === currentIndex && <Text dimColor>(current)</Text>}
           </Box>
         ))}
@@ -61,4 +61,4 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ runtime, onSelect,
       <Text dimColor>↑/↓: select, Enter: confirm, Ctrl+C: cancel</Text>
     </Box>
   );
-};
+}

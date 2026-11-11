@@ -1,8 +1,8 @@
 // SessionSelector - port ý tưởng từ pi-mono session-selector.ts
 // Chọn session với tìm kiếm, sắp xếp, xóa
-import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
-import type { AgentSessionRuntimeInterface } from '../../../runtime/index.js';
+import React, { useState, useEffect } from "react";
+import { Box, Text, useInput } from "ink";
+import type { AgentSessionRuntimeInterface } from "../../../runtime/index.js";
 
 interface SessionSelectorProps {
   runtime: AgentSessionRuntimeInterface;
@@ -18,7 +18,7 @@ interface SessionInfo {
 
 export const SessionSelector: React.FC<SessionSelectorProps> = ({ runtime, onSelect, onCancel }) => {
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export const SessionSelector: React.FC<SessionSelectorProps> = ({ runtime, onSel
   }, [runtime]);
 
   useInput((inputString, key) => {
-    if (key.ctrl && inputString === '\u0003') {
+    if (key.ctrl && inputString === "\u0003") {
       onCancel();
       return;
     }
@@ -70,8 +70,8 @@ export const SessionSelector: React.FC<SessionSelectorProps> = ({ runtime, onSel
       <Text>Search: {search}</Text>
       <Box flexDirection="column">
         {filtered.map((s, i) => (
-          <Text key={s.id} color={i === currentIndex ? 'cyan' : 'white'}>
-            {i + 1}. {s.id} {s.cwd ? `(${s.cwd})` : ''}
+          <Text key={s.id} color={i === currentIndex ? "cyan" : "white"}>
+            {i + 1}. {s.id} {s.cwd ? `(${s.cwd})` : ""}
           </Text>
         ))}
         {filtered.length === 0 && <Text>No sessions found</Text>}
@@ -79,4 +79,4 @@ export const SessionSelector: React.FC<SessionSelectorProps> = ({ runtime, onSel
       <Text dimColor>↑/↓: select, Enter: confirm, Ctrl+C: cancel</Text>
     </Box>
   );
-};
+}

@@ -1,8 +1,8 @@
 // ModelSelector - port ý tưởng từ pi-mono model-selector.ts
 // Chọn model với search, scoped models
-import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
-import type { AgentSessionRuntimeInterface } from '../../../runtime/index.js';
+import React, { useState, useEffect } from "react";
+import { Box, Text, useInput } from "ink";
+import type { AgentSessionRuntimeInterface } from "../../../runtime/index.js";
 
 interface ModelSelectorProps {
   runtime: AgentSessionRuntimeInterface;
@@ -17,7 +17,7 @@ interface ModelInfo {
 
 export const ModelSelector: React.FC<ModelSelectorProps> = ({ runtime, onSelect, onCancel }) => {
   const [models, setModels] = useState<ModelInfo[]>([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ runtime, onSelect,
   }, [runtime]);
 
   useInput((inputString, key) => {
-    if (key.ctrl && inputString === '\u0003') {
+    if (key.ctrl && inputString === "\u0003") {
       onCancel();
       return;
     }
@@ -71,7 +71,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ runtime, onSelect,
       <Box flexDirection="column">
         {filtered.map((m, i) => (
           <Box key={m.id} flexDirection="row" justifyContent="space-between">
-            <Text color={i === currentIndex ? 'cyan' : 'white'}>{m.id}</Text>
+            <Text color={i === currentIndex ? "cyan" : "white"}>{m.id}</Text>
             <Text dimColor>[{m.provider}]</Text>
           </Box>
         ))}
@@ -80,4 +80,4 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ runtime, onSelect,
       <Text dimColor>↑/↓: select, Enter: confirm, Ctrl+C: cancel</Text>
     </Box>
   );
-};
+}

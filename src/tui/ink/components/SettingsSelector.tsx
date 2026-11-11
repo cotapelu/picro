@@ -1,8 +1,8 @@
 // SettingsSelector - port ý tưởng từ pi-mono settings-selector.ts
 // Cài đặt: theme, disabled tools, provider, model, thinking level
-import React, { useState } from 'react';
-import { Box, Text, useInput } from 'ink';
-import type { AgentSessionRuntimeInterface } from '../../../runtime/index.js';
+import React, { useState } from "react";
+import { Box, Text, useInput } from "ink";
+import type { AgentSessionRuntimeInterface } from "../../../runtime/index.js";
 
 interface SettingsSelectorProps {
   runtime: AgentSessionRuntimeInterface;
@@ -14,15 +14,15 @@ export const SettingsSelector: React.FC<SettingsSelectorProps> = ({ runtime, onS
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const settings = [
-    { key: 'theme', label: 'Theme', value: 'dark' },
-    { key: 'disabledTools', label: 'Disabled tools', value: 'none' },
-    { key: 'defaultProvider', label: 'Default provider', value: 'unknown' },
-    { key: 'defaultModel', label: 'Default model', value: 'none' },
-    { key: 'defaultThinkingLevel', label: 'Default thinking', value: 'off' },
+    { key: "theme", label: "Theme", value: "dark" },
+    { key: "disabledTools", label: "Disabled tools", value: "none" },
+    { key: "defaultProvider", label: "Default provider", value: "unknown" },
+    { key: "defaultModel", label: "Default model", value: "none" },
+    { key: "defaultThinkingLevel", label: "Default thinking", value: "off" },
   ];
 
   useInput((inputString, key) => {
-    if (key.ctrl && inputString === '\u0003') {
+    if (key.ctrl && inputString === "\u0003") {
       onCancel();
       return;
     }
@@ -57,7 +57,7 @@ export const SettingsSelector: React.FC<SettingsSelectorProps> = ({ runtime, onS
       <Box flexDirection="column">
         {settings.map((s, i) => (
           <Box key={s.key} flexDirection="row" justifyContent="space-between">
-            <Text color={i === selectedIndex ? 'cyan' : 'white'}>{s.label}</Text>
+            <Text color={i === selectedIndex ? "cyan" : "white"}>{s.label}</Text>
             <Text dimColor>{s.value}</Text>
           </Box>
         ))}
@@ -65,4 +65,4 @@ export const SettingsSelector: React.FC<SettingsSelectorProps> = ({ runtime, onS
       <Text dimColor>↑/↓: select, Enter: confirm, Ctrl+C: cancel</Text>
     </Box>
   );
-};
+}

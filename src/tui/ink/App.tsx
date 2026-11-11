@@ -1,22 +1,22 @@
 // App - Ink TUI chính cho picro agent
 // Port ý tưởng từ pi-mono interactive-mode.ts
 // Viết lại bằng Ink TSX, không copy code
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Text,
   useApp,
   useInput,
-} from 'ink';
-import type { AgentSessionRuntimeInterface } from '../../runtime/index.js';
-import type { InteractiveController } from '../../modes/interactive/interactive-controller.js';
-import { Header } from './components/Header.js';
-import { Footer } from './components/Footer.js';
-import { Input } from './components/Input.js';
-import { MessageList } from './components/MessageList.js';
-import { Modal } from './components/Modal.js';
-import { StatusBar } from './components/StatusBar.js';
-import { Toast } from './components/Toast.js';
+} from "ink";
+import type { AgentSessionRuntimeInterface } from "../../runtime/index.js";
+import type { InteractiveController } from "../../modes/interactive/interactive-controller.js";
+import { Header } from "./components/Header.js";
+import { Footer } from "./components/Footer.js";
+import { Input } from "./components/Input.js";
+import { MessageList } from "./components/MessageList.js";
+import { Modal } from "./components/Modal.js";
+import { StatusBar } from "./components/StatusBar.js";
+import { Toast } from "./components/Toast.js";
 
 interface AppProps {
   runtime: AgentSessionRuntimeInterface;
@@ -26,7 +26,7 @@ interface AppProps {
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant' | 'system' | 'tool';
+  role: "user" | "assistant" | "system" | "tool";
   content: string;
   timestamp: number;
 }
@@ -34,14 +34,14 @@ interface Message {
 interface ToastItem {
   id: string;
   message: string;
-  type: 'info' | 'success' | 'error' | 'warning';
+  type: "info" | "success" | "error" | "warning";
   duration?: number;
   createdAt: number;
 }
 
 interface ModalState {
-  type: 'none' | 'login' | 'help' | 'thinking' | 'confirmation' |
-        'session-selector' | 'model-selector' | 'settings' | 'custom' | 'theme-selector';
+  type: "none" | "login" | "help" | "thinking" | "confirmation" |
+        "session-selector" | "model-selector" | "settings" | "custom" | "theme-selector";
   props?: Record<string, any>;
 }
 
@@ -50,7 +50,7 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
   const [status, setStatus] = useState<{ model: string; tokens: string; cwd: string; isProcessing: boolean }>(controller.getStatus());
   const [modal, setModal] = useState<ModalState>(controller.getModal());
   const [toasts, setToasts] = useState<ToastItem[]>(controller.getToasts());
-  const [cwd, setCwd] = useState<string>(runtime.cwd || '.');
+  const [cwd, setCwd] = useState<string>(runtime.cwd || ".");
 
   const { exit } = useApp();
 
@@ -59,7 +59,7 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
     if (initialMessage) {
       controller.sendMessage(initialMessage);
     }
-    setCwd(runtime.cwd || '.');
+    setCwd(runtime.cwd || ".");
   }, [runtime, initialMessage, controller]);
 
   // Đăng ký callbacks từ controller
@@ -76,7 +76,7 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
 
   // Xử lý Ctrl+C
   useInput((inputString, key) => {
-    if (key.ctrl && inputString === '\u0003') {
+    if (key.ctrl && inputString === "\u0003") {
       exit();
       process.exit(0);
     }
@@ -86,6 +86,14 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
   const handleSubmit = useCallback((text: string) => {
     controller.sendMessage(text);
   }, [controller]);
+
+  // Thêm toast helper
+  const addToast = useCallback((message: string, type: ToastItem["type"] = "info") => {
+    setToasts((prev) => [
+      ...prev,
+      { id: `toast-${Date.now()}`, message, type, createdAt: Date.now() },
+    ]);
+  }, []);
 
   const maxMsgHeight = 20;
 
@@ -98,7 +106,7 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
       <StatusBar key="statusbar" model={status.model} tokens={status.tokens} cwd={status.cwd} isProcessing={status.isProcessing} />
       <Input key="input" onSubmit={handleSubmit} placeholder="> " />
       <Toast key="toast" toasts={toasts} />
-      {modal.type !== 'none' && (
+      {modal.type !== "none" && (
         <Modal key="modal" modal={{ ...modal }} />
       )}
     </Box>

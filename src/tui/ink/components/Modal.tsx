@@ -1,20 +1,20 @@
 // Modal - port ý tưởng từ pi-mono Modal component
-import React from 'react';
-import { Box, Text } from 'ink';
+import React from "react";
+import { Box, Text } from "ink";
 
 interface ModalProps {
   modal: {
-    type: 'none' | 'login' | 'help' | 'thinking' | 'confirmation' |
-          'session-selector' | 'model-selector' | 'settings' | 'custom' | 'theme-selector';
+    type: "none" | "login" | "help" | "thinking" | "confirmation" |
+          "session-selector" | "model-selector" | "settings" | "custom" | "theme-selector";
     props?: Record<string, any>;
     onConfirm?: (result?: any) => void;
     onCancel?: () => void;
   };
 }
 
-const renderModalContent = (modal: ModalProps['modal']): React.ReactNode => {
+const renderModalContent = (modal: ModalProps["modal"]): React.ReactNode => {
   switch (modal.type) {
-    case 'help':
+    case "help":
       return (
         <Box>
           <Text bold>Help</Text>
@@ -26,15 +26,15 @@ const renderModalContent = (modal: ModalProps['modal']): React.ReactNode => {
           <Text>/quit - Exit</Text>
         </Box>
       );
-    case 'thinking':
+    case "thinking":
       return (
         <Box>
           <Text bold>Thinking Level</Text>
-          <Text>Current: {modal.props?.current || 'medium'}</Text>
+          <Text>Current: {modal.props?.current || "medium"}</Text>
           <Text>Options: off, minimal, low, medium, high, xhigh</Text>
         </Box>
       );
-    case 'login':
+    case "login":
       return (
         <Box>
           <Text bold>Login</Text>
@@ -42,22 +42,22 @@ const renderModalContent = (modal: ModalProps['modal']): React.ReactNode => {
           <Text>(saved to ~/.pi/agent/auth.json)</Text>
         </Box>
       );
-    case 'confirmation':
+    case "confirmation":
       return (
         <Box>
-          <Text bold>{modal.props?.title || 'Confirm'}</Text>
-          <Text>{modal.props?.message || ''}</Text>
+          <Text bold>{modal.props?.title || "Confirm"}</Text>
+          <Text>{modal.props?.message || ""}</Text>
         </Box>
       );
-    case 'settings':
+    case "settings":
       return (
         <Box>
           <Text bold>Settings</Text>
-          <Text>Theme: {modal.props?.theme || 'default'}</Text>
-          <Text>Disabled tools: {modal.props?.disabledTools?.join(', ') || 'none'}</Text>
+          <Text>Theme: {modal.props?.theme || "default"}</Text>
+          <Text>Disabled tools: {modal.props?.disabledTools?.join(", ") || "none"}</Text>
         </Box>
       );
-    case 'session-selector':
+    case "session-selector":
       return (
         <Box>
           <Text bold>Session Selector</Text>
@@ -72,28 +72,28 @@ const renderModalContent = (modal: ModalProps['modal']): React.ReactNode => {
           )}
         </Box>
       );
-    case 'model-selector':
+    case "model-selector":
       return (
         <Box>
           <Text bold>Model Selector</Text>
-          <Text>Current: {modal.props?.current || 'none'}</Text>
+          <Text>Current: {modal.props?.current || "none"}</Text>
         </Box>
       );
-    case 'theme-selector':
+    case "theme-selector":
       return (
         <Box>
           <Text bold>Theme Selector</Text>
-          <Text>Current: {modal.props?.current || 'default'}</Text>
+          <Text>Current: {modal.props?.current || "default"}</Text>
           <Text>Options: dark, light, matrix</Text>
         </Box>
       );
     default:
       return <Text>Modal: {modal.type}</Text>;
   }
-};
+}
 
 export const Modal: React.FC<ModalProps> = ({ modal }) => {
-  if (modal.type === 'none') return null;
+  if (modal.type === "none") return null;
 
   return (
     <Box
@@ -110,4 +110,4 @@ export const Modal: React.FC<ModalProps> = ({ modal }) => {
       {renderModalContent(modal)}
     </Box>
   );
-};
+}

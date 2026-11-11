@@ -1,21 +1,22 @@
 // Input - nhập liệu người dùng
 // Port ý tưởng từ pi-mono, dùng Ink useInput hook
-import React, { useRef, useCallback } from 'react';
-import { Box, Text, useInput, useApp } from 'ink';
+import React, { useRef, useEffect, useCallback } from "react";
+import { Box, Text, useInput, useApp } from "ink";
 
 interface InputProps {
   onSubmit: (text: string) => void;
   placeholder?: string;
+  value?: string;
 }
 
-export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = '> ' }) => {
+export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = "> ", value = "" }) => {
   const { exit } = useApp();
-  const inputRef = useRef<string>('');
+  const inputRef = useRef<string>(value);
 
   // Xử lý phím bấm từ stdin
   useInput((inputString, key) => {
     // Ctrl+C
-    if (key.ctrl && inputString === '\u0003') {
+    if (key.ctrl && inputString === "\u0003") {
       exit();
       process.exit(0);
     }
@@ -25,7 +26,7 @@ export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = '> ' }) =>
       if (currentValue.trim()) {
         onSubmit(currentValue.trim());
       }
-      inputRef.current = '';
+      inputRef.current = "";
     }
     // Backspace
     if (key.backspace) {
@@ -41,6 +42,10 @@ export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = '> ' }) =>
       inputRef.current += inputString;
     }
   });
+
+  useEffect(() => {
+    inputRef.current = value;
+  }, [value]);
 
   return (
     <Box paddingBottom={1} flexDirection="row">
