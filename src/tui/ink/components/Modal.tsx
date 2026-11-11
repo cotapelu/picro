@@ -1,11 +1,12 @@
 // Modal - hiển thị modal dialog (login, help, thinking, confirmation, settings)
+// Port từ pi-mono Modal component
 import React from 'react';
 import { Box, Text } from 'ink';
 
 interface ModalProps {
   modal: {
     type: 'none' | 'login' | 'help' | 'thinking' | 'confirmation' |
-          'session-selector' | 'model-selector' | 'settings' | 'custom';
+          'session-selector' | 'model-selector' | 'settings' | 'custom' | 'theme-selector';
     props?: Record<string, any>;
     onConfirm?: (result?: any) => void;
     onCancel?: () => void;
@@ -77,6 +78,14 @@ const renderModalContent = (modal: ModalProps['modal']): React.ReactNode => {
         <Box>
           <Text bold>Model Selector</Text>
           <Text>Current: {modal.props?.current || 'none'}</Text>
+        </Box>
+      );
+    case 'theme-selector':
+      return (
+        <Box>
+          <Text bold>Theme Selector</Text>
+          <Text>Current: {modal.props?.current || 'default'}</Text>
+          <Text>Options: dark, light, matrix</Text>
         </Box>
       );
     default:

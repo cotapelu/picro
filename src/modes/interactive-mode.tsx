@@ -1,5 +1,6 @@
 // Interactive Mode - Entry point for Ink TUI mode
-// Tham khảo pi-mono packages/coding-agent/src/modes/interactive/interactive-mode.ts
+// Port từ pi-mono packages/coding-agent/src/modes/interactive/interactive-mode.ts
+// Viết lại bằng Ink (không copy code)
 
 import React from 'react';
 import { render } from 'ink';

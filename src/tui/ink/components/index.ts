@@ -6,3 +6,4 @@ export * from './MessageList.js';
 export * from './Modal.js';
 export * from './StatusBar.js';
 export * from './Toast.js';
+export * from './FormatTokens.js';

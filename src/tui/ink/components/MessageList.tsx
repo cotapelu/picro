@@ -1,4 +1,5 @@
 // MessageList - hiển thị danh sách tin nhắn hội thoại
+// Port từ pi-mono assistant-message.ts, user-message.ts
 import React from 'react';
 import { Box, Text } from 'ink';
 
@@ -23,9 +24,9 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, maxHeight })
         const isUser = msg.role === 'user';
         return (
           <Box key={msg.id} flexDirection="column" marginBottom={1}>
-            <Text key="role">{isUser ? 'You' : 'Assistant'}:</Text>
-            <Box key="content-box" marginLeft={2} paddingRight={1}>
-              <Text key="content">{msg.content}</Text>
+            <Text key={`role-${msg.id}`}>{isUser ? 'You' : 'Assistant'}:</Text>
+            <Box key={`content-box-${msg.id}`} marginLeft={2} paddingRight={1}>
+              <Text key={`content-${msg.id}`}>{msg.content}</Text>
             </Box>
           </Box>
         );

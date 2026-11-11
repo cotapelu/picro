@@ -1,4 +1,5 @@
 // App - Ink TUI chính cho picro agent
+// Port từ pi-mono interactive-mode, viết lại bằng Ink (không copy code)
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -37,7 +38,7 @@ interface ToastItem {
 
 interface ModalState {
   type: 'none' | 'login' | 'help' | 'thinking' | 'confirmation' |
-        'session-selector' | 'model-selector' | 'settings' | 'custom';
+        'session-selector' | 'model-selector' | 'settings' | 'custom' | 'theme-selector';
   props?: Record<string, any>;
 }
 

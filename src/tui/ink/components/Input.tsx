@@ -1,4 +1,5 @@
-// Input - nhập liệu người dùng (dùng useInput hook từ Ink)
+// Input - nhập liệu người dùng
+// Port từ pi-mono, dùng Ink useInput hook
 import React, { useRef, useEffect, useCallback } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
 
