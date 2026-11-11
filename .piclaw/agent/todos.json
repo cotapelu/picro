@@ -3,62 +3,72 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Sục sảo agent, llm, tools, events, cli, extensions, utils, modes",
+      "name": "Đọc lại FULL mọi dòng code backend, không bỏ sót",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Đọc src/agent/* (tất cả file agent)",
+          "content": "Đọc lại src/main.ts từng dòng",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Đọc src/llm/* (tất cả file LLM)",
+          "content": "Đọc lại src/runtime/cli-args.ts từng dòng",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Đọc src/tools/* (tất cả file tools)",
+          "content": "Đọc lại src/runtime/settings-manager.ts từng dòng",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Đọc src/events/* (tất cả file events)",
+          "content": "Đọc lại src/session/session-manager.ts từng dòng",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Đọc src/cli/* (tất cả file CLI)",
+          "content": "Đọc lại src/session/agent-session.ts từng dòng",
           "status": "pending"
         },
         {
           "id": "task-6",
-          "content": "Đọc src/migrations.ts, package-manager-cli.ts",
+          "content": "Đọc lại src/agent/agent.ts từng dòng",
           "status": "pending"
         },
         {
           "id": "task-7",
-          "content": "Đọc src/extensions/* (tất cả file extensions)",
+          "content": "Đọc lại src/agent/agent-loop.ts từng dòng",
           "status": "pending"
         },
         {
           "id": "task-8",
-          "content": "Đọc src/utils/* (tất cả file utils)",
+          "content": "Đọc lại src/agent/tool-executor.ts từng dòng",
           "status": "pending"
         },
         {
           "id": "task-9",
-          "content": "Đọc src/modes/* (tất cả file modes)",
+          "content": "Đọc lại src/llm/providers/openai-compatible.ts từng dòng",
           "status": "pending"
         },
         {
           "id": "task-10",
-          "content": "Tổng hợp và báo cáo tất cả bug tìm được",
+          "content": "Đọc lại src/tools/* từng dòng",
+          "status": "pending"
+        },
+        {
+          "id": "task-11",
+          "content": "Đọc lại các file còn lại từng dòng",
+          "status": "pending"
+        },
+        {
+          "id": "task-12",
+          "content": "Tổng hợp tất cả bug tìm được",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 11,
+  "nextTaskId": 13,
   "nextPhaseId": 2,
-  "updatedAt": "2026-11-11T07:23:57.648Z"
+  "updatedAt": "2026-11-11T07:33:08.649Z"
 }

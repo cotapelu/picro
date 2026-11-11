@@ -17,6 +17,7 @@ export * from "./ModelSelector.js";
 export * from "./SelectList.js";
 export * from "./SessionSelector.js";
 export * from "./SettingsSelector.js";
+export * from "./SettingsList.js";
 export * from "./SettingsSubmenu.js";
 export * from "./ShowImagesSelector.js";
 export * from "./Spacer.js";

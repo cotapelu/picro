@@ -18,4 +18,8 @@ export * from "./TerminalColors.js";
 export * from "./TerminalImage.js";
 export * from "./NativePlatform.js";
 export * from "./NativeModifiers.js";
+export * from "./NativeModulePath.js";
 export * from "./RenderBus.js";
+export * from "./EditorComponent.js";
+export * from "./Autocomplete.js";
+export * from "./TuiTypes.js";
