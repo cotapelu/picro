@@ -15,7 +15,11 @@ export type {
 } from './agent-session-runtime.js';
 
 // Session Interfaces (UI/Runtime contracts)
-// (Removed: now using AgentSessionRuntime class directly)
+export type {
+  AgentSessionInterface,
+  AgentSessionRuntimeInterface,
+  AgentSessionRuntimeEvent,
+} from './agent-session-interfaces.js';
 
 // Re-export core & session for convenience
 export { Agent, AgentConfig, AgentRunResult } from '../agent/index.js';

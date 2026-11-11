@@ -80,7 +80,6 @@ export interface Settings {
   followUpMode?: "all" | "one-at-a-time";
   disabledTools?: string[];
   theme?: string;
-  disabledTools?: string[];
   compaction?: CompactionSettings;
   branchSummary?: BranchSummarySettings;
   retry?: RetrySettings;
@@ -640,25 +639,6 @@ export class SettingsManager {
   setTheme(theme: string): void {
     this.globalSettings.theme = theme;
     this.markModified("theme");
-    this.save();
-  }
-
-  // Tool management
-  getDisabledTools(): string[] {
-    return this.settings.disabledTools || [];
-  }
-
-  setToolDisabled(name: string, disabled: boolean): void {
-    const current = this.settings.disabledTools || [];
-    let updated: string[];
-    if (disabled) {
-      if (current.includes(name)) return; // already disabled
-      updated = [...current, name];
-    } else {
-      updated = current.filter((t) => t !== name);
-    }
-    this.globalSettings.disabledTools = updated;
-    this.markModified("disabledTools");
     this.save();
   }
 
