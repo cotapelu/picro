@@ -10,11 +10,11 @@ This document captures the agent's strengths, weaknesses, and areas needing atte
 
 ## Weaknesses / Fragile Areas
 
-- **Interface-Implementation Drift**: Mismatches between interfaces and concrete classes (e.g., `cycleModel` return type, `fork` options parameter). This causes build failures and needs constant vigilance.
-- **Partial Implementations**: Until recently, print and RPC modes were missing; TUI is still not fully validated. Coverage gaps in non-default modes.
+- **Interface-Implementation Drift**: Mostly resolved — AgentSessionRuntime now delegates directly to AgentSession, removing interface drift. Still requires vigilance when adding new methods.
+- **Partial Implementations**: Print and RPC modes fully implemented. Ink TUI mode validated with core slash commands. Coverage gaps remain in edge cases for alternate modes.
 - **Circular Dependencies**: The `AgentSessionRuntime` and `AgentSession` relationship requires careful handling to avoid import cycles.
-- **Type Strictness vs Practicality**: Interfaces sometimes expose internal fields unnecessarily (`_extensionRunner`) or omit optional parameters, leading to friction.
-- **Build Process**: Outdated steps (obsolete file copy) suggest infrequent execution of full build pipeline.
+- **Type Strictness vs Practicality**: Interfaces sometimes expose internal fields unnecessarily or omit optional parameters, leading to friction.
+- **Build Process**: Build pipeline working correctly (tsc + esbuild TUI bundling).
 
 ## Task Patterns That Usually Fail
 

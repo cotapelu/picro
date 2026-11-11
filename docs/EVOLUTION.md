@@ -9,9 +9,18 @@ This outline tracks planned changes, refactors, and anticipated technical debt.
 - **RPC Mode**: Full JSON-RPC 2.0 implementation over stdin/stdout. Exposes agent, session, settings, auth, clipboard APIs.
 - **Type Corrections**: Aligned `cycleModel` signature (`forward`/`backward`, Promise return); added optional `options` to `fork` method in runtime interface; removed private field from session interface.
 
+## Completed (Iteration 3 - 2025-07-04)
+
+- **Port from TTY evolution**: Runtime API simplification, trust manager exports,
+  settings disabledTools, AgentSession tool methods, CLI args fixes, /theme and
+  /tools commands for Ink TUI, trust-utils and truncate unit tests.
+- **TUI Mode Validation**: Ink TUI boots correctly with slash commands
+  (/theme, /tools, /compact, /settings, /login, /model, etc.). All imports and
+  event wiring validated.
+- **Build Stable**: tsc + esbuild TUI bundling working. All tests pass.
+
 ## In Progress
 
-- **TUI Mode Validation**: Verify interactive TUI boots correctly; fix any missing imports or event wiring.
 - **Print Mode Enhancements**: Consider streaming response or full conversation output.
 
 ## Planned

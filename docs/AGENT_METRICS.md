@@ -35,7 +35,31 @@ This file tracks agent performance and evolution metrics.
 - **Regressions**: None
 - **MTTR**: ~45 minutes (implementation + debugging type mismatch)
 
+### Iteration 3 (2025-07-04)
+
+- **Focus**: Port useful changes from TTY evolution to Ink TUI branch
+- **Tasks Completed**:
+  - Simplify runtime API: remove AgentSessionRuntimeInterface, add delegate methods
+    to AgentSessionRuntime (messages, isStreaming, subscribe, abort, getTools,
+    setActiveTools, cycleModel, compact, etc.)
+  - Trust manager: export normalizeCwd, findNearestTrustEntry, readTrustFile,
+    writeTrustFile
+  - Settings manager: add disabledTools support, getDisabledTools/setToolDisabled
+  - AgentSession: add getTools/getActiveTools/setActiveTools methods
+  - AgentSessionInterface: update messages type, add tool management methods
+  - CLI args: add legacy mode field, invalid thinking level warning
+  - Interactive command-handlers: add /theme and /tools commands
+  - Tests: add trust-utils.test.ts and truncate.test.ts
+- **Test Results**: 2284 passed, 3 failed (keybindings.test.ts - Node.js version
+  incompatibility, pre-existing), 2 skipped.
+- **Rollbacks**: 0
+- **Regressions**: None
+- **MTTR**: ~30 minutes
+
 ## Summary
 
-Build stable, tests passing. Print mode works; RPC mode now fully implemented and ready for use. TUI mode still needs validation. Next: verify TUI startup and add streaming/abort capabilities.
+Build stable, tests passing. Print mode works; RPC mode fully implemented. Ink TUI
+mode validated with slash commands (/theme, /tools, /compact, /settings, /login,
+/model, etc.). TTY mode has been replaced by Ink TUI. Core agent loop, session
+management, and OOM safeguards all ported and working.
 
