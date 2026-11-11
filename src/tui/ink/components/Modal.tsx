@@ -1,5 +1,4 @@
-// Modal - hiển thị modal dialog (login, help, thinking, confirmation, settings)
-// Port từ pi-mono Modal component
+// Modal - port ý tưởng từ pi-mono Modal component
 import React from 'react';
 import { Box, Text } from 'ink';
 

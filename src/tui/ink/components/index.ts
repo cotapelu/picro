@@ -7,3 +7,7 @@ export * from './Modal.js';
 export * from './StatusBar.js';
 export * from './Toast.js';
 export * from './FormatTokens.js';
+export * from './SessionSelector.js';
+export * from './SettingsSelector.js';
+export * from './ModelSelector.js';
+export * from './ThemeSelector.js';

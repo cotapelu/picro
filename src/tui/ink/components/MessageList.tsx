@@ -1,5 +1,4 @@
-// MessageList - hiển thị danh sách tin nhắn hội thoại
-// Port từ pi-mono assistant-message.ts, user-message.ts
+// MessageList - port ý tưởng từ pi-mono assistant-message.ts, user-message.ts
 import React from 'react';
 import { Box, Text } from 'ink';
 

@@ -1,17 +1,16 @@
 // Input - nhập liệu người dùng
-// Port từ pi-mono, dùng Ink useInput hook
-import React, { useRef, useEffect, useCallback } from 'react';
+// Port ý tưởng từ pi-mono, dùng Ink useInput hook
+import React, { useRef, useCallback } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
 
 interface InputProps {
   onSubmit: (text: string) => void;
   placeholder?: string;
-  value?: string;
 }
 
-export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = '> ', value = '' }) => {
+export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = '> ' }) => {
   const { exit } = useApp();
-  const inputRef = useRef<string>(value);
+  const inputRef = useRef<string>('');
 
   // Xử lý phím bấm từ stdin
   useInput((inputString, key) => {
@@ -43,14 +42,10 @@ export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = '> ', valu
     }
   });
 
-  useEffect(() => {
-    inputRef.current = value;
-  }, [value]);
-
   return (
     <Box paddingBottom={1} flexDirection="row">
       <Text>{placeholder}</Text>
       <Text>{inputRef.current}</Text>
     </Box>
   );
-};
+}

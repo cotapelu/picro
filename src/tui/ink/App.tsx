@@ -1,5 +1,6 @@
 // App - Ink TUI chính cho picro agent
-// Port từ pi-mono interactive-mode, viết lại bằng Ink (không copy code)
+// Port ý tưởng từ pi-mono interactive-mode.ts
+// Viết lại bằng Ink TSX, không copy code
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -8,6 +9,7 @@ import {
   useInput,
 } from 'ink';
 import type { AgentSessionRuntimeInterface } from '../../runtime/index.js';
+import type { InteractiveController } from '../../modes/interactive/interactive-controller.js';
 import { Header } from './components/Header.js';
 import { Footer } from './components/Footer.js';
 import { Input } from './components/Input.js';
@@ -18,6 +20,7 @@ import { Toast } from './components/Toast.js';
 
 interface AppProps {
   runtime: AgentSessionRuntimeInterface;
+  controller: InteractiveController;
   initialMessage?: string;
 }
 
@@ -42,12 +45,11 @@ interface ModalState {
   props?: Record<string, any>;
 }
 
-export const App: React.FC<AppProps> = ({ runtime, initialMessage }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [modal, setModal] = useState<ModalState>({ type: 'none' });
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage }) => {
+  const [messages, setMessages] = useState<Message[]>(controller.getMessages());
+  const [status, setStatus] = useState<{ model: string; tokens: string; cwd: string; isProcessing: boolean }>(controller.getStatus());
+  const [modal, setModal] = useState<ModalState>(controller.getModal());
+  const [toasts, setToasts] = useState<ToastItem[]>(controller.getToasts());
   const [cwd, setCwd] = useState<string>(runtime.cwd || '.');
 
   const { exit } = useApp();
@@ -55,69 +57,22 @@ export const App: React.FC<AppProps> = ({ runtime, initialMessage }) => {
   // Khởi tạo tin nhắn ban đầu
   useEffect(() => {
     if (initialMessage) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `msg-${Date.now()}`,
-          role: 'user',
-          content: initialMessage,
-          timestamp: Date.now(),
-        },
-      ]);
+      controller.sendMessage(initialMessage);
     }
     setCwd(runtime.cwd || '.');
-  }, [runtime, initialMessage]);
+  }, [runtime, initialMessage, controller]);
 
-  // Đăng ký sự kiện từ runtime
+  // Đăng ký callbacks từ controller
   useEffect(() => {
-    const session = runtime.session as any;
-    if (!session?.subscribe) return;
+    controller.onMessage((msgs) => setMessages(msgs));
+    controller.onStatusChange((st) => setStatus(st));
+    controller.onToast((t) => setToasts((prev) => [...prev, t]));
+    controller.onModalChange((m) => setModal(m));
 
-    const unsub = session.subscribe((event: any) => {
-      switch (event.type) {
-        case 'agent_start':
-          setIsProcessing(true);
-          break;
-        case 'agent_end':
-          setIsProcessing(false);
-          break;
-        case 'message_start':
-          setIsProcessing(true);
-          break;
-        case 'message_end': {
-          setIsProcessing(false);
-          const content = event.message?.content || '';
-          const text = Array.isArray(content)
-            ? content.filter((c: any) => c.type === 'text').map((c: any) => c.text).join('\n')
-            : String(content);
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `msg-${Date.now()}`,
-              role: 'assistant',
-              content: text,
-              timestamp: Date.now(),
-            },
-          ]);
-          break;
-        }
-        case 'error': {
-          setIsProcessing(false);
-          setToasts((prev) => [
-            ...prev,
-            {
-              id: `toast-${Date.now()}`,
-              message: event.message || 'Error',
-              type: 'error',
-              createdAt: Date.now(),
-            },
-          ]);
-          break;
-        }
-      }
-    });
-    return () => unsub?.();
-  }, [runtime]);
+    return () => {
+      // cleanup nếu cần
+    };
+  }, [controller]);
 
   // Xử lý Ctrl+C
   useInput((inputString, key) => {
@@ -129,46 +84,8 @@ export const App: React.FC<AppProps> = ({ runtime, initialMessage }) => {
 
   // Xử lý submit input
   const handleSubmit = useCallback((text: string) => {
-    if (!text.trim()) return;
-
-    // Kiểm tra slash command
-    if (text.startsWith('/')) {
-      const parts = text.split(' ');
-      const commandId = parts[0].slice(1);
-      const args = parts.slice(1).join(' ');
-
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: `toast-${Date.now()}`,
-          message: `Command: /${commandId} ${args}`,
-          type: 'info',
-          createdAt: Date.now(),
-        },
-      ]);
-    } else {
-      // Gửi tin nhắn bình thường
-      setMessages((prev) => [
-        ...prev,
-        { id: `msg-${Date.now()}`, role: 'user', content: text, timestamp: Date.now() },
-      ]);
-      setInputValue('');
-      runtime.prompt(text).catch((err: any) => {
-        setToasts((prev) => [
-          ...prev,
-          { id: `toast-${Date.now()}`, message: err.message, type: 'error', createdAt: Date.now() },
-        ]);
-      });
-    }
-  }, [runtime]);
-
-  // Thêm toast helper
-  const addToast = useCallback((message: string, type: ToastItem['type'] = 'info') => {
-    setToasts((prev) => [
-      ...prev,
-      { id: `toast-${Date.now()}`, message, type, createdAt: Date.now() },
-    ]);
-  }, []);
+    controller.sendMessage(text);
+  }, [controller]);
 
   const maxMsgHeight = 20;
 
@@ -176,12 +93,14 @@ export const App: React.FC<AppProps> = ({ runtime, initialMessage }) => {
     <Box flexDirection="column">
       <Header key="header" title="picro" cwd={cwd} />
       <Box key="messages-box" flexDirection="column" padding={1}>
-        <MessageList messages={messages} maxHeight={maxMsgHeight} />
+        <MessageList key="message-list" messages={messages} maxHeight={maxMsgHeight} />
       </Box>
-      <StatusBar key="statusbar" model="unknown" tokens="0/0" cwd={cwd} isProcessing={isProcessing} />
-      <Input key="input" onSubmit={handleSubmit} placeholder="> " value={inputValue} />
+      <StatusBar key="statusbar" model={status.model} tokens={status.tokens} cwd={status.cwd} isProcessing={status.isProcessing} />
+      <Input key="input" onSubmit={handleSubmit} placeholder="> " />
       <Toast key="toast" toasts={toasts} />
-      {modal.type !== 'none' && <Modal key="modal" modal={{ ...modal }} />}
+      {modal.type !== 'none' && (
+        <Modal key="modal" modal={{ ...modal }} />
+      )}
     </Box>
   );
-};
+}

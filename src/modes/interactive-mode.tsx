@@ -1,6 +1,6 @@
 // Interactive Mode - Entry point for Ink TUI mode
-// Port từ pi-mono packages/coding-agent/src/modes/interactive/interactive-mode.ts
-// Viết lại bằng Ink (không copy code)
+// Port ý tưởng từ pi-mono packages/coding-agent/src/modes/interactive/interactive-mode.ts
+// Viết lại bằng Ink TSX, không copy code
 
 import React from 'react';
 import { render } from 'ink';
@@ -9,6 +9,7 @@ import type { AgentSessionRuntimeInterface } from '../runtime/index.js';
 import type { CreateAgentSessionRuntimeFactory } from '../runtime/agent-session-runtime.js';
 import { createAgentSessionRuntime } from '../runtime/agent-session-runtime.js';
 import { getAgentDir } from '../config.js';
+import { InteractiveController } from './interactive/interactive-controller.js';
 
 export interface InteractiveModeOptions {
   cwd?: string;
@@ -22,6 +23,7 @@ export interface InteractiveModeOptions {
 
 export class InteractiveMode {
   private runtime!: AgentSessionRuntimeInterface;
+  private controller!: InteractiveController;
   private options: InteractiveModeOptions;
 
   constructor(options: InteractiveModeOptions = {}) {
@@ -48,10 +50,15 @@ export class InteractiveMode {
     });
 
     this.runtime = runtime;
+    this.controller = new InteractiveController({ runtime });
 
     // Render Ink TUI
     render(
-      <App runtime={runtime} initialMessage={this.options.initialMessage} />,
+      <App
+        runtime={runtime}
+        controller={this.controller}
+        initialMessage={this.options.initialMessage}
+      />,
       {
         exitOnCtrlC: true,
         stdout: process.stdout,
@@ -65,6 +72,10 @@ export class InteractiveMode {
 
   getRuntime(): AgentSessionRuntimeInterface {
     return this.runtime;
+  }
+
+  getController(): InteractiveController {
+    return this.controller;
   }
 }
 
