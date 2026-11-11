@@ -2,8 +2,6 @@
 
 ## In Progress / Next Up
 
-- [ ] Virtual scrolling thực sự (chỉ render tin nhắn trong viewport, cuộn thực tế)
-- [ ] Markdown rendering nâng cao (code blocks, syntax highlighting, tables, bold, italic)
 - [ ] Theme system thực sự (dark/light/matrix switching động, lưu vào settings)
 - [ ] Keybindings chi tiết hơn (vim keys h/j/k/l, search trong session, Ctrl+F find)
 - [ ] HTTP API mode (chạy như server, REST/WebSocket)
