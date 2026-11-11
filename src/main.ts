@@ -23,7 +23,7 @@ import { resetTimings, time, printTimings } from "./utils/timings.js";
 import { handleConfigCommand } from "./package-manager-cli.js";
 import { runMigrations, showDeprecationWarnings } from "./migrations.js";
 import type { Model } from "./llm/index.js";
-import { TTYMode } from "./tty-mode/index.js";
+import { InteractiveMode } from "./interactive/interactive-mode.js";
 
 function subscribeToSessionEvents(runtime: AgentSessionRuntime) {
   console.log('[DEBUG] Subscribing to session events...');
@@ -191,12 +191,6 @@ async function main(): Promise<void> {
   if (parsed.version) {
     console.log(VERSION);
     return;
-  }
-
-  // Require TTY (no pipe mode)
-  if (!process.stdin.isTTY) {
-    console.error("Error: Interactive mode requires a TTY. Pipe mode is not supported.");
-    process.exit(1);
   }
 
   const cwd = process.cwd();
@@ -388,9 +382,14 @@ async function main(): Promise<void> {
     await runtime.session.prompt(msg);
   }
 
-  // Start TTY interactive mode (this blocks until exit)
-  const ttyMode = new TTYMode(runtime);
-  await ttyMode.start();
+  // Start Interactive Mode (Ink TUI) - default mode
+  const interactiveMode = new InteractiveMode({
+    cwd,
+    agentDir,
+    model: resolvedModel,
+    thinkingLevel: parsed.thinking,
+  });
+  await interactiveMode.start();
 
   printTimings();
 }
