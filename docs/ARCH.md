@@ -315,4 +315,106 @@ Extension đăng ký handler; `AgentSession` chuyển tiếp event đã convert 
 
 ---
 
+## 10. Chi tiết đã xác minh trực tiếp khi đọc từng file
+
+Phần này ghi lại các hành vi chi tiết chỉ phát hiện được khi đọc từng dòng — quan trọng cho ai sửa code sau này.
+
+### 10.1 `src/main.ts` (421 dòng)
+- Parse `.env` thủ công ở cwd (không dùng dotenv); `handleConfigCommand` chặn `install/remove/update/list` trước khi parse args.
+- Thứ tự resolve model: CLI `--model` → (nếu không có) settings mặc định qua `agent-session-services`.
+- `subscribeToSessionEvents` là debug logger (`--verbose`) độc lập với UI subscribe.
+- Nhánh mode: `--mode http`/`rpc` → HTTP server; mặc định → `InteractiveMode` (thuần TS) → Ink `<App>`. Không còn nhánh TTY/pipe.
+
+### 10.2 `src/config.ts`
+- Đọc `package.json` để lấy `piConfig.name` (fallback `picro`), `piConfig.configDir` (fallback `.pi`); agent dir qua env `PICRO_AGENT_DIR` (tên tính từ `APP_NAME`).
+- Điểm cần chú ý: `CONFIG_DIR_NAME` mặc định `.pi` trong khi `env-api-keys.ts` tìm cả `~/.picro/agent/auth.json` — hai nguồn cấu hình song song, cần thống nhất.
+
+### 10.3 `src/migrations.ts` (180 dòng)
+- `migrateAuthToAuthJson`: gộp `oauth.json` + `settings.json.apiKeys` → `auth.json` (mode 600), đổi tên file cũ thành `.migrated`.
+- `migrateSessionsFromAgentRoot`: di chuyển session `.jsonl` nằm nhầm ở root agent dir về `sessions/<--cwd-encoded-->/` (mã hóa cwd bằng dấu `--` và thay `/`, `\`, `:` bằng `-`).
+- `migrateCommandsToPrompts`: đổi `commands/` → `prompts/` trong project dir.
+- Chạy mỗi lần khởi động, idempotent.
+
+### 10.4 `src/runtime/settings-manager.ts` (1.004 dòng) — chi tiết cơ chế
+- **Hai scope**: global (`~/.pi/agent/settings.json`) + project (`<cwd>/.pi/settings.json`), merge sâu (deep merge chỉ object không phải array).
+- **Khóa file**: tạo `<path>.lock` bằng `openSync('wx')`, ghi PID; lock cũ được phát hiện bằng `process.kill(pid, 0)` và xoá; retry tối đa 5 lần với backoff `50ms*(i+1)` (busy-wait bằng vòng `while Date.now()`), nếu hết retry thì ném lỗi — đây là busy-wait blocking, đánh đổi hiệu năng.
+- **Write queue** nối tiếp promise để ghi tuần tự; `flush()` await queue.
+- **Modified tracking**: `modifiedFields` + `modifiedNestedFields` cho từng scope; khi save chỉ merge các field đã đổi vào file hiện có (tránh mất thay đổi của process khác).
+- **Migration trong storage**: `queueMode` → `steeringMode`, `websockets` boolean → `transport` enum.
+- **InMemory storage** cho test (`SettingsManager.inMemory`).
+- Ghi chú: `getDisabledTools`/`setToolDisabled`/`getTheme`/`setTheme` là phần được thêm cho UI theme/tools toggle.
+
+### 10.5 `src/runtime/resource-loader.ts` (379 dòng) — xác minh
+- Comment đầu file ghi rõ **"stub implementation - full implementation coming in Phase B"** — cần biết trước khi kỳ vọng.
+- `reload()` nạp lần lượt: extensions → skills → prompt templates → themes → context files; mỗi loại có cờ `noX` tắt và `XOverride` cho test.
+- `loadThemes` là **stub trả về rỗng** — hiện chưa có theme thật từ file.
+- `loadProjectContextFiles` quét 4 đường dẫn: `<agentDir>/AGENTS.md`, `CLAUDE.md`, `<cwd>/.pi/AGENTS.md`, `CLAUDE.md` — chú ý **không** đọc `AGENTS.md` ngay tại root cwd (chỉ trong `agentDir` hoặc `.pi/`).
+- `extendResources` hiện reload toàn bộ (không incremental).
+
+### 10.6 `src/runtime/keybindings.ts`
+- ~34 keybinding mặc định với mô tả; branch Windows riêng (`ctrl+z` suspend bỏ trên Win).
+- Xung đột tiềm ẩn: một số tổ hợp dùng chung (ví dụ `F2` cho cả `session.rename` và `tree.editLabel`, `ctrl+t` cho `tools.expand` và `tree.toggleLabelTimestamp`) — khi nối UI cần xử lý theo ngữ cảnh.
+
+### 10.7 `src/runtime/diagnostics.ts` / `performance-tracker.ts` / `telemetry.ts`
+- `getSystemInfo`, `getMemoryInfo`, `getNetworkInterfaces`, đo `eventLoopDelay` — phục vụ `/debug` và báo lỗi.
+- `PerformanceTracker`: lấy mẫu CPU/heap mỗi 5 giây, giữ 1000 mẫu, tính avg/peak.
+- `Telemetry`: **mặc định tắt**, rate limit 5 giây, queue khi bị giới hạn, không PII — opt-in qua settings.
+
+### 10.8 `src/runtime/stream-utils.ts`
+- `collectStream`, `pipeStream`, `createStream`, `mergeToolCalls` (mera tool call arguments theo id), `supportsStreaming` (kiểm tra `streamWithTools` — kiểm tra này hiện không khớp provider thực tế của picro).
+
+### 10.9 `src/llm/env-api-keys.ts`
+- Thứ tự lấy key: explicit → env var theo provider → `secrets.json`/`models.json` ở cwd → `~/.pi/agent/auth.json` → `~/.picro/agent/auth.json` → `./auth.json` → fallback `API_KEY`/`<PROVIDER>_API_KEY`/`OPENAI_API_KEY`.
+- Cache module-level cho `secretsCache`/`authCache` — đổi key trong suốt process sẽ không được nhận.
+
+### 10.10 `src/llm/utils/*` — xác minh
+- `sanitizeSurrogates`: thay surrogate UTF-16 không cặp bằng U+FFFD (tránh lỗi API khi user paste text lỗi encoding).
+- `json-parse.parseStreamingJson`: dùng `partial-json` để parse JSON đang stream cho tool arguments; fallback về `JSON.parse`; trả `{}` nếu thất bại.
+- `stream-buffer.StreamBuffer`: đệm chunk theo ngưỡng thích ứng (dựa trên latency trung bình) để giảm số lần render UI — cơ chế tốt nhưng **hiện chưa nối vào UI** (App render trực tiếp từ event).
+- `utils/validation.validateToolCall`: AJV với `coerceTypes` + `useDefaults` — ép kiểu và điền default trước khi chạy tool; thông báo lỗi kèm input.
+- `utils/hash`: djb2 cho cache key, sha256 qua Web Crypto.
+
+### 10.11 `src/llm/validation.ts`
+- AJV riêng cho schema tool/model; `validateModelConfig` kiểm tra 10 field bắt buộc của `Model`.
+- Lưu ý trùng lặp: `llm/validation.ts` và `llm/utils/validation.ts` cùng tên file và cùng mục đích nhưng API khác nhau (`validateToolArguments` vs `validateToolCall`) — nên gộp.
+
+### 10.12 `src/session/session-manager.ts` — xác minh hành vi persist
+- **Lazy flush**: `_persist` chỉ ghi file khi branch đã có ít nhất một assistant message — nghĩa là session mới chỉ user message sẽ không được ghi ra disk cho đến khi assistant trả lời (tránh file rác; nhưng cần biết khi debug "mất" message).
+- `appendEntry` ghi một dòng JSONL mỗi entry; `setSessionFile` migrate phiên bản cũ (`migrateToCurrentVersion`) và rewrite file nếu cần.
+- `getSessionName` quét ngược từ cuối tìm entry `session_info`; đổi tên = append entry mới.
+- `buildSessionContext`: reconstruct từ leaf, ghép compaction summary trước các entry còn lại sau cut point.
+
+### 10.13 `src/session/agent-session.ts` — xác minh hành vi
+- **Retry** chỉ khi `settings.retry.enabled`; `_isRetryableError` khớp chuỗi con (overloaded, rate limit, 429, 5xx, timeout…) trong `errorMessage` — dựa trên text, dễ hỏng nếu provider đổi message.
+- **Queue congestion control**: `_maxSteeringQueueSize`/`_maxFollowUpQueueSize` — đuổi message cũ nhất khi quá giới hạn.
+- `_agentState` getter/setter **đi vòng qua `agent.runner.state`** với alias `messages = history`; nếu mock agent không có `runner` thì fallback cache nội bộ — đây là workaround vòng tránh typing.
+- `navigateTree`: target là user message → lá về `parentId` (cho phép sửa lại message cũ); target khác → lá về target.
+- Compaction kiểm tra "assistant message cũ hơn compaction boundary" bằng so timestamp để tránh loop compact.
+- `getContextUsage` ước token bằng `estimateContextUsage(history)` chia cho `contextWindow`.
+
+### 10.14 `src/memory/*` — xác minh
+- `MemoryStorage.add`: tiền tố `[ACTION]` vào content; dedup bằng hash (update access_count nếu trùng); evict khi vượt `maxMemories` bằng **ít access_count nhất, tie thì cũ nhất**.
+- `MemoryScorer`: compile regex một lần mỗi query; điểm = keyword TF (4/word) + bonus multi-word (5) + perfect match (15) + exact phrase (10) + filePath (15) + action match (2) + metadata string (3/word) − penalty sai action (30) → nhân recency factor (1.0–3.0) → +bonus content ngắn (+2) + access_count×2.
+- `MemoryRetriever`: prefilter bằng metadata/path/action-synonym trước khi scoring đầy đủ; cache 5 phút; metrics hit/miss + p95 latency.
+- `engine-dedup`: Jaccard similarity (ngưỡng 0.95) cho trùng gần nghĩa.
+- Storage: file JSON, **tự động nén gzip khi lưu**; đọc lại file cũ chưa nén sẽ được lưu lại dạng nén.
+
+### 10.15 `src/extensions/runner.ts` — xác minn mức hoàn thiện
+- `emit` chạy handler tuần tự, trả kết quả handler cuối; lỗi từng handler bị nuốt (log ra console).
+- Phần **UI binding còn là stub**: `createContext`, `createCommandContext`, `provideAutocomplete`, `renderMessage`, `createWidget`, `selectString` đều trả giá trị rỗng — extension chưa thể tạo UI thật.
+- `setUIContext`/`bindCommandContext`/`bindCore` là cơ chế để UI (Ink) bơm context vào sau — cần nối khi làm UI extension.
+
+### 10.16 `src/tools/path-utils.ts`
+- `resolveReadPath` thử 5 biến thể: gốc → AM/PM macOS (dùng narrow no-break space `\u202F`) → NFD normalize → curly quote `’` → NFD+curly. Việc này tồn tại để xử lý tên file screenshot macOS.
+- `validatePathWithinBase` chỉ là so prefix `base + '/'` — chưa xử lý symlink ra ngoài cwd (điểm cần cải thiện).
+
+### 10.17 `src/tui/ink/*` — xác minh
+- `Footer`/`StatusBar` hiện đọc từ `runtime.settings` (provider/model mặc định) chứ **chưa** đọc usage/context thật từ `getContextUsage()` — footer chưa sống; cần nối `FooterDataProvider` (nhánh git) và session stats.
+- `Input` giữ text trong `useRef` (không phải state) để tránh re-render mỗi ký tự; Ctrl+K → `/`, Ctrl+P → `/model`, Ctrl+L → `/clear`.
+- `VirtualMessageList` tính `maxScroll = total - visibleCount`; tuy nhiên `useInput` trong component này sẽ **nuốt phím mũi tên** khi chưa focus rõ ràng — khi nối đầy đủ cần cơ chế focus/capture để không xung đột với Input.
+- `MarkdownRenderer` là parser tự viết (regex), xử lý: code fence, inline code, heading, bold, italic, link, list, blockquote, `---`. Chưa hỗ trợ table và syntax highlighting.
+
+---
+
 *Tài liệu này là một phần của bộ ba tài liệu dự án: `AGENTS.md` (quy ước làm việc), `ARCH.md` (kiến trúc – file này), `GOAL.md` (mục tiêu và lộ trình).*
+
