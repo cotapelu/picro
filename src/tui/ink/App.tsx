@@ -1,8 +1,10 @@
 // App - Ink TUI chính cho picro agent
-// Layout theo nguyên tắc pi-mono:
-//   - Messages area chiếm toàn bộ không gian còn lại (flexGrow)
-//   - Input dock cố định ở đáy (flexShrink=0), không bị cuộn lên
-//   - StatusBar ở dưới input
+// Layout bắt chước nguyên tắc pi-mono interactive-mode:
+//   - Header cố định đầu màn hình
+//   - Messages area chiếm toàn bộ không gian còn lại (flexGrow=1), follow end
+//   - Input dock cố định đáy (flexShrink=0), không bị cuộn lên
+//   - StatusBar ngay dưới input
+//   - Keybindings, Toast, Modal ở lớp trên cùng
 // Chỉ Input component đăng ký useInput; các component khác không lung tung bắt phím.
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -15,7 +17,6 @@ import {
 import type { AgentSessionRuntimeInterface } from "../../runtime/index.js";
 import type { InteractiveController } from "../../modes/interactive/interactive-controller.js";
 import { Header } from "./components/Header.js";
-import { Footer } from "./components/Footer.js";
 import { Input } from "./components/Input.js";
 import { VirtualMessageList } from "./components/VirtualMessageList.js";
 import { Modal } from "./components/Modal.js";

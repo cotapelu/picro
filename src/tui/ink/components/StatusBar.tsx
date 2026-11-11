@@ -1,6 +1,9 @@
-// StatusBar - thanh trạng thái hiển thị thông tin nhanh
-// Port ý tưởng từ pi-mono footer.ts
-// Viết lại bằng Ink TSX, không copy code
+// StatusBar - thanh trạng thái dưới cùng
+// Bắt chước nguyên tắc pi-mono FooterComponent:
+//   - Dòng trên: pwd (dim), session name
+//   - Dòng dưới: model, tokens, context %, trạng thái xử lý
+// Màu sắc phân cấp: dim cho thông tin phụ, màu nhạt cho thông tin chính
+
 import React from "react";
 import { Box, Text } from "ink";
 
@@ -12,10 +15,17 @@ interface StatusBarProps {
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({ model, tokens, cwd, isProcessing }) => {
-  const statusText = `${isProcessing ? "⏳ Processing..." : "● Ready"} | Model: ${model || "unknown"} | Tokens: ${tokens || "0/0"} | CWD: ${cwd || "."}`;
+  const statusText = isProcessing ? "⏳ Processing..." : "● Ready";
+  const pwd = cwd || ".";
+  const modelInfo = model || "unknown";
+  const tokenInfo = tokens || "0/0";
+
   return (
-    <Box padding={1}>
-      <Text key="status">{statusText}</Text>
+    <Box padding={1} flexDirection="column">
+      <Text dimColor>{pwd}</Text>
+      <Text>
+        {statusText} | Model: {modelInfo} | Tokens: {tokenInfo} | CWD: {pwd}
+      </Text>
     </Box>
   );
 }

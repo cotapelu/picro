@@ -1,6 +1,9 @@
 // Input - nhập liệu người dùng
-// Chỉ component này đăng ký useInput của Ink để tránh xung đột phím bấm.
-// Hiển thị con trỏ blinking (█) vì Ink không có hardware cursor native.
+// Bắt chước nguyên tắc pi-tui Input:
+//   - Prompt "> " cố định đầu dòng
+//   - Con trỏ blinking (█) hiển thị khi đang focus
+//   - Chỉ component này đăng ký useInput của Ink để tránh xung đột phím bấm
+//   - Xử lý Enter (submit), Backspace (xóa), ký tự in được
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Text, useInput } from "ink";
@@ -16,13 +19,13 @@ export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = "> ", valu
   const [cursorVisible, setCursorVisible] = useState<boolean>(true);
   const inputRef = useRef<string>(text);
 
-  // Nhập liệu từ stdin (Ink useInput)
+  // Nhập liệu từ stdin (Ink useInput) - duy nhất một component đăng ký
   useInput((inputString, key) => {
-    // Ctrl+C
+    // Ctrl+C - để Ink/exitOnCtrlC xử lý, không can thiệp
     if (key.ctrl && inputString === "\u0003") {
       return;
     }
-    // Enter
+    // Enter - submit tin nhắn
     if (key.return) {
       const current = inputRef.current.trim();
       if (current) {
@@ -32,13 +35,13 @@ export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = "> ", valu
       setText("");
       return;
     }
-    // Backspace
+    // Backspace - xóa ký tự trước con trỏ
     if (key.backspace) {
       inputRef.current = inputRef.current.slice(0, -1);
       setText(inputRef.current);
       return;
     }
-    // Ký tự in được
+    // Ký tự in được (không xử lý các ký tự điều khiển khác)
     if (
       inputString &&
       inputString.length === 1 &&
@@ -58,7 +61,7 @@ export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = "> ", valu
     }
   }, [value]);
 
-  // Con trỏ blinking cada 500ms
+  // Con trỏ blinking cada 500ms (giả lập hardware cursor)
   useEffect(() => {
     const interval = setInterval(() => setCursorVisible((prev) => !prev), 500);
     return () => clearInterval(interval);

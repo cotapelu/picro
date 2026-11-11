@@ -16,9 +16,8 @@ export interface InteractiveAppProps {
 }
 
 /**
- * Chế độ nhập liệu đơn giản (readline) dùng khi Ink không khởi động được
- * vì stdin không phải raw-mode TTY. Ứng dụng vẫn chạy được, chỉ không có
- * giao diện Ink full-screen nữa.
+ * Chế độ nhập liệu đơn giản (readline) dùng khi stdin không phải raw-mode TTY.
+ * Ứng dụng vẫn chạy được, gõ xong nhấn Enter để gửi tin nhắn.
  */
 function startFallbackRepl(props: InteractiveAppProps): void {
   const { controller, initialMessage } = props;
@@ -63,8 +62,8 @@ function startFallbackRepl(props: InteractiveAppProps): void {
 }
 
 export function startInteractiveApp(props: InteractiveAppProps): void {
-  // Ink yêu cầu stdin là raw-mode TTY. Nếu môi trường không hỗ trợ,
-  // fallback sang readline REPL để ứng dụng vẫn chạy được thay vì crash.
+  // Ink yêu cầu stdin là raw-mode TTY. Nếu không, fallback sang readline REPL
+  // thay vì crash lặng.
   if (!process.stdin.isTTY) {
     startFallbackRepl(props);
     return;
@@ -83,8 +82,6 @@ export function startInteractiveApp(props: InteractiveAppProps): void {
       }
     );
   } catch (err: any) {
-    // Nếu Ink vẫn crash (raw mode bị từ chối dù isTTY = true),
-    // fallback sang readline REPL.
     console.error(`\nKhông khởi động được Ink UI: ${err?.message || err}\n`);
     console.error("Chuyển sang chế độ nhập liệu đơn giản (readline)...\n");
     startFallbackRepl(props);
