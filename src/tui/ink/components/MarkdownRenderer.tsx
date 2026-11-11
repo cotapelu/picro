@@ -1,93 +1,141 @@
-// MarkdownRenderer - port ý tưởng từ pi-mono markdown-transform.ts
-// Render markdown thành văn bản có màu sắc cho terminal
-// Viết lại bằng Ink TSX, không copy code
-import React from "react";
+// MarkdownRenderer - render markdown thành văn bản cho terminal
+// Bắt chước nguyên tắc pi-mono components/markdown.ts:
+//   - Tách theo khối (heading, paragraph, code, list, table, quote, hr)
+//   - Cắt/đệm mỗi dòng theo đúng chiều rộng khả dụng
+//   - Kiểu chữ theo theme: tiêu đề đậm, mờ cho gợi ý, xanh cho liên kết
+// Viet lai bang Ink TSX, khong copy code truc tiep.
+
+import React, { useMemo } from "react";
 import { Box, Text } from "ink";
-import { theme } from "../theme.js";
-
-// Helper: tô màu cho code block
-const codeBlockStyle = (text: string) => `\x1b[36m${text}\x1b[39m`; // cyan
-const codeInlineStyle = (text: string) => `\x1b[36m${text}\x1b[39m`; // cyan
-const boldStyle = (text: string) => `\x1b[1m${text}\x1b[22m`; // bold
-const italicStyle = (text: string) => `\x1b[3m${text}\x1b[23m`; // italic
-const headingStyle = (text: string) => `\x1b[1m${text}\x1b[22m`; // bold
-const linkStyle = (text: string) => `\x1b[34m${text}\x1b[39m`; // blue
-const listStyle = (text: string) => `\x1b[32m${text}\x1b[39m`; // green
-const quoteStyle = (text: string) => `\x1b[2m${text}\x1b[22m`; // dim
-
-// Parse markdown thành văn bản có màu ANSI
-export function renderMarkdown(text: string): string {
-  if (!text) return "";
-
-  let result = text;
-
-  // Code blocks (triple backticks) - phải xử lý trước
-  result = result.replace(/```([\s\S]*?)```/g, (_match, code) => {
-    return `\n${codeBlockStyle(code.trim())}\n`;
-  });
-
-  // Inline code (single backticks)
-  result = result.replace(/`([^`]+)`/g, (_match, code) => {
-    return codeInlineStyle(code);
-  });
-
-  // Headings (#, ##, ###)
-  result = result.replace(/^#{1,3}\s+(.+)$/gm, (_match, text) => {
-    return `\n${headingStyle(text.trim())}\n`;
-  });
-
-  // Bold (**text**)
-  result = result.replace(/\*\*([^*]+)\*\*/g, (_match, text) => {
-    return boldStyle(text);
-  });
-
-  // Italic (*text*)
-  result = result.replace(/\*([^*]+)\*/g, (_match, text) => {
-    return italicStyle(text);
-  });
-
-  // Links [text](url)
-  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, text, url) => {
-    return linkStyle(text);
-  });
-
-  // Lists (- item, * item, + item)
-  result = result.replace(/^[-*+]\s+(.+)$/gm, (_match, text) => {
-    return `  ${listStyle("• " + text.trim())}`;
-  });
-
-  // Numbered lists (1. item, 2. item)
-  result = result.replace(/^\d+\.\s+(.+)$/gm, (_match, text) => {
-    return `  ${listStyle(text.trim())}`;
-  });
-
-  // Horizontal rule (---)
-  result = result.replace(/^---$/gm, "\n" + "─".repeat(40) + "\n");
-
-  // Blockquote (> text)
-  result = result.replace(/^>\s+(.+)$/gm, (_match, text) => {
-    return quoteStyle(text.trim());
-  });
-
-  // Xóa các thẻ HTML còn lại
-  result = result.replace(/<[^>]*>/g, "");
-
-  // Xóa dòng trống nhiều hơn 2
-  result = result.replace(/\n{3,}/g, "\n\n");
-
-  return result;
-}
+import { theme, fg, bg } from "../theme.js";
 
 interface MarkdownRendererProps {
   content: string;
+  width?: number;
 }
 
-export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
-  const rendered = renderMarkdown(content);
+/** Cắt một dòng theo số cột hiển thị (không tính ANSI). */
+function clipLine(line: string, width: number): string {
+  if (width <= 0) return "";
+  const plain = line.replace(/\x1b\[[0-9;]*m/g, "");
+  if (plain.length <= width) return line;
+  return line.slice(0, Math.max(0, width - 1)) + fg("dim", "…");
+}
+
+/** Đệm dây đủ chiều rộng để viền khối đều nhau. */
+function padLine(line: string, width: number): string {
+  const plain = line.replace(/\x1b\[[0-9;]*m/g, "");
+  const missing = Math.max(0, width - plain.length);
+  return line + " ".repeat(missing);
+}
+
+interface Block {
+  lines: string[];
+  /** Khối mã có viền trên/dưới. */
+  fenced?: boolean;
+}
+
+/** Tách markdown thô thành các khối hiển thị. */
+function parseBlocks(source: string): Block[] {
+  const blocks: Block[] = [];
+  let buffer: string[] = [];
+
+  const flush = () => {
+    if (buffer.length > 0) {
+      blocks.push({ lines: buffer });
+      buffer = [];
+    }
+  };
+
+  const lines = source.split("\n");
+  let inFence = false;
+  let fenceBuffer: string[] = [];
+
+  for (const raw of lines) {
+    if (/^\s*```/.test(raw)) {
+      if (inFence) {
+        blocks.push({ lines: [...fenceBuffer], fenced: true });
+        fenceBuffer = [];
+        inFence = false;
+      } else {
+        flush();
+        inFence = true;
+      }
+      continue;
+    }
+    if (inFence) {
+      fenceBuffer.push(fg("codeBlock", raw));
+      continue;
+    }
+    buffer.push(raw);
+  }
+  if (inFence && fenceBuffer.length > 0) {
+    blocks.push({ lines: fenceBuffer, fenced: true });
+  }
+  flush();
+  return blocks;
+}
+
+/** Áp kiểu chữ nội tuyến: `code`, **bold**, *italic*, [link](url). */
+function styleInline(line: string): string {
+  let out = line;
+  out = out.replace(/`([^`]+)`/g, (_m, code) => fg("code", code));
+  out = out.replace(/\*\*([^*]+)\*\*/g, (_m, text) => theme.bold(text));
+  out = out.replace(/(^|[^*])\*([^*]+)\*/g, (_m, pre, text) => `${pre}${theme.italic(text)}`);
+  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text) => fg("link", text));
+  return out;
+}
+
+/** Áp kiểu theo loại dòng. */
+function styleLine(line: string, index: number): string {
+  const trimmed = line.trimStart();
+  if (/^#{1,6}\s/.test(trimmed)) {
+    const text = trimmed.replace(/^#{1,6}\s/, "");
+    return `${theme.bold(fg("heading", text))}`;
+  }
+  if (/^[-*+]\s/.test(trimmed)) {
+    return `${fg("listBullet", "• ")}${styleInline(trimmed.replace(/^[-*+]\s/, ""))}`;
+  }
+  if (/^\d+\.\s/.test(trimmed)) {
+    const m = /^(\d+)\.\s(.*)$/.exec(trimmed);
+    return `${fg("listBullet", `${m?.[1] ?? index + 1}. `)}${styleInline(m?.[2] ?? "")}`;
+  }
+  if (/^>\s?/.test(trimmed)) {
+    return `${fg("quote", "│ ")}${styleInline(trimmed.replace(/^>\s?/, ""))}`;
+  }
+  if (/^(-{3,}|\*{3,})$/.test(trimmed)) {
+    return fg("hr", "─".repeat(40));
+  }
+  return styleInline(line);
+}
+
+export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, width = 80 }) => {
+  const rendered = useMemo(() => {
+    const contentWidth = Math.max(20, width - 4);
+    const blocks = parseBlocks(content);
+    const out: string[] = [];
+
+    blocks.forEach((block, blockIndex) => {
+      if (blockIndex > 0) out.push("");
+      if (block.fenced) {
+        out.push(fg("codeBlockBorder", "```"));
+        for (const line of block.lines) {
+          out.push(padLine(`  ${clipLine(line, contentWidth - 2)}`, contentWidth));
+        }
+        out.push(fg("codeBlockBorder", "```"));
+        return;
+      }
+      block.lines.forEach((line, i) => out.push(clipLine(styleLine(line, i), contentWidth)));
+    });
+
+    return out;
+  }, [content, width]);
 
   return (
-    <Box padding={1}>
-      <Text>{rendered}</Text>
+    <Box flexDirection="column">
+      {rendered.map((line, i) => (
+        <Text key={`md-${i}`}>{line || " "}</Text>
+      ))}
     </Box>
   );
-}
+};

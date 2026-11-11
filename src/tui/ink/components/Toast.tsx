@@ -1,8 +1,12 @@
-// Toast - hiển thị thông báo tạm thời
-// Port ý tưởng từ pi-mono
-// Viết lại bằng Ink TSX, không copy code
-import React, { useEffect, useState } from "react";
+// Toast - thông báo tạm thời
+// Bắt chước nguyên tắc pi-mono AltScreenFlashContainer:
+//   - Hiển thị ở lớp trên cùng, dùng video ngược để nổi bật
+//   - Tự gỡ sau khoảng thời gian cố định (mặc định ~3 giây)
+// Viet lai bang Ink TSX, khong copy code truc tiep.
+
+import React, { useEffect, useRef, useState } from "react";
 import { Box, Text } from "ink";
+import { theme } from "../theme.js";
 
 interface Toast {
   id: string;
@@ -16,34 +20,44 @@ interface ToastProps {
   toasts: Toast[];
 }
 
+/** Khoảng thời gian mặc định một thông báo sống. */
+const DEFAULT_DURATION_MS = 3000;
+/** Khoảng cách kiểm tra hết hạn. */
+const TICK_MS = 120;
+
+const colorOf = (type: Toast["type"]): ((text: string) => string) => {
+  switch (type) {
+    case "error":
+      return theme.brightRed;
+    case "success":
+      return theme.brightGreen;
+    case "warning":
+      return theme.brightYellow;
+    default:
+      return theme.brightCyan;
+  }
+};
+
 export const Toast: React.FC<ToastProps> = ({ toasts }) => {
-  const [visibleToasts, setVisibleToasts] = useState<Toast[]>(toasts);
+  // Truy cập Date.now() mỗi lần tick để loại các mục đã hết hạn.
+  const [, forceTick] = useState(0);
+  const tickRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
-    const now = Date.now();
-    setVisibleToasts(
-      toasts.filter((t) => {
-        const elapsed = now - t.createdAt;
-        return elapsed < (t.duration || 3000);
-      })
-    );
-  }, [toasts]);
+    const timer = setInterval(() => forceTick((n) => n + 1), TICK_MS);
+    tickRef.current = timer;
+    return () => clearInterval(timer);
+  }, []);
 
-  if (visibleToasts.length === 0) return null;
+  const now = Date.now();
+  const visible = toasts.filter((t) => now - t.createdAt < (t.duration ?? DEFAULT_DURATION_MS));
+  if (visible.length === 0) return null;
 
   return (
-    <Box flexDirection="column" padding={1}>
-      {visibleToasts.map((t) => (
-        <Box
-          key={t.id}
-          marginBottom={1}
-          padding={1}
-          borderColor={t.type === "error" ? "red" : t.type === "success" ? "green" : "yellow"}
-          borderStyle="round"
-        >
-          <Text>{t.message}</Text>
-        </Box>
+    <Box flexDirection="column" flexShrink={0}>
+      {visible.map((t) => (
+        <Text key={t.id}>{theme.inverse(colorOf(t.type)(` ${t.message} `))}</Text>
       ))}
     </Box>
   );
-}
+};

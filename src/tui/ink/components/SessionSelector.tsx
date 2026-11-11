@@ -1,83 +1,144 @@
-// SessionSelector - port ý tưởng từ pi-mono session-selector.ts
-// Chọn session với tìm kiếm, sắp xếp, xóa
-// Viết lại bằng Ink TSX, không copy code
-import React, { useState, useEffect } from "react";
-import { Box, Text, useInput } from "ink";
-import type { AgentSessionRuntimeInterface } from "../../../runtime/index.js";
+// SessionSelector - chọn phiên làm việc để mở lại
+// Bắt chước nguyên tắc pi-mono components/session-selector.ts:
+//   - Phạm vi: thư mục hiện tại hoặc toàn bộ
+//   - Sắp xếp theo thời điểm sửa gần nhất
+//   - Tìm kiếm theo id/tên, hiển thị thư mục và tên phiên
+// Port sang Ink TSX, khong copy code truc iep.
 
-interface SessionSelectorProps {
-  runtime: AgentSessionRuntimeInterface;
+import React, { useMemo, useState } from "react";
+import { Box, Text, useInput } from "ink";
+import { theme, fg, bg } from "../theme.js";
+import { DynamicBorder } from "./DynamicBorder.js";
+import { TextInput } from "./TextInput.js";
+
+export interface SessionInfo {
+  id: string;
+  name?: string;
+  cwd?: string;
+  /** Thời điểm sửa đổi gần nhất (ms). */
+  modified?: number;
+}
+
+export interface SessionSelectorProps {
+  sessions: SessionInfo[];
   onSelect: (sessionId: string) => void;
   onCancel: () => void;
+  /** Mở rộng phạm vi sang mọi phiên (không chỉ thư mục hiện tại). */
+  onScopeToggle?: (allSessions: boolean) => void;
+  scopeAll?: boolean;
+  width?: number;
 }
 
-interface SessionInfo {
-  id: string;
-  path?: string;
-  cwd?: string;
+const MAX_VISIBLE = 10;
+
+/** Định dạng khoảng thời gian tương đối cho gọn. */
+function formatAgo(ms?: number): string {
+  if (ms === undefined) return "";
+  const diff = Date.now() - ms;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "vừa xong";
+  if (mins < 60) return `${mins}p`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}g`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}ng`;
+  return `${Math.floor(days / 30)}th`;
 }
 
-export const SessionSelector: React.FC<SessionSelectorProps> = ({ runtime, onSelect, onCancel }) => {
-  const [sessions, setSessions] = useState<SessionInfo[]>([]);
-  const [search, setSearch] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
+export const SessionSelector: React.FC<SessionSelectorProps> = ({
+  sessions,
+  onSelect,
+  onCancel,
+  onScopeToggle,
+  scopeAll = false,
+  width = 80,
+}) => {
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState(0);
 
-  useEffect(() => {
-    const sessionMgr = runtime.sessionManager as any;
-    const entries = sessionMgr.getEntries?.() || [];
-    setSessions(
-      entries.map((e: any) => ({
-        id: e.id,
-        path: e.path,
-        cwd: e.cwd,
-      }))
+  const sorted = useMemo(
+    () => [...sessions].sort((a, b) => (b.modified ?? 0) - (a.modified ?? 0)),
+    [sessions],
+  );
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return sorted;
+    const q = query.toLowerCase();
+    return sorted.filter((s) =>
+      `${s.id} ${s.name ?? ""} ${s.cwd ?? ""}`.toLowerCase().includes(q),
     );
-  }, [runtime]);
+  }, [sorted, query]);
 
-  useInput((inputString, key) => {
-    if (key.ctrl && inputString === "\u0003") {
-      onCancel();
-      return;
-    }
-    if (key.return) {
-      const selected = sessions[currentIndex];
-      if (selected) {
-        onSelect(selected.id);
-      }
-      return;
-    }
-    if (key.backspace) {
-      setSearch(search.slice(0, -1));
-      return;
-    }
+  const list = filtered;
+  const clamped = Math.max(0, Math.min(selected, list.length - 1));
+
+  useInput((input, key) => {
     if (key.upArrow) {
-      setCurrentIndex((i) => Math.max(0, i - 1));
+      setSelected((i) => (i <= 0 ? Math.max(0, list.length - 1) : i - 1));
       return;
     }
     if (key.downArrow) {
-      setCurrentIndex((i) => Math.min(sessions.length - 1, i + 1));
+      setSelected((i) => (i >= list.length - 1 ? 0 : i + 1));
       return;
     }
-    if (inputString && inputString.length === 1 && inputString.charCodeAt(0) >= 32) {
-      setSearch((s) => s + inputString);
+    if (key.return) {
+      const session = list[clamped];
+      if (session) onSelect(session.id);
+      return;
+    }
+    if (input === "\t" && onScopeToggle) {
+      onScopeToggle(!scopeAll);
+      return;
+    }
+    if (input === "\u001b" && !key.ctrl && !key.meta) {
+      onCancel();
+      return;
+    }
+    if (key.backspace) {
+      setQuery((q) => q.slice(0, -1));
+      return;
+    }
+    if (input && input.length === 1 && input.charCodeAt(0) >= 32) {
+      setQuery((q) => q + input);
     }
   });
 
-  const filtered = sessions.filter((s) => s.id.toLowerCase().includes(search.toLowerCase()));
+  const start = Math.max(0, Math.min(clamped - Math.floor(MAX_VISIBLE / 2), list.length - MAX_VISIBLE));
+  const end = Math.min(start + MAX_VISIBLE, list.length);
+  const visible = list.slice(start, end);
+  const scopeLabel = scopeAll ? "mọi phiên" : "thư mục này";
 
   return (
-    <Box borderStyle="round" borderColor="cyan" padding={1}>
-      <Text bold>Session Selector</Text>
-      <Text>Search: {search}</Text>
-      <Box flexDirection="column">
-        {filtered.map((s, i) => (
-          <Text key={s.id} color={i === currentIndex ? "cyan" : "white"}>
-            {i + 1}. {s.id} {s.cwd ? `(${s.cwd})` : ""}
+    <Box flexDirection="column" width={width}>
+      <DynamicBorder />
+      <Text bold>{fg("accent", "Mở lại phiên")}</Text>
+      <Text>{fg("muted", `Phạm vi: ${scopeLabel}`)}</Text>
+      <Text> </Text>
+      <TextInput value={query} placeholder="Tìm phiên…" onChange={setQuery} />
+      <Text> </Text>
+      {visible.map((session, offset) => {
+        const index = start + offset;
+        const isSelected = index === clamped;
+        const cursor = isSelected ? fg("accent", "› ") : "  ";
+        const head = session.name ? `${session.name} · ${session.id}` : session.id;
+        const tail = fg("dim", ` ${formatAgo(session.modified)}`);
+        return (
+          <Text key={session.id}>
+            {isSelected ? fg("accent", `${cursor}${head}${tail}`) : `${cursor}${fg("text", head)}${tail}`}
           </Text>
-        ))}
-        {filtered.length === 0 && <Text>No sessions found</Text>}
-      </Box>
-      <Text dimColor>↑/↓: select, Enter: confirm, Ctrl+C: cancel</Text>
+        );
+      })}
+      {list.length === 0 ? <Text>{fg("muted", "  Không có phiên")}</Text> : null}
+      {start > 0 || end < list.length ? (
+        <Text>{fg("dim", `  (${clamped + 1}/${list.length})`)}</Text>
+      ) : null}
+      <Text> </Text>
+      <Text>
+        {fg("dim", "  Enter để mở")}
+        {onScopeToggle ? fg("dim", " · Tab đổi phạm vi") : ""}
+        {fg("dim", " · Esc để hủy")}
+      </Text>
+      <DynamicBorder />
     </Box>
   );
-}
+};

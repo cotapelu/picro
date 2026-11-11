@@ -1,78 +1,68 @@
-// ThemeSelector - port ý tưởng từ pi-mono theme-selector.ts
-// Chọn theme: dark, light, matrix
-// Viết lại bằng Ink TSX, không copy code
-import React, { useState, useEffect } from "react";
-import { Box, Text, useInput } from "ink";
-import type { AgentSessionRuntimeInterface } from "../../../runtime/index.js";
+// ThemeSelector - chọn chủ đề giao diện
+// Bắt chước nguyên tắc pi-mono components/theme-selector.ts:
+//   - Danh sách chủ đề với tiền chọn chủ đề đang dùng
+//   - Gắn mô tả "(hiện tại)" cho mục đang hoạt động
+//   - Đổi mỗi lần nhấn phím để xem trước màu
+// Port sang Ink TSX, khong copy code truc tiep.
 
-interface ThemeSelectorProps {
-  runtime: AgentSessionRuntimeInterface;
-  onSelect: (theme: string) => void;
+import React from "react";
+import { Box, Text, useInput } from "ink";
+import { theme, fg, bg } from "../theme.js";
+import { DynamicBorder } from "./DynamicBorder.js";
+import { SelectList } from "./SelectList.js";
+
+export interface ThemeSelectorProps {
+  themes: string[];
+  currentTheme: string;
+  onSelect: (themeName: string) => void;
   onCancel: () => void;
+  /** Gọi mỗi lần nhấn phím để xem trước. */
+  onPreview?: (themeName: string) => void;
+  width?: number;
 }
 
-export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ runtime, onSelect, onCancel }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [currentTheme, setCurrentTheme] = useState("default");
+export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
+  themes,
+  currentTheme,
+  onSelect,
+  onCancel,
+  onPreview,
+  width = 80,
+}) => {
+  const items = themes.map((name) => ({
+    value: name,
+    label: name,
+    description: name === currentTheme ? "(hiện tại)" : undefined,
+  }));
 
-  const themes = [
-    { id: "dark", label: "Dark" },
-    { id: "light", label: "Light" },
-    { id: "matrix", label: "Matrix" },
-  ];
-
-  useEffect(() => {
-    const settings = runtime.settings as any;
-    const current = settings.getTheme?.() || "default";
-    setCurrentTheme(current);
-    // Tìm index của theme hiện tại
-    const idx = themes.findIndex((t) => t.id === current);
-    if (idx >= 0) {
-      setCurrentIndex(idx);
+  useInput((input, key) => {
+    if (key.return) {
+      const selected = items.find((i) => i.value === currentTheme);
+      if (selected) onSelect(selected.value);
+      return;
     }
-  }, [runtime]);
-
-  useInput((inputString, key) => {
-    if (key.ctrl && inputString === "\u0003") {
+    if (input === "\u001b" && !key.ctrl && !key.meta) {
       onCancel();
       return;
-    }
-    if (key.return) {
-      const theme = themes[currentIndex];
-      if (theme) {
-        onSelect(theme.id);
-      }
-      return;
-    }
-    if (key.upArrow) {
-      setCurrentIndex((i) => Math.max(0, i - 1));
-      return;
-    }
-    if (key.downArrow) {
-      setCurrentIndex((i) => Math.min(themes.length - 1, i + 1));
-      return;
-    }
-    if (inputString && inputString.length === 1 && inputString.charCodeAt(0) >= 32) {
-      const found = themes.find((t) => t.label.toLowerCase().startsWith(inputString.toLowerCase()));
-      if (found) {
-        setCurrentIndex(themes.indexOf(found));
-      }
     }
   });
 
   return (
-    <Box borderStyle="round" borderColor="cyan" padding={1}>
-      <Text bold>Theme Selector</Text>
-      <Box flexDirection="column">
-        {themes.map((t, i) => (
-          <Box key={t.id} flexDirection="row" justifyContent="space-between">
-            <Text color={i === currentIndex ? "cyan" : "white"}>{t.label}</Text>
-            {i === currentIndex && <Text dimColor>(current)</Text>}
-            {t.id === currentTheme && <Text dimColor>(active)</Text>}
-          </Box>
-        ))}
-      </Box>
-      <Text dimColor>↑/↓: select, Enter: confirm, Ctrl+C: cancel</Text>
+    <Box flexDirection="column" width={width}>
+      <DynamicBorder />
+      <Text bold>{fg("accent", "Chọn chủ đề")}</Text>
+      <Text> </Text>
+      <SelectList
+        items={items}
+        initialValue={currentTheme}
+        onSelect={(item) => onSelect(item.value)}
+        onCancel={onCancel}
+        onHighlight={(item) => onPreview?.(item.value)}
+        width={width}
+      />
+      <Text> </Text>
+      <Text>{fg("dim", "  Enter để dùng · Esc để hủy")}</Text>
+      <DynamicBorder />
     </Box>
   );
-}
+};

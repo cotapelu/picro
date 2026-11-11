@@ -1,34 +1,48 @@
-// Keybindings - hiển thị các phím tắt có sẵn
-// Port ý tưởng từ pi-mono keybinding-hints.ts
-// Viết lại bằng Ink TSX, không copy code
+// Keybindings - dòng gợi ý phím tắt dưới cùng
+// Bắt chước nguyên tắc pi-mono keybinding-hints.ts:
+//   - Nhãn phím tô màu "dim", mô tả tô màu "muted"
+//   - Hiển thị trên một dòng, cắt theo chiều rộng khung nhìn
+// Viet lai bang Ink TSX, khong copy code truc iep.
+
 import React from "react";
-import { Box, Text } from "ink";
+import { Box, Text, useWindowSize } from "ink";
+import { theme, fg, bg } from "../theme.js";
 
 interface KeybindingsProps {
   show?: boolean;
 }
 
+interface KeyHint {
+  keys: string;
+  text: string;
+}
+
+/** Cắt theo cột hiển thị, bỏ qua chuỗi escape ANSI. */
+function clipToWidth(text: string, width: number): string {
+  const plain = text.replace(/\x1b\[[0-9;]*m/g, "");
+  if (width <= 0) return "";
+  if (plain.length <= width) return text;
+  return text.slice(0, Math.max(0, width - 1)) + fg("dim", "…");
+}
+
+const HINTS: KeyHint[] = [
+  { keys: "Ctrl+C", text: "thoát" },
+  { keys: "Enter", text: "gửi" },
+  { keys: "↑/↓", text: "cuộn tin nhắn" },
+  { keys: "/help", text: "trợ giúp" },
+];
+
 export const Keybindings: React.FC<KeybindingsProps> = ({ show = true }) => {
+  const { columns } = useWindowSize();
   if (!show) return null;
 
-  const bindings = [
-    { key: "Ctrl+C", desc: "Thoát ứng dụng" },
-    { key: "Ctrl+K", desc: "Tìm kiếm slash commands" },
-    { key: "Ctrl+P", desc: "Chuyển model" },
-    { key: "Ctrl+L", desc: "Xóa màn hình" },
-    { key: "↑/↓", desc: "Lịch sử lệnh" },
-    { key: "Tab", desc: "Hoàn thành lệnh" },
-  ];
+  const line = HINTS.map((h) => `${fg("dim", h.keys)}${fg("muted", ` ${h.text}`)}`).join(
+    fg("dim", " · "),
+  );
 
   return (
-    <Box padding={1} borderStyle="round" borderColor="dim">
-      <Text bold>Phím tắt:</Text>
-      {bindings.map((b) => (
-        <Box key={b.key} flexDirection="row" justifyContent="space-between">
-          <Text dimColor>{b.key}</Text>
-          <Text>{b.desc}</Text>
-        </Box>
-      ))}
+    <Box flexShrink={0}>
+      <Text>{clipToWidth(line, columns || 80)}</Text>
     </Box>
   );
-}
+};
