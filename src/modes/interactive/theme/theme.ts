@@ -42,7 +42,7 @@ export interface ThemeJson {
   name: string;
   appearance?: ThemeAppearance;
   vars?: Record<string, ThemeColorValue>;
-  colors: ThemeColorValues<ThemeColorValue>;
+  colors: Record<string, ThemeColorValue>;
 }
 
 export interface ThemeStyle extends TextAttributes {
@@ -211,7 +211,7 @@ export class Theme {
     return colorToHex(parseColor(raw));
   }
 
-  /** In đậm đoạn văn bản (không tô màu). */
+  // In đám phụ: các phương thức style.
   bold(text: string): string {
     return `\x1b[1m${text}\x1b[22m`;
   }
@@ -284,8 +284,14 @@ export function loadBuiltinTheme(name: string): Theme {
 
 let activeTheme: Theme | undefined;
 
-export function setTheme(theme: Theme | undefined): void {
-  activeTheme = theme;
+export function setTheme(themeInstance: Theme | undefined): void {
+  activeTheme = themeInstance;
+}
+
+/** Đặt chủ đề và trả lại nó (tiện chuân hóa). */
+export function setThemeInstance(instance: Theme): Theme {
+  activeTheme = instance;
+  return instance;
 }
 
 export function getTheme(): Theme {
