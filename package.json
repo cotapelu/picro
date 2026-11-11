@@ -9,7 +9,8 @@
   },
   "scripts": {
     "build": "tsc && chmod +x dist/cli.js",
-    "dev": "VERBOSE=1 picro",
+    "dev": "npm run build && VERBOSE=1 npm start",
+    "start": "node dist/cli.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage:each": "bash scripts/test-coverage-each.sh",

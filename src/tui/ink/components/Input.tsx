@@ -64,7 +64,7 @@ export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = "> ", valu
   }, [value]);
 
   return (
-    <Box paddingBottom={1} flexDirection="row">
+    <Box paddingBottom={1} flexDirection="row" flexShrink={0}>
       <Text>{placeholder}</Text>
       <Text>{inputRef.current}</Text>
     </Box>

@@ -1,12 +1,11 @@
 // App - Ink TUI chính cho picro agent
-// Port ý tưởng từ pi-mono interactive-mode.ts
-// Viết lại bằng Ink TSX, không copy code
+// Chỉ chứa React/Ink UI, không chứa backend logic.
+
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Text,
   useApp,
-  useInput,
   useWindowSize,
 } from "ink";
 import type { AgentSessionRuntimeInterface } from "../../runtime/index.js";
@@ -57,19 +56,15 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
   const { exit } = useApp();
   const { columns, rows } = useWindowSize();
 
-  // Tính toán số lượng tin nhắn có thể hiển thị trong viewport
-  // Trừ đi header, footer, input, status bar, keybindings
-  const availableHeight = Math.max(5, rows - 8);
+  const availableHeight = rows ? Math.max(5, rows - 8) : 20;
 
-  // Khởi tạo tin nhắn ban đầu
   useEffect(() => {
     if (initialMessage) {
-      controller.sendMessage(initialMessage);
+      void controller.sendMessage(initialMessage);
     }
     setCwd(runtime.cwd || ".");
   }, [runtime, initialMessage, controller]);
 
-  // Đăng ký callbacks từ controller
   useEffect(() => {
     controller.onMessage((msgs) => setMessages(msgs));
     controller.onStatusChange((st) => setStatus(st));
@@ -81,27 +76,20 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
     };
   }, [controller]);
 
-  // Xử lý Ctrl+C
-  useInput((inputString, key) => {
-    if (key.ctrl && inputString === "\u0003") {
-      exit();
-      process.exit(0);
-    }
-  });
-
-  // Xử lý submit input
   const handleSubmit = useCallback((text: string) => {
-    controller.sendMessage(text);
+    void controller.sendMessage(text);
   }, [controller]);
 
   return (
     <Box flexDirection="column">
       <Header key="header" title="picro" cwd={cwd} />
-      <Box key="messages-box" flexDirection="column" padding={1}>
+      <Box key="messages-box" flexDirection="column" flexGrow={1} padding={1}>
         <VirtualMessageList key="message-list" messages={messages} viewportHeight={availableHeight} viewportWidth={columns} />
       </Box>
       <StatusBar key="statusbar" model={status.model} tokens={status.tokens} cwd={status.cwd} isProcessing={status.isProcessing} />
-      <Input key="input" onSubmit={handleSubmit} placeholder="> " />
+      <Box key="input-wrapper" flexShrink={0} paddingBottom={1}>
+        <Input key="input" onSubmit={handleSubmit} placeholder="> " />
+      </Box>
       <Toast key="toast" toasts={toasts} />
       {modal.type !== "none" && (
         <Modal key="modal" modal={{ ...modal }} />
