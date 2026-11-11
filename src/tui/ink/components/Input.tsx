@@ -21,6 +21,21 @@ export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = "> ", valu
       exit();
       process.exit(0);
     }
+    // Ctrl+K - Tìm kiếm slash commands
+    if (key.ctrl && inputString === "k") {
+      onSubmit("/");
+      return;
+    }
+    // Ctrl+P - Chuyển model
+    if (key.ctrl && inputString === "p") {
+      onSubmit("/model");
+      return;
+    }
+    // Ctrl+L - Xóa màn hình
+    if (key.ctrl && inputString === "l") {
+      onSubmit("/clear");
+      return;
+    }
     // Enter
     if (key.return) {
       const currentValue = inputRef.current;

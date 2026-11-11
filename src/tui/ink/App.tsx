@@ -18,6 +18,7 @@ import { MessageList } from "./components/MessageList.js";
 import { Modal } from "./components/Modal.js";
 import { StatusBar } from "./components/StatusBar.js";
 import { Toast } from "./components/Toast.js";
+import { Keybindings } from "./components/Keybindings.js";
 
 interface AppProps {
   runtime: AgentSessionRuntimeInterface;
@@ -105,6 +106,7 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
       {modal.type !== "none" && (
         <Modal key="modal" modal={{ ...modal }} />
       )}
+      <Keybindings key="keybindings" />
     </Box>
   );
 }
