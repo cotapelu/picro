@@ -1,5 +1,6 @@
 // MessageList - port ý tưởng từ pi-mono assistant-message.ts, user-message.ts
 // Viết lại bằng Ink TSX, không copy code
+// Hỗ trợ virtual scrolling: chỉ render tin nhắn trong viewport
 import React from "react";
 import { Box, Text } from "ink";
 
@@ -12,11 +13,14 @@ interface Message {
 
 interface MessageListProps {
   messages: Message[];
-  maxHeight?: number;
+  viewportHeight?: number;
+  viewportWidth?: number;
 }
 
-export const MessageList: React.FC<MessageListProps> = ({ messages, maxHeight }) => {
-  const displayMessages = maxHeight ? messages.slice(-maxHeight) : messages;
+export const MessageList: React.FC<MessageListProps> = ({ messages, viewportHeight, viewportWidth }) => {
+  // Tính số lượng tin nhắn có thể hiển thị trong viewport
+  const availableHeight = viewportHeight || 20;
+  const displayMessages = messages.slice(-availableHeight);
 
   return (
     <Box flexDirection="column" padding={1}>
