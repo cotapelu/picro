@@ -1,5 +1,6 @@
 // ModelSelector - port ý tưởng từ pi-mono model-selector.ts
 // Chọn model với search, scoped models
+// Viết lại bằng Ink TSX, không copy code
 import React, { useState, useEffect } from "react";
 import { Box, Text, useInput } from "ink";
 import type { AgentSessionRuntimeInterface } from "../../../runtime/index.js";

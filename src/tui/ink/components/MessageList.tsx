@@ -1,4 +1,5 @@
 // MessageList - port ý tưởng từ pi-mono assistant-message.ts, user-message.ts
+// Viết lại bằng Ink TSX, không copy code
 import React from "react";
 import { Box, Text } from "ink";
 

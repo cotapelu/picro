@@ -1,5 +1,6 @@
 // SettingsSelector - port ý tưởng từ pi-mono settings-selector.ts
 // Cài đặt: theme, disabled tools, provider, model, thinking level
+// Viết lại bằng Ink TSX, không copy code
 import React, { useState } from "react";
 import { Box, Text, useInput } from "ink";
 import type { AgentSessionRuntimeInterface } from "../../../runtime/index.js";

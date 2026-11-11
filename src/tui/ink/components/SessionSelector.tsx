@@ -1,5 +1,6 @@
 // SessionSelector - port ý tưởng từ pi-mono session-selector.ts
 // Chọn session với tìm kiếm, sắp xếp, xóa
+// Viết lại bằng Ink TSX, không copy code
 import React, { useState, useEffect } from "react";
 import { Box, Text, useInput } from "ink";
 import type { AgentSessionRuntimeInterface } from "../../../runtime/index.js";

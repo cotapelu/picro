@@ -1,4 +1,5 @@
 // Modal - port ý tưởng từ pi-mono Modal component
+// Viết lại bằng Ink TSX, không copy code
 import React from "react";
 import { Box, Text } from "ink";
 

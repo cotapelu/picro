@@ -1,5 +1,6 @@
 // Footer - port ý tưởng từ pi-mono footer.ts
 // Hiển thị pwd, token stats, context usage, model, git branch
+// Viết lại bằng Ink TSX, không copy code
 import React, { useState, useEffect } from "react";
 import { Box, Text } from "ink";
 import { formatTokens } from "./FormatTokens.js";

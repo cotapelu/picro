@@ -2,7 +2,12 @@
 
 ## In Progress / Next Up
 
-- [ ] Integrate StatusBar into TTYMode (show model, token usage, cwd)
+- [ ] Port Ink TUI from pi-mono: rewrite all components (Footer, MessageList, Input, Modal, StatusBar, Toast, SessionSelector, SettingsSelector, ModelSelector, ThemeSelector)
+- [ ] Rewrite InteractiveController: pure TS, handle slash commands, runtime events
+- [ ] Rewrite InteractiveMode: pure TS orchestrator, connect runtime + Ink UI
+- [ ] Write interactive-app.tsx: Ink entry point
+- [ ] Update main.ts: use new Ink TUI default mode
+- [ ] Build and test
 - [ ] Measure coverage, enforce ≥80%
 - [ ] Enforce function length ≤20 and complexity ≤10 via lint/CI
 
@@ -29,7 +34,6 @@
 
 ## Deferred / Future
 
-- [ ] Consider using `blessed` or `ink` if UI needs become complex
 - [ ] Add telemetry opt-in
 - [ ] Implement session export/import
 - [ ] Multi-line input support (already enabled via config)

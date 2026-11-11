@@ -1,11 +1,13 @@
 // Toast - hiển thị thông báo tạm thời
-import React, { useEffect, useState } from 'react';
-import { Box, Text } from 'ink';
+// Port ý tưởng từ pi-mono
+// Viết lại bằng Ink TSX, không copy code
+import React, { useEffect, useState } from "react";
+import { Box, Text } from "ink";
 
 interface Toast {
   id: string;
   message: string;
-  type: 'info' | 'success' | 'error' | 'warning';
+  type: "info" | "success" | "error" | "warning";
   duration?: number;
   createdAt: number;
 }
@@ -36,7 +38,7 @@ export const Toast: React.FC<ToastProps> = ({ toasts }) => {
           key={t.id}
           marginBottom={1}
           padding={1}
-          borderColor={t.type === 'error' ? 'red' : t.type === 'success' ? 'green' : 'yellow'}
+          borderColor={t.type === "error" ? "red" : t.type === "success" ? "green" : "yellow"}
           borderStyle="round"
         >
           <Text>{t.message}</Text>
@@ -44,4 +46,4 @@ export const Toast: React.FC<ToastProps> = ({ toasts }) => {
       ))}
     </Box>
   );
-};
+}

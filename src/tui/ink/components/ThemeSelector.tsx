@@ -1,5 +1,6 @@
 // ThemeSelector - port ý tưởng từ pi-mono theme-selector.ts
 // Chọn theme: dark, light, matrix
+// Viết lại bằng Ink TSX, không copy code
 import React, { useState } from "react";
 import { Box, Text, useInput } from "ink";
 import type { AgentSessionRuntimeInterface } from "../../../runtime/index.js";

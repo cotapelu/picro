@@ -87,14 +87,6 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
     controller.sendMessage(text);
   }, [controller]);
 
-  // Thêm toast helper
-  const addToast = useCallback((message: string, type: ToastItem["type"] = "info") => {
-    setToasts((prev) => [
-      ...prev,
-      { id: `toast-${Date.now()}`, message, type, createdAt: Date.now() },
-    ]);
-  }, []);
-
   const maxMsgHeight = 20;
 
   return (

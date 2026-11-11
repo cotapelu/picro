@@ -1,5 +1,6 @@
 // Input - nhập liệu người dùng
 // Port ý tưởng từ pi-mono, dùng Ink useInput hook
+// Viết lại bằng Ink TSX, không copy code
 import React, { useRef, useEffect, useCallback } from "react";
 import { Box, Text, useInput, useApp } from "ink";
 
