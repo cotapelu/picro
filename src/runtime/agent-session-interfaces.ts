@@ -14,7 +14,7 @@ export interface AgentSessionInterface {
   prompt(text: string, options?: { images?: unknown[] }): Promise<void>;
   subscribe(listener: (event: AgentSessionRuntimeEvent) => void): () => void;
   abort(): void;
-  messages: unknown[];
+  messages: Array<{ role: string; content: unknown[] }>;
   isStreaming: boolean;
   // Thinking level
   get thinkingLevel(): "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
@@ -29,6 +29,9 @@ export interface AgentSessionInterface {
 
   // Tool definitions
   getToolDefinition(name: string): any;
+  getTools(): Array<{ name: string; description: string; parameters: any }>;
+  getActiveTools(): string[];
+  setActiveTools(names: string[]): void;
 
   // Model handling
   cycleModel(direction?: "forward" | "backward"): Promise<{ model: any; thinkingLevel?: string } | undefined>;

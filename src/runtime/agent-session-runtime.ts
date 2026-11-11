@@ -56,7 +56,7 @@ export interface SessionStartEvent {
 /**
  * AgentSessionRuntime - The top-level runtime that owns everything
  */
-export class AgentSessionRuntime implements AgentSessionRuntime {
+export class AgentSessionRuntime {
   private _agent: any; // Agent - avoid circular import
   private _session: AgentSession;
   private _services: AgentSessionServices;
@@ -179,6 +179,115 @@ export class AgentSessionRuntime implements AgentSessionRuntime {
    */
   get modelFallbackMessage(): string | undefined {
     return undefined;
+  }
+
+  // === Delegate session methods ===
+  get messages(): Array<{ role: string; content: unknown[] }> {
+    return this._session.messages;
+  }
+
+  get isStreaming(): boolean {
+    return this._session.isStreaming;
+  }
+
+  subscribe(listener: (event: any) => void): () => void {
+    return this._session.subscribe(listener);
+  }
+
+  abort(): void {
+    this._session.abort();
+  }
+
+  getSteeringMessages(): readonly string[] {
+    return this._session.getSteeringMessages();
+  }
+
+  getFollowUpMessages(): readonly string[] {
+    return this._session.getFollowUpMessages();
+  }
+
+  clearQueue(): { steering: string[]; followUp: string[] } {
+    return this._session.clearQueue();
+  }
+
+  getToolDefinition(name: string): any {
+    return this._session.getToolDefinition(name);
+  }
+
+  getTools(): Array<{ name: string; description: string; parameters: any }> {
+    return this._session.getTools();
+  }
+
+  getActiveTools(): string[] {
+    return this._session.getActiveTools();
+  }
+
+  setActiveTools(names: string[]): void {
+    this._session.setActiveTools(names);
+  }
+
+  async cycleModel(direction?: "forward" | "backward"): Promise<{ model: any; thinkingLevel?: string } | undefined> {
+    return this._session.cycleModel(direction);
+  }
+
+  async setModel(model: any): Promise<void> {
+    await this._session.setModel(model);
+  }
+
+  setAutoCompactionEnabled(enabled: boolean): void {
+    this._session.setAutoCompactionEnabled(enabled);
+  }
+
+  getContextUsage(): { tokens: number; contextWindow: number; percent: number } | undefined {
+    return this._session.getContextUsage();
+  }
+
+  getTree(): any[] {
+    return this._session.getTree();
+  }
+
+  getLeafId(): string | null {
+    return this._session.getLeafId();
+  }
+
+  async navigateTree(branchId: string, options?: { summarize?: boolean; customInstructions?: string }): Promise<{ cancelled: boolean; selectedText?: string }> {
+    return this._session.navigateTree(branchId, options);
+  }
+
+  getSessionStats(): any {
+    return this._session.getSessionStats();
+  }
+
+  getUserMessagesForForking(): Array<{ entryId: string; text: string }> {
+    return this._session.getUserMessagesForForking();
+  }
+
+  getLastAssistantText(): string | undefined {
+    return this._session.getLastAssistantText();
+  }
+
+  async compact(): Promise<void> {
+    await this._session.compact();
+  }
+
+  abortCompaction(): void {
+    this._session.abortCompaction();
+  }
+
+  abortRetry(): void {
+    this._session.abortRetry();
+  }
+
+  recordBashResult(command: string, output: string, exitCode: number, cancelled: boolean, truncated: boolean, fullOutputPath?: string, options?: { excludeFromContext?: boolean }): void {
+    this._session.recordBashResult(command, output, exitCode, cancelled, truncated, fullOutputPath, options);
+  }
+
+  abortBash(): void {
+    this._session.abortBash();
+  }
+
+  get sessionManager(): any {
+    return this._session.sessionManager;
   }
 
   /**

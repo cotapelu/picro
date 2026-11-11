@@ -271,6 +271,51 @@ export async function handleCommand(ctx: CommandContext, commandId: string, slas
         return { type: 'toast', message: 'Compaction failed', toastType: 'error' };
       }
 
+    case 'theme':
+      try {
+        const settings = runtime.settings as any;
+        if (!args) {
+          const current = settings.getTheme?.() || 'default';
+          return { type: 'toast', message: `Current theme: ${current}`, toastType: 'info' };
+        }
+        if (settings.setTheme) {
+          settings.setTheme(args);
+          return { type: 'toast', message: `Theme set to: ${args}`, toastType: 'success' };
+        } else {
+          return { type: 'toast', message: 'Theme setting not supported', toastType: 'error' };
+        }
+      } catch (err) {
+        return { type: 'toast', message: 'Theme change failed', toastType: 'error' };
+      }
+
+    case 'tools':
+      try {
+        const settings = runtime.settings as any;
+        if (!args) {
+          const disabled = settings.getDisabledTools?.() || [];
+          const active = (runtime.session as any).getActiveTools?.() || [];
+          return {
+            type: 'toast',
+            message: `Active: ${active.join(', ') || 'none'}. Disabled: ${disabled.join(', ') || 'none'}`,
+            toastType: 'info',
+          };
+        }
+        const parts = args.split(' ');
+        const action = parts[0]; // enable/disable
+        const toolName = parts.slice(1).join(' ');
+        if (!action || !toolName) {
+          return { type: 'toast', message: 'Usage: /tools enable|disable <tool-name>', toastType: 'info' };
+        }
+        if (settings.setToolDisabled) {
+          settings.setToolDisabled(toolName, action === 'disable');
+          return { type: 'toast', message: `Tool ${toolName} ${action}d`, toastType: 'success' };
+        } else {
+          return { type: 'toast', message: 'Tool management not supported', toastType: 'error' };
+        }
+      } catch (err) {
+        return { type: 'toast', message: 'Tool management failed', toastType: 'error' };
+      }
+
     case 'reload':
       try {
         await runtime.settings?.reload?.();
@@ -388,6 +433,8 @@ export const BUILTIN_SLASH_COMMANDS = [
   { name: 'new', description: 'Create new session' },
   { name: 'settings', description: 'Open settings' },
   { name: 'model', description: 'Select model' },
+  { name: 'theme', description: 'Set color theme (dark, light, matrix)' },
+  { name: 'tools', description: 'List, enable, or disable tools' },
   { name: 'scoped-models', description: 'Configure scoped models' },
   { name: 'export', description: 'Export session to HTML' },
   { name: 'import', description: 'Import session from JSONL file' },
