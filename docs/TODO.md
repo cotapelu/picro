@@ -2,11 +2,25 @@
 
 ## Đang thực hiện / Sắp tới
 
-- [ ] Viết bộ test đầy đủ cho các thành phần Ink TUI (App, Input, MessageList, Modal, StatusBar, Toast, SessionSelector, SettingsSelector, ModelSelector, ThemeSelector, Keybindings)
-- [ ] Viết test cho InteractiveController (lệnh slash, sự kiện runtime)
-- [ ] Thêm kiểm tra nhập liệu dấu tiếng Việt
-- [ ] Đo cobertura, bắt buộc đạt ≥80%
-- [ ] Áp ràng buộc chiều dài hàm ≤20 và độ phức tạp ≤10 thông qua lint/CI
+- [ ] Viết lại toàn bộ `src/tui/ink/interactive-app.tsx`: điểm vào Ink, kiểm tra stdin là raw-mode TTY, fallback readline REPL khi không phải TTY
+- [ ] Viết lại toàn bộ `src/tui/ink/App.tsx`: layout chuẩn pi-mono (header cố định đầu, messages co giãn chiếm không gian còn lại, input dock cố định đáy, statusbar ngay dưới input)
+- [ ] Viết lại toàn bộ `src/tui/ink/components/Input.tsx`: prompt `> `, con trỏ blinking `█`, chỉ component này đăng ký `useInput`, xử lý Enter/Backspace/ký tự in được
+- [ ] Viết lại toàn bộ `src/tui/ink/components/VirtualMessageList.tsx`: follow-end scroll như `ScrollView follow: "end"`, không đăng ký `useInput`, không xung đột với Input
+- [ ] Viết lại toàn bộ `src/tui/ink/components/StatusBar.tsx`: 2 dòng như `FooterComponent` (dòng trên pwd dim, dòng dưới model + tokens + context + trạng thái xử lý)
+- [ ] Viết lại toàn bộ `src/tui/ink/components/Header.tsx`: tiêu đề ứng dụng + phím tắt chính như `BuiltInHeader`
+- [ ] Viết lại toàn bộ `src/tui/ink/components/Modal.tsx`: overlay modal, định vị trung tâm, border tròn, padding
+- [ ] Viết lại toàn bộ `src/tui/ink/components/Toast.tsx`: thông báo tạm thời, auto-remove sau duration, màu theo loại (info/success/error/warning)
+- [ ] Viết lại toàn bộ `src/tui/ink/components/Keybindings.tsx`: hiển thị danh sách phím tắt có sẵn
+- [ ] Viết lại toàn bộ `src/tui/ink/components/ThemeSelector.tsx`: chọn chủ đề dark/light/matrix, điều hướng ↑/↓, Enter xác nhận, Ctrl+C hủy
+- [ ] Viết lại toàn bộ `src/tui/ink/components/SettingsSelector.tsx`: danh sách cài đặt (theme, công cụ bị tắt, nhà cung cấp mặc định, mô hình mặc định, cấp độ suy nghĩ), điều hướng, xác nhận
+- [ ] Viết lại toàn bộ `src/tui/ink/components/ModelSelector.tsx`: tìm kiếm mô hình, danh sách theo nhà cung cấp, điều hướng, xác nhận
+- [ ] Viết lại toàn bộ `src/tui/ink/components/SessionSelector.tsx`: chọn phiên làm việc, tìm kiếm, sắp xếp, xóa phiên
+- [ ] Viết lại toàn bộ `src/tui/ink/components/MarkdownRenderer.tsx`: render markdown tin nhắn, hỗ trợ mã, liên kết, danh sách, bảng
+- [ ] Viết lại toàn bộ `src/tui/ink/components/MessageList.tsx`: danh sách tin nhắn chat, phân biệt user/assistant, canh lề, padding
+- [ ] Viết lại toàn bộ `src/tui/ink/components/FormatTokens.ts`: định dạng số token (k, M)
+- [ ] Viết lại toàn bộ `src/tui/ink/theme.ts`: hệ thống màu (màu cơ bản, màu sáng, in đậm, mờ, nghiêng, gạch dưới, ngược, màu nền, composite helpers)
+- [ ] Viết lại toàn bộ `src/tui/ink/test-setup.ts`: cấu hình kiểm thử môi trường Ink (mock TTY)
+- [ ] Viết lại toàn bộ `src/tui/ink/index.ts`: xuất tất cả thành phần
 
 ## Hoàn thành
 
@@ -14,7 +28,7 @@
 - [x] Thay thế TUI tùy chỉnh bằng terminal thuần (không dùng giao diện readline)
 - [x] Thêm lệnh slash `/model` kèm menu tương tác
 - [x] Đảm bảo chỉ cho phép TTY (chặn chế độ pipe)
-- [x] Tách chế độ TTY thành các module và thành phần/ (InputHandler, MenuSystem, CommandProcessor, PromptLine, OutputRenderer, ConfigManager, StatusBar)
+- [x] Tách chế độ TTY thành các module và thành phần (InputHandler, MenuSystem, CommandProcessor, PromptLine, OutputRenderer, ConfigManager, StatusBar)
 - [x] Tạo `docs/PROJECT_STATE.md` (phiên bản đầu tiên)
 - [x] Build thành công (`npm run build`)
 - [x] Thêm kiểm thử đơn vị cho chế độ TTY (41 kiểm thử pass)
@@ -26,7 +40,7 @@
 - [x] ConfigManager: cấu hình bền vững, đặt lại/khôi phục
 - [x] Thêm lệnh `/sessions` (liệt kê, chuyển phiên)
 - [x] Thêm lệnh `/settings` (xem/sửa cấu hình)
-- [x] Thêm lệnh `/tools` (bật/tắt công cụ 내장)
+- [x] Thêm lệnh `/tools` (bật/tắt công cụ内建)
 - [x] Thêm lệnh `/theme` (chuyển màu chủ đề)
 - [x] Port TUI Ink từ pi-mono: viết lại tất cả thành phần (Footer, MessageList, Input, Modal, StatusBar, Toast, SessionSelector, SettingsSelector, ModelSelector, ThemeSelector)
 - [x] Viết lại InteractiveController: TypeScript thuần, xử lý lệnh slash, sự kiện runtime
@@ -39,10 +53,7 @@
 - [x] Thêm hệ thống chủ đề (tối, sáng, matrix)
 - [x] Thêm chế độ API HTTP với REST và WebSocket
 - [x] Build và kiểm thử
-- [x] Viết lại bố cục TUI Ink theo nguyên tắc pi-mono (tiêu đề cố định đầu màn hình, tin nhắn co giãn chiếm không gian còn lại, ô nhập liệu cố định đáy, thanh trạng thái dưới ô nhập liệu)
-- [x] Thêm con trœur nhấp nháy `█` vào ô nhập liệu `Input`
-- [x] Chỉ thành phần `Input` đăng ký `useInput`, gỡ khỏi `VirtualMessageList` để tránh xung đột phím
-- [x] Thêm lệnh `npm run start` (chạy `node dist/cli.js`)
+- [x] Thêm script `npm run start` (chạy `node dist/cli.js`)
 - [x] Cập nhật `npm run dev` tự động build rồi chạy `npm start` với `VERBOSE=1`
 - [x] Thêm chế độ dự phòng readline REPL khi stdin không phải raw-mode TTY
 - [x] Sửa lỗi giá trị `NaN` chiều cao khung nhìn khi `rows` chưa khởi tạo
