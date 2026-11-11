@@ -105,6 +105,9 @@ export class InteractiveMode {
     this.height = size.height;
 
     this.setup();
+
+    // Keep the process alive until screen is stopped
+    await this.screen.start();
   }
 
   private setup(): void {
