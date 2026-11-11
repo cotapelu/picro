@@ -2,14 +2,16 @@
 
 ## In Progress / Next Up
 
+- [ ] Virtual scrolling thực sự (chỉ render tin nhắn trong viewport, cuộn thực tế)
+- [ ] Markdown rendering nâng cao (code blocks, syntax highlighting, tables, bold, italic)
+- [ ] Theme system thực sự (dark/light/matrix switching động, lưu vào settings)
+- [ ] Keybindings chi tiết hơn (vim keys h/j/k/l, search trong session, Ctrl+F find)
+- [ ] HTTP API mode (chạy như server, REST/WebSocket)
+- [ ] Integration tests cho Ink TUI
 - [ ] Measure coverage, enforce ≥80%
 - [ ] Enforce function length ≤20 and complexity ≤10 via lint/CI
-- [ ] Multi-line input support (already enabled via config)
-- [ ] Command palette search (fuzzy find)
-- [ ] Telemetry opt-in
-- [ ] Implement session export/import
 
-## Completed (recent)
+## Completed
 
 - [x] Remove print/rpc modes, keep TTY only
 - [x] Replace custom TUI with raw terminal (no readline interface)

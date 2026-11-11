@@ -14,7 +14,7 @@ import type { InteractiveController } from "../../modes/interactive/interactive-
 import { Header } from "./components/Header.js";
 import { Footer } from "./components/Footer.js";
 import { Input } from "./components/Input.js";
-import { MessageList } from "./components/MessageList.js";
+import { VirtualMessageList } from "./components/VirtualMessageList.js";
 import { Modal } from "./components/Modal.js";
 import { StatusBar } from "./components/StatusBar.js";
 import { Toast } from "./components/Toast.js";
@@ -57,6 +57,10 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
   const { exit } = useApp();
   const { columns, rows } = useWindowSize();
 
+  // Tính toán số lượng tin nhắn có thể hiển thị trong viewport
+  // Trừ đi header, footer, input, status bar, keybindings
+  const availableHeight = Math.max(5, rows - 8);
+
   // Khởi tạo tin nhắn ban đầu
   useEffect(() => {
     if (initialMessage) {
@@ -90,15 +94,11 @@ export const App: React.FC<AppProps> = ({ runtime, controller, initialMessage })
     controller.sendMessage(text);
   }, [controller]);
 
-  // Tính toán số lượng tin nhắn có thể hiển thị trong viewport
-  // Trừ đi header, footer, input, status bar
-  const availableHeight = Math.max(5, rows - 8);
-
   return (
     <Box flexDirection="column">
       <Header key="header" title="picro" cwd={cwd} />
       <Box key="messages-box" flexDirection="column" padding={1}>
-        <MessageList key="message-list" messages={messages} viewportHeight={availableHeight} viewportWidth={columns} />
+        <VirtualMessageList key="message-list" messages={messages} viewportHeight={availableHeight} viewportWidth={columns} />
       </Box>
       <StatusBar key="statusbar" model={status.model} tokens={status.tokens} cwd={status.cwd} isProcessing={status.isProcessing} />
       <Input key="input" onSubmit={handleSubmit} placeholder="> " />
