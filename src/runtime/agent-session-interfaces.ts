@@ -84,6 +84,7 @@ export interface AgentSessionRuntimeInterface {
     getCwd(): string;
     setSessionName(name: string): void;
   };
+  services: any;
   cwd: string;
   // Prompting (high-level API)
   prompt(text: string, options?: { images?: unknown[] }): Promise<void>;

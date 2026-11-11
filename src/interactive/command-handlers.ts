@@ -103,10 +103,51 @@ export async function handleCommand(ctx: CommandContext, commandId: string, slas
       };
 
     case 'settings':
-      return { type: 'modal', modal: { type: 'settings' } };
+      try {
+        const settings = runtime.settings as any;
+        return {
+          type: 'modal',
+          modal: {
+            type: 'settings',
+            props: {
+              settings: {
+                theme: settings.getTheme?.() || 'default',
+                disabledTools: settings.getDisabledTools?.() || [],
+                defaultProvider: settings.getDefaultProvider?.() || 'none',
+                defaultModel: settings.getDefaultModel?.() || 'none',
+                defaultThinkingLevel: settings.getDefaultThinkingLevel?.() || 'off',
+              },
+            },
+          },
+        };
+      } catch (err) {
+        return { type: 'toast', message: 'Settings failed: ' + (err as Error).message, toastType: 'error' };
+      }
 
     case 'model':
-      return { type: 'modal', modal: { type: 'model-selector' } };
+      try {
+        const modelRegistry = runtime.services?.modelRegistry || {};
+        const providers = modelRegistry.getProviders?.() || [];
+        const models: any[] = [];
+        for (const p of providers) {
+          const pm = modelRegistry.getModels?.(p) || [];
+          for (const m of pm) {
+            models.push({ id: m.id, provider: p });
+          }
+        }
+        return {
+          type: 'modal',
+          modal: {
+            type: 'model-selector',
+            props: {
+              current: (runtime.session as any)?.model?.id || 'none',
+              models,
+            },
+          },
+        };
+      } catch (err) {
+        return { type: 'toast', message: 'Model selector failed: ' + (err as Error).message, toastType: 'error' };
+      }
 
     case 'scoped-models':
       return { type: 'modal', modal: { type: 'scoped-models' } };

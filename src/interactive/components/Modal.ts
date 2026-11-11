@@ -99,6 +99,106 @@ ${props.models?.map((m: any, i: number) =>
     confirmLabel: 'Select',
     cancelLabel: 'Cancel',
   },
+  settings: {
+    type: 'settings',
+    render: (props: any) => {
+      const s = props.settings || {};
+      const theme = s.theme || 'default';
+      const disabledTools = (s.disabledTools || []).join(', ') || 'none';
+      const lines = [
+        '+------------------------------------------+',
+        '|                 SETTINGS                 |',
+        '+------------------------------------------+',
+        '| Theme: ' + theme + ' '.repeat(39 - theme.length) + '|',
+        '| Disabled tools: ' + disabledTools + ' '.repeat(39 - disabledTools.length - 14) + '|',
+        '| Default provider: ' + (s.defaultProvider || 'none') + ' '.repeat(39 - (s.defaultProvider || 'none').length - 16) + '|',
+        '| Default model: ' + (s.defaultModel || 'none') + ' '.repeat(39 - (s.defaultModel || 'none').length - 14) + '|',
+        '| Default thinking: ' + (s.defaultThinkingLevel || 'off') + ' '.repeat(39 - (s.defaultThinkingLevel || 'off').length - 17) + '|',
+        '+------------------------------------------+',
+        '| /theme <name> - Set theme                |',
+        '| /tools <enable|disable> <tool> - Toggle  |',
+        '+------------------------------------------+',
+      ];
+      return lines.join('\n');
+    },
+    confirmLabel: 'OK',
+  },
+  theme: {
+    type: 'theme',
+    render: (props: any) => {
+      const current = props.current || 'default';
+      const themes = ['dark', 'light', 'matrix'];
+      const lines = [
+        '+------------------------------------------+',
+        '|              THEME SELECTOR              |',
+        '+------------------------------------------+',
+        '| Current: ' + current + ' '.repeat(39 - current.length - 9) + '|',
+        '|                                          |',
+      ];
+      for (const t of themes) {
+        const marker = t === current ? ' (current)' : '';
+        lines.push('|  ' + t + marker + ' '.repeat(35 - t.length - marker.length) + '|');
+      }
+      lines.push('+------------------------------------------+');
+      return lines.join('\n');
+    },
+    confirmLabel: 'Select',
+    cancelLabel: 'Cancel',
+  },
+  tools: {
+    type: 'tools',
+    render: (props: any) => {
+      const active = props.active || [];
+      const disabled = props.disabled || [];
+      const allTools = [...active, ...disabled];
+      const lines = [
+        '+------------------------------------------+',
+        '|                    TOOLS                 |',
+        '+------------------------------------------+',
+      ];
+      if (allTools.length === 0) {
+        lines.push('|  No tools available                      |');
+      } else {
+        for (const tool of allTools) {
+          const status = disabled.includes(tool) ? 'disabled' : 'active';
+          lines.push('|  ' + tool + ' '.repeat(25 - tool.length) + ' [' + status + ' '.repeat(10 - status.length) + ']|');
+        }
+      }
+      lines.push('+------------------------------------------+');
+      lines.push('| /tools enable <tool> - Enable tool       |');
+      lines.push('| /tools disable <tool> - Disable tool     |');
+      lines.push('+------------------------------------------+');
+      return lines.join('\n');
+    },
+    confirmLabel: 'OK',
+  },
+  sessions: {
+    type: 'sessions',
+    render: (props: any) => {
+      const sessions = props.sessions || [];
+      const currentId = props.currentId || '';
+      const lines = [
+        '+------------------------------------------+',
+        '|                  SESSIONS                |',
+        '+------------------------------------------+',
+      ];
+      if (sessions.length === 0) {
+        lines.push('|  No saved sessions                       |');
+      } else {
+        for (let i = 0; i < sessions.length; i++) {
+          const s = sessions[i];
+          const id = (s && s.id ? s.id.substring(0, 28) : 'unknown');
+          const marker = s.id === currentId ? ' (current)' : '';
+          lines.push('|  ' + (i + 1) + '. ' + id + ' '.repeat(30 - id.length) + marker + '|');
+        }
+      }
+      lines.push('+------------------------------------------+');
+      lines.push('| Usage: /sessions <session-id> to switch  |');
+      lines.push('+------------------------------------------+');
+      return lines.join('\n');
+    },
+    confirmLabel: 'OK',
+  },
 };
 
 /**
