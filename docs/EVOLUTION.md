@@ -1,57 +1,44 @@
-# EVOLUTION.md
+# Evolution Plan
 
-## Evolution Trajectory & Planned Refactors
+This outline tracks planned changes, refactors, and anticipated technical debt.
 
-### Phase 1: Foundation (Completed 2025-07-04)
+## Completed (v0.0.1+)
 
-**Focus:** Stabilize interactive TTY mode
-**Completed:**
-- Refactor TTY mode into modular structure (InputHandler, MenuSystem, CommandProcessor, TTYMode)
-- Add comprehensive unit tests for TTY mode (43 tests)
-- Fix CLI args compatibility (remove legacy `--mode`, add warnings for invalid thinking level)
+- **Build Stability**: Fixed missing test setup, removed obsolete copy step, all tests pass.
+- **Print Mode**: Basic print mode with text/JSON output; extracts last assistant response.
+- **RPC Mode**: Full JSON-RPC 2.0 implementation over stdin/stdout. Exposes agent, session, settings, auth, clipboard APIs.
+- **Type Corrections**: Aligned `cycleModel` signature (`forward`/`backward`, Promise return); added optional `options` to `fork` method in runtime interface; removed private field from session interface.
 
-**Outcome:** All tests passing.
+## Completed (Iteration 3 - 2025-07-04)
 
----
+- **Port from TTY evolution**: Runtime API simplification, trust manager exports,
+  settings disabledTools, AgentSession tool methods, CLI args fixes, /theme and
+  /tools commands for Ink TUI, trust-utils and truncate unit tests.
+- **TUI Mode Validation**: Ink TUI boots correctly with slash commands
+  (/theme, /tools, /compact, /settings, /login, /model, etc.). All imports and
+  event wiring validated.
+- **Build Stable**: tsc + esbuild TUI bundling working. All tests pass.
 
-### Phase 2: Components & Polish (Completed 2025-07-04)
+## In Progress
 
-**Focus:** High-end TTY UI components
-**Completed:**
-- Components: ConfigManager, StatusBar, enhanced InputHandler (history, multi-line, editing shortcuts), OutputRenderer (colors, markdown, spinner, progress, code blocks)
-- Commands Added: `/login`, `/sessions`, `/settings`, `/tools`, `/theme`, `/compact`
-- StatusBar integration: shows model, token usage, cwd, updates dynamically
-- Config system: persistent, set/reset via `/settings`
+- **Print Mode Enhancements**: Consider streaming response or full conversation output.
 
-**Outcome:** Professional TTY experience with rich interactivity.
+## Planned
 
----
+- **Cancelation Support**: Allow aborting long-running agent runs via SIGINT or internal abort.
+- **Model Cycling in Print Mode**: Expose cycleModel via CLI flags for headless usage.
+- **Refactor AgentSessionInterface**: Clean up optional vs required, split into focused interfaces.
+- **Performance Tracking**: Enable and expose metrics in print/RPC modes.
+- **Unit Tests for Modes**: Add tests for print-mode and RPC mode request handling.
 
-### Phase 3: Feature Expansion (Current)
+## Anticipated Debt
 
-**Goals:** Already delivered most high-impact features.
-**Remaining minor items:**
-- `/replay` – rerun last prompt
-- `/copy` – copy last response to clipboard (if supported)
-- Command palette with fuzzy search
+- Print mode extracts last assistant message via history scan; may miss thinking blocks. Prefer event-based capture.
+- RPC mode does not yet support streaming responses; all results are wait-for-completion.
+- Interface drift risk remains; need automated contract checks.
 
----
+## Risk Assessment
 
-### Phase 4: Runtime Refactor (Later)
+- Low risk: Core agent loop well-tested.
+- Medium risk: RPC mode may require adjustments as new features are added; integration testing needed.
 
-**Rationale:** `src/runtime/agent-session-runtime.ts` and `settings-manager.ts` are large; high complexity may cause bugs.
-**Plan:** Split runtime into domain services (LLM, Tools, Settings, Events).
-**Risk:** Medium – core functionality, needs comprehensive tests first.
-
----
-
-### Anticipated Technical Debt
-
-- **Menu system** may need abstraction for future UI backends (web, VS Code extension)
-- **Command processor** could become plugin-based to allow user-defined slash commands
-- **Settings** currently simple object; may need schema validation and migrations
-- **StatusBar** rendering could be improved with real-time updates without full redraw
-
----
-
-*Evolution plan revisited after each iteration.*

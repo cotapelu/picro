@@ -1,30 +1,31 @@
-# AGENT_PROFILE.md
+# Agent Profile
 
-## Weaknesses & Failure Patterns
+This document captures the agent's strengths, weaknesses, and areas needing attention.
 
-### Commonly Failing Tasks (Improved)
+## Strengths
 
-- **TTY mode** – Now unit-tested; input handling stable
-- **CLI args parsing** – Legacy flags (`--mode`) removed; thinking level validation added
+- Comprehensive test suite with high coverage.
+- Modular architecture with clear separation between agent core, session management, and UI layers.
+- Extensible via extensions, skills, and prompt templates.
 
-### Fragile Modules (High Change Frequency)
+## Weaknesses / Fragile Areas
 
-- `src/runtime/agent-session-runtime.ts` – Large, complex, may need split (now covered by tests)
-- `src/session/` – Model registry and session storage tight coupling
-- `src/tty-mode/` – Stabilized; components modular and well-tested
+- **Interface-Implementation Drift**: Mostly resolved — AgentSessionRuntime now delegates directly to AgentSession, removing interface drift. Still requires vigilance when adding new methods.
+- **Partial Implementations**: Print and RPC modes fully implemented. Ink TUI mode validated with core slash commands. Coverage gaps remain in edge cases for alternate modes.
+- **Circular Dependencies**: The `AgentSessionRuntime` and `AgentSession` relationship requires careful handling to avoid import cycles.
+- **Type Strictness vs Practicality**: Interfaces sometimes expose internal fields unnecessarily or omit optional parameters, leading to friction.
+- **Build Process**: Build pipeline working correctly (tsc + esbuild TUI bundling).
 
-### Stack Weaknesses
+## Task Patterns That Usually Fail
 
-- TypeScript strict mode occasionally surfaces implicit any; requires careful typing
-- Lack of unit tests in some runtime paths (coverage target: 80%)
+- Interface updates without synchronizing implementations.
+- Incomplete implementations for alternate modes.
+- Over-reliance on dynamic imports without fallbacks.
 
-### Improvement Focus
+## Recommendations
 
-- Increase unit test coverage for runtime modules
-- Refactor large runtime modules to reduce complexity
-- Add integration tests for slash command execution
-- Implement end-to-end terminal simulation tests
+- Regularly run `npm run build` and `npm test` in CI.
+- Keep interfaces aligned with actual class signatures; include optional parameters where needed.
+- Validate all modes (text, json, rpc, tui) in integration tests.
+- Consider splitting large interfaces into smaller, role-specific ones.
 
----
-
-*Profile updates after each evolution round.*
