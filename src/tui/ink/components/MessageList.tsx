@@ -41,6 +41,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, viewportHeig
           </Box>
         );
       })}
+      {displayMessages.length === 0 && <Text>No messages yet.</Text>}
     </Box>
   );
 }

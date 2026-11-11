@@ -13,6 +13,7 @@ const italicStyle = (text: string) => `\x1b[3m${text}\x1b[23m`; // italic
 const headingStyle = (text: string) => `\x1b[1m${text}\x1b[22m`; // bold
 const linkStyle = (text: string) => `\x1b[34m${text}\x1b[39m`; // blue
 const listStyle = (text: string) => `\x1b[32m${text}\x1b[39m`; // green
+const quoteStyle = (text: string) => `\x1b[2m${text}\x1b[22m`; // dim
 
 // Parse markdown thành văn bản có màu ANSI
 export function renderMarkdown(text: string): string {
@@ -20,7 +21,7 @@ export function renderMarkdown(text: string): string {
 
   let result = text;
 
-  // Code blocks (triple backticks)
+  // Code blocks (triple backticks) - phải xử lý trước
   result = result.replace(/```([\s\S]*?)```/g, (_match, code) => {
     return `\n${codeBlockStyle(code.trim())}\n`;
   });
@@ -32,7 +33,7 @@ export function renderMarkdown(text: string): string {
 
   // Headings (#, ##, ###)
   result = result.replace(/^#{1,3}\s+(.+)$/gm, (_match, text) => {
-    return `\n${boldStyle(text.trim())}\n`;
+    return `\n${headingStyle(text.trim())}\n`;
   });
 
   // Bold (**text**)
@@ -50,9 +51,14 @@ export function renderMarkdown(text: string): string {
     return linkStyle(text);
   });
 
-  // Lists (- item, * item)
-  result = result.replace(/^[-*]\s+(.+)$/gm, (_match, text) => {
+  // Lists (- item, * item, + item)
+  result = result.replace(/^[-*+]\s+(.+)$/gm, (_match, text) => {
     return `  ${listStyle("• " + text.trim())}`;
+  });
+
+  // Numbered lists (1. item, 2. item)
+  result = result.replace(/^\d+\.\s+(.+)$/gm, (_match, text) => {
+    return `  ${listStyle(text.trim())}`;
   });
 
   // Horizontal rule (---)
@@ -60,8 +66,14 @@ export function renderMarkdown(text: string): string {
 
   // Blockquote (> text)
   result = result.replace(/^>\s+(.+)$/gm, (_match, text) => {
-    return theme.dim(text.trim());
+    return quoteStyle(text.trim());
   });
+
+  // Xóa các thẻ HTML còn lại
+  result = result.replace(/<[^>]*>/g, "");
+
+  // Xóa dòng trống nhiều hơn 2
+  result = result.replace(/\n{3,}/g, "\n\n");
 
   return result;
 }
