@@ -345,6 +345,8 @@ export class InteractiveController {
         if (settings.setTheme) {
           settings.setTheme(args);
           this.addToast(`Theme set to: ${args}`, 'success');
+          // Áp dụng theme ngay lập tức
+          this.applyTheme(args);
         } else {
           this.addToast('Theme setting not supported', 'error');
         }
@@ -422,6 +424,20 @@ export class InteractiveController {
       this.toasts = this.toasts.filter((t) => t.id !== toast.id);
       this.onToastCallback?.(toast);
     }, toast.duration || 3000);
+  }
+
+  private applyTheme(themeName: string): void {
+    // Áp dụng theme ngay lập tức bằng cách thay đổi màu sắc của terminal
+    // Các theme được hỗ trợ: dark, light, matrix
+    const themeSettings: Record<string, { bg: string; fg: string }> = {
+      dark: { bg: "\x1b[40m", fg: "\x1b[37m" },     // Đen nền, trắng chữ
+      light: { bg: "\x1b[47m", fg: "\x1b[30m" },   // Trắng nền, đen chữ
+      matrix: { bg: "\x1b[42m", fg: "\x1b[32m" },  // Xanh lá nền, xanh lá chữ
+    };
+
+    const theme = themeSettings[themeName] || themeSettings.dark;
+    // Áp dụng màu nền và chữ cho terminal
+    process.stdout.write(theme.bg + theme.fg);
   }
 
   private setModal(modal: ModalState): void {
