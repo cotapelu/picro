@@ -2,14 +2,12 @@
 
 ## In Progress / Next Up
 
-- [ ] Port Ink TUI from pi-mono: rewrite all components (Footer, MessageList, Input, Modal, StatusBar, Toast, SessionSelector, SettingsSelector, ModelSelector, ThemeSelector)
-- [ ] Rewrite InteractiveController: pure TS, handle slash commands, runtime events
-- [ ] Rewrite InteractiveMode: pure TS orchestrator, connect runtime + Ink UI
-- [ ] Write interactive-app.tsx: Ink entry point
-- [ ] Update main.ts: use new Ink TUI default mode
-- [ ] Build and test
 - [ ] Measure coverage, enforce ≥80%
 - [ ] Enforce function length ≤20 and complexity ≤10 via lint/CI
+- [ ] Multi-line input support (already enabled via config)
+- [ ] Command palette search (fuzzy find)
+- [ ] Telemetry opt-in
+- [ ] Implement session export/import
 
 ## Completed (recent)
 
@@ -31,13 +29,21 @@
 - [x] Add `/settings` command (view/edit config)
 - [x] Add `/tools` command (toggle built-in tools)
 - [x] Add `/theme` command (switch color themes)
+- [x] Port Ink TUI from pi-mono: rewrite all components (Footer, MessageList, Input, Modal, StatusBar, Toast, SessionSelector, SettingsSelector, ModelSelector, ThemeSelector)
+- [x] Rewrite InteractiveController: pure TS, handle slash commands, runtime events
+- [x] Rewrite InteractiveMode: pure TS orchestrator, connect runtime + Ink UI
+- [x] Write interactive-app.tsx: Ink entry point
+- [x] Update main.ts: use new Ink TUI default mode
+- [x] Add virtual scrolling for message list
+- [x] Add markdown rendering for assistant messages
+- [x] Add keybindings (Ctrl+K, Ctrl+P, Ctrl+L, Ctrl+C)
+- [x] Add theme system (dark, light, matrix)
+- [x] Build and test
 
 ## Deferred / Future
 
 - [ ] Add telemetry opt-in
 - [ ] Implement session export/import
-- [ ] Multi-line input support (already enabled via config)
-- [ ] Command palette search (fuzzy find)
 
 ---
 
