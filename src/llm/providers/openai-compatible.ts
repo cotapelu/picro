@@ -190,15 +190,19 @@ function calcUsage(rawUsage: any, model: Model): Usage {
   const inputTokens = rawUsage.prompt_tokens || 0;
   const outputTokens = rawUsage.completion_tokens || 0;
   const cacheDetails = rawUsage.prompt_tokens_details || {};
-  const completionDetails = rawUsage.completion_tokens_details || {};
 
+  // Provider placement differs (OpenAI/OpenRouter: prompt_tokens_details.cached_tokens,
+  // DeepSeek: prompt_cache_hit_tokens, Kimi: top-level cached_tokens). cached_tokens is a
+  // cache-READ count; cache_write_tokens is a separate write count and must NOT be
+  // subtracted from it, otherwise spec-compliant providers are under-reported.
+  const cacheRead = cacheDetails.cached_tokens ?? rawUsage.prompt_cache_hit_tokens ?? rawUsage.cached_tokens ?? 0;
   const cacheWrite = cacheDetails.cache_write_tokens || 0;
-  const cacheReadRaw = cacheDetails.cached_tokens || 0;
-  const cacheRead = cacheWrite > 0 ? Math.max(0, cacheReadRaw - cacheWrite) : cacheReadRaw;
-  const reasoningTokens = completionDetails.reasoning_tokens || 0;
 
+  // completion_tokens already includes reasoning_tokens (documented OpenAI behavior):
+  // adding them again double-counted output tokens and inflated totalTokens, which
+  // feeds cost calculation and the compaction threshold.
   const input = Math.max(0, inputTokens - cacheRead - cacheWrite);
-  const output = outputTokens + reasoningTokens;
+  const output = outputTokens;
   const total = input + output + cacheRead + cacheWrite;
 
   const usage: Usage = {

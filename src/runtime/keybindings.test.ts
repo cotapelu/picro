@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   mkdirSync,
-  rmdirSync,
+  rmSync,
   unlinkSync,
   existsSync,
   writeFileSync,
@@ -23,7 +23,9 @@ function createTempDir(): string {
 }
 function cleanupTempDir(dir: string) {
   if (existsSync(dir)) {
-    rmdirSync(dir, { recursive: true, force: true });
+    // fs.rmdirSync() dropped the `recursive` option (Node 16+); rmSync is the
+    // supported replacement and no longer throws "options.recursive is no longer supported".
+    rmSync(dir, { recursive: true, force: true });
   }
 }
 

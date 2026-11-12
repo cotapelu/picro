@@ -388,14 +388,17 @@ export class AgentSessionRuntime {
         : selectedEntry.id;
 
       // Create branch summary
-      const result = this._session.sessionManager.branchWithSummary(
+      const branchSummaryEntryId = this._session.sessionManager.branchWithSummary(
         branchFromId,
         `Forked from entry ${entryId}`
       );
 
+      // branchWithSummary() returns the new entry's id (a string). Reading a
+      // `.selectedText` property off that string always yielded undefined, so
+      // callers never learned which entry the fork landed on.
       return { 
         cancelled: false,
-        selectedText: (result as any)?.selectedText
+        selectedText: branchSummaryEntryId
       };
     } catch (error) {
       console.error("Failed to fork session:", error);

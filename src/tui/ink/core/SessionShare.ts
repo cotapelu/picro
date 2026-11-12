@@ -7,7 +7,7 @@
 //   - Dọn thư mục tạm trong finally
 // Port sang TSX riêng, khon copy code truc iep.
 
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -228,8 +228,6 @@ function extractToken(auth: unknown): string | undefined {
 
 function spawnSyncSafe(command: string, args: string[]): { status: number | null } {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { spawnSync } = require("node:child_process") as typeof import("node:child_process");
     const result = spawnSync(command, args, { encoding: "utf-8", stdio: "ignore" });
     return { status: result.status };
   } catch {

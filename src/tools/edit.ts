@@ -68,7 +68,13 @@ export function createEditToolDefinition(cwd: string) {
         };
       }
 
-      const modified = original.replace(oldString, newString);
+      // Build the result by index arithmetic instead of String.prototype.replace:
+      // with a string search value, `replace` still interprets $ patterns in the
+      // replacement ($&, $1, $`, $' ...), so a newString containing them (very
+      // common in code edits) was rewritten with the matched text instead of
+      // being inserted literally.
+      const modified =
+        original.slice(0, index) + newString + original.slice(index + oldString.length);
 
       if (dryRun) {
         return {

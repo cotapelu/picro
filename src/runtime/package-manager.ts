@@ -91,7 +91,7 @@ export class DefaultPackageManager {
       const pkgJsonPath = join(pkgPath, 'package.json');
       if (!existsSync(pkgJsonPath)) return null;
 
-      const pkg = JSON.parse(require('fs').readFileSync(pkgJsonPath, 'utf8'));
+      const pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf8'));
       return {
         name: pkg.name,
         version: pkg.version,

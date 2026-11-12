@@ -9,7 +9,8 @@
  */
 
 import { cpus, freemem, totalmem, arch, platform, release, version, hostname, networkInterfaces } from 'os';
-import { existsSync, statSync } from 'fs';import { stat } from 'fs/promises';
+import { existsSync, statSync, readFileSync } from 'fs';
+import { stat } from 'fs/promises';
 import type { Stats } from 'fs';
 import { join } from 'path';
 
@@ -226,7 +227,7 @@ function getPackageVersion(): string | null {
   try {
     const pkgPath = join(process.cwd(), 'package.json');
     if (existsSync(pkgPath)) {
-      const pkg = JSON.parse(require('fs').readFileSync(pkgPath, 'utf8'));
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
       return pkg.version;
     }
   } catch {}

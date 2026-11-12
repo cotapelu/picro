@@ -106,6 +106,25 @@ export function convertSessionMessagesToLlm(messages: any[]): Message[] {
         return m as Message;
       }
 
+      // ConversationTurn-shaped tool turns are what AgentSession persists
+      // (createToolTurn uses role 'tool'). Dropping them here silently lost
+      // every tool result when a session was resumed: the restored context
+      // still contained the assistant toolCall blocks but no matching
+      // toolResult, so the model lost all tool output history.
+      if (m.role === 'tool') {
+        const content = typeof m.content === 'string'
+          ? [{ type: 'text' as const, text: m.content }]
+          : (Array.isArray(m.content) ? m.content : []);
+        return {
+          role: 'toolResult',
+          toolCallId: m.toolCallId,
+          toolName: m.toolName,
+          content: content as TextContent[],
+          isError: m.isError === true,
+          timestamp: m.timestamp,
+        } as unknown as Message;
+      }
+
       // Session-specific types
       switch (m.role) {
         case 'bashExecution':

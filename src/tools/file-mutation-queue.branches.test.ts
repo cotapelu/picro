@@ -14,7 +14,9 @@ describe('FileMutationQueue branch coverage', () => {
   let testDir: string;
 
   beforeEach(async () => {
-    testDir = join(tmpdir(), `picro-test-${Date.now()}`);
+    // Random suffix: file-tools.test.ts shares this prefix and ran in parallel
+    // within the same millisecond, so both suites deleted each other's fixtures.
+    testDir = join(tmpdir(), `picro-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await mkdir(testDir, { recursive: true });
     queue = new FileMutationQueue(testDir);
   });

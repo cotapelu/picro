@@ -202,24 +202,26 @@ describe('AgentSessionRuntime (extended)', () => {
   describe('fork', () => {
     const branchFromId = 'entry123';
     const summary = `Forked from entry ${branchFromId}`;
+    // SessionManager.branchWithSummary() returns the new entry's id (a string).
+    const forkedEntryId = 'forked-entry-1';
 
     beforeEach(() => {
       session.sessionManager.getEntry = vi.fn().mockReturnValue({ id: branchFromId, parentId: 'parent456' });
-      session.sessionManager.branchWithSummary = vi.fn().mockReturnValue({ selectedText: 'forked text' });
+      session.sessionManager.branchWithSummary = vi.fn().mockReturnValue(forkedEntryId);
     });
 
     it('forks at position "at" by default', async () => {
       const result = await runtime.fork(branchFromId);
       expect(session.sessionManager.getEntry).toHaveBeenCalledWith(branchFromId);
       expect(session.sessionManager.branchWithSummary).toHaveBeenCalledWith(branchFromId, summary);
-      expect(result).toEqual({ cancelled: false, selectedText: 'forked text' });
+      expect(result).toEqual({ cancelled: false, selectedText: forkedEntryId });
     });
 
     it('forks at position "before" uses parentId', async () => {
       const result = await runtime.fork(branchFromId, { position: 'before' });
       expect(session.sessionManager.getEntry).toHaveBeenCalledWith(branchFromId);
       expect(session.sessionManager.branchWithSummary).toHaveBeenCalledWith('parent456', summary);
-      expect(result).toEqual({ cancelled: false, selectedText: 'forked text' });
+      expect(result).toEqual({ cancelled: false, selectedText: forkedEntryId });
     });
 
     it('returns cancelled:true when disposed', async () => {

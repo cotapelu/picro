@@ -4,6 +4,9 @@
  */
 
 import type { AgentEvent } from './events.js';
+// Default import (not destructured) so tests can spy on fs.writeFileSync/readFileSync
+// via `import fs from 'fs'` + vi.spyOn(fs, ...), which patches this same object.
+import fs from 'fs';
 
 /**
  * Event recorder options
@@ -94,7 +97,7 @@ export class EventRecorder {
     const filePath = path ?? this.persistPath;
     if (!filePath) return;
     try {
-      require('fs').writeFileSync(filePath, JSON.stringify(this.events, null, 2));
+      fs.writeFileSync(filePath, JSON.stringify(this.events, null, 2));
     } catch (err) {
       console.error('Failed to save event recording:', err);
     }
@@ -105,7 +108,7 @@ export class EventRecorder {
    */
   static load(path: string): EventRecorder {
     try {
-      const content = require('fs').readFileSync(path, 'utf8');
+      const content = fs.readFileSync(path, 'utf8');
       const events = JSON.parse(content) as AgentEvent[];
       const recorder = new EventRecorder();
       recorder.events = events;

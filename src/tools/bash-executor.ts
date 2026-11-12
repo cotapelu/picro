@@ -12,12 +12,18 @@
 
 import { spawn } from 'child_process';
 import * as fs from 'fs';
+import { constants as osConstants } from 'node:os';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import type { EventEmitter } from '../events/event-emitter.js';
 
 const DEFAULT_MAX_BYTES = 1024 * 1024; // 1MB
 const DEFAULT_MAX_LINES = 10000;
+/** Extra bytes retained past the display limit so multi-byte boundaries stay intact. */
+const OUTPUT_SLACK_BYTES = 4096;
+
+/** POSIX signal name → number, used to build the 128+signum exit convention. */
+const EXIT_SIGNAL_CODE: Record<string, number> = osConstants.signals as Record<string, number>;
 
 /**
  * Options for bash execution
@@ -51,6 +57,8 @@ export interface BashResult {
   exitCode: number | undefined;
   /** Whether the command was cancelled via signal */
   cancelled: boolean;
+  /** Whether the command was killed because it exceeded the timeout */
+  timedOut: boolean;
   /** Whether the output was truncated */
   truncated: boolean;
   /** Path to temp file containing full output (if output exceeded truncation threshold) */
@@ -128,19 +136,33 @@ export async function executeBash(
       ? ['cmd.exe', '/c', command]
       : ['bash', '-c', command];
 
+    // detached on POSIX makes the child a process-group leader, so the
+    // `process.kill(-pid)` below reaches the whole tree (shell + its children).
+    // Without it the group id did not exist, the kill silently failed and
+    // grandchildren survived an abort/timeout while still holding the pipes.
     const child = spawn(shell, args, {
       cwd,
       env,
+      detached: process.platform !== 'win32',
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    let stdout = '';
-    let stderr = '';
+    // Keep only the head of the stream in memory (the tail is trimmed to
+    // maxBytes/maxLines below); `capReached` stops appending so a huge command
+    // cannot grow the array without bound.
+    let capReached = false;
+    const appendChunk = (chunk: string) => {
+      if (capReached) return;
+      stderrString += chunk;
+      outputChunks.push(chunk);
+      if (stderrString.length >= maxBytes + OUTPUT_SLACK_BYTES) {
+        capReached = true;
+      }
+    };
 
     child.stdout?.on('data', (data: Buffer) => {
       const chunk = sanitizeOutput(data);
-      stdout += chunk;
-      outputChunks.push(chunk);
+      appendChunk(chunk);
       totalBytes += data.length;
       totalLines += chunk.split('\n').length - 1;
       onChunk?.(chunk);
@@ -156,8 +178,7 @@ export async function executeBash(
 
     child.stderr?.on('data', (data: Buffer) => {
       const chunk = sanitizeOutput(data);
-      stderrString += chunk;
-      outputChunks.push(chunk);
+      appendChunk(chunk);
       totalBytes += data.length;
       totalLines += chunk.split('\n').length - 1;
       onChunk?.(chunk);
@@ -177,37 +198,48 @@ export async function executeBash(
   let timeoutId: any;
   let exited = false;
   let exitCode: number | undefined;
+  let aborted = false; // caller's AbortSignal fired
+  let timedOut = false; // our own timeout fired
+
+  const killTree = (sig: NodeJS.Signals = 'SIGTERM') => {
+    if (child.pid) {
+      try { process.kill(-child.pid, sig); } catch { /* group gone */ }
+    }
+    try { child.kill(sig); } catch { /* already dead */ }
+  };
 
   // Handle timeout
   if (timeout > 0) {
     timeoutId = setTimeout(() => {
       if (!exited) {
-        // Try to kill entire process tree (Unix)
-        if (child.pid) {
-          try { process.kill(-child.pid, 'SIGTERM'); } catch {}
-        }
-        child.kill('SIGTERM');
+        timedOut = true;
+        killTree('SIGTERM');
       }
     }, timeout);
   }
 
   // Handle abort signal
   if (signal) {
-    signal.addEventListener('abort', () => {
+    const onAbort = () => {
       if (!exited) {
-        if (child.pid) {
-          try { process.kill(-child.pid, 'SIGTERM'); } catch {}
-        }
-        child.kill('SIGTERM');
+        aborted = true;
+        killTree('SIGTERM');
       }
-    });
+    };
+    if (signal.aborted) {
+      onAbort();
+    } else {
+      signal.addEventListener('abort', onAbort, { once: true });
+    }
   }
 
   // Wait for exit
   await new Promise<void>((resolve, reject) => {
-    child.on('close', (code) => {
+    child.on('close', (code, sig) => {
       exited = true;
-      exitCode = code ?? undefined;
+      // A killed child reports a null code plus the signal that stopped it;
+      // the 128+signum convention keeps it distinguishable from success.
+      exitCode = code ?? (sig ? 128 + (EXIT_SIGNAL_CODE[sig] ?? 0) : undefined);
       if (timeoutId) clearTimeout(timeoutId as any);
       tempFileStream?.end();
       resolve();
@@ -217,6 +249,8 @@ export async function executeBash(
       reject(err);
     });
   });
+
+  const cancelled = aborted || !!signal?.aborted;
 
   const output = outputChunks.join('');
 
@@ -230,7 +264,8 @@ export async function executeBash(
       output: truncatedOutput,
       stderr: stderrString,
       exitCode,
-      cancelled: false,
+      cancelled,
+      timedOut,
       truncated: true,
       fullOutputPath: fs.existsSync(tempFilePath) ? tempFilePath : undefined,
     };
@@ -247,7 +282,8 @@ export async function executeBash(
     output,
     stderr: stderrString,
     exitCode,
-    cancelled: false,
+    cancelled,
+    timedOut,
     truncated: false,
   };
 }

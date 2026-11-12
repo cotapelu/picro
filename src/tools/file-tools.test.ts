@@ -14,7 +14,10 @@ import { createLsToolDefinition, type LsEntry } from './ls.js';
 
 // Helper to create a temporary test directory structure
 function setupTestEnv() {
-  const testCwd = join(tmpdir(), `picro-test-${Date.now()}`);
+  // Date.now() alone collides when test files run in parallel within the same
+  // millisecond (file-mutation-queue.branches.test.ts uses the same prefix),
+  // and each file's afterEach cleanup then deleted the other's fixtures.
+  const testCwd = join(tmpdir(), `picro-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(testCwd, { recursive: true });
 
   // Create some test files

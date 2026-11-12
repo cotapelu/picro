@@ -396,6 +396,13 @@ export class AgentLoop {
       ? this.combineSignals(signal, this.abortController.signal)
       : this.abortController.signal;
 
+    // A new execution must never inherit a stale cancel flag: resume() (and any
+    // non-streaming run) keeps the previous state, so an abort from an earlier
+    // run used to leave isCancelled=true forever and every later prompt
+    // silently did nothing. A fresh AbortController is created above, so the
+    // loop condition is only cancelled by a signal belonging to THIS execution.
+    this.state.isCancelled = false;
+
     if (resetState) {
       this.state = this.createInitialState();
     }
@@ -931,25 +938,62 @@ export class AgentLoop {
 
 
 
-  private _buildAssistantContent(response: LLMResponse): ContentBlock[] {
+  /**
+   * Build assistant content blocks from either shape:
+   * - LLMResponse: `content` is a plain string, tool calls live in `toolCalls`
+   *   (non-streaming path).
+   * - AssistantMessage: `content` is already an array of blocks
+   *   (streaming path, produced by src/llm providers). Assuming the
+   *   non-streaming shape here silently nested the whole block array inside a
+   *   single text block and dropped every toolCall block.
+   */
+  private _buildAssistantContent(response: any): ContentBlock[] {
     const contentBlocks: ContentBlock[] = [];
-    if (response.content) {
-      contentBlocks.push({ type: 'text', text: response.content });
+    const rawContent = response?.content;
+
+    if (Array.isArray(rawContent)) {
+      for (const block of rawContent) {
+        if (!block || typeof block !== 'object') continue;
+        if (block.type === 'text') {
+          const text = typeof block.text === 'string' ? block.text : String(block.text ?? '');
+          if (text.length > 0) contentBlocks.push({ type: 'text', text });
+        } else if (block.type === 'thinking') {
+          const thinking = typeof block.thinking === 'string' ? block.thinking : String(block.thinking ?? '');
+          if (thinking.length > 0) contentBlocks.push({ type: 'thinking', thinking } as ThinkingBlock);
+        } else if (block.type === 'toolCall') {
+          if (!block.id || !block.name) continue;
+          contentBlocks.push({
+            type: 'toolCall',
+            id: block.id,
+            name: block.name,
+            arguments: block.arguments ?? {},
+          } as ToolCallBlock);
+        }
+        // image blocks are not valid in assistant turns
+      }
+    } else if (typeof rawContent === 'string' && rawContent.length > 0) {
+      contentBlocks.push({ type: 'text', text: rawContent });
+    } else if (rawContent !== undefined && rawContent !== null && typeof rawContent !== 'string') {
+      // Defensive: unknown non-string content (numbers, objects) → text
+      contentBlocks.push({ type: 'text', text: String(rawContent) });
     }
-    if (response.toolCalls && Array.isArray(response.toolCalls)) {
-      for (const tc of response.toolCalls) {
+
+    const toolCalls = response?.toolCalls;
+    if (Array.isArray(toolCalls)) {
+      for (const tc of toolCalls) {
+        if (!tc || !tc.id || !tc.name) continue;
         contentBlocks.push({
           type: 'toolCall',
           id: tc.id,
           name: tc.name,
-          arguments: tc.arguments,
+          arguments: tc.arguments ?? {},
         } as ToolCallBlock);
       }
     }
     return contentBlocks;
   }
 
-  private createAssistantTurn(response: LLMResponse): ConversationTurn {
+  private createAssistantTurn(response: any): ConversationTurn {
     return {
       id: randomUUID(),
       role: "assistant",

@@ -1230,6 +1230,8 @@ export class AgentSession {
       newLeafId = targetId;
     }
 
+    let summaryEntry: BranchSummaryEntry | undefined;
+
     if (summaryText) {
       const summaryEntryId = this.sessionManager.branchWithSummary(
         newLeafId,
@@ -1240,7 +1242,7 @@ export class AgentSession {
       if (label) {
         this.sessionManager.appendLabelChange(summaryEntryId, label);
       }
-      const summaryEntry = this.sessionManager.getEntry(summaryEntryId) as BranchSummaryEntry;
+      summaryEntry = this.sessionManager.getEntry(summaryEntryId) as BranchSummaryEntry;
     } else if (newLeafId === null) {
       this.sessionManager.resetLeaf();
     } else {
@@ -1254,11 +1256,12 @@ export class AgentSession {
       type: 'session_tree',
       newLeafId: this.sessionManager.getLeafId(),
       oldLeafId,
-      summaryEntry: summaryText ? undefined : undefined,
+      // Emit the created branch-summary entry so listeners can highlight it.
+      summaryEntry: summaryText ? summaryEntry : undefined,
       fromExtension: false,
     });
 
-    return { cancelled: false, editorText };
+    return { cancelled: false, editorText, summaryEntry };
   }
 
   /**

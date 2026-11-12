@@ -13,6 +13,15 @@ interface HttpServerOptions {
   controller: InteractiveController;
 }
 
+/** Hard cap on request bodies: unbounded accumulation let any client OOM the agent process. */
+const MAX_BODY_BYTES = 10 * 1024 * 1024; // 10MB
+
+function isLoopbackHost(host: string | undefined): boolean {
+  if (!host) return true;
+  const h = host.replace(/^[\["']+|["'\]]+$/g, "");
+  return h === "localhost" || h === "::1" || h.startsWith("127.");
+}
+
 export class HttpServer {
   private server: http.Server | null = null;
   private wss: WebSocketServer | null = null;
@@ -46,6 +55,16 @@ export class HttpServer {
         const addr = this.server?.address();
         const port = typeof addr === "object" && addr ? addr.port : this.options.port;
         console.log(`Picro HTTP API server listening on ${this.options.host || "0.0.0.0"}:${port}`);
+        // The API exposes /prompt, which can drive tools (including bash) on this
+        // machine, and it has no authentication. Binding to a non-loopback
+        // interface therefore exposes remote code execution to the network.
+        if (!isLoopbackHost(this.options.host)) {
+          console.warn(
+            `[security] HTTP API is bound to ${this.options.host} without authentication. ` +
+            `Anyone able to reach this port can run commands on this machine. ` +
+            `Bind to 127.0.0.1 or put it behind an authenticating reverse proxy.`
+          );
+        }
         resolve(undefined);
       });
 
@@ -188,14 +207,24 @@ export class HttpServer {
   private async readBody(req: http.IncomingMessage): Promise<string> {
     return new Promise((resolve, reject) => {
       let body = "";
+      let bytes = 0;
+      let aborted = false;
       req.on("data", (chunk: string) => {
+        if (aborted) return;
+        bytes += Buffer.byteLength(chunk);
+        if (bytes > MAX_BODY_BYTES) {
+          aborted = true;
+          reject(new Error(`Request body too large (limit ${MAX_BODY_BYTES} bytes)`));
+          req.destroy();
+          return;
+        }
         body += chunk;
       });
       req.on("end", () => {
-        resolve(body);
+        if (!aborted) resolve(body);
       });
       req.on("error", (err: Error) => {
-        reject(err);
+        if (!aborted) reject(err);
       });
     });
   }

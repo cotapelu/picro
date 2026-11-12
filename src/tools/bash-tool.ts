@@ -9,9 +9,13 @@ import { spawn } from "child_process";
 import { randomBytes } from "node:crypto";
 import { createWriteStream, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { constants as osConstants } from "node:os";
 import { join } from "node:path";
 import { truncateHead } from '../utils/truncate.js';
 import type { ToolDefinition, ToolHandler, ToolContext } from '../agent/index.js';
+
+/** Extra bytes retained past the display limit so multi-byte boundaries stay intact. */
+const OUTPUT_SLACK_BYTES = 4096;
 
 /**
  * Generate a unique temp file path for bash output.
@@ -136,7 +140,7 @@ async function executeBash(
     maxBytes?: number;
     signal?: AbortSignal;
   } = {}
-): Promise<{ output: string; exitCode: number | null; truncated: boolean; details: any }> {
+): Promise<{ output: string; exitCode: number | null; truncated: boolean; aborted: boolean; details: any }> {
   const { shell, args } = getShellConfig();
   const timeout = options.timeout ?? DEFAULT_TIMEOUT;
   const maxBytes = options.maxBytes ?? MAX_OUTPUT_BYTES;
@@ -152,15 +156,31 @@ async function executeBash(
       env: getShellEnv(),
       stdio: ["ignore", "pipe", "pipe"],
     });
-    
+
     if (child.pid) {
       trackDetachedChildPid(child.pid);
     }
-    
+
     let output = "";
+    let retainedBytes = 0;
+    let totalBytes = 0;
+    let aborted = false;
     let timedOut = false;
     let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
-    
+
+    // Bounded accumulation: only the head of the stream is kept in memory,
+    // because the final result is truncated from the head anyway. Without this
+    // cap a command like `yes` (or any huge output) grew the string until the
+    // process ran out of memory, even though maxBytes was only 100KB.
+    const appendChunk = (data: Buffer): void => {
+      const text = data.toString();
+      totalBytes += data.length;
+      if (retainedBytes < maxBytes + OUTPUT_SLACK_BYTES) {
+        output += text;
+        retainedBytes += data.length;
+      }
+    };
+
     // Set timeout
     if (timeout > 0) {
       timeoutHandle = setTimeout(() => {
@@ -172,16 +192,12 @@ async function executeBash(
     }
     
     // Collect stdout
-    child.stdout?.on("data", (data: Buffer) => {
-      output += data.toString();
-    });
+    child.stdout?.on("data", appendChunk);
     
     // Collect stderr
-    child.stderr?.on("data", (data: Buffer) => {
-      output += data.toString();
-    });
+    child.stderr?.on("data", appendChunk);
     
-    child.on("close", (code) => {
+    child.on("close", (code, signal) => {
       if (timeoutHandle) {
         clearTimeout(timeoutHandle);
       }
@@ -192,13 +208,21 @@ async function executeBash(
       // Truncate output if exceeds maxBytes
       const truncateResult = truncateHead(output, { maxBytes: maxBytes });
 
+      // A signal-killed shell reports a null exit code. Without the 128+signum
+      // convention an aborted/timed-out command looked like a success with no
+      // exit code at all, so the agent could not tell it had been killed.
+      const signalName = signal as NodeJS.Signals | null;
+      const resolvedExitCode = code ?? (signalName ? 128 + (osConstants.signals[signalName] ?? 0) : 1);
+
       resolve({
         output: truncateResult.content,
-        exitCode: code,
+        exitCode: resolvedExitCode,
         truncated: truncateResult.truncated,
+        aborted,
         details: {
           timedOut,
-          fullOutputLength: output.length,
+          aborted,
+          fullOutputLength: totalBytes,
           truncatedBytes: truncateResult.outputBytes,
           truncatedLines: truncateResult.outputLines,
         },
@@ -217,11 +241,17 @@ async function executeBash(
     
     // Handle abort signal
     if (options.signal) {
-      options.signal.addEventListener("abort", () => {
+      const onAbort = () => {
+        aborted = true;
         if (child.pid) {
           killProcessTree(child.pid);
         }
-      });
+      };
+      if (options.signal.aborted) {
+        onAbort();
+      } else {
+        options.signal.addEventListener("abort", onAbort, { once: true });
+      }
     }
   });
 }
@@ -258,6 +288,10 @@ export function createBashHandler(cwd: string, options?: BashToolOptions): ToolH
       
       if (result.details.timedOut) {
         output += "\n\n[Command timed out]";
+      }
+      
+      if (result.aborted) {
+        output += "\n\n[Command cancelled]";
       }
       
       if (result.exitCode !== null && result.exitCode !== 0) {

@@ -159,8 +159,18 @@ describe('cli-args - parseArgs branch coverage', () => {
   it('handles --no-session and other flags together', () => {
     const args = parseArgs(['--no-session', '--mode', 'json', 'message']);
     expect(args.noSession).toBe(true);
-    // --mode no longer supported; treated as unknown flag
-    expect(args.unknownFlags.get('--mode')).toBe('json');
+    // --mode IS a supported flag (main.ts branches on tty/http/rpc), so an
+    // invalid value is rejected with a warning instead of falling through to
+    // unknownFlags: the flag stays consumed and mode remains undefined.
+    expect(args.mode).toBeUndefined();
+    expect(args.unknownFlags.has('--mode')).toBe(false);
+    expect(args.diagnostics.some(d => d.type === 'warning' && d.message.includes('Invalid mode'))).toBe(true);
     expect(args.messages).toEqual(['message']);
+  });
+
+  it('accepts a valid --mode value', () => {
+    const args = parseArgs(['--mode', 'http']);
+    expect(args.mode).toBe('http');
+    expect(args.diagnostics).toEqual([]);
   });
 });
