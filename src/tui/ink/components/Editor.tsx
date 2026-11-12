@@ -32,6 +32,12 @@ export interface EditorProps {
    * thiệp — ví dụ cuộn transcript khi ô nhập rỗng thay vì duyệt lịch sử.
    */
   onKey?: (data: string, keys: { up: boolean; down: boolean; pageUp: boolean; pageDown: boolean }) => void;
+  /**
+   * Alt+Enter: xếp hàng nội dung thay vì gửi/xuống dòng (pi-mono
+   * app.message.followUp). Terminal không có Shift+Enter thường gửi alt+enter
+   * cho hành động này.
+   */
+  onQueue?: (text: string) => void;
 }
 
 interface EditorState {
@@ -199,6 +205,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       disableSubmit = false,
       width = 80,
       onKey,
+      onQueue,
     },
     ref,
   ) => {
@@ -921,6 +928,23 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
 
   useInput((data, key) => {
     if (key.ctrl && data === "\u0003") return;
+    // Ink không thể phân biệt Alt+Enter (nó nuốt ESC của "\x1b\r" và chỉ trả
+    // "\r"), nên hành động "xếp hàng" của pi-mono (app.message.followUp) được
+    // gán cho Shift+Enter/Ctrl+J — tức byte "\n" mà Ink báo riêng biệt. Khi
+    // không có onQueue, cùng phím đó giữ nhiệm vụ xuống dòng.
+    if (data === "\n" || kb.matches(data, "shift+enter")) {
+      if (onQueue) {
+        const text = stateRef.current.lines.join("\n");
+        if (text.trim()) {
+          setLines({ lines: [""], cursorLine: 0, cursorCol: 0 }, { undo: false });
+          onQueue(text);
+        }
+        return;
+      }
+      addNewLine();
+      return;
+    }
+
 
     // Chờ ký tự đích của lệnh nhảy (Ctrl+]).
     if (jumpMode.current !== null) {
@@ -947,10 +971,6 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
         return;
       }
       submit();
-      return;
-    }
-    if (kb.matches(data, "tui.input.newLine")) {
-      addNewLine();
       return;
     }
     if (kb.matches(data, "tui.editor.deleteCharBackward") || matchesKey(data, "shift+backspace")) {

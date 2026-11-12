@@ -67,6 +67,12 @@ export interface InteractiveControllerLike {
   getTranscript(): TranscriptItem[];
   /** Báo cho view rằng transcript đã thay đổi (chuyển phiên, fork, nén…). */
   loadTranscript?(): void;
+  /** Tin nhắn đang chờ (steering + follow-up), hiển thị trong dock nhập liệu. */
+  getQueue?(): { steering: string[]; followUp: string[] };
+  /** Đưa nội dung ô nhập vào hàng đợi follow-up (Alt+Enter). */
+  queueFollowUp?(text: string): Promise<void>;
+  /** Khôi phục toàn bộ hàng đợi về ô nhập. */
+  restoreQueue?(): number;
   /** Gửi tin nhắn của người dùng. */
   sendMessage(text: string): Promise<void>;
   /** Chạy một lệnh slash theo id (vd "model", "thinking", "quit"). */
@@ -81,7 +87,7 @@ export interface InteractiveControllerLike {
   /** Yêu cầu view đóng cửa sổ phụ đang mở. */
   onOverlayClose(callback: () => void): void;
   /** Đăng ký hook thoát để /quit khôi phục terminal trước khi exit. */
-  onShutdown(callback: () => void): void;
+  onShutdown?(callback: () => void): void;
   /** Báo trạng thái đang chạy để dock hiển thị chỉ báo. */
   onIndicator(callback: (state: IndicatorState) => void): void;
   /** Đăng ký nghe sự kiện phiên (cho orchestrator). */

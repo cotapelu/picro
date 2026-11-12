@@ -12,6 +12,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text, useWindowSize } from "ink";
+import { getTheme } from "./theme/index.js";
 import type { AgentSessionRuntimeInterface } from "../../runtime/index.js";
 import type { InteractiveControllerLike } from "./controller-bridge.js";
 import { ChatViewport } from "./components/ChatViewport.js";
@@ -95,6 +96,9 @@ export const App: React.FC<AppProps> = ({
   const [overlay, setOverlay] = useState<OverlayKind>("none");
   const [overlayProps, setOverlayProps] = useState<Record<string, unknown>>({});
   const [toolsExpanded, setToolsExpanded] = useState(false);
+  const [queue, setQueue] = useState<{ steering: string[]; followUp: string[] }>(() =>
+    controller.getQueue ? controller.getQueue() : { steering: [], followUp: [] },
+  );
   const [followingEnd, setFollowingEnd] = useState(true);
   const [cwd, setCwd] = useState<string>(runtime.cwd || ".");
   const editorRef = useRef<{ getText(): string; setText(text: string): void; addToHistory(text: string): void } | null>(null);
@@ -113,6 +117,7 @@ export const App: React.FC<AppProps> = ({
   const refresh = useCallback(() => {
     setTranscript(controller.getTranscript());
     setStatus(controller.getStatus());
+    if (controller.getQueue) setQueue(controller.getQueue());
   }, [controller]);
   const totalLines = useMemo(
     () => transcriptLineCount(transcript, width),
@@ -185,8 +190,19 @@ export const App: React.FC<AppProps> = ({
       void controller.sendMessage(text);
       setFollowingEnd(true);
       setScrollLines(0);
+      setQueue({ steering: [], followUp: [] });
     },
     [controller],
+  );
+
+  /** Alt+Enter: xếp hàng thay vì gửi ngay. */
+  const handleQueue = useCallback(
+    (text: string) => {
+      const queue = controller.queueFollowUp;
+      if (!queue) return;
+      void queue(text).then(() => refresh());
+    },
+    [controller, refresh],
   );
 
   const closeOverlay = useCallback(() => setOverlay("none"), []);
@@ -212,11 +228,17 @@ export const App: React.FC<AppProps> = ({
         transcript={
           <Transcript items={visibleTranscript} width={width} toolsExpanded={toolsExpanded} />
         }
+        pendingMessages={
+          queue.steering.length > 0 || queue.followUp.length > 0 ? (
+            <PendingQueue queue={queue} width={width} />
+          ) : null
+        }
         editor={
           overlay === "none" ? (
             <MessageInput
               ref={editorRef}
               onSubmit={handleSubmit}
+              onQueue={handleQueue}
               disabled={status.isProcessing}
               onScroll={handleScroll}
               width={width}
@@ -253,6 +275,32 @@ export const App: React.FC<AppProps> = ({
     </Box>
   );
 };
+
+/** Hàng đợi hiển thị trong dock nhập liệu (pi-mono updatePendingMessagesDisplay). */
+const PendingQueue: React.FC<{
+  queue: { steering: string[]; followUp: string[] };
+  width: number;
+}> = ({ queue, width }) => {
+  const t = getTheme();
+  return (
+    <Box flexDirection="column">
+      {queue.steering.map((text, i) => (
+        <Text key={`st-${i}`}>{truncateLine(t.fg("dim", `Steering: ${text}`), width)}</Text>
+      ))}
+      {queue.followUp.map((text, i) => (
+        <Text key={`fu-${i}`}>{truncateLine(t.fg("dim", `Follow-up: ${text}`), width)}</Text>
+      ))}
+      <Text>{t.fg("dim", "↳ đang chờ agent xử lý")}</Text>
+    </Box>
+  );
+};
+
+/** Cắt một dòng theo chiều rộng khung nhìn (bỏ qua escape). */
+function truncateLine(text: string, width: number): string {
+  const plain = text.replace(/\x1b\[[0-9;]*m/g, "");
+  if (plain.length <= width) return text;
+  return text.slice(0, Math.max(0, width - 1)) + "…";
+}
 
 /** Cửa sổ phụ (overlay) đang mở do controller yêu cầu. */
 function renderOverlay(options: {

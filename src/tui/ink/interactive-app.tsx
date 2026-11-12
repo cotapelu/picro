@@ -18,6 +18,46 @@ export interface InteractiveAppProps {
   initialMessage?: string;
 }
 
+/** Đảm bảo các method tuỳ chọn của seam luôn gọi được (test/mock có thể thiếu). */
+function withOptionalMethods(controller: InteractiveControllerLike): InteractiveControllerLike {
+  const c = controller as InteractiveControllerLike & {
+    getQueue?: () => { steering: string[]; followUp: string[] };
+    queueFollowUp?: (text: string) => Promise<void>;
+    restoreQueue?: () => number;
+    loadTranscript?: () => void;
+    updateSetting?: (id: string, value: string) => void;
+    getHistory?: () => readonly string[];
+    getTranscript?: () => unknown[];
+    runCommand?: (id: string, args?: string) => Promise<void>;
+    onOverlayRequest?: (cb: (r: unknown) => void) => void;
+    onOverlayClose?: (cb: () => void) => void;
+    onIndicator?: (cb: (s: unknown) => void) => void;
+    onShutdown?: (cb: () => void) => void;
+    onEditorCallbacks?: (hooks: { clear: () => void; read: () => string }) => void;
+    onMessage?: (cb: (m: unknown[]) => void) => void;
+    onStatusChange?: (cb: (s: unknown) => void) => void;
+    dispose?: () => void;
+  };
+  const noop = () => {};
+  c.getQueue = c.getQueue ?? (() => ({ steering: [], followUp: [] }));
+  c.queueFollowUp = c.queueFollowUp ?? (async () => {});
+  c.restoreQueue = c.restoreQueue ?? (() => 0);
+  c.loadTranscript = c.loadTranscript ?? noop;
+  c.updateSetting = c.updateSetting ?? noop;
+  c.getHistory = c.getHistory ?? (() => []);
+  c.getTranscript = c.getTranscript ?? (() => []);
+  c.runCommand = c.runCommand ?? (async () => {});
+  c.onOverlayRequest = c.onOverlayRequest ?? noop;
+  c.onOverlayClose = c.onOverlayClose ?? noop;
+  c.onIndicator = c.onIndicator ?? noop;
+  c.onShutdown = c.onShutdown ?? noop;
+  c.onEditorCallbacks = c.onEditorCallbacks ?? noop;
+  c.onMessage = c.onMessage ?? noop;
+  c.onStatusChange = c.onStatusChange ?? noop;
+  c.dispose = c.dispose ?? noop;
+  return controller;
+}
+
 /**
  * Chế độ nhập liệu đơn giản (readline) khi stdin không phải raw-mode TTY.
  * Ink không khởi động được, nên dùng readline thuần để người dùng vẫn nhập liệu.
@@ -87,10 +127,11 @@ export function startInteractiveApp(props: InteractiveAppProps): void {
   }
 
   try {
+    const controller = withOptionalMethods(props.controller);
     const instance = render(
       <App
         runtime={props.runtime}
-        controller={props.controller}
+        controller={controller}
         initialMessage={props.initialMessage}
       />,
       {
@@ -101,19 +142,23 @@ export function startInteractiveApp(props: InteractiveAppProps): void {
 
     // /quit (và mọi đường thoát nội bộ) đi qua hook này: controller gọi nó
     // thay vì process.exit trần, để terminal được khôi phục trước khi kết thúc.
-    props.controller.onShutdown?.(() => {
-      try {
-        instance.unmount();
-      } catch {
-        // unmount có thể throw nếu render đã hỏng.
-      }
-      try {
-        props.controller.dispose?.();
-      } catch {
-        // dispose là best-effort.
-      }
-      process.exit(0);
-    });
+    const onShutdown = controller.onShutdown;
+    if (onShutdown) {
+      onShutdown(() => {
+        try {
+          instance.unmount();
+        } catch {
+          // unmount có thể throw nếu render đã hỏng.
+        }
+        try {
+          const dispose = controller.dispose;
+          if (dispose) dispose();
+        } catch {
+          // dispose là best-effort.
+        }
+        process.exit(0);
+      });
+    }
 
     // Bản cũ không bao giờ dọn dẹp: Ink unmount không stop terminal nên raw mode,
     // bracketed paste và con trỏ ẩn còn nguyên khi tiến trình kết thúc.
@@ -124,7 +169,8 @@ export function startInteractiveApp(props: InteractiveAppProps): void {
         // unmount có thể throw nếu render đã hỏng.
       }
       try {
-        props.controller.dispose?.();
+        const dispose = controller.dispose;
+        if (dispose) dispose();
       } catch {
         // dispose là best-effort.
       }

@@ -21,6 +21,8 @@ export interface MessageInputProps {
   disabled?: boolean;
   /** Gợi ý phím cuộn transcript (do App truyền vào). */
   onScroll?: (direction: "up" | "down", page: boolean) => void;
+  /** Alt+Enter: xếp hàng thay vì gửi ngay (pi-mono handleFollowUp). */
+  onQueue?: (text: string) => void;
   width?: number;
   /** Lịch sử tin nhắn đã gửi (duyệt bằng mũi tên lên/xuống). */
   history?: readonly string[];
@@ -42,6 +44,7 @@ export const MessageInput = React.forwardRef<EditorHandle, MessageInputProps>(
       placeholder = PLACEHOLDER,
       disabled = false,
       onScroll,
+      onQueue,
       width = 80,
       history = [],
       slashCommands = [],
@@ -93,6 +96,7 @@ export const MessageInput = React.forwardRef<EditorHandle, MessageInputProps>(
         value={value}
         onChange={setValue}
         onSubmit={submit}
+        onQueue={onQueue}
         disabled={disabled}
         onKey={handleKey}
         width={width}
@@ -119,22 +123,34 @@ const MessageEditor = React.forwardRef<
     onSubmit: (text: string) => void;
     disabled: boolean;
     onKey: (data: string, keys: { up: boolean; down: boolean; pageUp: boolean; pageDown: boolean }) => void;
+    onQueue?: (text: string) => void;
     width: number;
     history: readonly string[];
     slashCommands: readonly SlashCommand[];
     enablePathCompletion: boolean;
   }
->(({ value, onChange, onSubmit, disabled, onKey, width }, ref) => (
-  <Editor
-    ref={ref}
-    value={value}
-    onSubmit={onSubmit}
-    onChange={onChange}
-    disableSubmit={disabled}
-    width={width}
-    onKey={onKey}
-  />
-));
+>(({ value, onChange, onSubmit, onQueue, disabled, onKey, width }, ref) => {
+  // Bắt Alt+Enter (tui.input.newLine binding cũng nhận alt+enter ở một số
+  // terminal) để xếp hàng thay vì xuống dòng: giống pi-mono handleFollowUp.
+  const handleQueue = React.useCallback(
+    (text: string) => {
+      if (onQueue) onQueue(text);
+    },
+    [onQueue],
+  );
+  return (
+    <Editor
+      ref={ref}
+      value={value}
+      onSubmit={onSubmit}
+      onChange={onChange}
+      disableSubmit={disabled}
+      width={width}
+      onKey={onKey}
+      onQueue={handleQueue}
+    />
+  );
+});
 
 MessageEditor.displayName = "MessageEditor";
 
