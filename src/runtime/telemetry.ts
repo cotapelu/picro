@@ -86,23 +86,26 @@ export class Telemetry {
   }
 
   /**
-   * Track an event
+   * Track an event.
+   *
+   * Events that arrive inside the rate-limit window are queued and sent once the
+   * window elapses (or on flush()). The queue used to be drained from send()
+   * itself, but send() refreshes lastSent first, so the drain condition was
+   * always false - and the queue was then cleared anyway, silently discarding
+   * every rate-limited event.
    */
   track(event: TelemetryEvent, properties: Record<string, unknown> = {}): void {
     if (!this.enabled) return;
 
-    const now = Date.now();
-    if (now - this.lastSent < this.rateLimitMs) {
-      // Rate limited - queue for later
-      this.queue.push({ event, timestamp: now, properties });
-      return;
-    }
-
-    this.send({ event, timestamp: now, properties });
+    this.queue.push({ event, timestamp: Date.now(), properties });
+    this.drainQueue();
   }
 
   /**
-   * Track event with session context
+   * Track event with session context.
+   *
+   * The session id travels inside `properties` (the payload shape has no
+   * top-level field), which is also what emit() forwards.
    */
   trackWithSession(
     event: TelemetryEvent,
@@ -110,6 +113,15 @@ export class Telemetry {
     properties: Record<string, unknown> = {}
   ): void {
     this.track(event, { ...properties, sessionId });
+  }
+
+  /** Send at most one queued event, and only when the rate window has elapsed. */
+  private drainQueue(): void {
+    const now = Date.now();
+    if (now - this.lastSent < this.rateLimitMs) return;
+    const next = this.queue.shift();
+    if (!next) return;
+    this.send(next);
   }
 
   /**
@@ -135,17 +147,6 @@ export class Telemetry {
         // Ignore
       }
     }
-
-    // Flush queue
-    if (this.queue.length > 0) {
-      const now = Date.now();
-      for (const queued of this.queue) {
-        if (now - this.lastSent >= this.rateLimitMs) {
-          this.send({ ...queued, timestamp: now });
-        }
-      }
-      this.queue = [];
-    }
   }
 
   /**
@@ -158,9 +159,15 @@ export class Telemetry {
 
   /**
    * Emit a telemetry event (alias for track)
+   *
+   * The payload's sessionId is forwarded into properties; dropping it (as this
+   * did) lost the only session context on the event.
    */
   emit(payload: TelemetryPayload): void {
-    this.track(payload.event, payload.properties);
+    const properties = payload.sessionId !== undefined
+      ? { ...payload.properties, sessionId: payload.sessionId }
+      : payload.properties;
+    this.track(payload.event, properties);
   }
 
   /**

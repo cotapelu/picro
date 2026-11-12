@@ -51,21 +51,31 @@ const LEGACY_KEY_SEQUENCES = {
   delete: ["\x1b[3~"],
   pageUp: ["\x1b[5~", "\x1b[[5~"],
   pageDown: ["\x1b[6~", "\x1b[[6~"],
+  clear: ["\x1b[E", "\x1bOE"],
   f1: ["\x1bOP", "\x1b[11~", "\x1b[[A"],
   f2: ["\x1bOQ", "\x1b[12~", "\x1b[[B"],
   f3: ["\x1bOR", "\x1b[13~", "\x1b[[C"],
   f4: ["\x1bOS", "\x1b[14~", "\x1b[[D"],
   f5: ["\x1b[15~", "\x1b[[E"],
+  f6: ["\x1b[17~"],
+  f7: ["\x1b[18~"],
+  f8: ["\x1b[19~"],
+  f9: ["\x1b[20~"],
+  f10: ["\x1b[21~"],
+  f11: ["\x1b[23~"],
+  f12: ["\x1b[24~"],
 } as const;
 
 const LEGACY_SHIFT_SEQUENCES = {
   up: ["\x1b[a"], down: ["\x1b[b"], right: ["\x1b[c"], left: ["\x1b[d"],
+  clear: ["\x1b[e"],
   insert: ["\x1b[2$"], delete: ["\x1b[3$"], pageUp: ["\x1b[5$"],
   pageDown: ["\x1b[6$"], home: ["\x1b[7$"], end: ["\x1b[8$"],
 } as const;
 
 const LEGACY_CTRL_SEQUENCES = {
   up: ["\x1bOa"], down: ["\x1bOb"], right: ["\x1bOc"], left: ["\x1bOd"],
+  clear: ["\x1bOe"],
   insert: ["\x1b[2^"], delete: ["\x1b[3^"], pageUp: ["\x1b[5^"],
   pageDown: ["\x1b[6^"], home: ["\x1b[7^"], end: ["\x1b[8^"],
 } as const;
@@ -88,6 +98,10 @@ const LEGACY_SEQUENCE_KEY_IDS: Record<string, string> = {
   "\x1b[18~": "f7", "\x1b[19~": "f8", "\x1b[20~": "f9", "\x1b[21~": "f10",
   "\x1b[23~": "f11", "\x1b[24~": "f12", "\x1bb": "alt+left", "\x1bf": "alt+right",
   "\x1bp": "alt+up", "\x1bn": "alt+down",
+  // VT100 home/end forms. matchesKey() has always accepted these sequences, so
+  // the reverse label was the only missing piece and parseKey() returned
+  // undefined for them (upstream carries the same gap).
+  "\x1b[1~": "home", "\x1b[4~": "end",
 };
 
 let kittyProtocolActive = false;
@@ -325,7 +339,10 @@ export function matchesKey(data: string, keyId: string): boolean {
       if (matchesLegacyModifier(data, "delete", modifier)) return true;
       return matchesKitty(data, FUNCTIONAL_CODEPOINTS.delete, modifier);
     case "clear":
-      return modifier === 0 && matchesLegacy(data, ["\x1b[E", "\x1bOE"]);
+      // "clear" has no Kitty codepoint of its own; only legacy sequences
+      // (including shift/ctrl variants) identify it.
+      if (modifier === 0) return matchesLegacy(data, LEGACY_KEY_SEQUENCES.clear);
+      return matchesLegacyModifier(data, "clear", modifier);
     case "home":
       if (modifier === 0) return matchesLegacy(data, LEGACY_KEY_SEQUENCES.home) || matchesKitty(data, FUNCTIONAL_CODEPOINTS.home, 0);
       if (matchesLegacyModifier(data, "home", modifier)) return true;
@@ -364,9 +381,13 @@ export function matchesKey(data: string, keyId: string): boolean {
       if (modifier === 0) return matchesLegacy(data, LEGACY_KEY_SEQUENCES.right) || matchesKitty(data, ARROW_CODEPOINTS.right, 0);
       if (matchesLegacyModifier(data, "right", modifier)) return true;
       return matchesKitty(data, ARROW_CODEPOINTS.right, modifier);
-    case "f1": case "f2": case "f3": case "f4": case "f5":
-      if (modifier === 0 && matchesLegacy(data, LEGACY_KEY_SEQUENCES[key])) return true;
-      return matchesKitty(data, FUNCTIONAL_CODEPOINTS[key as "f1" | "f2" | "f3" | "f4" | "f5"], modifier);
+      case "f1": case "f2": case "f3": case "f4": case "f5":
+      case "f6": case "f7": case "f8": case "f9":
+      case "f10": case "f11": case "f12": {
+        const functionKey = key as keyof typeof LEGACY_KEY_SEQUENCES & keyof typeof FUNCTIONAL_CODEPOINTS;
+        if (modifier === 0 && matchesLegacy(data, LEGACY_KEY_SEQUENCES[functionKey])) return true;
+        return matchesKitty(data, FUNCTIONAL_CODEPOINTS[functionKey], modifier);
+      }
   }
 
   // Phím đơn: chữ cái, chữ số, ký hiệu
