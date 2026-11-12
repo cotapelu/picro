@@ -12,6 +12,7 @@ import { loadPromptTemplates } from "./prompt-templates.js";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { discoverAndLoadExtensions } from "../extensions/loader.js";
+import { stripBom } from "./frontmatter.js";
 import { createExtensionRuntime } from "../extensions/runner.js";
 import { ExtensionRunner } from "../extensions/runner.js";
 
@@ -345,11 +346,6 @@ export class DefaultResourceLoader implements ResourceLoader {
  * one and both spellings of AGENTS/CLAUDE are accepted.
  */
 const CONTEXT_FILE_CANDIDATES = ["AGENTS.override.md", "AGENTS.md", "AGENTS.MD", "CLAUDE.md", "CLAUDE.MD"];
-
-/** Drop a leading UTF-8 BOM so it never leaks into the system prompt. */
-function stripBom(content: string): string {
-  return content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
-}
 
 /** First matching context file in a directory, or null. */
 function loadContextFileFromDir(dir: string): { path: string; content: string } | null {

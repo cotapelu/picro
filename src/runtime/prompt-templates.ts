@@ -13,6 +13,7 @@ import { basename, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { homedir } from "node:os";
 
 import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.js";
+import { parseFrontmatter } from "./frontmatter.js";
 
 // ============================================================================
 // Constants
@@ -59,30 +60,6 @@ export interface LoadPromptTemplatesOptions {
 // ============================================================================
 // Frontmatter Parsing
 // ============================================================================
-
-/**
- * Parse frontmatter from markdown content
- */
-function parseFrontmatter<T>(content: string): { frontmatter: T; content: string } {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!match) {
-    return { frontmatter: {} as T, content };
-  }
-
-  const frontmatterBlock = match[1];
-  const body = match[2];
-  const frontmatter: Record<string, string> = {};
-
-  for (const line of frontmatterBlock.split("\n")) {
-    const colonIndex = line.indexOf(":");
-    if (colonIndex === -1) continue;
-    const key = line.slice(0, colonIndex).trim();
-    const value = line.slice(colonIndex + 1).trim();
-    frontmatter[key] = value;
-  }
-
-  return { frontmatter: frontmatter as T, content: body };
-}
 
 // ============================================================================
 // Argument Parsing
@@ -182,7 +159,7 @@ function loadTemplateFromFile(
 ): PromptTemplate | null {
   try {
     const rawContent = readFileSync(filePath, "utf-8");
-    const { frontmatter, content: body } = parseFrontmatter<
+    const { frontmatter, body } = parseFrontmatter<
       Record<string, string>
     >(rawContent);
 

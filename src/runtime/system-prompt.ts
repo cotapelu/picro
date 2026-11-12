@@ -12,15 +12,30 @@ export interface BuildSystemPromptOptions {
   appendSystemPrompt?: string;
   cwd: string;
   contextFiles?: Array<{ path: string; content: string }>;
-  skills?: Array<{ name: string; description: string; filePath: string }>;
+  skills?: Array<{ name: string; description: string; filePath: string; disableModelInvocation?: boolean }>;
 }
 
-/** Format skills for prompt inclusion */
-export function formatSkillsForPrompt(skills: Array<{ name: string; description: string; filePath: string }>): string {
+/**
+ * Format skills for prompt inclusion.
+ *
+ * Skills that set `disable-model-invocation` must stay out of the system prompt:
+ * the model is not supposed to invoke them on its own (they are still loadable
+ * explicitly by the user). This formatter used to take a shape without the flag,
+ * so every disabled skill was advertised anyway, and the filtering copy in
+ * skills.ts was dead code on the model-facing path.
+ */
+export function formatSkillsForPrompt(skills: Array<{ name: string; description: string; filePath: string; disableModelInvocation?: boolean }>): string {
+  const promptSkills = skills.filter((skill) => skill.disableModelInvocation !== true);
+  if (promptSkills.length === 0) {
+    return "";
+  }
+
   let text = "\n# Available Skills\n\n";
   text += "Use /skill:<name> args to invoke a skill. Skills are reusable templates for common tasks.\n\n";
-  for (const skill of skills) {
-    text += `## ${skill.name}\n${skill.description}\n\n`;
+  for (const skill of promptSkills) {
+    // The file path is what makes the entry actionable: without it the model
+    // knows a skill exists but cannot read its instructions.
+    text += `## ${skill.name}\n${skill.description}\n\nLocation: ${skill.filePath}\n\n`;
   }
   return text;
 }

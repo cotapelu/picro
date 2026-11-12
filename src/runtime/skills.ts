@@ -12,6 +12,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { homedir } from "node:os";
+import { parseFrontmatter } from "./frontmatter.js";
 
 export interface Skill {
   name: string;
@@ -22,93 +23,6 @@ export interface Skill {
 
 const MAX_NAME_LENGTH = 64;
 const MAX_DESCRIPTION_LENGTH = 1024;
-
-/** Drop a leading UTF-8 BOM so the opening fence is recognised. */
-function stripBom(content: string): string {
-  return content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
-}
-
-/** CRLF/CR (Windows editors) must not hide the "---" fences. */
-function normalizeNewlines(value: string): string {
-  return value.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-}
-
-/** Coerce a YAML scalar to the type callers expect (booleans, numbers, plain text). */
-function parseScalar(raw: string): string | number | boolean {
-  const value = raw.trim();
-  if (value === "" || value === "~" || value === "null") return "";
-  if (value === "true") return true;
-  if (value === "false") return false;
-  if (/^-?\d+$/.test(value)) return Number(value);
-  if (/^-?\d*\.\d+$/.test(value)) return Number(value);
-  if ((value.startsWith('"') && value.endsWith('"') && value.length >= 2) ||
-      (value.startsWith("'") && value.endsWith("'") && value.length >= 2)) {
-    return value.slice(1, -1);
-  }
-  return value;
-}
-
-/**
- * Parse YAML frontmatter delimited by "---" fences.
- *
- * Mirrors pi-mono's utils/frontmatter.ts semantics (without pulling in a YAML
- * dependency): the closing fence is located with indexOf so it may sit at EOF
- * with no trailing newline, BOM and CRLF/CR are normalised away, and a value can
- * span several indented lines. The previous regex required "\n---\n", so a file
- * saved without a trailing newline, written on Windows, or starting with a BOM
- * lost its whole frontmatter - the skill was then dropped for having no
- * description.
- */
-function parseFrontmatter<T>(content: string): { frontmatter: T; body: string } {
-  const normalized = normalizeNewlines(stripBom(content));
-
-  if (!normalized.startsWith("---")) {
-    return { frontmatter: {} as T, body: normalized };
-  }
-
-  const endIndex = normalized.indexOf("\n---", 3);
-  if (endIndex === -1) {
-    return { frontmatter: {} as T, body: normalized };
-  }
-
-  const yamlBlock = normalized.slice(4, endIndex);
-  const body = normalized.slice(endIndex + 4).trim();
-  const frontmatter: Record<string, string | number | boolean> = {};
-
-  let currentKey: string | null = null;
-  for (const line of yamlBlock.split("\n")) {
-    if (line.trim() === "") continue;
-
-    const indent = line.length - line.trimStart().length;
-    const trimmed = line.trim();
-
-    // Continuation of a multi-line scalar (deeper indentation, no new key).
-    if (indent > 0 && currentKey !== null && !/^[-\w\"']+:/.test(trimmed)) {
-      const previous = String(frontmatter[currentKey] ?? "");
-      frontmatter[currentKey] = previous === "" ? trimmed : `${previous}\n${trimmed}`;
-      continue;
-    }
-
-    const colonIndex = trimmed.indexOf(":");
-    if (colonIndex === -1) {
-      currentKey = null;
-      continue;
-    }
-
-    const key = trimmed.slice(0, colonIndex).trim();
-    const rawValue = trimmed.slice(colonIndex + 1).trim();
-    // Block scalar markers ("|", "|-", ">") introduce indented lines.
-    if (rawValue === "|" || rawValue === "|-" || rawValue === ">" || rawValue === ">-") {
-      frontmatter[key] = "";
-      currentKey = key;
-      continue;
-    }
-    frontmatter[key] = parseScalar(rawValue);
-    currentKey = key;
-  }
-
-  return { frontmatter: frontmatter as T, body };
-}
 
 export function loadSkillFromFile(filePath: string): Skill | null {
   try {
