@@ -129,15 +129,21 @@ const MessageEditor = React.forwardRef<
     slashCommands: readonly SlashCommand[];
     enablePathCompletion: boolean;
   }
->(({ value, onChange, onSubmit, onQueue, disabled, onKey, width }, ref) => {
-  // Bắt Alt+Enter (tui.input.newLine binding cũng nhận alt+enter ở một số
-  // terminal) để xếp hàng thay vì xuống dòng: giống pi-mono handleFollowUp.
+>(({ value, onChange, onSubmit, onQueue, disabled, onKey, width, slashCommands, enablePathCompletion }, ref) => {
+  // Shift+Enter (byte \n) xếp hàng thay vì xuống dòng: giống pi-mono
+  // app.message.followUp (Ink không phân biệt được Alt+Enter).
   const handleQueue = React.useCallback(
     (text: string) => {
       if (onQueue) onQueue(text);
     },
     [onQueue],
   );
+
+  // Nhà cung gợi ý (lệnh slash + đường dẫn), dựng một lần theo props.
+  const provider = React.useMemo(() => {
+    if (!enablePathCompletion && slashCommands.length === 0) return undefined;
+    return new CombinedAutocompleteProvider([...slashCommands], process.cwd());
+  }, [slashCommands, enablePathCompletion]);
   return (
     <Editor
       ref={ref}
@@ -148,6 +154,7 @@ const MessageEditor = React.forwardRef<
       width={width}
       onKey={onKey}
       onQueue={handleQueue}
+      {...(provider ? { autocompleteProvider: provider } : {})}
     />
   );
 });

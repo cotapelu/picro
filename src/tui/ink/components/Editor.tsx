@@ -17,10 +17,20 @@ import { findWordBackward, findWordForward } from "../core/WordNavigation.js";
 import { visibleWidth, wrapTextWithAnsi } from "../core/TerminalText.js";
 import { isWhitespaceChar } from "../core/TextPredicates.js";
 import { matchesKey, decodePrintableKey } from "../core/Keys.js";
+import { fuzzyFilter } from "../core/Fuzzy.js";
+import type {
+  AutocompleteItem,
+  AutocompleteProvider,
+  SlashCommand,
+} from "../core/Autocomplete.js";
 import { getKeybindings } from "../core/Keybindings.js";
 
 export interface EditorProps {
   value?: string;
+  /** Nhà cung cấp gợi ý (lệnh slash + đường dẫn). Không truyền = tắt autocomplete. */
+  autocompleteProvider?: AutocompleteProvider;
+  /** Số mục gợi ý tối đa. */
+  autocompleteMaxVisible?: number;
   onSubmit?: (text: string) => void;
   onChange?: (text: string) => void;
   /** Tắt hành vi tự gửi (vd khi hội thoại đang xử lý). */
@@ -196,6 +206,17 @@ export interface EditorHandle {
   addToHistory(text: string): void;
 }
 
+/**
+ * Lấy danh sách lệnh slash từ provider (nếu provider là CombinedAutocompleteProvider).
+ *
+ * AutocompleteProvider chuẩn không nhất thiết phải khai báo commands, nên ta đọc
+ * field nội bộ qua duck-typing thay vì ép kiểu.
+ */
+function providerCommands(provider: AutocompleteProvider): SlashCommand[] | undefined {
+  const commands = (provider as unknown as { commands?: SlashCommand[] }).commands;
+  return Array.isArray(commands) ? commands : undefined;
+}
+
 export const Editor = React.forwardRef<EditorHandle, EditorProps>(
   (
     {
@@ -206,6 +227,8 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       width = 80,
       onKey,
       onQueue,
+      autocompleteProvider,
+      autocompleteMaxVisible = 5,
     },
     ref,
   ) => {
@@ -224,6 +247,34 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
   const [historyDraft, setHistoryDraft] = useState<EditorState | null>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
   const [focused, setFocused] = useState(true);
+  /** Gợi ý đang mở (null = tắt). */
+  const [autocomplete, setAutocompleteState] = useState<{
+    items: AutocompleteItem[];
+    prefix: string;
+    selected: number;
+  } | null>(null);
+  /**
+   * Bản ref của `autocomplete`.
+   *
+   * Ink's useInput handler đọc state qua useEffectEvent, nhưng khi state được
+   * đổi từ một ref callback (refreshAutocomplete qua refreshAutocompleteRef) thì
+   * handler vẫn đọc closure cũ; dùng ref giữ giá trị đọc được ngay trong handler.
+   */
+  const autocompleteRef = useRef<{
+    items: AutocompleteItem[];
+    prefix: string;
+    selected: number;
+  } | null>(null);
+  autocompleteRef.current = autocomplete;
+
+  /** Đặt gợi ý, đồng bộ cả state lẫn ref. */
+  const setAutocomplete = useCallback(
+    (next: { items: AutocompleteItem[]; prefix: string; selected: number } | null) => {
+      autocompleteRef.current = next;
+      setAutocompleteState(next);
+    },
+    [],
+  );
 
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -360,9 +411,15 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
         lines: nextLines,
         cursorCol: current.cursorCol + char.length,
       });
+      // Gõ "/" ở đầu dòng hoặc ký tự kích hoạt -> mở gợi ý.
+      // refreshAutocomplete khai báo phía dưới nên giữ qua ref để tránh phụ
+      // thuộc vòng giữa hai useCallback.
+      refreshAutocompleteRef.current(char);
     },
     [pushUndo, setLines],
   );
+
+  const refreshAutocompleteRef = useRef<(char: string) => void>(() => {});
 
   /**
    * Chèn một đoạn văn bản (một hoặc nhiều dòng) tại con trỏ, ATOMIC.
@@ -884,6 +941,99 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
     onSubmit?.(text);
   }, [disableSubmit, history, onSubmit, setLines]);
 
+
+  /** Vô hiệu hóa gợi ý. */
+  const closeAutocomplete = useCallback(() => setAutocomplete(null), []);
+
+  /** Lấy gợi ý cho văn bản trước con trỏ. */
+  const refreshAutocomplete = useCallback(
+    (force = false) => {
+      const provider = autocompleteProvider;
+      if (!provider) return;
+      const current = stateRef.current;
+      const line = current.lines[current.cursorLine] ?? "";
+      const before = line.slice(0, current.cursorCol);
+      const trimmed = before.trimStart();
+      // Lệnh slash: chỉ khi bắt đầu dòng (như pi-mono: slash menu ở đầu message).
+      if (trimmed.startsWith("/") && !trimmed.includes(" ")) {
+        const prefix = trimmed.slice(1);
+        const items = fuzzyFilter(
+          (providerCommands(provider) ?? []).map((cmd) => ({
+            value: cmd.name,
+            label: cmd.name,
+            description: cmd.description ?? cmd.argumentHint,
+          })),
+          prefix,
+          (item) => `${item.value} ${item.description ?? ""}`,
+        );
+        if (items.length === 0) {
+          closeAutocomplete();
+          return;
+        }
+        setAutocomplete({ items: items.slice(0, autocompleteMaxVisible), prefix, selected: 0 });
+        return;
+      }
+      // Đường dẫn: token trước con trỏ trông như đường dẫn.
+      if (force || /(^|[\s@])[.~\w][\w./\-]*$/.test(before)) {
+        const token = before.split(/[\s(){}<>`"']/).at(-1) ?? "";
+        void provider
+          .getSuggestions(current.lines, current.cursorLine, current.cursorCol, {
+            signal: new AbortController().signal,
+            force,
+          })
+          .then((result) => {
+            if (!result || result.items.length === 0) {
+              closeAutocomplete();
+              return;
+            }
+            setAutocomplete({
+              items: result.items.slice(0, autocompleteMaxVisible),
+              prefix: result.prefix,
+              selected: 0,
+            });
+          })
+          .catch(() => closeAutocomplete());
+        return;
+      }
+      closeAutocomplete();
+    },
+    [autocompleteProvider, autocompleteMaxVisible, closeAutocomplete],
+  );
+
+  // Cập nhật ref để insertCharacter gọi được (khai báo trước đó).
+  refreshAutocompleteRef.current = (char: string) => {
+    if (char === "/" || char === "@") {
+      refreshAutocomplete();
+      return;
+    }
+    if (stateRef.current.lines[stateRef.current.cursorLine]?.trimStart().startsWith("/")) {
+      refreshAutocomplete();
+    }
+  };
+
+  /** Chèn mục đang chọn vào dòng hiện tại. */
+  const applyAutocomplete = useCallback(() => {
+    const state = autocompleteRef.current;
+    if (!state) return false;
+    const item = state.items[state.selected];
+    if (!item) return false;
+    const current = stateRef.current;
+    const line = current.lines[current.cursorLine] ?? "";
+    const before = line.slice(0, current.cursorCol - state.prefix.length);
+    const after = line.slice(current.cursorCol);
+    const isSlash = before.trim() === "" && line.trimStart().startsWith("/");
+    const value = isSlash ? `/${item.value}` : item.value;
+    const suffix = isSlash ? " " : "";
+    const nextLines = [...current.lines];
+    nextLines[current.cursorLine] = `${before}${value}${suffix}${after}`;
+    closeAutocomplete();
+    setLines(
+      { ...current, lines: nextLines, cursorCol: before.length + value.length + suffix.length },
+      { undo: false },
+    );
+    return true;
+  }, [autocomplete, closeAutocomplete, setLines]);
+
   /** Đánh dấu paste lớn, chèn thay vì dán toàn bộ. */
   const handlePaste = useCallback(
     (pasted: string) => {
@@ -928,6 +1078,48 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
 
   useInput((data, key) => {
     if (key.ctrl && data === "\u0003") return;
+
+    // --- Gợi ý đang mở: điều hướng + chọn ---
+    if (autocompleteRef.current) {
+      if (matchesKey(data, "escape")) {
+        closeAutocomplete();
+        return;
+      }
+      if (matchesKey(data, "up")) {
+        setAutocomplete({
+          ...autocompleteRef.current,
+          selected:
+            autocompleteRef.current.selected === 0
+              ? autocompleteRef.current.items.length - 1
+              : autocompleteRef.current.selected - 1,
+        });
+        return;
+      }
+      if (matchesKey(data, "down")) {
+        setAutocomplete({
+          ...autocompleteRef.current,
+          selected:
+            autocompleteRef.current.selected === autocompleteRef.current.items.length - 1
+              ? 0
+              : autocompleteRef.current.selected + 1,
+        });
+        return;
+      }
+      // Ink báo Tab là chuỗi rỗng + key.tab (không phải "\t").
+      if (data === "\t" || key.tab) {
+        applyAutocomplete();
+        return;
+      }
+      if (matchesKey(data, "enter")) {
+        const wasSlash = autocompleteRef.current.prefix.length > 0 && (stateRef.current.lines[stateRef.current.cursorLine] ?? "").trimStart().startsWith("/");
+        if (applyAutocomplete() && wasSlash) {
+          // Chọn lệnh slash xong thì gửi luôn (pi-mono: Tab chọn, Enter gửi).
+          submit();
+          return;
+        }
+        return;
+      }
+    }
     // Ink không thể phân biệt Alt+Enter (nó nuốt ESC của "\x1b\r" và chỉ trả
     // "\r"), nên hành động "xếp hàng" của pi-mono (app.message.followUp) được
     // gán cho Shift+Enter/Ctrl+J — tức byte "\n" mà Ink báo riêng biệt. Khi
@@ -1167,6 +1359,21 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
     <Box flexDirection="column">
       {hiddenAbove > 0 ? (
         <Text>{fg("dim", `─ ↑ ${hiddenAbove} more `)}</Text>
+      ) : null}
+      {autocomplete && autocomplete.items.length > 0 ? (
+        <Box flexDirection="column">
+          {autocomplete.items.map((item, index) => {
+            const isSelected = index === autocomplete.selected;
+            return (
+              <Text key={item.value}>
+                {isSelected
+                  ? fg("accent", `→ ${item.label}`)
+                  : `  ${item.label}`}
+                {item.description ? fg("muted", ` ${item.description}`) : ""}
+              </Text>
+            );
+          })}
+        </Box>
       ) : null}
       {visibleLines.map((line, i) => {
         if (!line.hasCursor || line.cursorPos === undefined) {

@@ -83,6 +83,40 @@ const MIN_TRANSCRIPT_LINES = 5;
 /** Bước cuộn khi nhấn PageUp/PageDown. */
 const PAGE_OVERLAP = 2;
 
+/** Danh sách dự phòng khi runtime chưa nạp (tránh ô nhập không có gợi ý). */
+const DEFAULT_SLASH_COMMANDS: Array<{ name: string; description?: string }> = [
+  { name: "help", description: "hiện trợ giúp" },
+  { name: "model", description: "chọn mô hình" },
+  { name: "thinking", description: "đặt cấp độ suy nghĩ" },
+  { name: "settings", description: "bảng cài đặt" },
+  { name: "theme", description: "đổi chủ đề" },
+  { name: "compact", description: "nén ngữ cảnh" },
+  { name: "sessions", description: "liệt kê/chuyển phiên" },
+  { name: "new", description: "tạo phiên mới" },
+  { name: "resume", description: "mở lại phiên cũ" },
+  { name: "tree", description: "điều hướng cây phiên" },
+  { name: "fork", description: "fork từ tin nhắn" },
+  { name: "trust", description: "tin tưởng dự án" },
+  { name: "login", description: "đăng nhập" },
+  { name: "logout", description: "đăng xuất" },
+  { name: "name", description: "đặt tên phiên" },
+  { name: "hotkeys", description: "phím tắt" },
+  { name: "export", description: "xuất phiên" },
+  { name: "import", description: "nhập phiên" },
+  { name: "reload", description: "nạp lại tài nguyên" },
+  { name: "quit", description: "thoát" },
+];
+
+/**
+ * Lệnh slash dùng cho gợi ý trong ô nhập.
+ *
+ * Lấy từ danh sách built-in của runtime (src/runtime/slash-commands.ts) khi có,
+ * để một nơi duy nhất định nghĩa và gợi ý luôn khớp phần thực thi.
+ */
+const SLASH_COMMANDS: Array<{ name: string; description?: string; argumentHint?: string }> =
+  (globalThis as { __PICRO_SLASH_COMMANDS__?: Array<{ name: string; description?: string }> }).__PICRO_SLASH_COMMANDS__ ??
+  DEFAULT_SLASH_COMMANDS;
+
 export const App: React.FC<AppProps> = ({
   runtime,
   controller,
@@ -243,6 +277,7 @@ export const App: React.FC<AppProps> = ({
               onScroll={handleScroll}
               width={width}
               history={controller.getHistory()}
+              slashCommands={SLASH_COMMANDS}
             />
           ) : (
             <Box flexDirection="column" width={width}>

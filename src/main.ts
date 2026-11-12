@@ -14,6 +14,7 @@ import { buildInitialMessage, type InitialMessageResult } from "./cli/initial-me
 import { listModels } from "./cli/list-models.js";
 import { selectSession, type SessionsLoader } from "./cli/session-picker.js";
 import { getMissingSessionCwdIssue } from "./session/session-cwd.js";
+import { listSlashCommands } from "./runtime/slash-commands.js";
 import { resolveCliModel } from "./session/model-resolver.js";
 import { createAgentSessionServices } from "./session/agent-session-services.js";
 import { createAgentSessionFromServices, type SessionStartEvent } from "./session/agent-session-services.js";
@@ -410,6 +411,9 @@ async function main(): Promise<void> {
     });
   } else {
     // Default: Ink TUI mode
+    // Cung cấp danh sách lệnh slash built-in cho gợi ý trong ô nhập.
+    (globalThis as { __PICRO_SLASH_COMMANDS__?: Array<{ name: string; description?: string }> }).__PICRO_SLASH_COMMANDS__ =
+      listSlashCommands();
     startInteractiveApp({
       runtime,
       controller,
