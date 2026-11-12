@@ -28,8 +28,10 @@ export interface InteractiveControllerLike {
   onMessage(callback: (messages: ChatMessageLike[]) => void): void;
   /** Đăng ký nghe trạng thái thay đổi. */
   onStatusChange(callback: (status: ControllerStatus) => void): void;
-  /** Đăng ký nghe thông báo tạm mới. */
-  onToast(callback: (toast: ToastLike) => void): void;
+  /** Đăng ký nghe thông báo tạm mới.
+   *  `removed` đánh dấu lần phát ra khi thông báo vừa hết hạn bị gỡ, để view
+   *  xoá đúng phần tử thay vì chỉ biết cách thêm. */
+  onToast(callback: (toast: ToastLike, removed?: boolean) => void): void;
 
   /** Gửi tin nhắn của người dùng. */
   sendMessage(text: string): Promise<void>;

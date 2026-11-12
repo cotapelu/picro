@@ -75,7 +75,16 @@ export const App: React.FC<AppProps> = ({
   useEffect(() => {
     controller.onMessage((msgs) => setMessages(msgs));
     controller.onStatusChange((st) => setStatus(st));
-    controller.onToast((t) => setToasts((prev) => [...prev, t]));
+    // `removed` marks the emission when a toast expires: drop that entry instead
+    // of appending the same id again (which duplicated every toast and made the
+    // local list grow without bound).
+    controller.onToast((toast, removed) =>
+      setToasts((prev) =>
+        removed
+          ? prev.filter((t) => t.id !== toast.id)
+          : [...prev.filter((t) => t.id !== toast.id), toast]
+      )
+    );
   }, [controller]);
 
   const handleSubmit = useCallback(

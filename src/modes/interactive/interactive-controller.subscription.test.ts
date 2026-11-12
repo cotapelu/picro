@@ -194,3 +194,33 @@ describe('InteractiveController - command data', () => {
     controller.dispose();
   });
 });
+
+describe('InteractiveController - toast lifecycle', () => {
+  it('emits add and removal with an explicit flag', async () => {
+    vi.useFakeTimers();
+    let controller: InteractiveController | undefined;
+    try {
+      const { runtime } = createMockRuntime();
+      controller = new InteractiveController({ runtime });
+
+      const seen: Array<{ id: string; removed?: boolean }> = [];
+      controller.onToast((toast, removed) => seen.push({ id: toast.id, removed }));
+
+      await controller.runCommand('clear');
+      expect(controller.getToasts()).toHaveLength(1);
+
+      await vi.advanceTimersByTimeAsync(4000);
+      expect(controller.getToasts()).toHaveLength(0);
+
+      // Exactly two emissions for one toast: created, then removed.
+      expect(seen).toHaveLength(2);
+      expect(seen[0]!.removed).toBe(false);
+      expect(seen[1]!.removed).toBe(true);
+      expect(seen[1]!.id).toBe(seen[0]!.id);
+    } finally {
+      vi.useRealTimers();
+    }
+
+    controller?.dispose();
+  });
+});

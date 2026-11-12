@@ -45,7 +45,7 @@ export class InteractiveController {
 
   private onMessageCallback: ((messages: ChatMessage[]) => void) | null = null;
   private onStatusChangeCallback: ((status: RuntimeStatus) => void) | null = null;
-  private onToastCallback: ((toast: ToastItem) => void) | null = null;
+  private onToastCallback: ((toast: ToastItem, removed?: boolean) => void) | null = null;
   private onModalCallback: ((modal: ModalState) => void) | null = null;
 
   constructor(options: InteractiveControllerOptions) {
@@ -167,7 +167,7 @@ export class InteractiveController {
     callback(this.status);
   }
 
-  onToast(callback: (toast: ToastItem) => void): void {
+  onToast(callback: (toast: ToastItem, removed?: boolean) => void): void {
     this.onToastCallback = callback;
   }
 
@@ -450,12 +450,15 @@ export class InteractiveController {
       createdAt: Date.now(),
     };
     this.toasts.push(toast);
-    this.onToastCallback?.(toast);
+    this.onToastCallback?.(toast, false);
 
-    // Auto remove after duration
+    // Auto remove after duration. The view is told explicitly which toast went
+    // away: emitting the same object without that flag made views that keep a
+    // list append it a second time and never shrink, so the list grew by two
+    // entries per toast for the whole session.
     setTimeout(() => {
       this.toasts = this.toasts.filter((t) => t.id !== toast.id);
-      this.onToastCallback?.(toast);
+      this.onToastCallback?.(toast, true);
     }, toast.duration || 3000);
   }
 
