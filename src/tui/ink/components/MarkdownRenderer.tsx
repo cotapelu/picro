@@ -8,6 +8,7 @@
 import React, { useMemo } from "react";
 import { Box, Text } from "ink";
 import { theme, fg, bg } from "../theme/index.js";
+import { classifyMarkdownLine, clipMarkdownLine, padMarkdownLine } from "./markdown-layout.js";
 
 export interface MarkdownRendererProps {
   content: string;
@@ -22,21 +23,7 @@ export interface MarkdownRendererProps {
   color?: string;
 }
 
-/** Cắt một dòng theo số cột hiển thị (không tính ANSI). */
-function clipLine(line: string, width: number): string {
-  if (width <= 0) return "";
-  const plain = line.replace(/\x1b\[[0-9;]*m/g, "");
-  if (plain.length <= width) return line;
-  return line.slice(0, Math.max(0, width - 1)) + fg("dim", "…");
-}
-
 /** Đệm dây đủ chiều rộng để viền khối đều nhau. */
-function padLine(line: string, width: number): string {
-  const plain = line.replace(/\x1b\[[0-9;]*m/g, "");
-  const missing = Math.max(0, width - plain.length);
-  return line + " ".repeat(missing);
-}
-
 interface Block {
   lines: string[];
   /** Khối mã có viền trên/dưới. */
@@ -97,24 +84,24 @@ function styleInline(line: string): string {
 /** Áp kiểu theo loại dòng. */
 function styleLine(line: string, index: number): string {
   const trimmed = line.trimStart();
-  if (/^#{1,6}\s/.test(trimmed)) {
-    const text = trimmed.replace(/^#{1,6}\s/, "");
-    return `${theme.bold(fg("heading", text))}`;
+  switch (classifyMarkdownLine(trimmed)) {
+    case "heading": {
+      const text = trimmed.replace(/^#{1,6}\s/, "");
+      return `${theme.bold(fg("heading", text))}`;
+    }
+    case "bullet":
+      return `${fg("listBullet", "• ")}${styleInline(trimmed.replace(/^[-*+]\s/, ""))}`;
+    case "ordered": {
+      const m = /^(\d+)\.\s(.*)$/.exec(trimmed);
+      return `${fg("listBullet", `${m?.[1] ?? index + 1}. `)}${styleInline(m?.[2] ?? "")}`;
+    }
+    case "quote":
+      return `${fg("quote", "│ ")}${styleInline(trimmed.replace(/^>\s?/, ""))}`;
+    case "hr":
+      return fg("hr", "─".repeat(40));
+    default:
+      return styleInline(line);
   }
-  if (/^[-*+]\s/.test(trimmed)) {
-    return `${fg("listBullet", "• ")}${styleInline(trimmed.replace(/^[-*+]\s/, ""))}`;
-  }
-  if (/^\d+\.\s/.test(trimmed)) {
-    const m = /^(\d+)\.\s(.*)$/.exec(trimmed);
-    return `${fg("listBullet", `${m?.[1] ?? index + 1}. `)}${styleInline(m?.[2] ?? "")}`;
-  }
-  if (/^>\s?/.test(trimmed)) {
-    return `${fg("quote", "│ ")}${styleInline(trimmed.replace(/^>\s?/, ""))}`;
-  }
-  if (/^(-{3,}|\*{3,})$/.test(trimmed)) {
-    return fg("hr", "─".repeat(40));
-  }
-  return styleInline(line);
 }
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, width = 80, transform, paddingX = 0, italic = false, color }) => {
@@ -128,7 +115,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, wid
       if (block.fenced) {
         out.push(fg("codeBlockBorder", "```"));
         for (const line of block.lines) {
-          out.push(padLine(`  ${clipLine(line, contentWidth - 2)}`, contentWidth));
+          out.push(padMarkdownLine(`  ${clipMarkdownLine(line, contentWidth - 2)}`, contentWidth));
         }
         out.push(fg("codeBlockBorder", "```"));
         return;
@@ -136,7 +123,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, wid
       const sourceLines = transform ? transform(block.lines.join("\n"), contentWidth).split("\n") : block.lines;
       sourceLines.forEach((line, i) => {
         const styled = styleLine(line, i);
-        out.push(clipLine(italic ? italicize(styled) : styled, contentWidth));
+        out.push(clipMarkdownLine(italic ? italicize(styled) : styled, contentWidth));
       });
     });
 
