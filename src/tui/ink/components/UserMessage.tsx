@@ -6,7 +6,7 @@
 // Port sang Ink TSX, khon copy code truc iep.
 
 import React, { useMemo } from "react";
-import { Box } from "ink";
+import { Box, Text } from "ink";
 import { getTheme } from "../theme/index.js";
 import { MarkdownRenderer } from "./MarkdownRenderer.js";
 import { createMarkdownTransform, type MarkdownTransformer } from "./markdown-transform.js";
@@ -42,7 +42,12 @@ export const UserMessage: React.FC<UserMessageProps> = ({
 
   return (
     <Box flexDirection="column">
-      <Box paddingX={outputPad}>{`${OSC133_START}${pad}${t.bg("userMessageBg", "")}`.trimEnd()}</Box>
+      {/* Ink không render chuỗi đặt trực tiếp trong Box (nó cần <Text>);
+          background zone lines must be wrapped or the whole subtree renders
+          blank. */}
+      <Box paddingX={outputPad}>
+        <Text>{`${OSC133_START}${pad}${t.bg("userMessageBg", "")}`.trimEnd()}</Text>
+      </Box>
       <MarkdownRenderer
         content={text}
         width={Math.max(20, width - outputPad * 2)}
@@ -50,7 +55,9 @@ export const UserMessage: React.FC<UserMessageProps> = ({
         paddingX={outputPad}
         color="userMessageText"
       />
-      <Box paddingX={outputPad}>{`${OSC133_END}${OSC133_FINAL}${pad}${t.bg("userMessageBg", "")}`.trimEnd()}</Box>
+      <Box paddingX={outputPad}>
+        <Text>{`${OSC133_END}${OSC133_FINAL}${pad}${t.bg("userMessageBg", "")}`.trimEnd()}</Text>
+      </Box>
     </Box>
   );
 };

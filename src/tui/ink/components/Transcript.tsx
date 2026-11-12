@@ -167,6 +167,7 @@ const TranscriptRow: React.FC<{ item: TranscriptItem; width: number; toolsExpand
       return (
         <BashExecution
           command={item.command ?? ""}
+          output={item.output}
           excludeFromContext={item.excludeFromContext}
           outputPad={pad}
           expanded={item.expanded ?? toolsExpanded}

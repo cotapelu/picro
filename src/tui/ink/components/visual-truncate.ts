@@ -73,4 +73,15 @@ export class VisualLinePreview {
     this.cachedWidth = undefined;
     this.cachedLines = undefined;
   }
+
+  /**
+   * Thay văn bản xem trước và bỏ cache.
+   *
+   * Callers mutated the private `options.text` field from outside before; an
+   * explicit setter keeps that invariant inside the class.
+   */
+  setText(text: string): void {
+    this.options = { ...this.options, text };
+    this.invalidate();
+  }
 }

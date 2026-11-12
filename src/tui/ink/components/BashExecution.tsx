@@ -7,7 +7,7 @@
 //   - Cảnh báo khi đầu ra bị cắt do giới hạn ngữ cảnh
 // Port sang Ink TSX, khon copy code truc iep.
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Box, Text } from "ink";
 import { getTheme } from "../theme/index.js";
 import { DynamicBorder } from "./DynamicBorder.js";
@@ -35,6 +35,8 @@ export interface BashExecutionProps {
   exitCode?: number;
   cancelled?: boolean;
   truncated?: TruncationResult;
+  /** Đầu ra đã có (phiên được phát lại) để hiển thị ngay, không chỉ qua append(). */
+  output?: string;
   fullOutputPath?: string;
   width?: number;
 }
@@ -61,6 +63,7 @@ export const BashExecution: React.FC<BashExecutionProps> = ({
   exitCode,
   cancelled = false,
   truncated,
+  output,
   fullOutputPath,
   width = 80,
 }) => {
@@ -68,6 +71,18 @@ export const BashExecution: React.FC<BashExecutionProps> = ({
   const [outputLines, setOutputLines] = useState<string[]>([]);
   const colorKey = excludeFromContext ? "dim" : "bashMode";
   const pad = " ".repeat(outputPad);
+
+  /**
+   * Đồng bộ output từ prop vào state nội bộ.
+   *
+   * `output` was declared in the props type and then never read: a BashExecution
+   * rendered from the transcript (a replayed session) showed an empty block, and
+   * a live one only ever displayed chunks pushed through the internal append().
+   */
+  useEffect(() => {
+    if (output === undefined) return;
+    setOutputLines((prev) => (prev.join("\n") === output ? prev : output.split("\n")));
+  }, [output]);
 
   // Thêm chunk vào đầu ra, ghép vào dòng cuối nếu chưa có newline.
   const append = (chunk: string): void => {
@@ -98,12 +113,15 @@ export const BashExecution: React.FC<BashExecutionProps> = ({
   const preview = useMemo(
     () =>
       new VisualLinePreview({
-        text: `\n${view.preview.map((line) => t.fg("muted", line.replace(/[\x00-\x1f]/g, ""))).join("\n")}`,
+        text: "",
         maxVisualLines: PREVIEW_LINES,
         keep: "end",
         formatHint: (hidden) => t.fg("muted", `... ${hidden} dòng nữa (Ctrl+T để mở rộng)`),
       }),
-    [view.preview, t],
+    [t],
+  );
+  preview.setText(
+    `\n${view.preview.map((line) => t.fg("muted", line.replace(/[\x00-\x1f]/g, ""))).join("\n")}`,
   );
 
   return (
