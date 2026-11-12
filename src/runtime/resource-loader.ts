@@ -9,8 +9,8 @@ import type { AgentMessage } from "../session/agent-types.js";
 import type { Skill } from "./skills.js";
 import { loadSkills } from "./skills.js";
 import { loadPromptTemplates } from "./prompt-templates.js";
-import { existsSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { discoverAndLoadExtensions } from "../extensions/loader.js";
 import { createExtensionRuntime } from "../extensions/runner.js";
 import { ExtensionRunner } from "../extensions/runner.js";
@@ -340,30 +340,81 @@ export class DefaultResourceLoader implements ResourceLoader {
 }
 
 /**
- * Load project context files (AGENTS.md, CLAUDE.md)
+ * Candidate names for a context file, in priority order.
+ * Matches pi-mono's resource-loader so an override file can shadow the plain
+ * one and both spellings of AGENTS/CLAUDE are accepted.
+ */
+const CONTEXT_FILE_CANDIDATES = ["AGENTS.override.md", "AGENTS.md", "AGENTS.MD", "CLAUDE.md", "CLAUDE.MD"];
+
+/** Drop a leading UTF-8 BOM so it never leaks into the system prompt. */
+function stripBom(content: string): string {
+  return content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
+}
+
+/** First matching context file in a directory, or null. */
+function loadContextFileFromDir(dir: string): { path: string; content: string } | null {
+  for (const filename of CONTEXT_FILE_CANDIDATES) {
+    const filePath = join(dir, filename);
+    if (!existsSync(filePath)) continue;
+    try {
+      if (!statSync(filePath).isFile()) continue;
+      return { path: filePath, content: stripBom(readFileSync(filePath, "utf8")) };
+    } catch (error) {
+      console.warn(`Warning: Could not read context file ${filePath}:`, error);
+    }
+  }
+  return null;
+}
+
+/**
+ * Load project context files (AGENTS.md, CLAUDE.md).
+ *
+ * Scope order (later entries win when the agent concatenates them):
+ *   1. the agent directory (global scope),
+ *   2. every ancestor of cwd from the filesystem root down to cwd.
+ *
+ * The previous implementation looked only at "<agentDir>/AGENTS.md" and
+ * "<cwd>/.pi/AGENTS.md", so a project's own AGENTS.md at its root - the
+ * documented location, and the whole point of the --no-context-files flag -
+ * was never read, and neither were the AGENTS.md files of nested packages in a
+ * monorepo.
  */
 export function loadProjectContextFiles(options: {
   cwd: string;
   agentDir: string;
 }): Array<{ path: string; content: string }> {
-  const files: Array<{ path: string; content: string }> = [];
-  const pathsToCheck = [
-    join(options.agentDir, "AGENTS.md"),
-    join(options.agentDir, "CLAUDE.md"),
-    join(options.cwd, ".pi", "AGENTS.md"),
-    join(options.cwd, ".pi", "CLAUDE.md"),
-  ];
-  for (const path of pathsToCheck) {
-    if (existsSync(path)) {
-      try {
-        const content = readFileSync(path, "utf8");
-        files.push({ path, content });
-      } catch {
-        // ignore read errors
-      }
+  const resolvedCwd = resolve(options.cwd);
+  const resolvedAgentDir = resolve(options.agentDir);
+
+  const contextFiles: Array<{ path: string; content: string }> = [];
+  const seenPaths = new Set<string>();
+
+  const addFile = (file: { path: string; content: string } | null): void => {
+    if (!file || seenPaths.has(file.path)) return;
+    seenPaths.add(file.path);
+    contextFiles.push(file);
+  };
+
+  // Global scope.
+  addFile(loadContextFileFromDir(resolvedAgentDir));
+
+  // Every ancestor, root first so the nearest file is applied last.
+  const ancestors: Array<{ path: string; content: string }> = [];
+  const ancestorSeen = new Set<string>();
+  let currentDir = resolvedCwd;
+  while (true) {
+    const file = loadContextFileFromDir(currentDir);
+    if (file && !ancestorSeen.has(file.path)) {
+      ancestorSeen.add(file.path);
+      ancestors.unshift(file);
     }
+    const parentDir = dirname(currentDir);
+    if (parentDir === currentDir) break;
+    currentDir = parentDir;
   }
-  return files;
+
+  for (const file of ancestors) addFile(file);
+  return contextFiles;
 }
 
 /**
