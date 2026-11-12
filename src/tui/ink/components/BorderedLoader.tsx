@@ -48,10 +48,9 @@ export const BorderedLoader: React.FC<BorderedLoaderProps> = ({
   );
 };
 
-/** Escape có được bấm không (dùng cho loader hủy được). */
-export function isCancelKey(data: string): boolean {
-  return matchesKey(data, "escape");
-}
+// isCancelKey giờ nằm ở CancellableLoader (gần controller hủy), export lại để
+// giữ nguyên API công khai cũ của BorderedLoader.
+export { isCancelKey } from "./CancellableLoader.js";
 
 /** Tiện ích cho cha: tạo controller và hủy khi cần. */
 export function createLoaderAbort(): { signal: AbortSignal; abort: () => void } {

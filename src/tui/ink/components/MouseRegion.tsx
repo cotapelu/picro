@@ -4,7 +4,7 @@
 //   - Sự kiện chuột ưu tiên xử lý ở con, rồi mới tới handler bọc ngoài
 // Port sang Ink TSX, khon copy code truc iep.
 
-import React from "react";
+import React, { useRef } from "react";
 
 export type MouseEventType = "press" | "release" | "move" | "drag" | "click" | "wheel";
 export type MouseButton = "left" | "middle" | "right" | "none";
@@ -40,14 +40,31 @@ export interface MouseRegionProps {
  * ranh giới logic: dùng khi chuyển logic xử lý chuột sang tầng trên
  * (vd alt-screen) mà không làm component con biết.
  */
+/**
+ * Handler chuột gần nhất, tra được qua getLatestMouseHandler().
+ *
+ * Bản cũ ghi `lastHandler` lên CHÍNH function component, nên mọi instance dùng
+ * chung một ô: hai MouseRegion cùng mounted sẽ ghi đè lẫn nhau và handler của
+ * vùng sau không bao giờ được gọi. Ink không có API mouse, nên picro chỉ giữ
+ * một handler toàn cục — nhưng phải là handler của instance ĐANG HOẠT ĐỘNG.
+ */
+let latestHandler: MouseRegionHandler | undefined;
+let latestId = 0;
+
+export function getLatestMouseHandler(): MouseRegionHandler | undefined {
+  return latestHandler;
+}
+
 export const MouseRegion: React.FC<MouseRegionProps> = ({ children, onMouse }) => {
-  // Ghi lại handler để tầng renderer có thể gọi khi mice sự kiện đến.
+  const idRef = useRef<number>(0);
+  if (idRef.current === 0) idRef.current = ++latestId;
+
   React.useEffect(() => {
-    (MouseRegion as unknown as { lastHandler?: MouseRegionHandler }).lastHandler = onMouse;
+    const id = idRef.current;
+    latestHandler = onMouse;
     return () => {
-      if ((MouseRegion as unknown as { lastHandler?: MouseRegionHandler }).lastHandler === onMouse) {
-        delete (MouseRegion as unknown as { lastHandler?: MouseRegionHandler }).lastHandler;
-      }
+      // Chỉ xóa nếu đây vẫn là handler mới nhất.
+      if (latestId === id) latestHandler = undefined;
     };
   }, [onMouse]);
 

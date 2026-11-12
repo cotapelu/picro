@@ -27,17 +27,16 @@ export const ThemedText: React.FC<ThemedTextProps> = ({ build, paddingX = 1, pad
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
+  const padX = " ".repeat(Math.max(0, paddingX));
   return (
-    <Text>
-      {Array.from({ length: paddingY }).map((_, i) => (
-        <span key={`pt-${i}`}>{"\n"}</span>
+    <>
+      {Array.from({ length: Math.max(0, paddingY) }).map((_, i) => (
+        <Text key={`pt-${i}`}> </Text>
       ))}
-      {" ".repeat(paddingX)}
-      {content}
-      {" ".repeat(paddingX)}
-      {Array.from({ length: paddingY }).map((_, i) => (
-        <span key={`pb-${i}`}>{"\n"}</span>
+      <Text>{`${padX}${content}${padX}`}</Text>
+      {Array.from({ length: Math.max(0, paddingY) }).map((_, i) => (
+        <Text key={`pb-${i}`}> </Text>
       ))}
-    </Text>
+    </>
   );
 };

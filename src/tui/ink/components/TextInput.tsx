@@ -9,6 +9,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { theme, fg, bg } from "../theme/index.js";
+import { KillRing } from "../core/KillRing.js";
+import { UndoStack } from "../core/UndoStack.js";
+import { findWordBackward, findWordForward } from "../core/WordNavigation.js";
+import { matchesKey, decodePrintableKey } from "../core/Keys.js";
+import { parsePastePayload } from "./Editor.js";
 
 export interface TextInputProps {
   value?: string;
@@ -66,10 +71,29 @@ export const TextInput: React.FC<TextInputProps> = ({
   onEscape,
   disabled = false,
   onKey,
+  width,
 }) => {
   const [text, setText] = useState(value);
   const [cursor, setCursor] = useState(text.length);
+  const [viewportWidth, setViewportWidth] = useState<number>(() => width ?? 80);
   const ref = useRef({ text, cursor });
+  const killRing = useRef(new KillRing());
+  const undoStack = useRef(new UndoStack<{ value: string; cursor: number }>());
+  const lastAction = useRef<"kill" | "yank" | "type-word" | null>(null);
+
+  /** Chèn văn bản tại con trỏ (một lượt undo cho cả đoạn). */
+  const insertAtCursor = (payload: string): void => {
+    if (!payload) return;
+    undoStack.current.push({ value: ref.current.text, cursor: ref.current.cursor });
+    const before = ref.current.text.slice(0, ref.current.cursor);
+    const after = ref.current.text.slice(ref.current.cursor);
+    setText(before + payload + after);
+    setCursor(ref.current.cursor + payload.length);
+  };
+
+  useEffect(() => {
+    if (width !== undefined) setViewportWidth(width);
+  }, [width]);
 
   useEffect(() => {
     if (value !== ref.current.text) {
@@ -91,71 +115,179 @@ export const TextInput: React.FC<TextInputProps> = ({
     setCursor(nextCursor);
   }, []);
 
+  // Bracketed paste: nội dung dán được bọc [200~...[201~ và bắt đầu bằng
+  // ESC, nên mọi kiểm tra "ký tự in được" đều từ chối nó — phải xử lý TRƯỚC.
+  const pasteBuffer = useRef("");
+  const pasteActive = useRef(false);
+
   useInput((input, key) => {
     if (disabled) return;
     if (key.ctrl && input === "\u0003") return;
 
-    if (key.return) {
+    // --- Bracketed paste (chunk đầu hoặc chunk tiếp theo) ---
+    if (pasteActive.current || input.includes("\x1b[200~")) {
+      if (!pasteActive.current) {
+        const start = input.indexOf("\x1b[200~");
+        const before = input.slice(0, start);
+        pasteActive.current = true;
+        pasteBuffer.current = input.slice(start + "\x1b[200~".length);
+        // Ký tự gõ trước lúc dán vẫn phải vào ô nhập.
+        if (before.length > 0) insertAtCursor(before);
+      } else {
+        pasteBuffer.current += input;
+      }
+      const end = pasteBuffer.current.indexOf("\x1b[201~");
+      if (end !== -1) {
+        const payload = parsePastePayload(pasteBuffer.current) ?? pasteBuffer.current.slice(0, end);
+        pasteBuffer.current = "";
+        pasteActive.current = false;
+        if (payload) insertAtCursor(payload);
+      }
+      return;
+    }
+
+    // --- Gửi ---
+    if (matchesKey(input, "enter")) {
       onSubmit?.(ref.current.text);
       apply("", 0);
       return;
     }
 
-    if (input === "\u001b" && !key.ctrl && !key.meta) {
+    // --- Thoát ---
+    if (input === "\x1b" && !key.ctrl && !key.meta) {
       onEscape?.();
       return;
     }
 
-    // Dịch con trỏ theo grapheme.
-    if (key.upArrow || key.downArrow) {
-      onKey?.(input, key.upArrow === true, key.downArrow === true);
-      return;
-    }
-    if (key.leftArrow) {
-      const g = toGraphemes(ref.current.text.slice(0, ref.current.cursor));
-      setCursor(Math.max(0, ref.current.cursor - (g.at(-1)?.length ?? 1)));
-      return;
-    }
-    if (key.rightArrow) {
-      const g = toGraphemes(ref.current.text.slice(ref.current.cursor));
-      setCursor(Math.min(ref.current.text.length, ref.current.cursor + (g[0]?.length ?? 1)));
-      return;
-    }
-
-    if (key.backspace || key.delete) {
-      // Backspace deletes before the cursor, Delete deletes after it. Both used
-      // to run the same backward-deletion code.
-      const next = removeGrapheme(ref.current.text, ref.current.cursor, key.delete ? "forward" : "backward");
+    // --- Xóa ---
+    if (matchesKey(input, "backspace") || (key.backspace && !key.ctrl)) {
+      undoStack.current.push({ value: ref.current.text, cursor: ref.current.cursor });
+      const next = removeGrapheme(ref.current.text, ref.current.cursor, "backward");
       apply(next.text, next.cursor);
       return;
     }
-
-    if (key.ctrl && input === "u") {
+    if (matchesKey(input, "delete") || (key.delete && !key.ctrl)) {
+      undoStack.current.push({ value: ref.current.text, cursor: ref.current.cursor });
+      const next = removeGrapheme(ref.current.text, ref.current.cursor, "forward");
+      apply(next.text, next.cursor);
+      return;
+    }
+    if (matchesKey(input, "deleteWordBackward") || (key.ctrl && input === "w")) {
+      const target = findWordBackward(ref.current.text, ref.current.cursor);
+      killRing.current.push(ref.current.text.slice(target, ref.current.cursor), {
+        prepend: true,
+        accumulate: lastAction.current === "kill",
+      });
+      lastAction.current = "kill";
+      apply(ref.current.text.slice(0, target) + ref.current.text.slice(ref.current.cursor), target);
+      return;
+    }
+    if (matchesKey(input, "deleteToLineStart") || (key.ctrl && input === "u")) {
+      undoStack.current.push({ value: ref.current.text, cursor: ref.current.cursor });
+      if (ref.current.cursor > 0) {
+        killRing.current.push(ref.current.text.slice(0, ref.current.cursor), {
+          prepend: true,
+          accumulate: lastAction.current === "kill",
+        });
+        lastAction.current = "kill";
+      }
       apply(ref.current.text.slice(ref.current.cursor), 0);
       return;
     }
-    if (key.ctrl && input === "k") {
+    if (matchesKey(input, "deleteToLineEnd") || (key.ctrl && input === "k")) {
+      undoStack.current.push({ value: ref.current.text, cursor: ref.current.cursor });
+      if (ref.current.cursor < ref.current.text.length) {
+        killRing.current.push(ref.current.text.slice(ref.current.cursor), {
+          prepend: false,
+          accumulate: lastAction.current === "kill",
+        });
+        lastAction.current = "kill";
+      }
       apply(ref.current.text.slice(0, ref.current.cursor), ref.current.cursor);
       return;
     }
-    if (key.ctrl && input === "a") {
+
+    // --- Kill ring ---
+    if (matchesKey(input, "yank")) {
+      const text = killRing.current.peek();
+      if (text) {
+        insertAtCursor(text);
+        lastAction.current = "yank";
+      }
+      return;
+    }
+    if (matchesKey(input, "yankPop")) {
+      if (lastAction.current === "yank" && killRing.current.length > 1) {
+        const prev = killRing.current.peek() ?? "";
+        const stripped =
+          ref.current.text.slice(0, ref.current.cursor - prev.length) + ref.current.text.slice(ref.current.cursor);
+        killRing.current.rotate();
+        const next = killRing.current.peek() ?? "";
+        apply(stripped.slice(0, ref.current.cursor - prev.length) + next + stripped.slice(ref.current.cursor - prev.length), ref.current.cursor - prev.length + next.length);
+      }
+      return;
+    }
+
+    // --- Hoàn tác ---
+    if (matchesKey(input, "undo") || (key.ctrl && input === "-")) {
+      const snapshot = undoStack.current.pop();
+      if (snapshot) {
+        apply(snapshot.value, snapshot.cursor);
+      }
+      return;
+    }
+
+    // --- Di chuyển con trỏ ---
+    if (matchesKey(input, "cursorLeft")) {
+      const g = toGraphemes(ref.current.text.slice(0, ref.current.cursor));
+      const len = g.at(-1)?.length ?? 1;
+      setCursor(Math.max(0, ref.current.cursor - len));
+      return;
+    }
+    if (matchesKey(input, "cursorRight")) {
+      const g = toGraphemes(ref.current.text.slice(ref.current.cursor));
+      const len = g[0]?.length ?? 1;
+      setCursor(Math.min(ref.current.text.length, ref.current.cursor + len));
+      return;
+    }
+    if (matchesKey(input, "cursorWordLeft")) {
+      setCursor(findWordBackward(ref.current.text, ref.current.cursor));
+      return;
+    }
+    if (matchesKey(input, "cursorWordRight")) {
+      setCursor(findWordForward(ref.current.text, ref.current.cursor));
+      return;
+    }
+    if (matchesKey(input, "cursorLineStart")) {
       setCursor(0);
       return;
     }
-    if (key.ctrl && input === "e") {
+    if (matchesKey(input, "cursorLineEnd")) {
       setCursor(ref.current.text.length);
       return;
     }
 
-    if (input && input.length >= 1 && input.charCodeAt(0) >= 32) {
-      const before = ref.current.text.slice(0, ref.current.cursor);
-      const after = ref.current.text.slice(ref.current.cursor);
-      apply(before + input + after, before.length + input.length);
+    // --- Điều hướng transcript (ủy quyền ra ngoài) ---
+    if (key.upArrow || key.downArrow) {
+      onKey?.(input, key.upArrow === true, key.downArrow === true);
+      return;
+    }
+
+    // --- Ký tự in được (CSI-u / modifyOtherKeys hoặc ký tự thường) ---
+    const printable = decodePrintableKey(input);
+    if (printable !== undefined) {
+      insertAtCursor(printable);
+      return;
+    }
+    if (input && input.length >= 1 && !key.ctrl && !key.meta && input.charCodeAt(0) >= 32) {
+      insertAtCursor(input);
     }
   });
 
-  // Cửa sổ cuộn ngang: hiển thị tối đa 60 cột, giữ con trỏ ở giữa.
-  const AVAILABLE = 60;
+  // Cửa sổ cuộn ngang: chiều rộng khả dụng = width trừ đi prompt. Bản cũ
+  // hardcode 60 cột và bỏ qua prop width, nên terminal rộng vẫn chỉ nhìn thấy
+  // 60 ký tự trong khi editor của pi-mono dùng toàn bộ chiều rộng khả dụng.
+  const AVAILABLE = Math.max(1, viewportWidth - prompt.length);
   const total = text.length;
   let visibleText = text;
   let start = 0;

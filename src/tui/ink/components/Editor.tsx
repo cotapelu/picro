@@ -16,7 +16,7 @@ import { UndoStack } from "../core/UndoStack.js";
 import { findWordBackward, findWordForward } from "../core/WordNavigation.js";
 import { visibleWidth, wrapTextWithAnsi } from "../core/TerminalText.js";
 import { isWhitespaceChar } from "../core/TextPredicates.js";
-import { matchesKey } from "../core/Keys.js";
+import { matchesKey, decodePrintableKey } from "../core/Keys.js";
 import { getKeybindings } from "../core/Keybindings.js";
 
 export interface EditorProps {
@@ -68,6 +68,19 @@ const graphemeSegmenter = new Intl.Segmenter(undefined, { granularity: "grapheme
 
 function segmentsOf(text: string): string[] {
   return [...graphemeSegmenter.segment(text)].map((s) => s.segment);
+}
+
+/** Chiều cao terminal hiện tại (theo dõi resize), dùng cho vùng xem editor. */
+function useTerminalRows(): number {
+  const [rows, setRows] = useState(() => process.stdout.rows || 24);
+  useEffect(() => {
+    const onResize = () => setRows(process.stdout.rows || 24);
+    process.stdout.on("resize", onResize);
+    return () => {
+      process.stdout.off("resize", onResize);
+    };
+  }, []);
+  return rows;
 }
 
 const PASTE_START = "\x1b[200~";
@@ -196,6 +209,8 @@ export const Editor: React.FC<EditorProps> = ({
   const preferredVisualCol = useRef<number | null>(null);
   const snappedFromCursorCol = useRef<number | null>(null);
   const lastWidth = useRef(width > 2 ? width - 1 : width);
+  /** Hướng nhảy ký tự đang chờ ký tự đích, hoặc null. */
+  const jumpMode = useRef<"forward" | "backward" | null>(null);
 
   const notifyChange = useCallback(
     (next: EditorState) => {
@@ -320,6 +335,83 @@ export const Editor: React.FC<EditorProps> = ({
     [pushUndo, setLines],
   );
 
+  /**
+   * Chèn một đoạn văn bản (một hoặc nhiều dòng) tại con trỏ, ATOMIC.
+   *
+   * Caller đã pushUndo trước đó, nên hàm này không push thêm snapshot: bản cũ
+   * gọi setLines (mặc định undo:false) cho paste một dòng, khiến paste không
+   * hoàn tác được, còn nhánh marker lại chèn giữa hai snapshot undo -> lệch state.
+   */
+  const insertTextAtomic = useCallback(
+    (text: string) => {
+      const current = stateRef.current;
+      const inserted = text.split("\n");
+      const line = current.lines[current.cursorLine] ?? "";
+      const before = line.slice(0, current.cursorCol);
+      const after = line.slice(current.cursorCol);
+
+      if (inserted.length === 1) {
+        const nextLines = [...current.lines];
+        nextLines[current.cursorLine] = before + text + after;
+        setLines(
+          { ...current, lines: nextLines, cursorCol: current.cursorCol + text.length },
+          { undo: false },
+        );
+        return;
+      }
+      const nextLines = [
+        ...current.lines.slice(0, current.cursorLine),
+        before + inserted[0]!,
+        ...inserted.slice(1, -1),
+        inserted[inserted.length - 1]! + after,
+        ...current.lines.slice(current.cursorLine + 1),
+      ];
+      setLines(
+        {
+          ...current,
+          lines: nextLines,
+          cursorLine: current.cursorLine + inserted.length - 1,
+          cursorCol: inserted[inserted.length - 1]!.length,
+        },
+        { undo: false },
+      );
+    },
+    [setLines],
+  );
+
+  /**
+   * Xóa một paste marker khỏi registry và ĐÁNH SỐ LẠI các marker còn lại.
+   *
+   * Không đổi số id thì sau khi xóa `[paste #1]` trong khi `[paste #2]` còn
+   * tồn tại, lần submit sau sẽ mở rộng đúng nội dung nhưng editor hiển thị id
+   * không khớp registry; xóa lần nữa cùng một marker sẽ không còn gì để xóa.
+   * Cách làm của pi-mono: dời id lớn hơn xuống 1 và viết lại marker trong text.
+   */
+  const removePasteMarker = useCallback(
+    (targetId: number) => {
+      const nextMap = new Map(pastesRef.current);
+      nextMap.delete(targetId);
+      const higher = [...nextMap.keys()].filter((id) => id > targetId).sort((a, b) => a - b);
+      for (const id of higher) {
+        nextMap.set(id - 1, nextMap.get(id)!);
+        nextMap.delete(id);
+      }
+      pastesRef.current = nextMap;
+      setPastes(nextMap);
+      setPasteCounter((c) => Math.max(0, c - 1));
+      const current = stateRef.current;
+      const renumbered = current.lines.map((line) =>
+        line.replace(PASTE_MARKER_REGEX, (full, idGroup, suffixGroup) => {
+          const id = Number(idGroup);
+          if (id <= targetId) return full;
+          return `[paste #${id - 1}${suffixGroup ?? ""}]`;
+        }),
+      );
+      setLines({ ...current, lines: renumbered }, { undo: false });
+    },
+    [setLines],
+  );
+
   const addNewLine = useCallback(() => {
     const current = stateRef.current;
     pushUndo(current);
@@ -343,9 +435,17 @@ export const Editor: React.FC<EditorProps> = ({
       const before = line.slice(0, current.cursorCol);
       const segs = segmentsOf(before);
       const remove = segs.at(-1)?.length ?? 1;
+      // Xóa trọn một paste marker thì phải dọn registry và đánh số lại, nếu không
+      // id còn trong text không còn khớp nội dung đã lưu (và marker bị xóa lần 2
+      // sẽ không tìm thấy gì để mở rộng khi submit).
+      const marker = PASTE_MARKER_SINGLE.exec(segs.at(-1) ?? "");
       const trimmed = before.slice(0, before.length - remove);
       const nextLines = [...current.lines];
       nextLines[current.cursorLine] = trimmed + line.slice(current.cursorCol);
+      if (marker) {
+        removePasteMarker(Number(marker[1]));
+        return;
+      }
       setLines({ ...current, lines: nextLines, cursorCol: current.cursorCol - remove });
       return;
     }
@@ -359,7 +459,7 @@ export const Editor: React.FC<EditorProps> = ({
       nextLines.splice(current.cursorLine, 1);
       setLines({ ...current, lines: nextLines, cursorLine: current.cursorLine - 1, cursorCol: prev.length });
     }
-  }, [pushUndo, setLines]);
+  }, [pushUndo, removePasteMarker, setLines]);
 
   const deleteToLineStart = useCallback(() => {
     const current = stateRef.current;
@@ -512,19 +612,138 @@ export const Editor: React.FC<EditorProps> = ({
     [history, historyIndex, historyDraft, pushUndo, setLines],
   );
 
-  const moveCursorVertical = useCallback(
-    (delta: number) => {
-      const current = stateRef.current;
-      const visual = buildVisualLineMap(lastWidth.current);
-      const currentVisual = findVisualLineAt(visual, current.cursorLine, current.cursorCol);
-      const target = currentVisual + delta;
-      if (target < 0 || target >= visual.length) return;
+  /** Di chuyển con trỏ về trước một từ (giữ nguyên dòng). */
+  const moveWordBackwards = useCallback(() => {
+    lastAction.current = null;
+    preferredVisualCol.current = null;
+    const current = stateRef.current;
+    const line = current.lines[current.cursorLine] ?? "";
+    if (current.cursorCol === 0) {
+      if (current.cursorLine > 0) {
+        const prevLen = (current.lines[current.cursorLine - 1] ?? "").length;
+        setLines({ ...current, cursorLine: current.cursorLine - 1, cursorCol: prevLen });
+      }
+      return;
+    }
+    setLines({ ...current, cursorCol: findWordBackward(line, current.cursorCol) });
+  }, [setLines]);
 
-      const curVL = visual[currentVisual]!;
-      const tgtVL = visual[target]!;
-      const isLastSource = currentVisual === visual.length - 1 || visual[currentVisual + 1]?.logicalLine !== curVL.logicalLine;
+  /** Di chuyển con trỏ tới trước một từ (giữ nguyên dòng). */
+  const moveWordForwards = useCallback(() => {
+    lastAction.current = null;
+    preferredVisualCol.current = null;
+    const current = stateRef.current;
+    const line = current.lines[current.cursorLine] ?? "";
+    if (current.cursorCol >= line.length) {
+      if (current.cursorLine < current.lines.length - 1) {
+        setLines({ ...current, cursorLine: current.cursorLine + 1, cursorCol: 0 });
+      }
+      return;
+    }
+    setLines({ ...current, cursorCol: findWordForward(line, current.cursorCol) });
+  }, [setLines]);
+
+  /** Xóa ký tự ngay sau con trỏ (Delete), gộp dòng khi ở cuối dòng. */
+  const handleForwardDelete = useCallback(() => {
+    lastAction.current = null;
+    const current = stateRef.current;
+    const line = current.lines[current.cursorLine] ?? "";
+    if (current.cursorCol < line.length) {
+      pushUndo(current);
+      const segs = segmentsOf(line.slice(current.cursorCol));
+      const remove = segs[0]?.length ?? 1;
+      const nextLines = [...current.lines];
+      nextLines[current.cursorLine] = line.slice(0, current.cursorCol) + line.slice(current.cursorCol + remove);
+      setLines({ ...current, lines: nextLines });
+      return;
+    }
+    if (current.cursorLine < current.lines.length - 1) {
+      pushUndo(current);
+      const next = current.lines[current.cursorLine + 1] ?? "";
+      const nextLines = [...current.lines];
+      nextLines[current.cursorLine] = line + next;
+      nextLines.splice(current.cursorLine + 1, 1);
+      setLines({ ...current, lines: nextLines });
+    }
+  }, [pushUndo, setLines]);
+
+  /** Xóa về trước một từ (Ctrl+W), gộp dòng khi ở đầu dòng. */
+  const deleteWordForward = useCallback(() => {
+    lastAction.current = null;
+    const current = stateRef.current;
+    const line = current.lines[current.cursorLine] ?? "";
+    if (current.cursorCol >= line.length) {
+      if (current.cursorLine < current.lines.length - 1) {
+        pushUndo(current);
+        killRing.current.push("\n", { prepend: false, accumulate: lastAction.current === "kill" });
+        lastAction.current = "kill";
+        const next = current.lines[current.cursorLine + 1] ?? "";
+        const nextLines = [...current.lines];
+        nextLines[current.cursorLine] = line + next;
+        nextLines.splice(current.cursorLine + 1, 1);
+        setLines({ ...current, lines: nextLines });
+      }
+      return;
+    }
+    pushUndo(current);
+    const wasKill = lastAction.current === "kill";
+    const oldCol = current.cursorCol;
+    const target = findWordForward(line, oldCol);
+    killRing.current.push(line.slice(oldCol, target), { prepend: false, accumulate: wasKill });
+    lastAction.current = "kill";
+    const nextLines = [...current.lines];
+    nextLines[current.cursorLine] = line.slice(0, oldCol) + line.slice(target);
+    setLines({ ...current, lines: nextLines });
+  }, [pushUndo, setLines]);
+
+  /** Cuộn một trang (30% chiều cao terminal, tối thiểu 5 dòng). */
+  const pageScroll = useCallback((direction: -1 | 1) => {
+    lastAction.current = null;
+    const visual = buildVisualLineMap(lastWidth.current);
+    const currentVisual = findVisualLineAt(visual, stateRef.current.cursorLine, stateRef.current.cursorCol);
+    const pageSize = Math.max(5, Math.floor((process.stdout.rows || 24) * 0.3));
+    const target = Math.max(0, Math.min(visual.length - 1, currentVisual + direction * pageSize));
+    if (target === currentVisual) return;
+    // Tái dùng logic di chuyển dọc (đã khai báo phía dưới) để giữ đúng "cột dính".
+    moveCursorVerticalRef.current(target - currentVisual);
+  }, [buildVisualLineMap, findVisualLineAt]);
+
+  /** Nhảy tới ký tự chỉ định theo hướng (Ctrl+] / Ctrl+Alt+]). */
+  const jumpToChar = useCallback((char: string, direction: "forward" | "backward") => {
+    lastAction.current = null;
+    const current = stateRef.current;
+    const isForward = direction === "forward";
+    const end = isForward ? current.lines.length : -1;
+    const step = isForward ? 1 : -1;
+    for (let lineIdx = current.cursorLine; lineIdx !== end; lineIdx += step) {
+      const line = current.lines[lineIdx] ?? "";
+      const isCurrent = lineIdx === current.cursorLine;
+      const from = isCurrent ? (isForward ? current.cursorCol + 1 : current.cursorCol - 1) : undefined;
+      const idx = isForward ? line.indexOf(char, from) : line.lastIndexOf(char, from);
+      if (idx !== -1) {
+        setLines({ ...current, cursorLine: lineIdx, cursorCol: idx });
+        return;
+      }
+    }
+  }, [setLines]);
+
+  /**
+   * Di chuyển con trỏ tới một dòng hiển thị mục tiêu, áp bảng quyết định
+   * "cột dính" (preferredVisualCol) để di chuyển lên/xuống qua nhiều dòng wrap
+   * không nhảy cột. Dùng chung cho mũi tên dọc và cuộn trang.
+   */
+  const moveToVisualLine = useCallback(
+    (visual: VisualLine[], currentVisual: number, targetVisual: number) => {
+      const current = stateRef.current;
+      const curVL = visual[currentVisual];
+      const tgtVL = visual[targetVisual];
+      if (!curVL || !tgtVL) return;
+
+      const isLastSource =
+        currentVisual === visual.length - 1 || visual[currentVisual + 1]?.logicalLine !== curVL.logicalLine;
       const sourceMax = isLastSource ? curVL.length : Math.max(0, curVL.length - 1);
-      const isLastTarget = target === visual.length - 1 || visual[target + 1]?.logicalLine !== tgtVL.logicalLine;
+      const isLastTarget =
+        targetVisual === visual.length - 1 || visual[targetVisual + 1]?.logicalLine !== tgtVL.logicalLine;
       const targetMax = isLastTarget ? tgtVL.length : Math.max(0, tgtVL.length - 1);
 
       const currentVisualCol = current.cursorCol - curVL.startCol;
@@ -566,8 +785,24 @@ export const Editor: React.FC<EditorProps> = ({
       lastAction.current = null;
       setLines({ ...current, cursorLine: tgtVL.logicalLine, cursorCol: col });
     },
-    [buildVisualLineMap, findVisualLineAt, setLines],
+    [setLines],
   );
+
+  const moveCursorVertical = useCallback(
+    (delta: number) => {
+      const current = stateRef.current;
+      const visual = buildVisualLineMap(lastWidth.current);
+      const currentVisual = findVisualLineAt(visual, current.cursorLine, current.cursorCol);
+      const target = currentVisual + delta;
+      if (target < 0 || target >= visual.length) return;
+      moveToVisualLine(visual, currentVisual, target);
+    },
+    [buildVisualLineMap, findVisualLineAt, moveToVisualLine],
+  );
+  // pageScroll khai báo trước moveCursorVertical nên giữ qua ref để tránh
+  // phụ thuộc vòng giữa hai useCallback.
+  const moveCursorVerticalRef = useRef(moveCursorVertical);
+  moveCursorVerticalRef.current = moveCursorVertical;
 
   const submit = useCallback(() => {
     if (disableSubmit) return;
@@ -601,11 +836,21 @@ export const Editor: React.FC<EditorProps> = ({
   /** Đánh dấu paste lớn, chèn thay vì dán toàn bộ. */
   const handlePaste = useCallback(
     (pasted: string) => {
-      const current = stateRef.current;
-      pushUndo(current);
+      pushUndo(stateRef.current);
       lastAction.current = null;
 
-      const clean = pasted.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\t/g, "    ");
+      // Chuẩn hóa: xuống dòng, tab -> 4 space, và bỏ ký tự điều khiển trừ \n.
+      let clean = pasted
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .replace(/\t/g, "    ");
+      // Dán đường dẫn thì thêm một space nếu ký tự trước con trỏ là ký tự từ,
+      // để path không dính vào chữ (pi-mono: readability cho file attachment).
+      if (/^[/~.]/.test(clean)) {
+        const line = stateRef.current.lines[stateRef.current.cursorLine] ?? "";
+        const before = stateRef.current.cursorCol > 0 ? line[stateRef.current.cursorCol - 1] : "";
+        if (before && /\w/.test(before)) clean = ` ${clean}`;
+      }
       const lines = clean.split("\n");
       const totalChars = clean.length;
 
@@ -616,41 +861,38 @@ export const Editor: React.FC<EditorProps> = ({
         pastesRef.current = nextMap;
         setPastes(nextMap);
         setPasteCounter(id);
-        const marker = lines.length > PASTE_MAX_LINES ? `[paste #${id} +${lines.length} lines]` : `[paste #${id} ${totalChars} chars]`;
-        insertCharacter(marker);
+        const marker =
+          lines.length > PASTE_MAX_LINES
+            ? `[paste #${id} +${lines.length} lines]`
+            : `[paste #${id} ${totalChars} chars]`;
+        insertTextAtomic(marker);
         return;
       }
-
-      // Paste nhỏ: chèn trực tiếp, hỗ trợ nhiều dòng.
-      const before = current.lines[current.cursorLine]?.slice(0, current.cursorCol) ?? "";
-      const after = current.lines[current.cursorLine]?.slice(current.cursorCol) ?? "";
-      if (lines.length === 1) {
-        const nextLines = [...current.lines];
-        nextLines[current.cursorLine] = before + clean + after;
-        setLines({ ...current, lines: nextLines, cursorCol: current.cursorCol + clean.length });
-        return;
-      }
-      const nextLines = [
-        ...current.lines.slice(0, current.cursorLine),
-        before + lines[0]!,
-        ...lines.slice(1, -1),
-        lines[lines.length - 1]! + after,
-        ...current.lines.slice(current.cursorLine + 1),
-      ];
-      setLines({
-        ...current,
-        lines: nextLines,
-        cursorLine: current.cursorLine + lines.length - 1,
-        cursorCol: lines[lines.length - 1]!.length,
-      });
+      insertTextAtomic(clean);
     },
-    [insertCharacter, pushUndo, setLines],
+    [insertTextAtomic, pushUndo],
   );
 
   const kb = getKeybindings();
 
   useInput((data, key) => {
     if (key.ctrl && data === "\u0003") return;
+
+    // Chờ ký tự đích của lệnh nhảy (Ctrl+]).
+    if (jumpMode.current !== null) {
+      if (kb.matches(data, "tui.editor.jumpForward") || kb.matches(data, "tui.editor.jumpBackward")) {
+        jumpMode.current = null;
+        return;
+      }
+      const printable = decodePrintableKey(data) ?? (data.charCodeAt(0) >= 32 ? data : undefined);
+      if (printable !== undefined) {
+        const direction = jumpMode.current;
+        jumpMode.current = null;
+        jumpToChar(printable, direction);
+        return;
+      }
+      jumpMode.current = null;
+    }
 
     if (kb.matches(data, "tui.input.submit")) {
       const line = stateRef.current.lines[stateRef.current.cursorLine] ?? "";
@@ -667,8 +909,12 @@ export const Editor: React.FC<EditorProps> = ({
       addNewLine();
       return;
     }
-    if (kb.matches(data, "tui.editor.deleteCharBackward") || (key.backspace && !key.ctrl)) {
+    if (kb.matches(data, "tui.editor.deleteCharBackward") || matchesKey(data, "shift+backspace")) {
       handleBackspace();
+      return;
+    }
+    if (kb.matches(data, "tui.editor.deleteCharForward") || matchesKey(data, "shift+delete")) {
+      handleForwardDelete();
       return;
     }
     if (kb.matches(data, "tui.editor.deleteToLineStart")) {
@@ -681,6 +927,10 @@ export const Editor: React.FC<EditorProps> = ({
     }
     if (kb.matches(data, "tui.editor.deleteWordBackward")) {
       deleteWordBackwards();
+      return;
+    }
+    if (kb.matches(data, "tui.editor.deleteWordForward")) {
+      deleteWordForward();
       return;
     }
     if (kb.matches(data, "tui.editor.yank")) {
@@ -724,6 +974,30 @@ export const Editor: React.FC<EditorProps> = ({
         return;
       }
       moveCursorVertical(1);
+      return;
+    }
+    if (kb.matches(data, "tui.editor.cursorWordLeft")) {
+      moveWordBackwards();
+      return;
+    }
+    if (kb.matches(data, "tui.editor.cursorWordRight")) {
+      moveWordForwards();
+      return;
+    }
+    if (kb.matches(data, "tui.editor.pageUp")) {
+      pageScroll(-1);
+      return;
+    }
+    if (kb.matches(data, "tui.editor.pageDown")) {
+      pageScroll(1);
+      return;
+    }
+    if (kb.matches(data, "tui.editor.jumpForward")) {
+      jumpMode.current = "forward";
+      return;
+    }
+    if (kb.matches(data, "tui.editor.jumpBackward")) {
+      jumpMode.current = "backward";
       return;
     }
     if (kb.matches(data, "tui.editor.cursorLeft")) {
@@ -780,8 +1054,11 @@ export const Editor: React.FC<EditorProps> = ({
   });
 
   // Tự cuộn để con trỏ luôn trong khung nhìn.
+  // Số dòng hiển thị của editor = 30% chiều cao terminal, tối thiểu 5 — đúng như
+  // pi-mono. Bản cũ hardcode 24 rows nên terminal cao cũng chỉ hiện 7 dòng.
+  const terminalRows = useTerminalRows();
+  const MAX_VISIBLE = Math.max(5, Math.floor(terminalRows * 0.3));
   const layout = layoutText(Math.max(1, lastWidth.current));
-  const MAX_VISIBLE = Math.max(5, Math.floor(24 * 0.3));
   let cursorLineIndex = layout.findIndex((l) => l.hasCursor);
   if (cursorLineIndex === -1) cursorLineIndex = 0;
 

@@ -28,17 +28,54 @@ export interface HStackProps {
   align?: "start" | "center" | "end";
 }
 
-/** Bề rộng hiển thị của dòng (bỏ qua ANSI). */
-function visualWidth(line: string): number {
-  return line.replace(/\x1b\[[0-9;]*m/g, "").length;
-}
+/**
+ * Bề rộng hiển thị của dòng.
+ *
+ * Regex cũ chỉ bỏ SGR (\x1b[...m) nên hyperlink OSC 8, cursor marker APC và
+ * escape ảnh vẫn bị đo là "ký tự nhìn thấy", làm mọi phép tính bề rộng của
+ * HStack lệch — đúng thứ mà visibleWidth() của tầng core loại bỏ.
+ */
+import { visibleWidth, stripTerminalSequences } from "../core/index.js";
 
-/** Ghép hai đoạn ở cùng một dòng theo cột. */
-function composite(base: string, overlay: string, col: number, total: number): string {
-  const plainBase = base.replace(/\x1b\[[0-9;]*m/g, "");
-  const before = plainBase.slice(0, col).padEnd(col, " ");
-  const after = plainBase.slice(col).padEnd(Math.max(0, total - col), " ");
-  return `${before}${overlay}${after}`;
+/** Cắt một đoạn theo CỘT HIỂN THỊ, rồi đệm cho đủ bề rộng. */
+function sliceByColumns(line: string, startCol: number, length: number): string {
+  if (length <= 0) return "";
+  let out = "";
+  let used = 0;
+  let col = 0;
+  let i = 0;
+  while (i < line.length) {
+    const code = line.charCodeAt(i);
+    if (code === 0x1b) {
+      // Nuốt escape (SGR/OSC/APC) — không tốn cột.
+      let j = i + 1;
+      const next = line[j];
+      if (next === "[") {
+        while (j < line.length && !"mGKHJ".includes(line[j]!)) j++;
+        j = Math.min(line.length, j + 1);
+      } else if (next === "]" || next === "_") {
+        while (j < line.length && line[j] !== "\x07" && !(line[j] === "\x1b" && line[j + 1] === "\\")) j++;
+        if (line[j] === "\x07") j += 1;
+        else j = Math.min(line.length, j + 2);
+      } else {
+        j = i + 1;
+      }
+      if (col >= startCol) out += line.slice(i, j);
+      i = j;
+      continue;
+    }
+    // Một grapheme.
+    const seg = [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(line.slice(i))][0]?.segment ?? line[i]!;
+    const w = visibleWidth(seg);
+    if (col >= startCol && col < startCol + length) {
+      out += seg;
+      used += w;
+    }
+    col += w;
+    i += seg.length;
+    if (col >= startCol + length) break;
+  }
+  return out;
 }
 
 export const HStack: React.FC<HStackProps> = ({
@@ -48,7 +85,7 @@ export const HStack: React.FC<HStackProps> = ({
   align = "center",
 }) => {
   const intrinsic = entries.map((entry) =>
-    entry.basis ?? Math.max(0, ...entry.lines.map(visualWidth)),
+    entry.basis ?? Math.max(0, ...entry.lines.map((l) => visibleWidth(l))),
   );
   const available = Math.max(0, width - Math.max(0, entries.length - 1) * gap);
   const intrinsicTotal = intrinsic.reduce((sum, w) => sum + w, 0);
@@ -86,7 +123,12 @@ export const HStack: React.FC<HStackProps> = ({
     entry.lines.forEach((line, row) => {
       const target = row + offset;
       if (target < 0 || target >= height) return;
-      out[target] = composite(out[target] ?? "", line.padEnd(childWidth, " "), x, width);
+      // Ghép theo CỘT HIỂN THỊ thay vì slice theo UTF-16 unit: chuỗi chứa emoji
+      // hay CJK bị lệch cột nếu cắt theo code unit.
+      const before = sliceByColumns(out[target] ?? "", 0, x).padEnd(x, " ");
+      const cell = sliceByColumns(line, 0, childWidth).padEnd(childWidth, " ");
+      const after = sliceByColumns(out[target] ?? "", x + childWidth, Math.max(0, width - x - childWidth));
+      out[target] = `${before}${cell}${after}`;
     });
     x += childWidth + gap;
   });

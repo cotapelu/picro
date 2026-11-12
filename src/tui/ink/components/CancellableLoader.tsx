@@ -4,7 +4,7 @@
 //   - Escape gọi onAbort và abort signal
 // Port sang Ink TSX, khong copy code truc iep.
 
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useImperativeHandle, useRef } from "react";
 import { Loader } from "./Loader.js";
 import { matchesKey } from "../core/Keys.js";
 
@@ -15,22 +15,40 @@ export interface CancellableLoaderProps {
   onAbort?: () => void;
 }
 
-export const CancellableLoader: React.FC<CancellableLoaderProps> = ({ message, frames, intervalMs, onAbort }) => {
+/** Handle để cha bấm Escape / hủy loader. */
+export interface CancellableLoaderHandle {
+  cancel(): void;
+  readonly aborted: boolean;
+}
+
+export const CancellableLoader = React.forwardRef<
+  CancellableLoaderHandle,
+  CancellableLoaderProps
+>(({ message, frames, intervalMs, onAbort }, ref) => {
   const controller = useRef(new AbortController());
 
-  useEffect(() => () => controller.current.abort(), []);
+  // Hủy signal khi unmount để không để lại promise treo.
+  useEffect(
+    () => () => {
+      controller.current.abort();
+    },
+    [],
+  );
 
-  // Escape là phím cấp cao nhất; component nhận useInput sẽ chuyển tiếp vào đây.
   const cancel = useCallback(() => {
+    if (controller.current.signal.aborted) return;
     controller.current.abort();
     onAbort?.();
   }, [onAbort]);
 
-  const isCancelled = (data: string): boolean => matchesKey(data, "escape");
-  (CancellableLoader as unknown as { cancelLast?: () => void }).cancelLast = () => {
-    if (controller.current.signal.aborted) cancel();
-  };
-  void isCancelled;
+  useImperativeHandle(ref, () => ({ cancel, get aborted() { return controller.current.signal.aborted; } }), [cancel]);
 
   return <Loader message={message} frames={frames} intervalMs={intervalMs} />;
-};
+});
+
+CancellableLoader.displayName = "CancellableLoader";
+
+/** Escape có được bấm không (dùng cho loader hủy được). */
+export function isCancelKey(data: string): boolean {
+  return matchesKey(data, "escape");
+}

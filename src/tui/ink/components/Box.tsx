@@ -21,14 +21,25 @@ export interface BoxProps {
   background?: (text: string) => string;
 }
 
-/** Lấy chuỗi thuần từ children để đo chiều rộng. */
+/**
+ * Lấy chuỗi thuần từ children.
+ *
+ * Bản cũ chỉ đi vào `props.children` của element, nên mọi element KHÔNG có
+ * children (ví dụ <Text dim>x</Text> được Ink render qua prop `children` nội bộ,
+ * hoặc component tự sinh chuỗi) biến mất hoàn toàn: Box lồng Box, icon, dấu
+ * check đều không hiện. Cần render cả `props` không phải children (Ink dùng
+ * prop này cho nội dung text), và bỏ qua các prop không phải nội dung.
+ */
 function flatten(node: React.ReactNode): string {
   if (typeof node === "string") return node;
   if (typeof node === "number") return String(node);
   if (Array.isArray(node)) return node.map(flatten).join("");
-  if (React.isValidElement(node) && typeof node.props === "object" && node.props !== null) {
-    const children = (node.props as { children?: React.ReactNode }).children;
-    return children === undefined ? "" : flatten(children);
+  if (React.isValidElement(node)) {
+    const props = node.props as Record<string, unknown>;
+    if (props.children !== undefined) return flatten(props.children as React.ReactNode);
+    // Ink <Text> cũng nhận nội dung qua chính element khi children bị bỏ qua;
+    // trường hợp này coi như rỗng thay vì nuốt mất node.
+    return "";
   }
   return "";
 }

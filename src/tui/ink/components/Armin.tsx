@@ -7,7 +7,7 @@
 //   - Cache dòng theo chiều rộng; invalidate xóa cache
 // Port sang Ink TSX, khon copy code truc iep.
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Text } from "ink";
 import { getTheme } from "../theme/index.js";
 
@@ -205,8 +205,16 @@ export const Armin: React.FC<{ width?: number }> = ({ width = 80 }) => {
   const effect = useMemo(() => EFFECTS[Math.floor(Math.random() * EFFECTS.length)], []);
   const final = useMemo(() => buildFinalGrid(), []);
   const current = useRef<string[][]>(emptyGrid());
-  const state = useRef<EffectState>({} as EffectState);
-  {
+  const state = useRef<EffectState | null>(null);
+
+  /**
+   * Khởi tạo trạng thái hiệu ứng MỘT LẦN (lazy init qua hàm).
+   *
+   * Bản cũ khởi tạo trong thân component (một bare block chạy mỗi render), nên
+   * `state.current = s` reset toàn bộ tiến trình hoạt hình ở mỗi frame: typewriter
+   * không bao giờ vẽ quá 3 ô, fade/dissolve không tiến thêm, crt liên tục co lại.
+   */
+  const initialState = useCallback((): EffectState => {
     const s: EffectState = {};
     switch (effect) {
       case "typewriter":
@@ -233,18 +241,24 @@ export const Armin: React.FC<{ width?: number }> = ({ width = 80 }) => {
         s.phase = 0;
         break;
     }
-    state.current = s;
-  }
+    return s;
+  }, [effect]);
+
+  const getState = useCallback((): EffectState => {
+    if (state.current === null) state.current = initialState();
+    // Non-null sau lazy init; TypeScript không suy được qua nên khẳng định tại đây.
+    return state.current as EffectState;
+  }, [initialState]);
 
   useEffect(() => {
     const fps = effect === "glitch" ? 60 : 30;
     const timer = setInterval(() => {
-      const done = tickEffect(effect, state.current, current.current, final);
+      const done = tickEffect(effect, getState(), current.current, final);
       setVersion((v) => v + 1);
       if (done) clearInterval(timer);
     }, 1000 / fps);
     return () => clearInterval(timer);
-  }, [effect, final]);
+  }, [effect, final, getState]);
 
   const grid = current.current;
   const available = Math.max(0, width - 1);
@@ -263,7 +277,10 @@ export const Armin: React.FC<{ width?: number }> = ({ width = 80 }) => {
       {"\n "}
       {t.fg("accent", message)}
       {" ".repeat(Math.max(0, width - 1 - message.length))}
-      {void version}
+      {/* version chỉ là bộ đếm buộc React re-render mỗi frame; giá trị của nó
+          không hiển thị. Bản cũ viết `{void version}` — biểu thức không sinh
+          output nào nên không đảm bảo React coi là dependency đổi. */}
+      <span hidden>{version}</span>
     </Text>
   );
 };
