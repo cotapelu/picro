@@ -89,6 +89,16 @@ export class ProcessTerminal implements Terminal {
   }
 
   start(onInput: (data: string) => void, onResize: () => void): void {
+    // Guard against a double start: it used to attach a second stdin listener and
+    // a second StdinBuffer, so every keystroke was processed twice (and the
+    // keyboard-protocol query was re-sent, re-enabling modes the terminal had
+    // already answered).
+    if (this.stdinDataHandler) {
+      this.inputHandler = onInput;
+      this.resizeHandler = onResize;
+      return;
+    }
+
     this.inputHandler = onInput;
     this.resizeHandler = onResize;
 
