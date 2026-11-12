@@ -256,10 +256,20 @@ export async function executeBash(
 
   // If truncated, keep temp file path
   if (truncated && tempFilePath) {
-    // Trim output to max size/lines
-    const lines = output.split('\n');
-    const truncatedLines = lines.slice(0, maxLines);
-    const truncatedOutput = truncatedLines.join('\n');
+    // Trim output to max size/lines, giữ phần CUỐI (tail).
+    // Người dùng cần xem lỗi và kết quả cuối của lệnh; bản cũ giữ đầu nên phần
+    // có ích nhất (exit status, error, kết quả) lại bị cắt mất.
+    // Cắt theo dòng trước, rồi cắt theo byte để không bao giờ vượt maxBytes —
+    // bản cũ chỉ cắt theo dòng nên output 5000 dòng ngắn vẫn vượt maxBytes.
+    let truncatedOutput = output.split('\n').slice(-maxLines).join('\n');
+    while (Buffer.byteLength(truncatedOutput, 'utf8') > maxBytes) {
+      const firstBreak = truncatedOutput.indexOf('\n');
+      if (firstBreak === -1) {
+        truncatedOutput = truncatedOutput.slice(0, maxBytes);
+        break;
+      }
+      truncatedOutput = truncatedOutput.slice(firstBreak + 1);
+    }
     return {
       output: truncatedOutput,
       stderr: stderrString,

@@ -11,7 +11,7 @@
 
 import { accessSync, constants } from 'node:fs';
 import * as os from 'node:os';
-import { isAbsolute, resolve as resolvePath } from 'node:path';
+import { isAbsolute, relative, resolve as resolvePath, sep } from 'node:path';
 
 // Unicode normalization for macOS screenshot paths
 const UNICODE_SPACES = /[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g;
@@ -131,6 +131,11 @@ export function resolveReadPath(filePath: string, cwd: string): string {
 export function validatePathWithinBase(resolvedPath: string, baseDir: string): boolean {
   const normalizedResolved = resolvePath(resolvedPath);
   const normalizedBase = resolvePath(baseDir);
-  // Ensure the resolved path starts with the base directory
-  return normalizedResolved === normalizedBase || normalizedResolved.startsWith(normalizedBase + '/');
+  // Bản cũ so chuỗi prefix với `base + '/'`, sai trên Windows (separator là \)
+  // và khi base là gốc "/" (thành "//" nên không path nào khớp). relative()
+  // xử lý cả hai, và kết quả bắt đầu bằng ".." (hoặc là path tuyệt đối ở
+  // Windows khi khác ổ đĩa) là dấu hiệu nằm ngoài base.
+  if (normalizedResolved === normalizedBase) return true;
+  const rel = relative(normalizedBase, normalizedResolved);
+  return rel.length > 0 && !rel.startsWith(`..${sep}`) && rel !== '..' && !isAbsolute(rel);
 }
