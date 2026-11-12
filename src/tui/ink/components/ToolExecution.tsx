@@ -7,7 +7,7 @@
 //   - Thu gọn hiện số dòng xem trước, Ctrl+T để mở rộng
 // Port sang Ink TSX, khon copy code truc iep.
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text } from "ink";
 import { getTheme } from "../theme/index.js";
 import { DynamicBorder } from "./DynamicBorder.js";
@@ -116,17 +116,29 @@ export const ToolExecution: React.FC<ToolExecutionProps> = ({
   };
 
   // Preview đầu ra khi thu gọn.
+  //
+  // The instance is stable and the text is pushed through invalidate(): building
+  // a new VisualLinePreview per output change (as useMemo([outputText]) did)
+  // meant its width cache could never hit, so the entire output was re-wrapped on
+  // every streamed chunk - O(n^2) over a long run.
   const outputText = textOf(result);
   const preview = useMemo(
     () =>
       new VisualLinePreview({
-        text: outputText,
+        text: "",
         maxVisualLines: FALLBACK_PREVIEW_LINES,
         keep: "end",
         formatHint: (hidden) => t.fg("muted", `... (${hidden} dòng nữa, Ctrl+T để mở rộng)`),
       }),
-    [outputText, t],
+    [t],
   );
+  const lastPreviewText = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastPreviewText.current === outputText) return;
+    lastPreviewText.current = outputText;
+    (preview as unknown as { options: { text: string } }).options.text = outputText;
+    preview.invalidate();
+  }, [preview, outputText]);
 
   const callBody = (() => {
     if (renderers?.renderCall) {

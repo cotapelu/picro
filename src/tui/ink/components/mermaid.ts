@@ -54,41 +54,44 @@ export function createMermaidMarkdownTransformer(options: CreateMermaidTransform
     if (context.isStreaming && mode !== "streaming") return markdown;
     if (!options.renderer) return markdown;
 
-    // Tách khối mã mermaid ở cấp cao nhất.
+    // Tách khối mã mermaid ở cấp cao cùng.
+    //
+    // split(/```/) yields [before, inside1, between1, inside2, between2, ...]:
+    // even indices are outside any fence, odd indices are fence content. The old
+    // code toggled a boolean and re-emitted only the OPENING fence of a
+    // non-mermaid block, so that block's closing fence was never written and
+    // everything after it rendered as code (the mermaid diagram also swallowed
+    // the following separator). Parity makes the structure explicit, and every
+    // consumed fence is re-emitted.
     const blocks = markdown.split(/```/);
     const out: string[] = [];
-    let inFence = false;
-    for (const block of blocks) {
-      if (!inFence) {
+    blocks.forEach((block, index) => {
+      const insideFence = index % 2 === 1;
+      if (!insideFence) {
         out.push(block);
-        inFence = true;
-        continue;
+        return;
       }
       const firstLine = block.split("\n", 1)[0] ?? "";
       const isMermaid = firstLine.trim().split(/\s+/)[0]?.toLowerCase() === "mermaid";
       if (!isMermaid) {
-        out.push("```", block);
-        inFence = false;
-        continue;
+        out.push("```", block, "```");
+        return;
       }
       const source = block.slice(firstLine.length).replace(/^\n/, "");
-      const art = options.renderer.render(source);
+      const art = options.renderer!.render(source);
       if (!art || art.width > context.availableWidth) {
-        out.push("```", block);
-        inFence = false;
-        continue;
+        out.push("```", block, "```");
+        return;
       }
       if (!context.isStreaming && art.warnings.length > 0) {
         const suffix = art.warnings.length > 1 ? ` (+${art.warnings.length - 1} more)` : "";
         const warning = `Sơ đồ không render: ${art.warnings[0]}${suffix}`;
         out.push("```", block, "```", "\n", codeSpan(warning), "  \n");
-        inFence = false;
-        continue;
+        return;
       }
       const lines = art.plain;
       out.push(`${lines.map(codeSpan).join("  \n")}\n`);
-      inFence = false;
-    }
+    });
     return out.join("");
   };
 }
