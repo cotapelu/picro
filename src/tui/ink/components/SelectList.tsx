@@ -9,6 +9,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { theme, fg, bg } from "../theme/index.js";
+import { truncateToWidth } from "../core/index.js";
 
 export interface SelectItem {
   value: string;
@@ -37,10 +38,11 @@ const MIN_DESC_WIDTH = 10;
 
 /** Cắt chuỗi theo số cột hiển thị, bỏ qua ANSI. */
 function clip(text: string, width: number): string {
-  if (width <= 0) return "";
-  const plain = text.replace(/\x1b\[[0-9;]*m/g, "");
-  if (plain.length <= width) return text;
-  return text.slice(0, Math.max(0, width - 1));
+  // Delegates to the core ANSI-aware truncation. The local version compared the
+  // width of the ANSI-stripped text but sliced the RAW string, so escape bytes
+  // consumed the budget (labels were cut far too early) and the slice could land
+  // inside an escape sequence, emitting a broken control code.
+  return truncateToWidth(text, Math.max(0, width), "", false);
 }
 
 /** Bề rộng cột nhãn: vừa với nhãn dài nhất, kẹp trong [min,max]. */
@@ -74,7 +76,12 @@ export const SelectList: React.FC<SelectListProps> = ({
   }, [selected, items.length]);
 
   useEffect(() => {
-    onHighlight?.(items[selected]);
+    // Only report a highlight when there is an item: with an empty list this used
+    // to call onHighlight(undefined), and callers that immediately read
+    // `item.value` (SelectSubmenu) threw a TypeError as soon as a search query
+    // filtered everything out.
+    const highlighted = items[selected];
+    if (highlighted) onHighlight?.(highlighted);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected, items]);
 

@@ -6,7 +6,7 @@
 //   - Cửa sổ cuộn cân trên mục chọn, chỉ báo (i/n)
 // Port sang Ink TSX, khon copy code truc iep.
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { theme, fg, bg } from "../theme/index.js";
 import { fuzzyFilter } from "../core/Fuzzy.js";
@@ -15,6 +15,8 @@ import { getKeybindings } from "../core/Keybindings.js";
 import type { SelectItem } from "./SelectList.js";
 import { SelectList } from "./SelectList.js";
 import { TextInput } from "./TextInput.js";
+import { nextCycleValue } from "./settings-cycle.js";
+import { selectWindow } from "../core/select-window.js";
 
 export interface SettingItem {
   /** Định danh cài đặt. */
@@ -70,7 +72,6 @@ export const SettingsList: React.FC<SettingsListProps> = ({
   width = 80,
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [filtered, setFiltered] = useState(items);
   const [search, setSearch] = useState("");
   const [submenuValue, setSubmenuValue] = useState<string | null>(null);
   const kb = getKeybindings();
@@ -80,9 +81,23 @@ export const SettingsList: React.FC<SettingsListProps> = ({
     [items],
   );
 
-  const display = filtered;
-  const clamped = Math.max(0, Math.min(selectedIndex, display.length - 1));
+  // Derived, not stored: the list used to be snapshotted into state once, so a
+  // parent that re-rendered with new items (a changed value, a settings reload)
+  // was ignored and the UI kept showing stale rows and stale values.
+  const display = useMemo(() => {
+    const query = search.trim();
+    if (!query) return items;
+    return fuzzyFilter(items, query, (item) => `${item.label} ${item.description ?? ""}`);
+  }, [items, search]);
+
+  const window = selectWindow(selectedIndex, display.length, maxVisible);
+  const clamped = window.clamped;
   const selected = display[clamped];
+
+  // Keep the stored index inside the current list (see core/select-window.ts).
+  useEffect(() => {
+    if (clamped >= 0 && clamped !== selectedIndex) setSelectedIndex(clamped);
+  }, [clamped, selectedIndex]);
 
   useInput((data, key) => {
     if (submenuValue !== null) {
@@ -90,17 +105,17 @@ export const SettingsList: React.FC<SettingsListProps> = ({
       return;
     }
     if (kb.matches(data, "tui.select.up")) {
-      setSelectedIndex((i) => (i === 0 ? display.length - 1 : i - 1));
+      setSelectedIndex((i) => (i <= 0 ? Math.max(0, display.length - 1) : i - 1));
       return;
     }
     if (kb.matches(data, "tui.select.down")) {
-      setSelectedIndex((i) => (i === display.length - 1 ? 0 : i + 1));
+      setSelectedIndex((i) => (i >= display.length - 1 ? 0 : i + 1));
       return;
     }
     if (matchesKey(data, "escape")) {
+      // Clearing the query is enough: the list is derived from it.
       if (search) {
         setSearch("");
-        setFiltered(items);
         return;
       }
       onCancel();
@@ -110,8 +125,7 @@ export const SettingsList: React.FC<SettingsListProps> = ({
       const item = display[clamped];
       if (!item) return;
       if (item.values && item.values.length > 0) {
-        const idx = item.values.indexOf(item.currentValue);
-        onChange(item.id, item.values[(idx + 1) % item.values.length]!);
+        onChange(item.id, nextCycleValue(item.values, item.currentValue));
         return;
       }
       if (item.submenu) {
@@ -121,24 +135,14 @@ export const SettingsList: React.FC<SettingsListProps> = ({
       return;
     }
     if (enableSearch && data.length >= 1 && !key.ctrl && data.charCodeAt(0) >= 32) {
-      const next = search + data;
-      setSearch(next);
-      setFiltered(fuzzyFilter(items, next, (item) => `${item.label} ${item.description ?? ""}`));
-      setSelectedIndex(0);
+      setSearch(search + data);
     }
     if (enableSearch && key.backspace) {
-      const next = search.slice(0, -1);
-      setSearch(next);
-      setFiltered(next.trim() ? fuzzyFilter(items, next, (item) => item.label) : items);
-      setSelectedIndex(0);
+      setSearch(search.slice(0, -1));
     }
   });
 
-  const start = Math.max(
-    0,
-    Math.min(clamped - Math.floor(maxVisible / 2), display.length - maxVisible),
-  );
-  const end = Math.min(start + maxVisible, display.length);
+  const { start, end } = window;
   const visible = display.slice(start, end);
 
   const renderSubmenu = (): React.ReactNode => {

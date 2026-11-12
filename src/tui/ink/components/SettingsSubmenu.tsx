@@ -68,7 +68,7 @@ export const SelectSubmenu: React.FC<SelectSubmenuProps> = ({
         initialValue={currentValue}
         onSelect={(item) => onSelect(item.value)}
         onCancel={onCancel}
-        onHighlight={(item) => onHighlight?.(item.value)}
+        onHighlight={(item) => onHighlight?.(item?.value)}
         width={width}
       />
       <Text> </Text>
@@ -110,7 +110,13 @@ export const SteppedSubmenu: React.FC<SteppedSubmenuProps> = ({
   const [stepIndex, setStepIndex] = useState(0);
   const [context, setContext] = useState<Record<string, string>>({ ...(initialContext ?? {}) });
 
-  const step = steps[stepIndex]!;
+  const step = steps[stepIndex];
+  if (!step) {
+    // Nothing to choose: report the (empty) context instead of throwing on
+    // step.title below.
+    onComplete({ ...context });
+    return null;
+  }
   const title = typeof step.title === "function" ? step.title(context) : step.title;
   const description =
     typeof step.description === "function" ? step.description(context) : step.description;
