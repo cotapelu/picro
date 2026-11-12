@@ -9,7 +9,7 @@
 //   - Nhảy theo đoạn nhánh (segment start) với phím gấp/mở
 // Port sang Ink TSX, khon copy code truc iep.
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { getTheme } from "../theme/index.js";
 import { DynamicBorder } from "./DynamicBorder.js";
@@ -77,7 +77,7 @@ function extractText(content: unknown): string {
 }
 
 /** Gộp cây thành danh sách phẳng, ưu tiên nhánh chứa lá hoạt động lên trước. */
-function flattenTree(roots: SessionTreeNode[], leafId: string | null): FlatNode[] {
+export function flattenTree(roots: SessionTreeNode[], leafId: string | null): FlatNode[] {
   const result: FlatNode[] = [];
   const toolCalls = new Map<string, ToolCallInfo>();
   const multipleRoots = roots.length > 1;
@@ -349,6 +349,14 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({
 
   const maxVisible = Math.max(5, Math.floor(terminalHeight / 2));
   const clamped = Math.max(0, Math.min(selected, visible.length - 1));
+
+  // The stored index can point past the end after the list shrinks (filter,
+  // fold, search). The arrow keys bound-check against the raw index, so without
+  // this sync the highlight stayed put while Up had to be pressed several times
+  // before the index walked back into the window.
+  useEffect(() => {
+    if (clamped !== selected) setSelected(clamped);
+  }, [clamped, selected]);
   const start = Math.max(0, Math.min(clamped - Math.floor(maxVisible / 2), visible.length - maxVisible));
   const rows = visible.slice(start, start + maxVisible);
 
@@ -489,7 +497,7 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({
           const isSelected = index === clamped;
           const entry = flat.node.entry;
           const cursor = isSelected ? t.fg("accent", "› ") : "  ";
-          const displayIndent = visible.length > 0 && isMultiRoot(visible) ? Math.max(0, flat.indent - 1) : flat.indent;
+          const displayIndent = visible.length > 0 && isMultiRoot(visible, allFlat) ? Math.max(0, flat.indent - 1) : flat.indent;
           const connector = flat.showConnector && !flat.isVirtualRootChild ? (flat.isLast ? "└─ " : "├─ ") : "";
           const connectorPos = connector ? displayIndent - 1 : -1;
           const totalChars = displayIndent * 3;
@@ -516,7 +524,7 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({
           const clipWidth = Math.max(4, width - TREE_GUTTER_WIDTH);
           return (
             <Text key={`${entry.id}-${index}`}>
-              {clipToWidth(`${cursor}${body}`, width)}
+              {clipToWidth(`${cursor}${body}`, clipWidth)}
             </Text>
           );
         })
@@ -543,11 +551,25 @@ function findVisibleParent(
   return null;
 }
 
-/** Cây hiển thị có nhiều gốc không. */
-function isMultiRoot(visible: FlatNode[]): boolean {
+/**
+ * Cây hiển thị có nhiều gốc không.
+ *
+ * A root is a node whose parent is not in the visible list, NOT a node at
+ * indent 0: any first-level child of a branching tree also has indent 0, so the
+ * old indent-based check reported "multi-root" for an ordinary session tree,
+ * which shifted every row one column left and misplaced the connectors.
+ */
+export function isMultiRoot(visible: FlatNode[], allFlat: FlatNode[] = visible): boolean {
   let roots = 0;
-  for (const flat of visible) if (flat.indent === 0 || flat.isVirtualRootChild) roots++;
-  return roots > 1;
+  for (const flat of visible) {
+    if (flat.isVirtualRootChild) {
+      roots++;
+    } else if (findVisibleParent(allFlat, visible, flat.node.entry.id) === null) {
+      roots++;
+    }
+    if (roots > 1) return true;
+  }
+  return false;
 }
 
 /** Nút có nằm trên đường từ gốc tới lá không. */
@@ -586,11 +608,17 @@ function formatLabelTime(timestamp: string): string {
   return `${date.getFullYear().toString().slice(-2)}/${date.getMonth() + 1}/${date.getDate()} ${hh}:${mm}`;
 }
 
-/** Cắt dòng theo chiều rộng hiển thị, không tính ANSI. */
-function clipToWidth(text: string, width: number): string {
-  const plain = text.replace(/\x1b\[[0-9;]*m/g, "");
-  if (plain.length <= width) return text;
-  return text.slice(0, Math.max(0, width - 1));
+/**
+ * Cắt dòng theo chiều rộng hiển thị, không tính ANSI.
+ *
+ * Delegates to the core ANSI-aware truncation: the local implementation this
+ * replaces measured the plain text but sliced the RAW string, so a coloured line
+ * was cut far too early (escape bytes consumed the slice budget) and the slice
+ * could land inside an escape sequence, emitting a broken "\x1b[3" that
+ * corrupted the terminal output.
+ */
+export function clipToWidth(text: string, width: number): string {
+  return truncateToWidth(text, Math.max(0, width), "", false);
 }
 
 export { truncateToWidth, visibleWidth, wrapTextWithAnsi, extractText };
