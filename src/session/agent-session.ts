@@ -488,15 +488,34 @@ export class AgentSession {
 
   /**
    * Set active tools by name.
+   *
+   * Registration alone is additive: calling this with a shorter list used to
+   * leave every previously activated tool registered, so a tool the user had
+   * disabled was still advertised to the model and still executable for the
+   * rest of the session. Tools are now unregistered when they drop out of the
+   * selection (only for tools this session owns, so extension-managed tools are
+   * left untouched).
    */
   setActiveToolsByName(toolNames: string[]): void {
-    // Register the new tools
+    const requested = new Set(toolNames);
+
+    // Drop tools that are active but no longer selected.
+    for (const name of this.getActiveToolNames()) {
+      if (requested.has(name)) continue;
+      if (!this._toolDefinitions.has(name)) continue; // not ours to manage
+      if (typeof (this.agent as any).unregisterTool === 'function') {
+        (this.agent as any).unregisterTool(name);
+      }
+    }
+
+    // Register the requested tools.
     for (const name of toolNames) {
       const def = this._toolDefinitions.get(name);
       if (def) {
         this.agent.registerTool(def);
       }
     }
+
     // Rebuild system prompt with updated tool set
     this._baseSystemPrompt = this._buildSystemPrompt();
     this._agentState.systemPrompt = this._baseSystemPrompt;

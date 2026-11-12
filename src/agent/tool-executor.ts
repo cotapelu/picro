@@ -160,6 +160,27 @@ export class ToolExecutor {
   }
 
   /**
+   * Remove a tool from the registry.
+   *
+   * Needed by the session's tool allowlist: registering is additive, so without
+   * a removal path a tool that the user disabled stayed executable (and stayed in
+   * the tool list advertised to the model) for the rest of the session.
+   */
+  unregister(name: string): boolean {
+    const existed = this.tools.delete(name);
+    if (existed) {
+      // Drop cached results of the removed tool too, so re-enabling it later
+      // cannot serve a stale entry.
+      for (const key of this.cache.keys()) {
+        if (key === `${name}:` || key.startsWith(`${name}:`)) {
+          this.cache.delete(key);
+        }
+      }
+    }
+    return existed;
+  }
+
+  /**
    * Get all registered tool names.
    */
   getNames(): string[] {

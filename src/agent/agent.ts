@@ -411,6 +411,19 @@ export class Agent {
   }
 
   /**
+   * Remove a tool: its executor entry and the metadata entry that is advertised
+   * to the LLM. Returns true when the tool was registered.
+   */
+  unregisterTool(name: string): boolean {
+    const removed = (this.toolExecutor as any).unregister?.(name) ?? false;
+    const index = this.tools.findIndex((t) => t.name === name);
+    if (index >= 0) {
+      this.tools.splice(index, 1);
+    }
+    return removed || index >= 0;
+  }
+
+  /**
    * Get all registered tools (for LLM context).
    */
   getTools(): AgentTool[] {
