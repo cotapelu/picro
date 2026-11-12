@@ -20,6 +20,19 @@ function isControlString(data: string): boolean {
   return data.startsWith(`${ESC}]`) || data.startsWith(`${ESC}P`) || data.startsWith(`${ESC}_`);
 }
 
+/**
+ * Convert 8-bit C1 controls (U+0080-U+009F) to their 7-bit ESC equivalents,
+ * so a terminal speaking 8-bit CSI (0x9B) is understood as "\x1b[".
+ */
+function c1ToEscapes(text: string): string {
+  let out = "";
+  for (const ch of text) {
+    const cp = ch.codePointAt(0)!;
+    out += cp >= 0x80 && cp <= 0x9f ? ESC + String.fromCharCode(cp - 0x40) : ch;
+  }
+  return out;
+}
+
 function isCompleteSequence(data: string): "complete" | "incomplete" | "not-escape" {
   if (!data.startsWith(ESC)) return "not-escape";
   if (data.length === 1) return "incomplete";
@@ -108,8 +121,13 @@ function extractCompleteSequences(buffer: string): { sequences: string[]; remain
       }
       if (seqEnd > remaining.length) return { sequences, remainder: remaining };
     } else {
-      sequences.push(remaining[0]!);
-      pos++;
+      // Consume one whole code point. Indexing by UTF-16 code unit split every
+      // astral character (emoji, rare CJK) into two lone surrogates, which then
+      // rendered as replacement characters.
+      const codePoint = remaining.codePointAt(0)!;
+      const char = String.fromCodePoint(codePoint);
+      sequences.push(char);
+      pos += char.length;
     }
   }
   return { sequences, remainder: "" };
@@ -128,6 +146,12 @@ export class StdinBuffer extends EventEmitter {
   private pasteMode = false;
   private pasteBuffer = "";
   private pendingKittyPrintable: number | undefined;
+  /**
+   * Streaming UTF-8 decoder. Keeps incomplete multi-byte sequences until the
+   * rest of the bytes arrive, so a character split across stdin chunks is
+   * reconstructed instead of being mangled.
+   */
+  private decoder = new TextDecoder("utf-8", { fatal: false });
 
   constructor(options: { timeout?: number; escapeTimeout?: number } = {}) {
     super();
@@ -141,13 +165,20 @@ export class StdinBuffer extends EventEmitter {
       this.timeout = null;
     }
     let str: string;
+    // True only when the caller handed us nothing at all (an empty chunk), not
+    // when decoding a partial multi-byte sequence produced nothing yet.
+    const inputWasEmpty = (typeof data === "string" ? data : data).length === 0;
     if (Buffer.isBuffer(data)) {
-      if (data.length === 1 && data[0]! > 127) str = `${ESC}${String.fromCharCode(data[0]! - 128)}`;
-      else str = data.toString();
+      // Any single byte >= 0x80 used to become ESC + (byte - 128), which
+      // corrupted every non-ASCII character whose bytes arrive in separate
+      // chunks: the lead byte became one bogus escape and the continuation
+      // byte another ("é" -> "\x1bC\x1b)"). Decoding incrementally keeps the
+      // partial sequence pending until the rest of the character shows up.
+      str = c1ToEscapes(this.decoder.decode(data, { stream: true }));
     } else {
-      str = data;
+      str = c1ToEscapes(data);
     }
-    if (str.length === 0 && this.buffer.length === 0) {
+    if (inputWasEmpty && this.buffer.length === 0) {
       this.emit("data", "");
       return;
     }
@@ -245,6 +276,8 @@ export class StdinBuffer extends EventEmitter {
     this.pasteMode = false;
     this.pasteBuffer = "";
     this.pendingKittyPrintable = undefined;
+    // Drop any half-decoded multi-byte sequence pending from an earlier chunk.
+    this.decoder = new TextDecoder("utf-8", { fatal: false });
   }
 
   getBuffer(): string {

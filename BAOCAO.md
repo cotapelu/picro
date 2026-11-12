@@ -35,26 +35,6 @@ Sau khi xong toàn bộ các bước:
 
 ---
 
-## 2. Quy tắc bắt buộc (SCOPE)
-
-**✅ CHỈ ĐƯỢC SỬA các file liệt kê trong mục 3.**
-
-**❌ KHÔNG ĐƯỢC SỬA (ngay cả khi thấy chúng có mùi):**
-
-- `src/runtime/skills.ts`
-- `src/runtime/skills.frontmatter.test.ts`
-- `src/session/**`, `src/agent/**`, `src/llm/**`
-- `src/runtime/settings-manager.ts`, `src/runtime/footer-data-provider.ts`
-- `package.json`, `tsconfig.json`
-
-**❌ KHÔNG ĐƯỢC LÀM trong task này** (ghi lại ở §7 để làm sau, đừng tự làm):
-gỡ tham số `agent: any` khỏi `AgentSessionRuntime`; đổi `session['agent']` sang getter; thêm `modelRuntime` vào `AgentSessionServices`; xoá `[DEBUG] console.log` trong `main.ts`; gỡ prop `runtime` khỏi `HttpServerOptions`; gộp `HttpServerOptions` trùng lặp giữa `modes/http/index.ts` và `modes/http/http-server.ts`.
-
-**Commit:** stage từng file cụ thể, **không** `git add -A`.
-
----
-
-## 3. Các bước thực hiện
 
 ### B1 — Đọc rồi xoá file interface
 
