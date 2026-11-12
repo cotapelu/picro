@@ -50,7 +50,10 @@ export class MemoryScorer {
   private compileQuery(query: string): void {
     const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9\s./\-]/g, '');
     const queryWords = normalizedQuery.split(/\s+/).filter(w => w.length > 1);
-    this._compiledQuery = query;
+    // _compiledQuery is compared against a LOWERCASED content below (exact
+    // phrase bonus, action match), so it must store the normalized form; the raw
+    // query made every mixed-case query miss those bonuses.
+    this._compiledQuery = normalizedQuery;
     this._compiledQueryWords = queryWords;
     this._compiledSynonymRegexes.clear();
     for (const qw of queryWords) {

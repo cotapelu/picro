@@ -112,6 +112,8 @@ export interface Settings {
   projectTrusted?: boolean;
   /** Additional guidelines to add to system prompt */
   promptGuidelines?: string[];
+  /** Identifiers of warnings the user dismissed; getWarnings() reports these. */
+  disabledWarnings?: string[];
 }
 
 export type SettingsScope = "global" | "project";
@@ -897,8 +899,14 @@ export class SettingsManager {
     this.save();
   }
 
+  /**
+   * Các cảnh báo người dùng đã tắt.
+   *
+   * Bản cũ là stub luôn trả [], nên "tắt cảnh báo X trong settings" không có
+   * hiệu lực: mọi cảnh báo vẫn hiện dù người dùng đã tắt.
+   */
   getWarnings(): string[] {
-    return [];
+    return [...(this.settings.disabledWarnings ?? [])];
   }
 
   isProjectTrusted(): boolean {
