@@ -6,7 +6,7 @@
 //   - Lọc mờ theo id/tên/provider
 // Port sang Ink TSX, khon copy code truc iep.
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { getTheme } from "../theme/index.js";
 import { DynamicBorder } from "./DynamicBorder.js";
@@ -14,6 +14,7 @@ import { TextInput } from "./TextInput.js";
 import { fuzzyFilter } from "../core/Fuzzy.js";
 import { matchesKey } from "../core/Keys.js";
 import { getDistinctModelName } from "../core/ModelSearch.js";
+import { selectWindow } from "../core/select-window.js";
 
 export interface ModelItemInput {
   id: string;
@@ -101,9 +102,17 @@ export const ScopedModelsSelector: React.FC<{
     [items, query, byId],
   );
 
-  const clamped = Math.max(0, Math.min(selected, filtered.length - 1));
-  const start = Math.max(0, Math.min(clamped - Math.floor(MAX_VISIBLE / 2), filtered.length - MAX_VISIBLE));
+  const window = selectWindow(selected, filtered.length, MAX_VISIBLE);
+  const clamped = window.clamped;
+  const { start } = window;
   const visible = filtered.slice(start, start + MAX_VISIBLE);
+
+  // Keep the stored index inside the current list (see core/select-window.ts):
+  // the arrow keys bound-check the raw index, so after filtering the highlight
+  // otherwise sat still while Up had to be pressed repeatedly.
+  useEffect(() => {
+    if (clamped >= 0 && clamped !== selected) setSelected(clamped);
+  }, [clamped, selected]);
 
   const update = (next: EnabledIds) => {
     setEnabled(next);
@@ -156,7 +165,7 @@ export const ScopedModelsSelector: React.FC<{
       moveSelection(1);
       return;
     }
-    if (key.upArrow) setSelected((i) => (i <= 0 ? filtered.length - 1 : i - 1));
+    if (key.upArrow) setSelected((i) => (i <= 0 ? Math.max(0, filtered.length - 1) : i - 1));
     if (key.downArrow) setSelected((i) => (i >= filtered.length - 1 ? 0 : i + 1));
     if (key.backspace) setQuery((q) => q.slice(0, -1));
     if (data.length === 1 && !key.ctrl && data.charCodeAt(0) >= 32) setQuery((q) => q + data);
@@ -172,7 +181,8 @@ export const ScopedModelsSelector: React.FC<{
     const next = [...enabled];
     [next[index], next[target]] = [next[target]!, next[index]!];
     update(next);
-    setSelected(clamped + delta);
+    // Clamp: the row index after the move may run past the end of the list.
+    setSelected(Math.max(0, Math.min(clamped + delta, filtered.length - 1)));
   };
 
   const enabledCount = enabled === null ? allIds.length : enabled.filter((id) => byId.has(id)).length;

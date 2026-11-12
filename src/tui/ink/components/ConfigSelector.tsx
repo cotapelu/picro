@@ -14,6 +14,8 @@ import { getTheme } from "../theme/index.js";
 import { DynamicBorder } from "./DynamicBorder.js";
 import { TextInput } from "./TextInput.js";
 import { truncateToWidth } from "../core/index.js";
+import { filterConfigEntries } from "./config-filter.js";
+import { selectWindow } from "../core/select-window.js";
 import { matchesKey } from "../core/Keys.js";
 
 export type ResourceType = "extensions" | "skills" | "prompts" | "themes";
@@ -47,6 +49,9 @@ export interface ResourceGroup {
   subgroups: ResourceSubgroup[];
 }
 
+/** Số dòng tối đa hiển thị trong bảng cấu hình. */
+const CONFIG_MAX_VISIBLE = 12;
+
 const TYPE_LABELS: Record<ResourceType, string> = {
   extensions: "Extension",
   skills: "Skill",
@@ -67,7 +72,7 @@ export interface ConfigSelectorProps {
 }
 
 /** Danh sách phẳng để điều hướng: nhóm / nhóm con / mục. */
-type FlatEntry =
+export type FlatEntry =
   | { type: "group"; group: ResourceGroup }
   | { type: "subgroup"; subgroup: ResourceSubgroup; group: ResourceGroup }
   | { type: "item"; item: ResourceItem };
@@ -100,39 +105,24 @@ export const ConfigSelector: React.FC<ConfigSelectorProps> = ({
   }, [groups]);
 
   // Lọc theo truy vấn: giữ nhóm/nhóm con có chứa mục khớp.
-  const filtered = useMemo(() => {
-    if (!query.trim()) return flat;
-    const q = query.toLowerCase();
-    const matching = new Set(
-      flat
-        .filter(
-          (entry) =>
-            entry.type === "item" &&
-            (entry.item.displayName.toLowerCase().includes(q) ||
-              entry.item.resourceType.toLowerCase().includes(q) ||
-              entry.item.path.toLowerCase().includes(q)),
-        )
-        .map((entry) => (entry as { item: ResourceItem }).item),
-    );
-    const matchingSubgroups = new Set<string>();
-    const matchingGroups = new Set<string>();
-    for (const group of groups) {
-      for (const subgroup of group.subgroups) {
-        if (subgroup.items.some((i) => matching.has(i))) {
-          matchingSubgroups.add(subgroup.label);
-          matchingGroups.add(group.label);
-        }
-      }
-    }
-    return flat.filter((entry) => {
-      if (entry.type === "group") return matchingGroups.has(entry.group.label);
-      if (entry.type === "subgroup") return matchingSubgroups.has(entry.subgroup.label);
-      return matching.has(entry.item);
-    });
-  }, [flat, groups, query]);
+  //
+  // Delegates to filterConfigEntries(): the inline version tracked matching
+  // groups/subgroups by their display LABEL, so two groups sharing a label
+  // leaked each other's results - a header with no matching item under it
+  // stayed visible, and a matching group's header could be dropped.
+  const filtered = useMemo(
+    () => filterConfigEntries(flat, groups, query),
+    [flat, groups, query],
+  );
 
   const firstItemIndex = Math.max(0, filtered.findIndex((e) => e.type === "item"));
-  const clamped = Math.max(0, Math.min(selected, filtered.length - 1));
+  const window = selectWindow(selected, filtered.length, CONFIG_MAX_VISIBLE);
+  const clamped = window.clamped;
+
+  // Keep the stored index inside the current list (see core/select-window.ts).
+  useEffect(() => {
+    if (clamped >= 0 && clamped !== selected) setSelected(clamped);
+  }, [clamped, selected]);
 
   const findNextItem = (from: number, direction: 1 | -1): number => {
     let idx = from + direction;
@@ -199,9 +189,8 @@ export const ConfigSelector: React.FC<ConfigSelectorProps> = ({
     return () => clearTimeout(timer);
   }, [flash]);
 
-  const maxVisible = 12;
-  const start = Math.max(0, Math.min(clamped, Math.max(0, filtered.length - maxVisible)));
-  const visible = filtered.slice(start, start + maxVisible);
+  const { start } = window;
+  const visible = filtered.slice(start, start + CONFIG_MAX_VISIBLE);
 
   return (
     <Box flexDirection="column" width={width}>
