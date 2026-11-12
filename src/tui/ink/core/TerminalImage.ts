@@ -11,6 +11,7 @@ import { homedir } from "node:os";
 import { isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { TerminalColorMode } from "./Colors.js";
+import { visibleWidth } from "./TerminalText.js";
 
 export type ImageProtocol = "kitty" | "iterm2" | null;
 
@@ -211,12 +212,51 @@ function shortenImagePath(filename: string): string {
   return filename;
 }
 
-/** Cắt chuỗi theo chiều rộng hiển thị, thêm dấu ba chấm khi tràn. */
+/**
+ * Cắt chuỗi theo chiều rộng HIỂN THỊ, thêm dấu ba chấm khi tràn.
+ *
+ * This used to compare text.length (UTF-16 code units) against the width, so a
+ * short string of double-width characters sailed past the limit: "你好世界" (4
+ * units) was returned unchanged for maxWidth 5 even though it occupies 8
+ * columns, and "a😀b" for maxWidth 2 came out wider than the output row, breaking
+ * the surrounding layout.
+ */
 export function truncateToWidthCompat(text: string, maxWidth: number, ellipsis = "..."): string {
-  if (maxWidth <= 0) return "";
-  if (text.length <= maxWidth) return text;
-  if (maxWidth === 1) return text.slice(0, 1);
-  return text.slice(0, maxWidth - ellipsis.length) + ellipsis;
+  const width = Math.max(0, Math.floor(maxWidth));
+  if (width === 0) return "";
+  if (visibleWidth(text) <= width) return text;
+
+  const graphemes = (value: string): string[] =>
+    [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value)].map((s) => s.segment);
+
+  if (width === 1) {
+    const first = graphemes(text)[0];
+    return first !== undefined && visibleWidth(first) <= width ? first : text.slice(0, 1);
+  }
+  const ellipsisWidth = visibleWidth(ellipsis);
+  // No room for the ellipsis: hard-cut to the width instead of emitting an
+  // ellipsis that is itself wider than the row.
+  if (width <= ellipsisWidth) {
+    let hardUsed = 0;
+    let hard = "";
+    for (const segment of graphemes(text)) {
+      const segmentWidth = visibleWidth(segment);
+      if (hardUsed + segmentWidth > width) break;
+      hard += segment;
+      hardUsed += segmentWidth;
+    }
+    return hard;
+  }
+  const budget = width - ellipsisWidth;
+  let used = 0;
+  let taken = "";
+  for (const segment of graphemes(text)) {
+    const segmentWidth = visibleWidth(segment);
+    if (used + segmentWidth > budget) break;
+    taken += segment;
+    used += segmentWidth;
+  }
+  return `${taken}${ellipsis}`;
 }
 
 /** Đọc kích thước ảnh PNG từ header IHDR. */
@@ -237,7 +277,11 @@ export function getJpegDimensions(base64Data: string): ImageDimensions | null {
     const buffer = Buffer.from(base64Data, "base64");
     if (buffer.length < 2 || buffer[0] !== 0xff || buffer[1] !== 0xd8) return null;
     let offset = 2;
-    while (offset < buffer.length - 9) {
+    // An SOF segment needs 9 bytes from the marker (marker 2 + length 2 +
+    // precision 1 + height 2 + width 2). The previous "offset < length - 9"
+    // rejected a file whose SOF segment ends exactly at EOF - an off-by-one that
+    // dropped the last valid header position.
+    while (offset + 9 <= buffer.length) {
       if (buffer[offset] !== 0xff) {
         offset++;
         continue;
@@ -274,7 +318,11 @@ export function getGifDimensions(base64Data: string): ImageDimensions | null {
 export function getWebpDimensions(base64Data: string): ImageDimensions | null {
   try {
     const buffer = Buffer.from(base64Data, "base64");
-    if (buffer.length < 30) return null;
+    // The minimum viable container is RIFF+size+WEBP+chunk-id (16 bytes); each
+    // chunk type checks its own header below. The previous single "length < 30"
+    // guard made the VP8L branch's own check unreachable and rejected small but
+    // valid VP8L files.
+    if (buffer.length < 16) return null;
     if (buffer.slice(0, 4).toString("ascii") !== "RIFF") return null;
     if (buffer.slice(8, 12).toString("ascii") !== "WEBP") return null;
     const chunk = buffer.slice(12, 16).toString("ascii");
