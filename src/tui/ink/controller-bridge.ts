@@ -13,6 +13,8 @@ export interface ControllerStatus {
   tokens: string;
   cwd: string;
   isProcessing: boolean;
+  /** Phần trăm ngữ cảnh đã dùng, ví dụ "42%". */
+  contextPercent?: string;
 }
 
 /** Chỉ báo trạng thái cho dock nhập liệu (working / compaction / retry). */

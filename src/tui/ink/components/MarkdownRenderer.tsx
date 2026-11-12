@@ -9,6 +9,7 @@ import React, { useMemo } from "react";
 import { Box, Text } from "ink";
 import { theme, fg, bg } from "../theme/index.js";
 import { classifyMarkdownLine, clipMarkdownLine, padMarkdownLine } from "./markdown-layout.js";
+import { renderLatex } from "../core/Latex.js";
 
 export interface MarkdownRendererProps {
   content: string;
@@ -28,6 +29,8 @@ interface Block {
   lines: string[];
   /** Khối mã có viền trên/dưới. */
   fenced?: boolean;
+  /** Khối bảng đã được dựng sẵn (không cần style lại từng dòng). */
+  table?: boolean;
 }
 
 /** Tách markdown thô thành các khối hiển thị. */
@@ -45,8 +48,20 @@ function parseBlocks(source: string): Block[] {
   const lines = source.split("\n");
   let inFence = false;
   let fenceBuffer: string[] = [];
+  let tableBuffer: string[] = [];
 
-  for (const raw of lines) {
+  const flushTable = () => {
+    if (tableBuffer.length === 0) return;
+    blocks.push({ lines: renderTableBlock(tableBuffer), table: true });
+    tableBuffer = [];
+  };
+
+  /** Dòng phân cách kiểu GFM: |---|---| hoặc ---|--- */
+  const isDelimiterRow = (line: string): boolean =>
+    /^\s*\|?[\s]*:?-{1,}:?[\s]*(\|[\s]*:?-{1,}:?[\s]*)*\|?\s*$/.test(line);
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i]!;
     if (/^\s*```/.test(raw)) {
       if (inFence) {
         blocks.push({ lines: [...fenceBuffer], fenced: true });
@@ -54,6 +69,7 @@ function parseBlocks(source: string): Block[] {
         inFence = false;
       } else {
         flush();
+        flushTable();
         inFence = true;
       }
       continue;
@@ -62,22 +78,89 @@ function parseBlocks(source: string): Block[] {
       fenceBuffer.push(fg("codeBlock", raw));
       continue;
     }
+    // Bảng: dòng hiện tại chứa "|" và dòng tiếp theo là dòng phân cách. Bản cũ
+    // không nhận diện bảng nên toàn bộ markdown table hiển thị như đoạn văn thô.
+    const next = lines[i + 1];
+    if (next !== undefined && raw.includes("|") && isDelimiterRow(next)) {
+      flush();
+      tableBuffer = [raw, next];
+      i++;
+      while (i + 1 < lines.length && (lines[i + 1] ?? "").includes("|") && (lines[i + 1] ?? "").trim() !== "") {
+        tableBuffer.push(lines[i + 1]!);
+        i++;
+      }
+      flushTable();
+      continue;
+    }
     buffer.push(raw);
   }
   if (inFence && fenceBuffer.length > 0) {
     blocks.push({ lines: fenceBuffer, fenced: true });
   }
+  flushTable();
   flush();
   return blocks;
 }
 
-/** Áp kiểu chữ nội tuyến: `code`, **bold**, *italic*, [link](url). */
+/** Tách một dòng bảng thành các ô (bỏ dấu | hai đầu). */
+function splitTableRow(line: string): string[] {
+  let text = line.trim();
+  if (text.startsWith("|")) text = text.slice(1);
+  if (text.endsWith("|")) text = text.slice(0, -1);
+  return text.split("|").map((cell) => cell.trim());
+}
+
+/** Căn độ rộng cột cho bảng rồi kẻ viền, kết quả là các dòng đã định dạng. */
+function renderTableBlock(rows: string[]): string[] {
+  if (rows.length < 2) return rows;
+  const header = splitTableRow(rows[0]!);
+  const body = rows.slice(2).map(splitTableRow);
+  const colCount = Math.max(header.length, ...body.map((r) => r.length));
+  const widths = Array.from({ length: colCount }, (_, c) =>
+    Math.max(
+      3,
+      (header[c] ?? "").length,
+      ...body.map((r) => (r[c] ?? "").length),
+    ),
+  );
+  const formatRow = (cells: string[], styled: (text: string) => string) => {
+    const padded = Array.from({ length: colCount }, (_, c) =>
+      (cells[c] ?? "").padEnd(widths[c] ?? 0, " "),
+    );
+    return ` ${styled(padded.join(" │ "))} `;
+  };
+  const border = (left: string, mid: string, right: string) =>
+    `${left}${widths.map((w) => "─".repeat((w ?? 0) + 2)).join(mid)}${right}`;
+  return [
+    border("┌", "┬", "┐"),
+    formatRow(header, (text) => theme.bold(text)),
+    border("├", "┼", "┤"),
+    ...body.map((cells) => formatRow(cells, (text) => text)),
+    border("└", "┴", "┘"),
+  ];
+}
+
+/**
+ * Áp kiểu chữ nội tuyến: `code`, **bold**, *italic*, [text](url), $latex$.
+ *
+ * Hai thay đổi so với bản cũ:
+ *  - liên kết GIỮ URL: pi-mono hiện URL trong ngoặc khi chữ khác đích (và bọc
+ *    OSC 8 khi terminal hỗ trợ). Bản cũ bỏ hoàn toàn đích của link.
+ *  - công thức toán `$...$` được render bằng renderLatex của tầng core thay vì
+ *    hiện nguyên chuỗi "$x^2$".
+ */
 function styleInline(line: string): string {
   let out = line;
   out = out.replace(/`([^`]+)`/g, (_m, code) => fg("code", code));
+  out = out.replace(/\$([^$]+)\$/g, (_m, formula) => {
+    const rendered = renderLatex(formula);
+    return rendered !== undefined ? fg("mdCode", rendered) : `$${formula}$`;
+  });
   out = out.replace(/\*\*([^*]+)\*\*/g, (_m, text) => theme.bold(text));
   out = out.replace(/(^|[^*])\*([^*]+)\*/g, (_m, pre, text) => `${pre}${theme.italic(text)}`);
-  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text) => fg("link", text));
+  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, url) =>
+    text === url ? fg("link", text) : `${fg("link", text)}${fg("mdLinkUrl", ` (${url})`)}`,
+  );
   return out;
 }
 
@@ -118,6 +201,12 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, wid
           out.push(padMarkdownLine(`  ${clipMarkdownLine(line, contentWidth - 2)}`, contentWidth));
         }
         out.push(fg("codeBlockBorder", "```"));
+        return;
+      }
+      if (block.table) {
+        for (const line of block.lines) {
+          out.push(clipMarkdownLine(line, contentWidth));
+        }
         return;
       }
       const sourceLines = transform ? transform(block.lines.join("\n"), contentWidth).split("\n") : block.lines;

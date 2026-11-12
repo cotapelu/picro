@@ -220,6 +220,7 @@ export class InteractiveController {
           this.emitIndicator({ kind: 'none' });
           this.pendingToolIds.clear();
           this.streamingId = undefined;
+          this.refreshStatusFromSession();
           break;
 
         case 'agent_settled':
@@ -432,6 +433,8 @@ export class InteractiveController {
   private refreshStatusFromSession(): void {
     const session = this.runtime.session as any;
     const model = session?.model;
+    // Bản cũ hiển thị model mặc định của SETTINGS; phải là model của PHIÊN đang
+    // chạy (có thể đã đổi bằng /model hoặc Ctrl+P).
     this.status.model = model ? `${model.provider}/${model.id}` : this.status.model;
     const usage = (this.runtime as any).getContextUsage?.();
     if (usage) {

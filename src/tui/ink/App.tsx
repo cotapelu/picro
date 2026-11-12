@@ -234,6 +234,7 @@ export const App: React.FC<AppProps> = ({
             model={status.model}
             tokens={status.tokens}
             cwd={status.cwd}
+            contextPercent={status.contextPercent}
             isProcessing={status.isProcessing}
           />
         }

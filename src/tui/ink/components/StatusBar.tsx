@@ -40,12 +40,16 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
   // Dòng 2: bên trái token + context, bên phải model + thinking
   const statusText = isProcessing ? fg("warning", "⏳ Working") : fg("success", "● Ready");
-  const tokenTotal = tokens ?? "0";
-  const contextInfo = contextPercent ? `${contextPercent}` : "";
-  const leftParts = [statusText, `↑↓ ${formatTokens(Number(tokenTotal) || 0)}`];
+  // `tokens` có thể là "12345" (số token ngữ cảnh) — bản cũ luôn gọi
+  // formatTokens(Number("0/0")) = formatTokens(NaN) = 0 nên footer hiển thị
+  // "↑↓ 0" dù ngữ cảnh đang có 40k token. Chấp nhận cả dạng "a/b" để tương thích.
+  const contextTokens = Number.parseInt(String(tokens ?? "0").split("/")[0] ?? "0", 10);
+  const contextInfo = contextPercent && contextPercent !== "0%" ? contextPercent : "";
+  const leftParts = [statusText, `↑↓ ${formatTokens(Number.isFinite(contextTokens) ? contextTokens : 0)}`];
   if (contextInfo) leftParts.push(contextInfo);
 
-  const modelName = model ?? "no-model";  const rightParts = [modelName];
+  const modelName = model ?? "no-model";
+  const rightParts = [modelName];
   if (thinkingLevel && thinkingLevel !== "off") rightParts.push(`think ${thinkingLevel}`);
 
   // The right column's budget comes from the VISIBLE width of the left side:
