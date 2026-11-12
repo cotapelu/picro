@@ -285,6 +285,24 @@ function matchesModifyOtherKeys(data: string, code: number, modifier: number): b
   return parsed.codepoint === code && parsed.modifier === modifier;
 }
 
+/**
+ * Khớp dạng xterm modifyOtherKeys (CSI 27 ; mod ; keycode ~) với phím in được.
+ *
+ * Như matchesPrintableModifyOtherKeys của pi-mono: ngoài khớp vật lý còn nhận
+ * khớp "symbol thật" (terminal báo "+" là Shift + "="), nên binding đặt theo
+ * symbol vẫn hoạt động trên terminal chỉ hỗ trợ modifyOtherKeys (không Kitty).
+ */
+function matchesPrintableModifyOtherKeys(data: string, code: number, modifier: number): boolean {
+  const parsed = parseModifyOtherKeys(data);
+  if (!parsed) return false;
+  const physical =
+    parsed.modifier === modifier &&
+    normalizeShiftedLetter(parsed.codepoint, parsed.modifier) === normalizeShiftedLetter(code, modifier);
+  if (physical) return true;
+  const shifted = logicalShiftedSymbol(parsed.codepoint, parsed.modifier, SHIFTED_SYMBOL_KEYS);
+  return shifted?.modifier === modifier && shifted.codepoint === code;
+}
+
 function formatWithModifiers(keyName: string, modifier: number): string | undefined {
   const mods: string[] = [];
   const effective = modifier & ~LOCK_MASK;
@@ -328,6 +346,11 @@ export function matchesKey(data: string, keyId: string): boolean {
     case "esc":
       return modifier === 0 && (data === "\x1b" || matchesKitty(data, CODEPOINTS.escape, 0) || matchesModifyOtherKeys(data, CODEPOINTS.escape, 0));
     case "space":
+      // Legacy (không Kitty): \x00 = ctrl+space, ESC+space = alt+space.
+      if (!kittyProtocolActive) {
+        if (modifier === MODIFIERS.ctrl && data === "\x00") return true;
+        if (modifier === MODIFIERS.alt && data === "\x1b ") return true;
+      }
       if (modifier === 0) return data === " " || matchesKitty(data, CODEPOINTS.space, 0) || matchesModifyOtherKeys(data, CODEPOINTS.space, 0);
       return matchesKitty(data, CODEPOINTS.space, modifier) || matchesModifyOtherKeys(data, CODEPOINTS.space, modifier);
     case "tab":
@@ -430,15 +453,18 @@ export function matchesKey(data: string, keyId: string): boolean {
     if (modifier === MODIFIERS.alt && !kittyProtocolActive && data === `\x1b${key}`) return true;
     if (modifier === MODIFIERS.ctrl) {
       if (rawCtrl && data === rawCtrl) return true;
-      return matchesKitty(data, codepoint, MODIFIERS.ctrl);
+      return matchesKitty(data, codepoint, MODIFIERS.ctrl) || matchesPrintableModifyOtherKeys(data, codepoint, MODIFIERS.ctrl);
     }
     if (modifier === MODIFIERS.shift + MODIFIERS.ctrl) {
-      return matchesKitty(data, codepoint, MODIFIERS.shift + MODIFIERS.ctrl);
+      return (
+        matchesKitty(data, codepoint, MODIFIERS.shift + MODIFIERS.ctrl) ||
+        matchesPrintableModifyOtherKeys(data, codepoint, MODIFIERS.shift + MODIFIERS.ctrl)
+      );
     }
     if (modifier === MODIFIERS.shift) {
       const isLower = key >= "a" && key <= "z";
       if (isLower && data === key.toUpperCase()) return true;
-      return matchesKitty(data, codepoint, MODIFIERS.shift);
+      return matchesKitty(data, codepoint, MODIFIERS.shift) || matchesPrintableModifyOtherKeys(data, codepoint, MODIFIERS.shift);
     }
     if (modifier !== 0) return matchesKitty(data, codepoint, modifier);
     return data === key || matchesKitty(data, codepoint, 0);
@@ -498,6 +524,15 @@ export function parseKey(data: string): string | undefined {
   if (legacy) return legacy;
 
   if (data === "\x1b") return "escape";
+  // Dải điều khiển còn lại mà terminal gửi trực tiếp: \x1c/\x1d/\x1f và dạng
+  // ESC hai lần (Ctrl+Alt+[ \ ] -). Thiếu nhãn thì mọi binding gọi chúng vô nghĩa.
+  if (data === "\x1c") return "ctrl+\\";
+  if (data === "\x1d") return "ctrl+]";
+  if (data === "\x1f") return "ctrl+-";
+  if (data === "\x1b\x1b") return "ctrl+alt+[";
+  if (data === "\x1b\x1c") return "ctrl+alt+\\";
+  if (data === "\x1b\x1d") return "ctrl+alt+]";
+  if (data === "\x1b\x1f") return "ctrl+alt+-";
   if (data === "\t") return "tab";
   if (data === "\r" || (!kittyProtocolActive && data === "\n") || data === "\x1bOM") return "enter";
   if (data === "\x00") return "ctrl+space";
@@ -507,6 +542,11 @@ export function parseKey(data: string): string | undefined {
   if (data === "\x1b[Z") return "shift+tab";
   if (data === "\x1b\x7f" || data === "\x1b\b") return "alt+backspace";
   if (!kittyProtocolActive && data === "\x1b\r") return "alt+enter";
+  if (!kittyProtocolActive && data === "\x1b ") return "alt+space";
+  // Alt+Left/Right kiểu cổ điển dùng chữ hoa (ESC B / ESC F); chữ thường đã có
+  // trong LEGACY_SEQUENCE_KEY_IDS (alt+left/alt+right của word navigation).
+  if (!kittyProtocolActive && data === "\x1bB") return "alt+left";
+  if (!kittyProtocolActive && data === "\x1bF") return "alt+right";
   if (!kittyProtocolActive && data.length === 2 && data[0] === "\x1b") {
     const code = data.charCodeAt(1);
     if (code >= 1 && code <= 26) return `ctrl+alt+${String.fromCharCode(code + 96)}`;

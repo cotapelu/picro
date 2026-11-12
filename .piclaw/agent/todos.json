@@ -3,37 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Fix giai đoạn 4 - main.ts, interactive-mode, markdown, footer",
+      "name": "Phase A: read pi-mono tui/src (all files)",
       "tasks": [
         {
           "id": "task-1",
-          "content": "A60: bỏ 6 dòng console.log('[DEBUG]...') trong main.ts subscribeToSessionEvents",
+          "content": "Read tui/src/keys.ts (1511) - key parsing spec",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "A58/A59/A61: readline fallback await+error, Ink unmount stop terminal, dispose runtime khi exit",
+          "content": "Read tui/src/terminal.ts (639) + stdin-buffer.ts (480) + wheel-scroll + native-* + terminal-colors",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "A63/A64/A62: Ctrl+C clear editor, Ctrl+D/Ctrl+Z, stop() pause stdin",
+          "content": "Read tui/src/latex.ts (1506) + colors.ts + oklab.ts + utils.ts (1469)",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "A36-A38: MarkdownRenderer thêm LaTeX + bảng + link đúng URL",
+          "content": "Read tui/src/autocomplete.ts (858) + fuzzy + undo/kill/word-nav + editor-component + keybindings + layout",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "A20/A22: StatusBar hiển thị token/context thật; Footer model phiên",
+          "content": "Read tui/src/components/* (19 files)",
+          "status": "pending"
+        },
+        {
+          "id": "task-6",
+          "content": "Read tui/src/tui.ts (1551) + tui-main-screen (660) + tui-alt-screen (1798) + alt-screen-search + terminal-image (786)",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 6,
+  "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-11-12T08:10:33.736Z"
+  "updatedAt": "2026-11-12T23:44:49.065Z"
 }

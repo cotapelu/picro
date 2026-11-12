@@ -457,3 +457,17 @@
 - [ ] B27 Footer đầy đủ: ↑↓ R/W cache, CH%, cost, git branch, routed model
 - [ ] B29 Markdown: list lồng nhau, ordered marker, HTML comment, strikethrough nghiêm ngặt
 - [ ] B26 Fullscreen alt-screen (chuột, chọn text, scrollbar, tìm kiếm Ctrl+Shift+F) — Ink không hỗ trợ cần lớp terminal riêng
+
+## AUDIT TOÀN BỘ (bắt đầu vòng audit mới — đọc từng dòng, không ghi file báo cáo)
+
+### Đã đọc + đối chiếu: `pi-mono/packages/tui/src/keys.ts` (1511 dòng) ↔ `src/tui/ink/core/Keys.ts` (640 dòng)
+
+- [x] `matchesKey("space")`: thiếu nhánh legacy `\x00`=ctrl+space và `\x1b `=alt+space khi Kitty tắt → binding ctrl+space không bao giờ khớp (đã fix + test)
+- [x] `matchesKey(phím in được)`: thiếu `matchesPrintableModifyOtherKeys` → terminal chỉ hỗ trợ xterm modifyOtherKeys (không Kitty) không khớp được ctrl/shift cho phím in được (đã fix + test)
+- [x] `parseKey`: thiếu nhãn `\x1c`→ctrl+\, `\x1d`→ctrl+], `\x1f`→ctrl+-, `\x1b\x1b`→ctrl+alt+[, `\x1b\x1c`→ctrl+alt+\, `\x1b\x1d`→ctrl+alt+], `\x1b\x1f`→ctrl+alt+-, `\x1b `→alt+space, `\x1bB`→alt+left, `\x1bF`→alt+right (đã fix + test)
+
+### Còn phải đọc (chưa đọc = chưa hiểu)
+
+- [ ] `pi-mono/packages/tui/src`: terminal.ts, stdin-buffer.ts, wheel-scroll.ts, native-modifiers.ts, native-module-path.ts, native-platform.ts, terminal-colors.ts, terminal-image.ts, colors.ts, oklab.ts, latex.ts, fuzzy.ts, undo-stack.ts, kill-ring.ts, word-navigation.ts, autocomplete.ts, editor-component.ts, keybindings.ts, utils.ts, layout.ts, layout-node.ts, index.ts, tui.ts, tui-main-screen.ts, tui-alt-screen.ts, alt-screen-search.ts, program-status.ts, components/* (19 file)
+- [ ] `pi-mono/packages/coding-agent/src/modes/interactive`: interactive-mode.ts (7302 dòng), chat-viewport.ts, tui-renderer.ts, model-search.ts, model-catalog-refresh.ts, program-status-reporter.ts, session-share.ts, external-editor.ts, bug-report.ts, components/* (64 file), theme/* (5 file + 2 json)
+- [ ] `src/tui/ink` toàn bộ (core/ components/ theme/) + `src/modes/interactive` + App.tsx + interactive-app.tsx + controller-bridge.ts
