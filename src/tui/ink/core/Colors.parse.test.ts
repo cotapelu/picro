@@ -37,7 +37,7 @@ describe('parseColor', () => {
     });
 
     it('parses the percent form to a stable colour', () => {
-      expect(colorToHex(parseColor('okhsl(295 50% 67%)'))).toBe('#c0b6e5');
+      expect(colorToHex(parseColor('okhsl(295 50% 67%)'))).toBe('#a798d7');
     });
 
     it('honours the hue', () => {
@@ -52,10 +52,10 @@ describe('parseColor', () => {
       // okhsl(120 100% 50%) is a saturated green; the same colour at 0% is grey.
       const hex = colorToHex(parseColor('okhsl(120 100% 50%)'));
       expect(hex).not.toBe('#808080');
-      // 0% saturation is a grey; okhsl lightness is perceptual, so 50% lands on
-      // #8b8b8b rather than a linear 0.5.
+      // 0% saturation is a grey. OKHSL lightness is perceptual, so 50% maps to an
+      // Oklab lightness of ~0.574 and renders as #777777 rather than a linear 0.5.
       const grey = colorToHex(parseColor('okhsl(120 0% 50%)'));
-      expect(grey).toBe('#8b8b8b');
+      expect(grey).toBe('#777777');
     });
 
     it('honours the lightness', () => {

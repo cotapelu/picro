@@ -369,11 +369,27 @@ function oklabToLinearSrgb(lab: Vec3): Vec3 {
 
 export function rgbToOklab({ r, g, b }: RgbColorValue): Vec3 {
   const linear = [r / 255, g / 255, b / 255].map(srgbToLinear) as Vec3;
-  return multiply(LMS_TO_LAB, linear.map(Math.cbrt) as Vec3);
+  // Oklab is LMS -> cube root -> Lab. The forward transform must apply
+  // LINEAR_SRGB_TO_LMS before the cube root: skipping it (as this did) fed
+  // LINEAR sRGB straight into the cube root, so every derived Oklab value was
+  // wrong - pure red came out as l=0.21, c=1.98, h=0.75deg - and the inverse
+  // direction (oklabToLinearSrgb, which does apply both matrices) could not
+  // round-trip. Everything built on these values was affected: mixColors in
+  // oklch space, contrastRatio, appearance detection and rgbToOkhsl.
+  const lms = multiply(LINEAR_SRGB_TO_LMS, linear);
+  return multiply(LMS_TO_LAB, lms.map(Math.cbrt) as Vec3);
 }
 
+/**
+ * OKHSL lightness -> Oklab lightness.
+ *
+ * Must use the K3 = (1+K1)/(1+K2) denominator so it inverts
+ * oklabToOkhslLightness(). The previous constant (1.04812) was wrong, so an
+ * OKHSL lightness never round-tripped: 0.5 came back as 0.578, 0.2 as 0.239 and
+ * 0.8 as 0.914 - every okhsl colour rendered lighter or darker than requested.
+ */
 function okhslToOklabLightness(x: number): number {
-  return (x * x + 0.206 * x) / (1.04812 * (x + 0.03));
+  return (x * x + K1 * x) / (K3 * (x + K2));
 }
 
 function lmsSlopes(a: number, b: number): Vec3 {
@@ -505,7 +521,8 @@ export function oklabToOkhslLightness(x: number): number {
 
 /** OKHSL L sang Oklab L. */
 function okhslToOklabLightnessFromOkhsl(x: number): number {
-  return (x * x + K1 * x) / (K3 * (x + K2));
+  // Kept as the named reference for the mapping above (same formula).
+  return okhslToOklabLightness(x);
 }
 
 function okhslLightnessFromL(L: number): number {
