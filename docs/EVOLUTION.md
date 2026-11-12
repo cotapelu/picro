@@ -42,3 +42,21 @@ This outline tracks planned changes, refactors, and anticipated technical debt.
 - Low risk: Core agent loop well-tested.
 - Medium risk: RPC mode may require adjustments as new features are added; integration testing needed.
 
+
+## Completed (Iteration 8 - 2025-07-05)
+
+- **Transcript render correctness**: user text (Ink `Box` string child), tool
+  result preview (VisualLinePreview.setText), bash output (missing prop wiring).
+  Ba lỗi này khiến interactive mode hiển thị trống — đúng là phần "rất sơ sài".
+- **API cleanup**: `VisualLinePreview` giờ có `setText()` chính thức thay cho
+  mutation private field từ ngoài; hiệu năng re-render mỗi streamed chunk cũng tốt
+  hơn (không tạo preview mới mỗi lần).
+- **Regression tests**: `src/tui/ink/app-smoke.test.tsx` — mount App với mock
+  controller, assert mọi loại transcript item đều hiển thị payload.
+
+## Anticipated debt
+
+- `BashExecution` vẫn giữ `outputLines` nội bộ + `append()` song song với prop;
+  nên gộp thành một nguồn duy nhất khi có thời gian.
+- `ChatViewport.tsx`/`MessageList.tsx` (bản cũ) còn duplicate responsibility với
+  `Transcript.tsx` — nên gỡ bản cũ khỏi App để tránh hai đường render.

@@ -63,3 +63,23 @@ mode validated with slash commands (/theme, /tools, /compact, /settings, /login,
 /model, etc.). TTY mode has been replaced by Ink TUI. Core agent loop, session
 management, and OOM safeguards all ported and working.
 
+
+### Iteration 8 (2025-07-05)
+
+- **Focus**: Interactive TUI render correctness (audit giai đoạn 6/7)
+- **Tasks Completed**:
+  - `UserMessage.tsx`: chuỗi nền đặt trực tiếp trong `<Box>` khiến **toàn bộ
+    subtree render rỗng** (Ink cần `<Text>`) → tin nhắn người dùng không bao giờ
+    hiện. Đã bọc `<Text>` + regression test `app-smoke.test.tsx`.
+  - `ToolExecution.tsx`: `preview` bị mutate qua `as unknown as` + preview text
+    chỉ set trong `useEffect` → render đầu rỗng. Thêm `VisualLinePreview.setText()`
+    và set trong render body (cũng khỏi rebuild preview mỗi chunk → hết O(n²)).
+  - `BashExecution.tsx`: prop `output` được khai báo nhưng không destructure/không
+    dùng → phiên replay không hiện output; thiếu prop trong interface. Đã đồng bộ
+    prop → state và truyền `output` từ `Transcript.tsx`.
+  - Test: `npx vitest run` 2870 pass / 2 skip (210 file), tsc clean, build xanh.
+- **Test Results**: 2864 → 2870 pass, 0 fail. Initial failure rate this round:
+  1 render assertion fail → 0%.
+- **Rollbacks**: 0
+- **Regressions**: None (full suite + build verified before commit `afacc31`)
+- **MTTR**: ~25 phút (repro bằng ink-testing-library rồi bisect từng component)
