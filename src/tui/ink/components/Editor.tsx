@@ -8,7 +8,7 @@
 //   - Tự cuộn để con trỏ luôn trong khung nhìn
 // Port sang Ink TSX, khong copy code truc iep.
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { theme, fg, bg } from "../theme/index.js";
 import { KillRing } from "../core/KillRing.js";
@@ -27,6 +27,12 @@ export interface EditorProps {
   disableSubmit?: boolean;
   /** Chiều rộng khung nhìn để wrap; mặc định 80. */
   width?: number;
+  /**
+   * Nhận phím điều hướng (mũi tên lên/xuống) để lớp ngoài can thiệp — ví dụ cuộn
+   * transcript khi ô nhập rỗng thay vì duyệt lịch sử. Editor vẫn xử lý lịch sử
+   * khi có nội dung, nên callback chỉ nên dùng khi cha kiểm soát được vùng đó.
+   */
+  onKey?: (data: string, isUp: boolean, isDown: boolean) => void;
 }
 
 interface EditorState {
@@ -176,13 +182,27 @@ function wrapLineIntoDisplay(line: string, maxWidth: number): string[] {
   return wrapTextWithAnsi(line, maxWidth);
 }
 
-export const Editor: React.FC<EditorProps> = ({
-  value = "",
-  onSubmit,
-  onChange,
-  disableSubmit = false,
-  width = 80,
-}) => {
+export interface EditorHandle {
+  /** Nội dung hiển thị trong editor (chưa mở rộng paste marker). */
+  getText(): string;
+  /** Đặt lại nội dung (ví dụ sau khi gửi, hoặc khôi phục tin nhắn đã queue). */
+  setText(text: string): void;
+  /** Thêm vào lịch sử duyệt bằng mũi tên lên/xuống. */
+  addToHistory(text: string): void;
+}
+
+export const Editor = React.forwardRef<EditorHandle, EditorProps>(
+  (
+    {
+      value = "",
+      onSubmit,
+      onChange,
+      disableSubmit = false,
+      width = 80,
+      onKey,
+    },
+    ref,
+  ) => {
   const [state, setState] = useState<EditorState>(() => ({
     lines: value.length > 0 ? value.split("\n") : [""],
     cursorLine: value.length > 0 ? value.split("\n").length - 1 : 0,
@@ -191,6 +211,9 @@ export const Editor: React.FC<EditorProps> = ({
   const [pastes, setPastes] = useState<Map<number, string>>(new Map());
   const [pasteCounter, setPasteCounter] = useState(0);
   const [history, setHistory] = useState<string[]>([]);
+  /** historyRef giữ giá trị mới nhất cho handle addToHistory không bị stale. */
+  const historyRef = useRef(history);
+  historyRef.current = history;
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [historyDraft, setHistoryDraft] = useState<EditorState | null>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
@@ -804,6 +827,28 @@ export const Editor: React.FC<EditorProps> = ({
   const moveCursorVerticalRef = useRef(moveCursorVertical);
   moveCursorVerticalRef.current = moveCursorVertical;
 
+  // Handle cho phép cha (MessageInput/InteractiveController) đọc-ghi nội dung editor
+  // và nối history từ bên ngoài — đúng vai trò EditorComponent của pi-mono.
+  useImperativeHandle(
+    ref,
+    () => ({
+      getText: () => stateRef.current.lines.join("\n"),
+      setText: (text: string) => {
+        const lines = text.split("\n");
+        stateRef.current = { lines, cursorLine: lines.length - 1, cursorCol: lines.at(-1)?.length ?? 0 };
+        setState(stateRef.current);
+        notifyChange(stateRef.current);
+      },
+      addToHistory: (text: string) => {
+        const trimmed = text.trim();
+        if (!trimmed) return;
+        if (historyRef.current.length > 0 && historyRef.current[0] === trimmed) return;
+        setHistory((prev) => [trimmed, ...prev].slice(0, MAX_HISTORY));
+      },
+    }),
+    [notifyChange],
+  );
+
   const submit = useCallback(() => {
     if (disableSubmit) return;
     const current = stateRef.current;
@@ -955,6 +1000,12 @@ export const Editor: React.FC<EditorProps> = ({
     }
     if (kb.matches(data, "tui.editor.cursorUp")) {
       const { lines, cursorLine, cursorCol } = stateRef.current;
+      // Ô rỗng: ủy quyền mũi tên lên cho cha (cuộn transcript), như pi-mono cho
+      // CustomEditor. Có nội dung thì vào lịch sử như bình thường.
+      if (lines.length === 1 && lines[0] === "" && onKey) {
+        onKey(data, true, false);
+        return;
+      }
       const isFirstVisual = buildVisualLineMap(lastWidth.current).length > 0 && findVisualLineAt(buildVisualLineMap(lastWidth.current), cursorLine, cursorCol) === 0;
       if (isFirstVisual && (lines.length === 1 && lines[0] === "") || historyIndex > -1) {
         if (cursorCol === 0 || (lines.length === 1 && lines[0] === "")) {
@@ -967,6 +1018,10 @@ export const Editor: React.FC<EditorProps> = ({
     }
     if (kb.matches(data, "tui.editor.cursorDown")) {
       const { cursorLine, cursorCol } = stateRef.current;
+      if (onKey && stateRef.current.lines.length === 1 && stateRef.current.lines[0] === "") {
+        onKey(data, false, true);
+        return;
+      }
       const map = buildVisualLineMap(lastWidth.current);
       const isLastVisual = findVisualLineAt(map, cursorLine, cursorCol) === map.length - 1;
       if (isLastVisual && historyIndex > -1) {
@@ -1103,4 +1158,7 @@ export const Editor: React.FC<EditorProps> = ({
       ) : null}
     </Box>
   );
-};
+  },
+);
+
+Editor.displayName = "Editor";

@@ -2,6 +2,67 @@
 // Nắm giữ AgentSessionRuntime, xử lý slash commands, cung cấp API đơn giản cho UI.
 
 import type { AgentSessionRuntimeInterface } from '../../runtime/index.js';
+import type { IndicatorState, OverlayRequest } from '../../tui/ink/controller-bridge.js';
+
+/** Gộp text từ kết quả tool (chuỗi hoặc mảng block). */
+function textOfToolResult(result: any): string {
+  if (!result) return '';
+  const content = result.content ?? result;
+  if (typeof content === 'string') return content;
+  if (!Array.isArray(content)) return '';
+  return content
+    .filter((c: any) => c?.type === 'text')
+    .map((c: any) => c?.text ?? '')
+    .join('\n');
+}
+
+/** Mô tả gọn một tool call cho transcript. */
+function formatToolCall(name: string, args: unknown): string {
+  const record = (args ?? {}) as Record<string, unknown>;
+  const pick = (keys: string[]): string | undefined => {
+    for (const key of keys) {
+      const value = record[key];
+      if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    return undefined;
+  };
+  const detail =
+    pick(['command', 'cmd']) ??
+    pick(['path', 'file_path', 'filePath']) ??
+    pick(['pattern', 'query']) ??
+    pick(['url']);
+  return detail ? `⚙ ${name}: ${truncateMiddle(detail)}` : `⚙ ${name}`;
+}
+
+/** Ánh xạ loại overlay sang loại modal cũ (giữ tương thích getModal()). */
+function modalTypeForOverlay(kind: OverlayRequest['kind']): ModalState['type'] {
+  switch (kind) {
+    case 'model':
+      return 'model-selector';
+    case 'session':
+      return 'session-selector';
+    case 'settings':
+      return 'settings';
+    case 'theme':
+      return 'theme-selector';
+    case 'thinking':
+      return 'thinking';
+    case 'help':
+      return 'help';
+    case 'login':
+      return 'login';
+    default:
+      return 'none';
+  }
+}
+
+/** Cắt giữa chuỗi dài để vừa một dòng transcript. */
+function truncateMiddle(text: string, max = 60): string {
+  const flat = text.replace(/[\n\t]+/g, ' ').trim();
+  if (flat.length <= max) return flat;
+  const half = Math.floor((max - 1) / 2);
+  return `${flat.slice(0, half)}…${flat.slice(flat.length - half)}`;
+}
 
 export interface ChatMessage {
   id: string;
@@ -47,6 +108,16 @@ export class InteractiveController {
   private onStatusChangeCallback: ((status: RuntimeStatus) => void) | null = null;
   private onToastCallback: ((toast: ToastItem, removed?: boolean) => void) | null = null;
   private onModalCallback: ((modal: ModalState) => void) | null = null;
+  private onOverlayRequestCallback: ((request: OverlayRequest) => void) | null = null;
+  private onOverlayCloseCallback: (() => void) | null = null;
+  private onIndicatorCallback: ((state: IndicatorState) => void) | null = null;
+
+  /** Lịch sử tin nhắn đã gửi (mới nhất trước), dùng cho mũi tên lên/xuống. */
+  private history: string[] = [];
+  /** id -> message đang stream, để cập nhật nội dung liên tục thay vì nhảy một lần. */
+  private streamingId: string | undefined;
+  /** id -> tool execution đang chạy, hiển thị trong transcript. */
+  private pendingToolIds = new Set<string>();
 
   constructor(options: InteractiveControllerOptions) {
     this.runtime = options.runtime;
@@ -58,6 +129,47 @@ export class InteractiveController {
     };
 
     this.subscribeToRuntime();
+    // Nạp lại hội thoại của phiên hiện tại: nếu không, phiên được resume sẽ hiện
+    // transcript RỖNG dù session đã có message (pi-mono: renderInitialMessages).
+    this.loadTranscriptFromSession();
+  }
+
+  /**
+   * Đọc tin nhắn của phiên hiện tại vào transcript.
+   * Gọi khi khởi tạo và sau mỗi lần chuyển/tạo phiên.
+   */
+  private loadTranscriptFromSession(): void {
+    const session = this.runtime.session as any;
+    const raw: any[] = Array.isArray(session?.messages)
+      ? session.messages
+      : Array.isArray(session?.state?.messages)
+        ? session.state.messages
+        : [];
+    const loaded: ChatMessage[] = [];
+    for (const message of raw) {
+      const role = message?.role;
+      if (role !== 'user' && role !== 'assistant' && role !== 'system' && role !== 'tool') continue;
+      const content = message?.content;
+      const text = Array.isArray(content)
+        ? content.filter((c: any) => c?.type === 'text').map((c: any) => c?.text ?? '').join('\n')
+        : String(content ?? '');
+      if (!text.trim()) continue;
+      loaded.push({
+        id: `msg-${loaded.length}-${text.length}-${text.slice(0, 8)}`,
+        role,
+        content: text,
+        timestamp: typeof message?.timestamp === 'number' ? message.timestamp : Date.now(),
+      });
+    }
+    this.messages = loaded;
+    this.emitMessages();
+    // Lịch sử cho editor: các tin nhắn người dùng, mới nhất trước.
+    this.history = loaded.filter((m) => m.role === 'user').map((m) => m.content).reverse();
+  }
+
+  /** Phát lại danh sách tin nhắn cho view. */
+  private emitMessages(): void {
+    this.onMessageCallback?.(this.messages);
   }
 
   // ============================================================================
@@ -96,32 +208,271 @@ export class InteractiveController {
       switch (event.type) {
         case 'agent_start':
           this.setIsProcessing(true);
+          this.emitIndicator({ kind: 'working', message: 'Đang làm việc' });
+          this.pendingToolIds.clear();
+          this.streamingId = undefined;
           break;
+
         case 'agent_end':
           this.setIsProcessing(false);
+          this.emitIndicator({ kind: 'none' });
+          this.pendingToolIds.clear();
+          this.streamingId = undefined;
           break;
-        case 'message_start':
+
+        case 'agent_settled':
+          this.setIsProcessing(false);
+          this.emitIndicator({ kind: 'none' });
+          break;
+
+        case 'message_start': {
           this.setIsProcessing(true);
+          const role = event.message?.role;
+          if (role === 'user') {
+            this.addUserMessage(this.textOfMessage(event.message));
+          } else if (role === 'assistant') {
+            // Tạo message rỗng, sẽ được cập nhật liên tục trong message_update.
+            const id = this.addAssistantMessage('');
+            this.streamingId = id;
+          }
           break;
+        }
+
+        case 'message_update': {
+          if (event.message?.role !== 'assistant') break;
+          const id = this.streamingId;
+          if (!id) break;
+          // Cập nhật NỘI DUNG message đang stream: bản cũ bỏ qua hoàn toàn
+          // message_update nên chữ chỉ xuất hiện nguyên khối khi kết thúc.
+          this.updateMessage(id, this.textOfMessage(event.message));
+          for (const content of event.message?.content ?? []) {
+            if (content?.type === 'toolCall' && content.id) {
+              this.ensureToolMessage(content.id, content.name, content.arguments);
+            }
+          }
+          break;
+        }
+
         case 'message_end': {
           this.setIsProcessing(false);
-          const content = event.message?.content || '';
-          const text = Array.isArray(content)
-            ? content.filter((c: any) => c.type === 'text').map((c: any) => c.text).join('\n')
-            : String(content);
-          this.addAssistantMessage(text);
+          // event.message.role có thể bị thiếu ở một số runtime (mock/nhánh chỉ
+          // phát message_end). Chỉ bỏ qua khi ROLE được khai báo và khác assistant.
+          const role = event.message?.role;
+          if (role !== undefined && role !== 'assistant') break;
+          const text = this.textOfMessage(event.message);
+          if (this.streamingId) {
+            this.updateMessage(this.streamingId, text);
+          } else if (text.trim()) {
+            // Không có message_start đi trước: vẫn phải hiện nội dung.
+            this.addAssistantMessage(text);
+          }
+          const stopReason = event.message?.stopReason;
+          if (stopReason === 'error' && event.message?.errorMessage) {
+            this.addToast(event.message.errorMessage, 'error');
+          }
+          this.streamingId = undefined;
           break;
         }
+
+        case 'tool_execution_start': {
+          this.setIsProcessing(true);
+          this.ensureToolMessage(event.toolCallId, event.toolName, event.args);
+          break;
+        }
+
+        case 'tool_execution_update': {
+          this.updateToolMessage(event.toolCallId, event.partialResult);
+          break;
+        }
+
+        case 'tool_execution_end': {
+          this.updateToolMessage(event.toolCallId, event.result, {
+            isError: event.isError,
+            durationMs: event.durationMs,
+          });
+          this.pendingToolIds.delete(event.toolCallId);
+          break;
+        }
+
+        case 'compaction_start':
+          this.emitIndicator({ kind: 'compaction', reason: event.reason });
+          break;
+
+        case 'compaction_end':
+          this.emitIndicator({ kind: 'none' });
+          if (event.aborted) {
+            this.addToast(event.reason === 'manual' ? 'Đã hủy nén ngữ cảnh' : 'Tự động nén bị hủy', 'info');
+          } else if (event.errorMessage) {
+            this.addToast(event.errorMessage, 'error');
+          } else if (event.result) {
+            this.addToast(`Đã nén ngữ cảnh (${event.result.tokensBefore?.toLocaleString?.() ?? '?'} token)`, 'success');
+          }
+          // Sau khi nén, transcript bị thay thế: nạp lại từ session.
+          this.loadTranscriptFromSession();
+          break;
+
+        case 'auto_retry_start':
+          this.emitIndicator({
+            kind: 'retry',
+            attempt: event.attempt ?? 1,
+            maxAttempts: event.maxAttempts ?? 1,
+            delayMs: event.delayMs ?? 0,
+          });
+          break;
+
+        case 'auto_retry_end':
+          this.emitIndicator({ kind: 'none' });
+          if (!event.success) {
+            this.addToast(`Thử lại thất bại sau ${event.attempt ?? 1} lần: ${event.finalError || 'Không rõ'}`, 'error');
+          }
+          break;
+
+        case 'queue_update':
+          // Tin nhắn đã xếp hàng chờ agent xử lý.
+          break;
+
         case 'error': {
           this.setIsProcessing(false);
-          this.addToast(event.message || 'Error', 'error');
+          this.emitIndicator({ kind: 'none' });
+          this.addToast(typeof event.message === 'string' ? event.message : 'Lỗi', 'error');
           break;
         }
+
+        default:
+          break;
       }
     });
     (this as any)._unsub = unsub;
     return unsub;
   }
+
+  /** Gộp text từ một message (chuỗi hoặc mảng block). */
+  private textOfMessage(message: any): string {
+    const content = message?.content;
+    if (typeof content === 'string') return content;
+    if (!Array.isArray(content)) return '';
+    return content
+      .filter((c: any) => c?.type === 'text')
+      .map((c: any) => c?.text ?? '')
+      .join('\n');
+  }
+
+  /** Thêm tin nhắn trợ lý rỗng, trả về id để stream cập nhật. */
+  private addAssistantMessage(text: string): string {
+    const id = `msg-${Date.now()}-${this.messages.length}`;
+    this.messages.push({ id, role: 'assistant', content: text, timestamp: Date.now() });
+    this.emitMessages();
+    return id;
+  }
+
+  /** Cập nhật nội dung một message theo id. */
+  private updateMessage(id: string, text: string): void {
+    const found = this.messages.find((m) => m.id === id);
+    if (!found) return;
+    if (found.content === text) return;
+    found.content = text;
+    this.emitMessages();
+  }
+
+  /** Đảm bảo có một message mô tả tool call (một lần mỗi toolCallId). */
+  private ensureToolMessage(toolCallId: string, toolName: string, args: unknown): string {
+    if (this.pendingToolIds.has(toolCallId)) return toolCallId;
+    this.pendingToolIds.add(toolCallId);
+    const formatted = formatToolCall(toolName, args);
+    this.messages.push({
+      id: `tool-${toolCallId}`,
+      role: 'tool',
+      content: formatted,
+      timestamp: Date.now(),
+    });
+    this.emitMessages();
+    return toolCallId;
+  }
+
+  /** Cập nhật kết quả tool call vào message tương ứng. */
+  private updateToolMessage(
+    toolCallId: string,
+    result: any,
+    options?: { isError?: boolean; durationMs?: number },
+  ): void {
+    const found = this.messages.find((m) => m.id === `tool-${toolCallId}`);
+    if (!found) return;
+    const text = textOfToolResult(result);
+    if (!text) return;
+    const suffix = options?.durationMs !== undefined ? ` (${options.durationMs}ms)` : '';
+    const next = options?.isError ? `✗ ${text}${suffix}` : `✓ ${text}${suffix}`;
+    if (found.content === next) return;
+    found.content = next;
+    this.emitMessages();
+  }
+
+  /** Phát trạng thái chỉ báo cho view. */
+  private emitIndicator(state: IndicatorState): void {
+    this.onIndicatorCallback?.(state);
+  }
+
+  /** Cấp độ suy nghĩ đang áp dụng của phiên. */
+  private getCurrentThinkingLevel(): string {
+    const session = this.runtime.session as any;
+    return session?.thinkingLevel ?? 'off';
+  }
+
+  /** Các cấp độ suy nghĩ mô hình hiện tại hỗ trợ. */
+  private getAvailableThinkingLevels(): string[] {
+    const session = this.runtime.session as any;
+    if (typeof session?.getAvailableThinkingLevels === 'function') {
+      return session.getAvailableThinkingLevels();
+    }
+    return ['off', 'minimal', 'low', 'medium', 'high', 'xhigh'];
+  }
+
+  /** Cập nhật status (model/tokens) từ session sau khi đổi model/thinking. */
+  private refreshStatusFromSession(): void {
+    const session = this.runtime.session as any;
+    const model = session?.model;
+    this.status.model = model ? `${model.provider}/${model.id}` : this.status.model;
+    const usage = (this.runtime as any).getContextUsage?.();
+    if (usage) {
+      this.status.contextPercent = `${Math.round(usage.percent)}%`;
+      this.status.tokens = `${usage.tokens}/${usage.contextWindow}`;
+    }
+    this.onStatusChangeCallback?.(this.status);
+  }
+
+  /** Mở SessionSelector với danh sách phiên khả dụng. */
+  private async openSessionSelector(): Promise<void> {
+    let sessions: Array<{ id: string; path: string; cwd: string }> = [];
+    try {
+      sessions = typeof this.runtime.listSessions === 'function' ? await this.runtime.listSessions() : [];
+    } catch (err: any) {
+      this.addToast(`Không đọc được danh sách phiên: ${err?.message || 'lỗi'}`, 'error');
+      return;
+    }
+    this.requestOverlay({ kind: 'session', props: { sessions } });
+  }
+
+  /** Dựng các dòng cài đặt cho bảng /settings. */
+  private buildSettingRows(): Array<{ id: string; label: string; value: string; description?: string; values?: string[] }> {
+    const settings = this.runtime.settings as any;
+    const levels = ['off', 'minimal', 'low', 'medium', 'high', 'xhigh'];
+    return [
+      {
+        id: 'theme',
+        label: 'Chủ đề',
+        value: settings.getTheme?.() || 'dark',
+        description: 'Giao diện màu của transcript và viền',
+        values: ['dark', 'light'],
+      },
+      {
+        id: 'defaultThinkingLevel',
+        label: 'Cấp độ suy nghĩ',
+        value: settings.getDefaultThinkingLevel?.() || 'off',
+        description: 'Mức suy luận mặc định cho mô hình mới',
+        values: levels,
+      },
+    ];
+  }
+
 
   /** Detach from the old session and attach to the current one. */
   private resubscribeToRuntime(): void {
@@ -157,6 +508,46 @@ export class InteractiveController {
     return [...this.toasts];
   }
 
+  /** Lịch sử tin nhắn đã gửi (mới nhất trước) cho editor. */
+  getHistory(): readonly string[] {
+    return [...this.history];
+  }
+
+  /** Cập nhật một cài đặt (bảng settings của view). */
+  updateSetting(id: string, value: string): void {
+    const settings = this.runtime.settings as any;
+    switch (id) {
+      case 'theme':
+        if (settings?.setTheme) {
+          settings.setTheme(value);
+          this.applyTheme(value);
+        }
+        return;
+      case 'defaultThinkingLevel':
+        if (settings?.setDefaultThinkingLevel) settings.setDefaultThinkingLevel(value);
+        return;
+      default:
+        this.addToast(`Cài đặt "${id}" chưa hỗ trợ đổi từ giao diện.`, 'info');
+    }
+  }
+
+  /**
+   * Yêu cầu view mở một cửa sổ phụ (thay thế ô nhập).
+   *
+   * Cũng phản chiếu vào ModalState để getModal() vẫn trả đúng loại — nhiều nơi
+   * (và test) vẫn đọc modal, và pi-mono dùng showSelector() thay cho editor.
+   */
+  requestOverlay(request: OverlayRequest): void {
+    this.onOverlayRequestCallback?.(request);
+    this.setModal({ type: modalTypeForOverlay(request.kind), props: request.props ?? {} });
+  }
+
+  /** Yêu cầu view đóng cửa sổ phụ. */
+  closeOverlay(): void {
+    this.onOverlayCloseCallback?.();
+    this.setModal({ type: 'none' });
+  }
+
   onMessage(callback: (messages: ChatMessage[]) => void): void {
     this.onMessageCallback = callback;
     callback(this.messages);
@@ -176,19 +567,94 @@ export class InteractiveController {
     callback(this.modal);
   }
 
+  onOverlayRequest(callback: (request: OverlayRequest) => void): void {
+    this.onOverlayRequestCallback = callback;
+  }
+
+  onOverlayClose(callback: () => void): void {
+    this.onOverlayCloseCallback = callback;
+  }
+
+  onIndicator(callback: (state: IndicatorState) => void): void {
+    this.onIndicatorCallback = callback;
+  }
+
   // ============================================================================
   // User actions
   // ============================================================================
 
+  /**
+   * Gửi tin nhắn của người dùng.
+   *
+   * Định tuyến giống pi-mono setupEditorSubmitHandler():
+   *   - "/xxx ..."   -> lệnh slash nội bộ (runCommand), KHÔNG đẩy tới LLM
+   *   - "!cmd"/"!!cmd" -> chạy bash, kết quả hiện trong transcript
+   *   - còn lại      -> session.prompt()
+   * Bản cũ đẩy MỌI thứ (kể cả "/help") xuống LLM như tin nhắn thường, nên lệnh
+   * slash không bao giờ chạy và người dùng nhận lại câu trả lời vô nghĩa.
+   */
   async sendMessage(text: string): Promise<void> {
-    if (!text.trim()) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
 
-    this.addUserMessage(text);
+    if (trimmed.startsWith('/')) {
+      this.addUserMessage(trimmed);
+      const spaceIndex = trimmed.indexOf(' ');
+      const commandId = spaceIndex === -1 ? trimmed.slice(1) : trimmed.slice(1, spaceIndex);
+      const args = spaceIndex === -1 ? undefined : trimmed.slice(spaceIndex + 1).trim();
+      await this.runCommand(commandId, args);
+      return;
+    }
+
+    if (trimmed.startsWith('!')) {
+      this.addUserMessage(trimmed);
+      const excludeFromContext = trimmed.startsWith('!!');
+      const command = excludeFromContext ? trimmed.slice(2).trim() : trimmed.slice(1).trim();
+      if (!command) {
+        this.addToast('Thiếu lệnh bash sau "!".', 'info');
+        return;
+      }
+      await this.runBashCommand(command, excludeFromContext);
+      return;
+    }
+
+    this.addUserMessage(trimmed);
+    if (!this.history.includes(trimmed)) {
+      this.history = [trimmed, ...this.history].slice(0, 100);
+    }
 
     try {
-      await this.runtime.prompt(text);
+      await this.runtime.prompt(trimmed);
     } catch (err: any) {
       this.addToast(err.message || 'Unknown error', 'error');
+    }
+  }
+
+  /**
+   * Chạy lệnh bash từ chế độ tương tác ("!" / "!!").
+   * Kết quả được ghi vào session qua recordBashResult để xuất hiện trong
+   * transcript và (trừ khi excludeFromContext) vào ngữ cảnh mô hình.
+   */
+  private async runBashCommand(command: string, excludeFromContext: boolean): Promise<void> {
+    const session = this.runtime.session as any;
+    const toolId = `bash-${Date.now()}`;
+    this.messages.push({
+      id: toolId,
+      role: 'tool',
+      content: `⚙ bash: ${command.length > 60 ? `${command.slice(0, 30)}…${command.slice(-29)}` : command}`,
+      timestamp: Date.now(),
+    });
+    this.emitMessages();
+    try {
+      if (typeof session?.executeBash === 'function') {
+        const result = await session.executeBash(command, { excludeFromContext });
+        session.recordBashResult?.(command, result.output, result.exitCode, result.cancelled ?? false, result.truncated ?? false, result.fullOutputPath, { excludeFromContext });
+        this.updateMessage(toolId, `✓ ${result.output || '(không có đầu ra)'}`);
+      } else {
+        this.addToast('Phiên hiện tại không hỗ trợ chạy bash.', 'error');
+      }
+    } catch (err: any) {
+      this.updateMessage(toolId, `✗ ${err?.message || 'Lỗi không rõ'}`);
     }
   }
 
@@ -203,9 +669,18 @@ export class InteractiveController {
         const valid = ['off', 'minimal', 'low', 'medium', 'high', 'xhigh'];
         if (args && valid.includes(args)) {
           await this.runtime.setThinkingLevel(args as any);
-          this.addToast(`Thinking level set to ${args}`, 'success');
+          this.refreshStatusFromSession();
+          this.addToast(`Cấp độ suy nghĩ: ${args}`, 'success');
         } else {
-          this.setModal({ type: 'thinking', props: { current: this.status.model, options: valid } });
+          // Bản cũ truyền this.status.model làm "current" nên hộp thoại hiển thị
+          // MÃ MÔ HÌNH ở chỗ phải là CẤP ĐỘ SUY NGHĨ.
+          this.requestOverlay({
+            kind: 'thinking',
+            props: {
+              current: this.getCurrentThinkingLevel(),
+              levels: this.getAvailableThinkingLevels(),
+            },
+          });
         }
         return;
       }
@@ -215,7 +690,7 @@ export class InteractiveController {
         return;
 
       case 'help':
-        this.setModal({ type: 'help' });
+        this.requestOverlay({ kind: 'help' });
         return;
 
       case 'copy': {
@@ -239,7 +714,7 @@ export class InteractiveController {
       }
 
       case 'resume':
-        this.setModal({ type: 'session-selector' });
+        await this.openSessionSelector();
         return;
 
       case 'new': {
@@ -256,30 +731,20 @@ export class InteractiveController {
         return;
       }
 
-      case 'settings': {
-        const settings = this.runtime.settings as any;
-        this.setModal({
-          type: 'settings',
-          props: {
-            theme: settings.getTheme?.() || 'default',
-            disabledTools: settings.getDisabledTools?.() || [],
-            defaultProvider: settings.getDefaultProvider?.() || 'none',
-            defaultModel: settings.getDefaultModel?.() || 'none',
-            defaultThinkingLevel: settings.getDefaultThinkingLevel?.() || 'off',
-          },
-        });
+      case 'settings':
+        this.requestOverlay({ kind: 'settings', props: { settings: this.buildSettingRows() } });
         return;
-      }
 
       case 'model': {
-        // ModelRegistry exposes getAll(); there is no getModels(provider), so the
-        // previous loop always built an empty list.
         const modelRegistry = this.runtime.services?.modelRegistry as any;
         const all: any[] = modelRegistry?.getAll?.() || [];
-        const models = all.map((m: any) => ({ id: m.id, provider: m.provider }));
-        this.setModal({
-          type: 'model-selector',
-          props: { current: (this.runtime.session as any)?.model?.id || 'none', models },
+        const models = all.map((m: any) => ({ id: m.id, provider: m.provider, name: m.name }));
+        this.requestOverlay({
+          kind: 'model',
+          props: {
+            current: (this.runtime.session as any)?.model?.id || 'none',
+            models,
+          },
         });
         return;
       }
@@ -371,18 +836,16 @@ export class InteractiveController {
       case 'theme': {
         const settings = this.runtime.settings as any;
         if (!args) {
-          const current = settings.getTheme?.() || 'default';
-          this.addToast(`Current theme: ${current}`, 'info');
+          this.requestOverlay({
+            kind: 'theme',
+            props: { current: settings.getTheme?.() || 'dark', themes: ['dark', 'light'] },
+          });
           return;
         }
         if (settings.setTheme) {
           settings.setTheme(args);
-          this.addToast(`Theme set to: ${args}`, 'success');
-          // Áp dụng theme ngay lập tức
-          this.applyTheme(args);
-        } else {
-          this.addToast('Theme setting not supported', 'error');
         }
+        this.applyTheme(args);
         return;
       }
 
@@ -431,17 +894,6 @@ export class InteractiveController {
     this.onMessageCallback?.(this.messages);
   }
 
-  private addAssistantMessage(text: string): void {
-    const message: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      role: 'assistant',
-      content: text,
-      timestamp: Date.now(),
-    };
-    this.messages.push(message);
-    this.onMessageCallback?.(this.messages);
-  }
-
   private addToast(message: string, type: ToastItem['type'] = 'info'): void {
     const toast: ToastItem = {
       id: `toast-${Date.now()}`,
@@ -462,18 +914,29 @@ export class InteractiveController {
     }, toast.duration || 3000);
   }
 
+  /**
+   * Áp chủ đề qua hệ thống theme thật.
+   *
+   * Bản cũ ghi escape màu THÔ ra stdout (`\x1b[40m\x1b[37m`) — không đi qua
+   * render của Ink nên nó bị ghi đè ở frame kế tiếp, không có reset, và làm
+   * desync màn hình (màu loang ra toàn bộ output sau đó). Matrix thậm chí là
+   * xanh-trên-xanh nên chữ vô hình. Đổi qua setTheme()/Theme để component dựng
+   * lại với màu mới và Ink giữ đúng trạng thái terminal.
+   */
   private applyTheme(themeName: string): void {
-    // Áp dụng theme ngay lập tức bằng cách thay đổi màu sắc của terminal
-    // Các theme được hỗ trợ: dark, light, matrix
-    const themeSettings: Record<string, { bg: string; fg: string }> = {
-      dark: { bg: "\x1b[40m", fg: "\x1b[37m" },     // Đen nền, trắng chữ
-      light: { bg: "\x1b[47m", fg: "\x1b[30m" },   // Trắng nền, đen chữ
-      matrix: { bg: "\x1b[42m", fg: "\x1b[32m" },  // Xanh lá nền, xanh lá chữ
-    };
-
-    const theme = themeSettings[themeName] || themeSettings.dark;
-    // Áp dụng màu nền và chữ cho terminal
-    process.stdout.write(theme.bg + theme.fg);
+    if (themeName !== 'dark' && themeName !== 'light') {
+      this.addToast(`Chủ đề không hợp lệ: ${themeName}`, 'error');
+      return;
+    }
+    try {
+      const { setThemeInstance, loadBuiltinTheme } = require('../../tui/ink/theme/theme.js') as typeof import('../../tui/ink/theme/theme.js');
+      setThemeInstance(loadBuiltinTheme(themeName));
+      const { requestRenderBus } = require('../../tui/ink/core/RenderBus.js') as typeof import('../../tui/ink/core/RenderBus.js');
+      requestRenderBus.publish();
+      this.addToast(`Đã đổi chủ đề: ${themeName}`, 'success');
+    } catch (error) {
+      this.addToast(`Không đổi được chủ đề: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    }
   }
 
   private setModal(modal: ModalState): void {

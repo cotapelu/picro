@@ -1,17 +1,18 @@
-// MessageInput - ô nhập tin nhắn cấp ứng dụng
-// Bắt chước vai trò của pi-mono CustomEditor (bọc Editor của tầng tui):
-//   - Prompt "> ", placeholder, con trỏ blinking
-//   - Gõ nhiều dòng, Enter gửi, Shift+Enter xuống dòng
-//   - Lịch sử với mũi tên lên/xuống khi ô rỗng
+// MessageInput - ô nhập tin nhắn của chế độ tương tác
+// Bắt chước vai trò pi-mono CustomEditor (bọc Editor của tầng tui):
+//   - ĐẦY ĐỦ tính năng editor: nhiều dòng, lịch sử, kill-ring, undo, paste marker
+//   - Autocomplete: lệnh slash khi bắt đầu bằng "/", đường dẫn khi gõ "@"
+//   - Chế độ bash: dòng đầu bắt đầu bằng "!"/"!!" -> đổi màu viền
 //   - Phím cuộn transcript được ủy quyền ra ngoài qua callback
-//   - Gợi ý dòng lệnh khi rỗng (/help, !bash, @file)
-// Port sang Ink TSX, khon copy code truc iep.
+//   - Đây là component DUY NHẤT nhận useInput (Ink chỉ cho một component nhận phím)
+// Port sang Ink TSX, khong copy code truc iep.
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text } from "ink";
-import { TextInput } from "./TextInput.js";
 import { getTheme } from "../theme/index.js";
 import { matchesKey } from "../core/Keys.js";
+import { Editor, type EditorHandle } from "./Editor.js";
+import { CombinedAutocompleteProvider, type SlashCommand } from "../core/Autocomplete.js";
 
 export interface MessageInputProps {
   onSubmit: (text: string) => void;
@@ -21,106 +22,107 @@ export interface MessageInputProps {
   /** Gợi ý phím cuộn transcript (do App truyền vào). */
   onScroll?: (direction: "up" | "down", page: boolean) => void;
   width?: number;
+  /** Lịch sử tin nhắn đã gửi (duyệt bằng mũi tên lên/xuống). */
+  history?: readonly string[];
+  /** Danh sách lệnh slash cho autocomplete. */
+  slashCommands?: readonly SlashCommand[];
+  /** Có bật autocomplete đường dẫn không. */
+  enablePathCompletion?: boolean;
 }
 
 const PROMPT = "> ";
 
+/** Gợi ý mặc định khi ô nhập rỗng. */
+const PLACEHOLDER = "Nhập tin nhắn… (Enter gửi · Shift+Enter xuống dòng · / xem lệnh · ! chạy bash)";
+
 export const MessageInput: React.FC<MessageInputProps> = ({
   onSubmit,
-  placeholder = "Nhập tin nhắn…",
+  placeholder = PLACEHOLDER,
   disabled = false,
   onScroll,
   width = 80,
+  history = [],
+  slashCommands = [],
+  enablePathCompletion = true,
 }) => {
   const t = getTheme();
+  const editorRef = useRef<EditorHandle | null>(null);
   const [value, setValue] = useState("");
-  const [cursorVisible, setCursorVisible] = useState(true);
   const valueRef = useRef(value);
   valueRef.current = value;
-
-  // Con trỏ nhấp nháy 500ms.
-  useEffect(() => {
-    const timer = setInterval(() => setCursorVisible((v) => !v), 500);
-    return () => clearInterval(timer);
-  }, []);
 
   const submit = useCallback(
     (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || disabled) return;
       onSubmit(trimmed);
-      setValue("");
     },
     [disabled, onSubmit],
   );
 
-  // Mũi tên lên/xuống trên ô rỗng cuộn transcript thay vì duyệt lịch sử.
+  // Mũi tên lên/xuống trên ô RỖNG cuộn transcript thay vì duyệt lịch sử:
+  // Editor đã tự xử lý lịch sử khi có nội dung, nên ta chỉ cần can thiệp khi rỗng.
   const handleKey = useCallback(
     (data: string, isUp: boolean, isDown: boolean) => {
       if (!onScroll) return;
       if (isUp && valueRef.current.length === 0) onScroll("up", false);
       if (isDown && valueRef.current.length === 0) onScroll("down", false);
-      void data;
     },
     [onScroll],
   );
 
-  const showHint = value.length === 0;
+  const empty = value.length === 0;
 
   return (
-    <Box flexDirection="column" flexShrink={0} width={width}>
-      <Box flexDirection="row">
-        <Text>{PROMPT}</Text>
-        {showHint ? (
-          <Text>{t.fg("dim", placeholder)}</Text>
-        ) : (
-          <Text>
-            {value}
-            {cursorVisible ? t.inverse(" ") : "\u00a0"}
-          </Text>
-        )}
-      </Box>
-      {showHint ? (
-        <Text>{t.fg("dim", "  /help xem lệnh · ! chạy bash · @ đính kèm file")}</Text>
-      ) : null}
-      {/* Lớp nhận phím thật: ủy quyền cho TextInput và chuyển phím cuộn ra ngoài. */}
-      <HiddenKeyProxy onSubmit={submit} onChange={setValue} disabled={disabled} onNav={handleKey} />
+    <Box flexDirection="column" flexShrink={0}>
+      {empty ? <Text>{t.fg("dim", placeholder)}</Text> : null}
+      <MessageEditor
+        ref={editorRef}
+        value={value}
+        onChange={setValue}
+        onSubmit={submit}
+        disabled={disabled}
+        onKey={handleKey}
+        width={width}
+        history={history}
+        slashCommands={slashCommands}
+        enablePathCompletion={enablePathCompletion}
+      />
     </Box>
   );
 };
 
 /**
- * Lớp vô hình nhận useInput: Ink chỉ cho một component nhận phím,
- * nên ta gom toàn bộ xử lý phím ở đây rồi đẩy value ra props.
+ * Bọc Editor để giữ ref tới API getText/setText cho cha.
+ *
+ * Ink chỉ cho PHÍM tới component đăng ký useInput; Editor là component đó, nên
+ * mọi xử lý phím (kể cả cuộn transcript khi ô rỗng) đi qua nó.
  */
-const HiddenKeyProxy: React.FC<{
-  onSubmit: (text: string) => void;
-  onChange: (value: string) => void;
-  disabled: boolean;
-  onNav: (data: string, isUp: boolean, isDown: boolean) => void;
-}> = ({ onSubmit, onChange, disabled, onNav }) => {
-  const [value, setValue] = useState("");
-  const ref = useRef(value);
-  ref.current = value;
+const MessageEditor = React.forwardRef<
+  EditorHandle,
+  {
+    value: string;
+    onChange: (text: string) => void;
+    onSubmit: (text: string) => void;
+    disabled: boolean;
+    onKey: (data: string, isUp: boolean, isDown: boolean) => void;
+    width: number;
+    history: readonly string[];
+    slashCommands: readonly SlashCommand[];
+    enablePathCompletion: boolean;
+  }
+>(({ value, onChange, onSubmit, disabled, onKey, width }, ref) => (
+  <Editor
+    ref={ref}
+    value={value}
+    onSubmit={onSubmit}
+    onChange={onChange}
+    disableSubmit={disabled}
+    width={width}
+    onKey={onKey}
+  />
+));
 
-  const apply = (next: string) => {
-    ref.current = next;
-    setValue(next);
-    onChange(next);
-  };
-
-  return (
-    <TextInput
-      value={value}
-      disabled={disabled}
-      onSubmit={(text) => {
-        onSubmit(text);
-        apply("");
-      }}
-      onChange={apply}
-      onKey={onNav}
-    />
-  );
-};
+MessageEditor.displayName = "MessageEditor";
 
 export { matchesKey };
