@@ -111,6 +111,8 @@ export class InteractiveController {
   private onOverlayRequestCallback: ((request: OverlayRequest) => void) | null = null;
   private onOverlayCloseCallback: (() => void) | null = null;
   private onIndicatorCallback: ((state: IndicatorState) => void) | null = null;
+  private onEditorClear: (() => void) | undefined;
+  private onEditorRead: (() => string) | undefined;
 
   /** Lịch sử tin nhắn đã gửi (mới nhất trước), dùng cho mũi tên lên/xuống. */
   private history: string[] = [];
@@ -540,6 +542,25 @@ export class InteractiveController {
   requestOverlay(request: OverlayRequest): void {
     this.onOverlayRequestCallback?.(request);
     this.setModal({ type: modalTypeForOverlay(request.kind), props: request.props ?? {} });
+  }
+
+  /**
+   * Xóa nội dung ô nhập (Ctrl+C lần đầu).
+   * View giữ ref tới Editor; controller chỉ phát tín hiệu để view thực hiện.
+   */
+  clearEditor(): void {
+    this.onEditorClear?.();
+  }
+
+  /** Nội dung ô nhập hiện tại (Ctrl+D chỉ thoát khi rỗng). */
+  getEditorText(): string {
+    return this.onEditorRead?.() ?? "";
+  }
+
+  /** View đăng ký hai hook để controller tương tác với ô nhập. */
+  onEditorCallbacks(hooks: { clear: () => void; read: () => string }): void {
+    this.onEditorClear = hooks.clear;
+    this.onEditorRead = hooks.read;
   }
 
   /** Yêu cầu view đóng cửa sổ phụ. */

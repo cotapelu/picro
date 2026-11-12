@@ -63,6 +63,14 @@ export interface InteractiveControllerLike {
   onIndicator(callback: (state: IndicatorState) => void): void;
   /** Đăng ký nghe sự kiện phiên (cho orchestrator). */
   subscribeEvents(listener: (event: unknown) => void): () => void;
+  /** Hủy đăng ký sự kiện khi TUI đóng (tránh rò rỉ listener). */
+  dispose?(): void;
+  /** Xóa nội dung ô nhập (Ctrl+C lần đầu). */
+  clearEditor?(): void;
+  /** Đọc nội dung ô nhập (Ctrl+D chỉ thoát khi rỗng). */
+  getEditorText?(): string;
+  /** View đăng ký hook để controller xóa/đọc ô nhập. */
+  onEditorCallbacks?(hooks: { clear: () => void; read: () => string }): void;
 }
 
 export type { ChatMessageLike, ToastLike };

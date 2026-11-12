@@ -35,16 +35,20 @@ const PROMPT = "> ";
 /** Gợi ý mặc định khi ô nhập rỗng. */
 const PLACEHOLDER = "Nhập tin nhắn… (Enter gửi · Shift+Enter xuống dòng · / xem lệnh · ! chạy bash)";
 
-export const MessageInput: React.FC<MessageInputProps> = ({
-  onSubmit,
-  placeholder = PLACEHOLDER,
-  disabled = false,
-  onScroll,
-  width = 80,
-  history = [],
-  slashCommands = [],
-  enablePathCompletion = true,
-}) => {
+export const MessageInput = React.forwardRef<EditorHandle, MessageInputProps>(
+  (
+    {
+      onSubmit,
+      placeholder = PLACEHOLDER,
+      disabled = false,
+      onScroll,
+      width = 80,
+      history = [],
+      slashCommands = [],
+      enablePathCompletion = true,
+    },
+    ref,
+  ) => {
   const t = getTheme();
   const editorRef = useRef<EditorHandle | null>(null);
   const [value, setValue] = useState("");
@@ -77,7 +81,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     <Box flexDirection="column" flexShrink={0}>
       {empty ? <Text>{t.fg("dim", placeholder)}</Text> : null}
       <MessageEditor
-        ref={editorRef}
+        ref={ref ?? editorRef}
         value={value}
         onChange={setValue}
         onSubmit={submit}
@@ -90,7 +94,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       />
     </Box>
   );
-};
+  },
+);
 
 /**
  * Bọc Editor để giữ ref tới API getText/setText cho cha.
@@ -124,5 +129,7 @@ const MessageEditor = React.forwardRef<
 ));
 
 MessageEditor.displayName = "MessageEditor";
+
+MessageInput.displayName = "MessageInput";
 
 export { matchesKey };

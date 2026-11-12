@@ -28,40 +28,30 @@ import { InteractiveController } from "./modes/interactive/interactive-controlle
 import { createAgentSessionRuntime } from "./runtime/agent-session-runtime.js";
 import { startHttpServer } from "./modes/http/index.js";
 
-function subscribeToSessionEvents(runtime: AgentSessionRuntime) {
-  console.log('[DEBUG] Subscribing to session events...');
-  if (runtime && typeof runtime.subscribe === 'function') {
-    const unsub = runtime.subscribe((event: any) => {
-      if (process.env.VERBOSE) {
-        console.log(`[DEBUG] Event: ${event.type}`, event);
-      }
-      if (event.type === 'message_end') {
-        console.log('[DEBUG] message_end event received');
-        const msgs = runtime.messages as any[] || [];
-        const lastAssistant = [...msgs].reverse().find((m: any) => m.role === 'assistant');
-        if (lastAssistant) {
-          const content = lastAssistant.content as any[] || [];
-          const text = content.filter((c: any) => c.type === 'text').map((c: any) => c.text).join('\n');
-          if (text) {
-            console.log('');
-            console.log(text);
-          } else {
-            console.log('[No text in response]');
-          }
-        } else {
-          console.log('[No assistant message in history]');
-        }
-      }
-      if (event.type === 'agent_end') {
-        console.log('[DEBUG] agent_end event received');
-        const msgs = runtime.messages as any[] || [];
-        console.log('[DEBUG] Final messages with full content:', JSON.stringify(msgs, null, 2));
-      }
-    });
-    // Keep unsub if needed later
-  } else {
-    console.warn('[DEBUG] Session does not have subscribe method');
-  }
+/**
+ * Đăng ký nhận sự kiện phiên (chỉ dùng khi bật VERBOSE).
+ *
+ * Bản cũ ghi console.log('[DEBUG]...') KHÔNG điều kiện: 9 dòng log chạy ở mọi
+ * lần khởi động, ghi đè lên output của Ink (TUI fullscreen) và làm nhiễu stdout
+ * khi người ta pipe kết quả đi. Giờ chỉ log khi thực sự bật debug.
+ */
+function subscribeToSessionEvents(runtime: AgentSessionRuntime): void {
+  if (!runtime || typeof runtime.subscribe !== 'function') return;
+  runtime.subscribe((event: any) => {
+    if (!process.env.VERBOSE) return;
+    // eslint-disable-next-line no-console
+    console.error(`[picro] ${event.type}`);
+    if (event.type === 'message_end') {
+      const msgs = (runtime.messages as any[]) || [];
+      const lastAssistant = [...msgs].reverse().find((m: any) => m?.role === 'assistant');
+      const text = lastAssistant
+        ? (Array.isArray(lastAssistant.content)
+            ? lastAssistant.content.filter((c: any) => c?.type === 'text').map((c: any) => c?.text ?? '').join('\n')
+            : String(lastAssistant.content ?? ''))
+        : '';
+      if (text) console.error('');
+    }
+  });
 }
 
 function loadEnvFile(): void {
@@ -340,14 +330,23 @@ async function main(): Promise<void> {
   // Subscribe to events EARLY - before sending any messages
   subscribeToSessionEvents(runtime);
 
-  // Graceful shutdown
+  // Graceful shutdown: LUÔN dispose runtime (bản cũ chỉ dispose trong handler
+  // signal, nên thoát thường — EOF, /quit, Ink unmount — không bao giờ gọi và
+  // session file có thể không được flush).
+  let disposed = false;
+  const disposeRuntime = async (): Promise<void> => {
+    if (disposed) return;
+    disposed = true;
+    try { await runtime.dispose(); } catch { /* dispose is best-effort */ }
+  };
   const shutdown = async (signal: string) => {
     console.log(`\nReceived ${signal}, shutting down gracefully...`);
-    try { await runtime.dispose(); } catch (err) { console.error('Error during shutdown:', err); }
+    await disposeRuntime();
     process.exit(0);
   };
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
-  process.on('SIGHUP', () => shutdown('SIGHUP'));
+  process.on('SIGTERM', () => void shutdown('SIGTERM'));
+  process.on('SIGHUP', () => void shutdown('SIGHUP'));
+  process.once('exit', () => { void disposeRuntime(); });
   time("createAgentSessionRuntime");
 
   // Check session cwd

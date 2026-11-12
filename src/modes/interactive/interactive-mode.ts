@@ -147,7 +147,12 @@ export class InteractiveMode {
     this.pendingUserInputs.push(trimmed);
   }
 
-  /** Ctrl+C: lần đầu xóa ô nhập, hai lần liên tiếp thì thoát. */
+  /**
+   * Ctrl+C: lần đầu XÓA ô nhập, hai lần liên tiếp thì thoát.
+   *
+   * Bản cũ không làm gì ở lần đầu ngoài xin render lại — người dùng nhấn Ctrl+C
+   * không thấy phản hồi nào (pi-mono gọi clearEditor() và cập nhật trạng thái).
+   */
   handleCtrlC(): void {
     const now = Date.now();
     if (now - this.lastSigintTime < 500) {
@@ -155,7 +160,44 @@ export class InteractiveMode {
       return;
     }
     this.lastSigintTime = now;
+    this.clearEditor();
+  }
+
+  /** Xóa nội dung ô nhập (controller giữ state editor). */
+  private clearEditor(): void {
+    this.controller.clearEditor?.();
     requestRenderBus.publish();
+  }
+
+  /** Ctrl+D: chỉ thoát khi ô nhập rỗng (CustomEditor của pi-mono bắt buộc vậy). */
+  handleCtrlD(): void {
+    if ((this.controller.getEditorText?.() ?? "").trim().length === 0) {
+      void this.shutdown();
+    }
+  }
+
+  /** Ctrl+Z: tạm dừng tiến trình ra nền, khôi phục terminal khi tiếp tục. */
+  handleCtrlZ(): void {
+    if (process.platform === "win32") {
+      this.showStatus("Tạm dừng ra nền không hỗ trợ trên Windows");
+      return;
+    }
+    const keepAlive = setInterval(() => {}, 2 ** 30);
+    const ignoreSigint = () => {};
+    process.on("SIGINT", ignoreSigint);
+    process.once("SIGCONT", () => {
+      clearInterval(keepAlive);
+      process.removeListener("SIGINT", ignoreSigint);
+      requestRenderBus.publish();
+    });
+    try {
+      this.stop();
+      process.kill(0, "SIGTSTP");
+    } catch {
+      clearInterval(keepAlive);
+      process.removeListener("SIGINT", ignoreSigint);
+      throw new Error("Không tạm dừng được tiến trình");
+    }
   }
 
   stop(): void {
@@ -163,6 +205,14 @@ export class InteractiveMode {
     this.unsubscribe = undefined;
     this.programStatus.report();
     this.terminal.stop();
+    // Sau khi tắt raw mode, dữ liệu còn trong buffer stdin (ví dụ Ctrl+D người
+    // dùng vừa gõ) sẽ bị shell đọc lại và có thể đóng phiên shell cha — pi-mono
+    // chủ động pause stdin để chặn race này.
+    try {
+      process.stdin.pause();
+    } catch {
+      // stdin có thể đã đóng.
+    }
   }
 
   async shutdown(): Promise<void> {

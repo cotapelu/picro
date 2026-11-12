@@ -169,6 +169,16 @@ export const App: React.FC<AppProps> = ({
     [maxScroll, viewportHeight],
   );
 
+  // Controller cần đọc/xóa ô nhập cho Ctrl+C (xóa) và Ctrl+D (chỉ thoát khi rỗng).
+  const editorRef = useRef<{ getText(): string; setText(text: string): void; addToHistory(text: string): void } | null>(null);
+
+  useEffect(() => {
+    controller.onEditorCallbacks?.({
+      clear: () => editorRef.current?.setText(""),
+      read: () => editorRef.current?.getText() ?? "",
+    });
+  }, [controller]);
+
   const overlayNode = renderOverlay({
     kind: overlay,
     props: overlayProps,
@@ -192,6 +202,7 @@ export const App: React.FC<AppProps> = ({
         editor={
           overlay === "none" ? (
             <MessageInput
+              ref={editorRef}
               onSubmit={handleSubmit}
               disabled={status.isProcessing}
               onScroll={handleScroll}

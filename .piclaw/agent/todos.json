@@ -3,42 +3,37 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Fix giai đoạn 3 - Interactive mode + App",
+      "name": "Fix giai đoạn 4 - main.ts, interactive-mode, markdown, footer",
       "tasks": [
         {
           "id": "task-1",
-          "content": "A1: MessageInput dùng Editor (multi-line + history + autocomplete) thay TextInput 1 dòng",
+          "content": "A60: bỏ 6 dòng console.log('[DEBUG]...') trong main.ts subscribeToSessionEvents",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "A2/A23: App render selector/modal thật (model, session, settings, theme, thinking, help, login) — hiện chỉ truyền 0 prop cho Modal",
+          "content": "A58/A59/A61: readline fallback await+error, Ink unmount stop terminal, dispose runtime khi exit",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "A3/A4: App cuộn theo DÒNG hiển thị + follow-end + resize",
+          "content": "A63/A64/A62: Ctrl+C clear editor, Ctrl+D/Ctrl+Z, stop() pause stdin",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "A5/A6/A7: controller route slash command, !bash, thinking modal đúng, theme thật",
+          "content": "A36-A38: MarkdownRenderer thêm LaTeX + bảng + link đúng URL",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "A8/A9/A10: controller streaming message_update + tool execution + nạp transcript khi resume",
-          "status": "pending"
-        },
-        {
-          "id": "task-6",
-          "content": "A58/A59/A60/A61: readline fallback await, Ink unmount stop terminal, bỏ [DEBUG] trong main.ts, dispose runtime",
+          "content": "A20/A22: StatusBar hiển thị token/context thật; Footer model phiên",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
+  "nextTaskId": 6,
   "nextPhaseId": 2,
-  "updatedAt": "2026-11-12T07:39:41.817Z"
+  "updatedAt": "2026-11-12T08:10:33.736Z"
 }
