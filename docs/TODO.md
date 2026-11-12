@@ -361,3 +361,62 @@
 2. **Sửa bug interactive** (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A58–A64) — đây là phần "rất sơ sài" cần nâng cấp
 3. **Fix component bugs** (A11–A30, A32, A33, A36–A45)
 4. **Viết tính năng thiếu** (B1–B34) theo thứ tự ưu tiên: editor/autocomplete → slash commands + selectors → streaming/tool rendering → footer/header → markdown/latex → fullscreen
+
+## ĐÃ FIX (các commit gần nhất)
+
+### Giai đoạn 1 - Nền TUI (core)
+- [x] A31 `BashExecution.tsx` chứa byte NUL/0x1F trong regex char class (file bị coi là binary)
+- [x] A34/A35 `clipMarkdownLine`/`truncateVisual` nuốt escape chỉ tìm "m" → hyperlink OSC8 làm mất phần còn lại của dòng; nay nhận SGR/OSC/APC và giữ escape đuôi
+- [x] A54 `StdinBuffer` regex kitty printable thiếu group modifier → ký tự có modifier bị nuốt rồi chèn lại 2 lần
+- [x] A69 `Terminal.forwardInput` đổi MỌI `\r` thành Shift+Enter trên Apple Terminal → Enter thường không gửi được; nay kiểm tra Shift thật sự đang nhấn
+- [x] A47 `Keys.ts`: thêm isKeyRelease/isKeyRepeat/decodePrintableKey, `Key.*` đầy đủ, logical shifted-symbol cho matchesKitty/parseKey
+- [x] A53 `Latex.ts` dùng soft hyphen U+00AD (ký tự người dùng gõ được) làm layout marker → phá bố cục 2D; chuyển sang private-use + PROTECTED_SPACE không bị trim
+- [x] A51/A52 `TerminalText`: tracker SGR/hyperlink để wrap mở lại style xuyên dòng; đóng OSC8 trước ellipsis; fast-path ASCII cho visibleWidth; tính terminal-spacing mark (Indic/Thai/Lào) không lệch cột
+
+### Giai đoạn 2 - Component TUI
+- [x] A1/A13/A14/A15/A12 `Editor.tsx`: đủ keybinding (deleteCharForward, deleteWordForward, cursorWordLeft/Right, pageUp/Down, jump), MAX_VISIBLE theo terminal rows, paste atomic + prepend space, xóa paste marker đánh số lại registry
+- [x] A16/A17/A18 `TextInput.tsx`: đủ bộ phím soạn thảo (undo, kill ring, word nav, bracketed paste, CSI-u), cửa sổ ngang theo width prop, Delete/Backspace phân biệt
+- [x] A19/A24/A25/A26 `HStack.tsx` đo bằng visibleWidth và ghép theo cột hiển thị; `Box.tsx` render được node con; 
+- [x] A27 `Spacer`/`ThemedText` mỗi dòng trống là một node riêng
+- [x] A28/A29/A30 `CancellableLoader`/`MouseRegion` dùng handle per-instance (không ghi state lên function component); `RadiusLoginSelector` dùng useEffect
+- [x] A39/A40/A41 `Armin.tsx` khởi tạo hiệu ứng một lần (không reset mỗi frame), bỏ `{void version}` no-op
+
+### Giai đoạn 3 - Interactive mode + App
+- [x] A1 `MessageInput` dùng Editor đa dòng (thay TextInput 1 dòng), forward ref cho controller
+- [x] A2/A23 `App.tsx` render overlay/selector thật (model/session/settings/theme/thinking/help) thay cho editor, đúng mô hình showSelector của pi-mono
+- [x] A3/A4 App cuộn theo dùng ScrollView + follow-end, đo lại theo terminal resize
+- [x] A5 `sendMessage` định tuyến: /command chạy nội bộ, !/!! chạy bash, chỉ prompt thường tới LLM
+- [x] A6 `/thinking` mở selector với CẤP ĐỘ SUY NGHĶ đúng (trước đó hiện model id)
+- [x] A7 `/theme` áp qua Theme class (trước đó ghi ANSI thô ra stdout, desync màn hình)
+- [x] A8/A9 streaming message_update cập nhật message tại chỗ; tool_execution_* hiện trong transcript
+- [x] A10 nạp transcript của phiên khi khởi tạo và sau khi chuyển phiên
+- [x] A58/A59/A61 readline fallback await + báo lỗi + chỉ in message mới; Ink unmount stop terminal; main.ts bỏ [DEBUG] log vô điều kiện; dispose runtime khi exit
+- [x] A62/A63/A64 Ctrl+C xóa ô nhập (lần đầu), Ctrl+D chỉ thoát khi rỗng, Ctrl+Z suspend, stop() pause stdin
+- [x] A20/A22 StatusBar parse token thật; model/context đọc từ phiên đang chạy
+
+### Giai đoạn 4 - Session/tools/CLI
+- [x] `SessionManager.importSession` chỉ nhận JSON object → MỌI import file .jsonl thật đều fail; nay nhận JSONL và ghi thành phiên lưu được
+- [x] `_hashPassword` treo vô hạn với password rỗng (`min(32-len, len)` = 0 phần tử)
+- [x] bash-executor: truncate giữ ĐẦU thay vì ĐUỐI (mất error/exit status/kết quả); giờ giữ tail + cắt theo bytes
+- [x] `validatePathWithinBase` prefix `base + '/'` sai trên Windows và khi base là gốc; dùng path.relative
+- [x] `sanitizeBinaryOutput` không lọc DEL (0x7F) và dải C1 (0x80-0x9F)
+- [x] `--port` nhận NaN/out-of-range → listen(NaN); nay validate + cảnh báo
+- [x] main.ts dùng `resolveCliModel` (provider/id:thinking, alias) thay vì registry.find trần
+
+### Giai đoạn 5 - Markdown/footer
+- [x] A36-A38 MarkdownRenderer: bảng GFM (trước đó mọi pipe table hiện như đoạn thô), LaTeX inline $...$, link giữ URL đích
+
+## CÒN LẠI (ưu tiên giảm dần)
+
+- [ ] B1 Autocomplete menu trong editor (CombinedAutocompleteProvider đã port, chưa gắn menu overlay)
+- [ ] B3 Message queue steer/follow-up hiển thị trong dock + Alt+Enter
+- [ ] B6 Ctrl+T mở rộng tool output; B7 toggle thinking block; B8 Ctrl+G external editor; B9 Ctrl+V clipboard
+- [ ] B10/B11 cycling model (Ctrl+P) và thinking level
+- [ ] B12-B18 selector /tree, /fork, /trust, /login, /logout (component đã port)
+- [ ] B19-B20 /export, /import, /changelog, /name, /session, /hotkeys, /debug, /compact, /reload, /share, /clone
+- [ ] B21/B22 Header động (logo + version + key hints + loaded resources)
+- [ ] B25 Truy vấn màu terminal (OSC 10/11/4) + system theme auto-sync
+- [ ] B27 Footer đầy đủ (↑↓ R/W cache, CH%, cost, git branch, routed model)
+- [ ] B29 Markdown: list lồng nhau, ordered marker, HTML comment, strikethrough nghiêm ngặt
+- [ ] B33 isKeyRelease cho editor; B34 keybindings từ settings
+- [ ] B26 Fullscreen alt-screen (chuột, chọn text, scrollbar, tìm kiếm Ctrl+Shift+F)
