@@ -22,7 +22,7 @@ export interface SearchMatch {
   segments: SearchMatchSegment[];
 }
 
-interface SourceSpan {
+export interface SourceSpan {
   textStart: number;
   textEnd: number;
   row: number;
@@ -31,7 +31,7 @@ interface SourceSpan {
   linearColumns: boolean;
 }
 
-interface Corpus {
+export interface Corpus {
   text: string;
   spans: SourceSpan[];
 }
@@ -39,7 +39,7 @@ interface Corpus {
 const PRINTABLE_ASCII = /^[\x20-\x7e]*$/;
 
 /** Dựng chỉ mục tìm kiếm từ các dòng đã có escape bị lược bỏ. */
-function buildCorpus(lines: readonly string[]): Corpus {
+export function buildCorpus(lines: readonly string[]): Corpus {
   const chunks: string[] = [];
   const spans: SourceSpan[] = [];
   let textLength = 0;
@@ -55,6 +55,12 @@ function buildCorpus(lines: readonly string[]): Corpus {
   for (let row = 0; row < lines.length; row++) {
     const line = stripTerminalSequences(lines[row] ?? "");
     let column = 0;
+
+    // A row boundary is itself a separator, so a query can match across lines.
+    // Upstream inserts this between rows; without it the corpus glued
+    // "hello world" and "second line here" into "hello worldsecond line here"
+    // and a cross-row query could never match.
+    if (row > 0) pendingSeparator = true;
 
     if (PRINTABLE_ASCII.test(line)) {
       let index = 0;
@@ -110,6 +116,13 @@ function buildCorpus(lines: readonly string[]): Corpus {
 }
 
 /** Tìm truy vấn trong chỉ mục, trả về vùng cột khớp trên từng dòng. */
+/**
+ * Tìm truy vấn trong chỉ mục, trả về vùng cột khớp trên từng dòng.
+ *
+ * Matches are case-insensitive. Adjacent spans on the same row are merged into
+ * one segment (as upstream does), so a match spanning two words highlights a
+ * single range instead of two.
+ */
 export function searchCorpus(corpus: Corpus, query: string): SearchMatch[] {
   if (!query) return [];
   const matches: SearchMatch[] = [];
@@ -121,17 +134,23 @@ export function searchCorpus(corpus: Corpus, query: string): SearchMatch[] {
     const end = start + lowerQuery.length;
     const segments: SearchMatchSegment[] = [];
     for (const span of corpus.spans) {
-      const overlapStart = Math.max(span.textStart, start);
-      const overlapEnd = Math.min(span.textEnd, end);
-      if (overlapStart >= overlapEnd) continue;
+      if (span.textEnd <= start || span.textStart >= end) continue;
       if (span.linearColumns) {
-        segments.push({
-          row: span.row,
-          startCol: span.startCol + (overlapStart - span.textStart),
-          endCol: span.startCol + (overlapEnd - span.textStart),
-        });
+        const startCol = span.startCol + Math.max(start, span.textStart) - span.textStart;
+        const endCol = span.startCol + Math.min(end, span.textEnd) - span.textStart;
+        const previous = segments[segments.length - 1];
+        if (previous && previous.row === span.row && startCol <= previous.endCol) {
+          previous.endCol = Math.max(previous.endCol, endCol);
+        } else {
+          segments.push({ row: span.row, startCol, endCol });
+        }
       } else {
-        segments.push({ row: span.row, startCol: span.startCol, endCol: span.endCol });
+        const previous = segments[segments.length - 1];
+        if (previous && previous.row === span.row && span.startCol <= previous.endCol) {
+          previous.endCol = Math.max(previous.endCol, span.endCol);
+        } else {
+          segments.push({ row: span.row, startCol: span.startCol, endCol: span.endCol });
+        }
       }
     }
     if (segments.length > 0) matches.push({ segments });
