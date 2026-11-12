@@ -104,3 +104,60 @@ describe('AgentSession.setActiveToolsByName', () => {
     expect(agent.getToolNames()).toEqual([]);
   });
 });
+
+describe('AgentSession.getSessionStats - tool result counting', () => {
+  function statsSession(history: any[]): any {
+    const agent = new Agent(undefined, [], { maxRounds: 5 });
+    const session: any = new AgentSession({
+      agent: agent as any,
+      sessionManager: {
+        getLeafId: vi.fn(),
+        getBranch: vi.fn().mockReturnValue([]),
+        getSessionFile: vi.fn().mockReturnValue('/tmp/x.jsonl'),
+        getSessionId: vi.fn().mockReturnValue('sid'),
+      },
+      settingsManager: {
+        getCompactionEnabled: vi.fn().mockReturnValue(true),
+        setCompactionEnabled: vi.fn(),
+        getPromptGuidelines: vi.fn().mockReturnValue([]),
+      },
+      cwd: '/test',
+      resourceLoader: {},
+      modelRegistry: {},
+    } as any);
+    session._agentState.history.push(...history);
+    return session;
+  }
+
+  it('counts tool turns as the live loop records them (role: tool)', () => {
+    const session = statsSession([
+      { role: 'user', content: [{ type: 'text', text: 'hi' }], timestamp: 1 },
+      {
+        role: 'assistant',
+        content: [{ type: 'toolCall', id: 'c1', name: 'ls', arguments: {} }],
+        usage: { input: 1, output: 2 },
+        timestamp: 2,
+      },
+      { role: 'tool', toolCallId: 'c1', toolName: 'ls', content: [{ type: 'text', text: 'ok' }], isError: false, timestamp: 3 },
+    ]);
+
+    const stats = session.getSessionStats();
+    expect(stats.toolCalls).toBe(1);
+    expect(stats.toolResults).toBe(1);
+  });
+
+  it('counts toolResult turns as a resumed session carries them', () => {
+    const session = statsSession([
+      { role: 'user', content: [{ type: 'text', text: 'hi' }], timestamp: 1 },
+      {
+        role: 'assistant',
+        content: [{ type: 'toolCall', id: 'c1', name: 'ls', arguments: {} }],
+        usage: { input: 1, output: 2 },
+        timestamp: 2,
+      },
+      { role: 'toolResult', toolCallId: 'c1', toolName: 'ls', content: [{ type: 'text', text: 'ok' }], isError: false, timestamp: 3 },
+    ]);
+
+    expect(session.getSessionStats().toolResults).toBe(1);
+  });
+});

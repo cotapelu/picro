@@ -2225,7 +2225,12 @@ export class AgentSession {
     const msgs = this.messages;
     const userMessages = msgs.filter(m => m.role === "user").length;
     const assistantMessages = msgs.filter(m => m.role === "assistant").length;
-    const toolResults = msgs.filter(m => m.role === "toolResult").length;
+    // The live loop records tool turns with role 'tool' (ConversationTurn
+    // shape), while a session restored from disk goes through
+    // convertSessionMessagesToLlm and carries role 'toolResult'. Counting only
+    // one of them reported 0 tool results for any session that had not been
+    // resumed.
+    const toolResults = msgs.filter(m => m.role === "tool" || m.role === "toolResult").length;
 
     let toolCalls = 0;
     let totalInput = 0;
