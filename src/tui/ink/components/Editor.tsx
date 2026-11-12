@@ -70,6 +70,27 @@ function segmentsOf(text: string): string[] {
   return [...graphemeSegmenter.segment(text)].map((s) => s.segment);
 }
 
+const PASTE_START = "\x1b[200~";
+const PASTE_END = "\x1b[201~";
+
+/**
+ * Extract the payload of a bracketed-paste block, or null when `data` is not one.
+ *
+ * Terminal.ts enables bracketed paste and forwards a paste as
+ * "\x1b[200~<content>\x1b[201~", which reaches useInput verbatim. That data
+ * begins with ESC (0x1B), so any "is this printable input" check rejects it -
+ * the paste used to be dropped on the floor.
+ */
+export function parsePastePayload(data: string): string | null {
+  const start = data.indexOf(PASTE_START);
+  if (start === -1) return null;
+  const contentStart = start + PASTE_START.length;
+  const end = data.indexOf(PASTE_END, contentStart);
+  // A missing end marker previously made slice(start, -1) silently drop the last
+  // character of the payload; treat everything after the start marker as content.
+  return end === -1 ? data.slice(contentStart) : data.slice(contentStart, end);
+}
+
 /** Wrap một dòng thành chunk có đánh chỉ số nguồn. */
 function wordWrapLine(line: string, maxWidth: number): TextChunk[] {
   if (!line || maxWidth <= 0) return [{ text: "", startIndex: 0, endIndex: 0 }];
@@ -743,13 +764,17 @@ export const Editor: React.FC<EditorProps> = ({
       return;
     }
 
+    // Bracketed paste must be handled before the printable-character test:
+    // the payload is wrapped in escape sequences, so it starts with ESC and
+    // would otherwise be discarded.
+    const pasted = parsePastePayload(data);
+    if (pasted !== null) {
+      handlePaste(pasted);
+      return;
+    }
+
     // Ký tự in được
     if (data.length >= 1 && !key.ctrl && !key.meta && data.charCodeAt(0) >= 32) {
-      if (data.includes("\x1b[200~")) {
-        const inner = data.slice(data.indexOf("\x1b[200~") + 6, data.indexOf("\x1b[201~"));
-        handlePaste(inner);
-        return;
-      }
       insertCharacter(data);
     }
   });

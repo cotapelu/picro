@@ -167,9 +167,13 @@ export class CombinedAutocompleteProvider implements AutocompleteProvider {
     const currentLine = lines[cursorLine] ?? "";
     const beforePrefix = currentLine.slice(0, cursorCol - prefix.length);
     const afterCursor = currentLine.slice(cursorCol);
-    const isSlash = prefix.trimStart().startsWith("/") && beforePrefix.trim() === "";
-    const value = isSlash ? `/${item.value}` : item.value;
-    const suffix = isSlash ? " " : item.label.endsWith("/") ? "" : " ";
+    // A slash command is recognised by its own prefix, not by its position: when
+    // the command sits mid-line the old code set isSlash=false and inserted the
+    // bare command name, silently dropping the "/" the user had typed
+    // ("run /he" + help -> "run help ").
+    const prefixIsSlash = prefix.trimStart().startsWith("/");
+    const value = prefixIsSlash ? `/${item.value}` : item.value;
+    const suffix = prefixIsSlash ? " " : item.label.endsWith("/") ? "" : " ";
     const newLine = `${beforePrefix}${value}${suffix}${afterCursor}`;
     const newLines = [...lines];
     newLines[cursorLine] = newLine;
