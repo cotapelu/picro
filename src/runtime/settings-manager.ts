@@ -187,11 +187,19 @@ class FileSettingsStorage implements SettingsStorage {
           try {
             const pidStr = readFileSync(lockPath, "utf8").trim();
             const pid = parseInt(pidStr, 10);
-            if (!isNaN(pid)) {
-              try {
-                process.kill(pid, 0); // test if process exists
-              } catch {
-                // Stale lock, remove it
+            // A lock file that exists but holds no PID (crash between creating the
+            // file and writing the PID) can never be recognised as stale below and
+            // would block every settings write forever.
+            if (pidStr.length === 0 || isNaN(pid)) {
+              unlinkSync(lockPath);
+              return acquireLock();
+            }
+            try {
+              process.kill(pid, 0); // test if process exists
+            } catch (killErr: any) {
+              // Only ESRCH means "no such process". EPERM means the lock belongs
+              // to another user and is still live, so it must not be stolen.
+              if (killErr?.code === "ESRCH") {
                 unlinkSync(lockPath);
                 return acquireLock();
               }
