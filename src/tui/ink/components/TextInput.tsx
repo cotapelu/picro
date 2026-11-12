@@ -33,6 +33,30 @@ function toGraphemes(text: string): string[] {
   return [...text];
 }
 
+/**
+ * Remove one grapheme from `text`, either side of `cursor`.
+ *
+ * Backward removal (Backspace) deletes the grapheme ending at the cursor;
+ * forward removal (Delete) deletes the grapheme starting at the cursor. Ink
+ * reports both keys, and treating `key.delete` as a second Backspace made the
+ * Delete key erase the character before the cursor instead of after it.
+ */
+export function removeGrapheme(
+  text: string,
+  cursor: number,
+  direction: "backward" | "forward",
+): { text: string; cursor: number } {
+  if (direction === "backward") {
+    if (cursor <= 0) return { text, cursor };
+    const remove = toGraphemes(text.slice(0, cursor)).at(-1)?.length ?? 1;
+    const start = Math.max(0, cursor - remove);
+    return { text: text.slice(0, start) + text.slice(cursor), cursor: start };
+  }
+  if (cursor >= text.length) return { text, cursor };
+  const remove = toGraphemes(text.slice(cursor))[0]?.length ?? 1;
+  return { text: text.slice(0, cursor) + text.slice(cursor + remove), cursor };
+}
+
 export const TextInput: React.FC<TextInputProps> = ({
   value = "",
   placeholder = "",
@@ -99,10 +123,10 @@ export const TextInput: React.FC<TextInputProps> = ({
     }
 
     if (key.backspace || key.delete) {
-      const g = toGraphemes(ref.current.text.slice(0, ref.current.cursor));
-      const remove = g.at(-1)?.length ?? 1;
-      const before = ref.current.text.slice(0, ref.current.cursor - remove);
-      apply(before + ref.current.text.slice(ref.current.cursor), before.length);
+      // Backspace deletes before the cursor, Delete deletes after it. Both used
+      // to run the same backward-deletion code.
+      const next = removeGrapheme(ref.current.text, ref.current.cursor, key.delete ? "forward" : "backward");
+      apply(next.text, next.cursor);
       return;
     }
 
