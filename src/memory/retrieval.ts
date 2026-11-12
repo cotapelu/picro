@@ -224,8 +224,9 @@ function computeBM25(
   }
   const avgDocLen = totalLen / N;
 
-  // Precompile regexes for query terms
-  const termRegexes = queryTerms.map(term => new RegExp(term, 'g'));
+  // Escape regex metacharacters: a query like "foo(1)" used to throw
+  // SyntaxError here, which propagated out of retrieve() and aborted the turn.
+  const termRegexes = queryTerms.map(term => new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'));
 
   // Compute term frequencies (tf) per document and document frequencies (df)
   const dfs = new Array(queryTerms.length).fill(0);
