@@ -29,3 +29,16 @@ This document captures the agent's strengths, weaknesses, and areas needing atte
 - Validate all modes (text, json, rpc, tui) in integration tests.
 - Consider splitting large interfaces into smaller, role-specific ones.
 
+
+## Update (Iteration 8 - 2025-07-05)
+
+- **Weak spot confirmed**: Ink semantics chi tiết (bare string child trong `<Box>`
+  làm rỗng subtree) không được phát hiện bởi typecheck — chỉ test render mới thấy.
+  → Từ nay mọi component có render string phải có test `ink-testing-library`.
+- **Weak spot confirmed**: prop khai báo trong interface nhưng không destructure
+  (`BashExecution.output`) — `tsc` không cảnh báo. → Bổ sung noiUnusedLocals và
+  test cho mỗi component với đầy đủ props.
+- **Fragile module**: `components/ToolExecution.tsx` — preview state + cache dễ hỏng
+  im lặng; cần test streaming chunk trước khi merge.
+- **Strength giữ vững**: audit+bisect có hệ thống (repro → isolate → root cause →
+  regression test) đã tìm ra 3 bug render nghiêm trọng trong 1 vòng.
