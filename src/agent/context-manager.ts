@@ -9,6 +9,9 @@ import type {
   ContextBuilderConfig,
 } from "./types.js";
 
+/** Upper bound on prompt-rebuild retries (see buildWithDepth). */
+const MAX_BUILD_DEPTH = 3;
+
 /**
  * Builds LLM prompt from conversation history.
  * Handles token limiting and memory injection.
@@ -23,7 +26,6 @@ export class ContextBuilder {
       minMessages: config?.minMessages ?? 5,
     };
   }
-
   /**
    * Build full prompt for LLM.
    * Returns prompt string and estimated token count.
@@ -32,6 +34,22 @@ export class ContextBuilder {
     basePrompt: string,
     history: ConversationTurn[]
   ): { prompt: string; tokenCount: number } {
+    return this.buildWithDepth(basePrompt, history, 0);
+  }
+
+  /**
+   * Depth-limited build.
+   *
+   * The retry passes the already-truncated history back in, but truncateHistory()
+   * always keeps the system turns plus `minMessages` recent turns. When that
+   * mandatory tail alone is larger than maxTokens, every retry produced the very
+   * same oversized prompt and recursed until the stack overflowed.
+   */
+  private buildWithDepth(
+    basePrompt: string,
+    history: ConversationTurn[],
+    depth: number,
+  ): { prompt: string; tokenCount: number } {
     const maxTokens = this.config.maxTokens;
     const reservedTokens = this.config.reservedTokens;
 
@@ -39,8 +57,7 @@ export class ContextBuilder {
     const baseTokens = this.estimateTokenCount(basePrompt);
 
     // Compute remaining tokens for history
-    const usedTokens = baseTokens;
-    const availableForHistory = maxTokens - reservedTokens - usedTokens;
+    const availableForHistory = maxTokens - reservedTokens - baseTokens;
 
     // Truncate history to fit remaining space (or empty if negative)
     const truncatedHistory = availableForHistory > 0 ? this.truncateHistory(history, availableForHistory) : [];
@@ -55,16 +72,13 @@ export class ContextBuilder {
     // Estimate final token count
     const tokenCount = this.estimateTokenCount(fullPrompt);
 
-    // Safety: if still over limit, rebuild the prompt with the already
-    // truncated history so a long system prompt can shrink in the next pass.
-    if (tokenCount > maxTokens) {
-      // If there is no history left to drop (e.g. the system prompt itself
-      // already exceeds maxTokens - reservedTokens), recursing again would
-      // pass the same empty history forever, causing a stack overflow.
-      if (truncatedHistory.length === 0) {
-        return { prompt: fullPrompt, tokenCount };
-      }
-      return this.build(basePrompt, truncatedHistory);
+    // Safety: if still over limit, rebuild with the already truncated history so
+    // a long system prompt can shrink on the next pass. Guarded by a depth limit:
+    // if there is nothing left to drop (system prompt or the mandatory recent
+    // tail alone exceeds maxTokens) retrying cannot help and used to recurse
+    // until "Maximum call stack size exceeded".
+    if (tokenCount > maxTokens && truncatedHistory.length > 0 && depth < MAX_BUILD_DEPTH) {
+      return this.buildWithDepth(basePrompt, truncatedHistory, depth + 1);
     }
 
     return { prompt: fullPrompt, tokenCount };
