@@ -10,6 +10,7 @@ import { Box, Text } from "ink";
 import { theme, fg, bg } from "../theme/index.js";
 import { classifyMarkdownLine, clipMarkdownLine, padMarkdownLine } from "./markdown-layout.js";
 import { renderLatex } from "../core/Latex.js";
+import { wrapTextWithAnsi } from "../core/TerminalText.js";
 
 export interface MarkdownRendererProps {
   content: string;
@@ -31,6 +32,8 @@ interface Block {
   fenced?: boolean;
   /** Khối bảng đã được dựng sẵn (không cần style lại từng dòng). */
   table?: boolean;
+  /** Khối danh sách: cần render theo cấp lồng nhau (pi-mono renderList). */
+  list?: boolean;
 }
 
 /** Tách markdown thô thành các khối hiển thị. */
@@ -40,7 +43,10 @@ function parseBlocks(source: string): Block[] {
 
   const flush = () => {
     if (buffer.length > 0) {
-      blocks.push({ lines: buffer });
+      // Một khối được coi là danh sách nếu có ít nhất một dòng mục danh sách;
+      // các dòng còn lại trong khối là nội dung mục hoặc dòng nối tiếp thụt vào.
+      const list = buffer.some((line) => LIST_ITEM_RE.test(line));
+      blocks.push({ lines: buffer, list });
       buffer = [];
     }
   };
@@ -62,6 +68,17 @@ function parseBlocks(source: string): Block[] {
 
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i]!;
+    // Dòng trống phân cách khối: đoạn văn này kết thúc tại đây.
+    //
+    // Bản cũ đẩy mọi dòng (kể cả trống) vào một buffer duy nhất nên một đoạn
+    // văn đứng ngay trước danh sách bị coi là "dòng nối tiếp của mục danh sách"
+    // và bị thụt lùi sai. Ngoài ra Ink KHÔNG render dòng trống (xem chú thích ở
+    // return của component), nên phân cách đoạn phải do ranh giới khối tạo ra.
+    if (raw.trim() === "" && !inFence) {
+      flush();
+      flushTable();
+      continue;
+    }
     if (/^\s*```/.test(raw)) {
       if (inFence) {
         blocks.push({ lines: [...fenceBuffer], fenced: true });
@@ -100,6 +117,84 @@ function parseBlocks(source: string): Block[] {
   flushTable();
   flush();
   return blocks;
+}
+
+/**
+ * Một dòng bắt đầu mục danh sách: `- x`, `* x`, `+ x`, `1. x`, `1) x` và
+ * dạng task `- [ ] x` / `- [x] x`.
+ */
+const LIST_ITEM_RE = /^(\s*)(?:([-+*])|(\d{1,9})([.)]))\s+(?:\[([ xX])\]\s+)?(.*)$/;
+
+/** Khoảng thụt của mỗi cấp danh sách lồng nhau. */
+const LIST_INDENT = 2;
+
+/** Ký hiệu bullet theo cấc độ, giống cách markdown viewer chọn bullet khác nhau. */
+const LIST_BULLETS = ["•", "◦", "▪"];
+
+interface ParsedListLine {
+  /** Số cấp lồng nhau (0 = gốc). */
+  depth: number;
+  /** Phần đầu dòng đã tính (bullet/đánh số/task), rỗng nếu là dòng nối tiếp. */
+  marker: string;
+  /** Nội dung còn lại. */
+  text: string;
+}
+
+/**
+ * Độ sâu lồng của một dòng dựa trên stack khoảng thụt.
+ *
+ * Bản cũ `trimStart()` toàn bộ rồi render phẳng: danh sách lồng nhau mất hoàn
+ * toàn cấu trúc (`- a / - b` dù nguồn có thụt vào). Đây là cách CommonMark
+ * nhận diện: so khoảng thụt với mục gần nhất.
+ */
+function listDepth(indent: number, stack: number[]): number {
+  while (stack.length > 1 && indent < (stack[stack.length - 1] ?? 0)) stack.pop();
+  if (indent > (stack[stack.length - 1] ?? 0)) stack.push(indent);
+  return stack.length - 1;
+}
+
+/** Phân tích một dòng thành (cấp, marker, nội dung); undefined nếu không phải mục. */
+function parseListItem(raw: string, stack: number[], counters: number[]): ParsedListLine | undefined {
+  const match = LIST_ITEM_RE.exec(raw);
+  if (!match) return undefined;
+  const depth = listDepth(match[1]!.length, stack);
+  // Marker nằm trước nội dung: bullet/đánh số trước, cờ task theo sau (pi-mono).
+  const task = match[5] !== undefined ? `[${match[5].toLowerCase() === "x" ? "x" : " "}] ` : "";
+  if (match[3] !== undefined) {
+    counters.length = depth + 1;
+    counters[depth] = (counters[depth] ?? 0) + 1;
+    return { depth, marker: `${counters[depth]}${match[4]} ${task}`, text: match[6] ?? "" };
+  }
+  return { depth, marker: `${LIST_BULLETS[depth % LIST_BULLETS.length]!} ${task}`, text: match[6] ?? "" };
+}
+
+/**
+ * Render khối danh sách: giữ cấp lồng nhau, marker riêng theo cấc độ, đánh số
+ * lại ordered list (đếm trong từng danh sách), wrap nội dung và thụt lùi các
+ * dòng nối tiếp cho đúng cột.
+ */
+function renderListBlock(lines: string[], contentWidth: number): string[] {
+  const stack: number[] = [0];
+  const counters: number[] = [];
+  const out: string[] = [];
+  for (const raw of lines) {
+    if (raw.trim() === "") {
+      out.push("");
+      continue;
+    }
+    const item = parseListItem(raw, stack, counters);
+    const indent = " ".repeat((item?.depth ?? 0) * LIST_INDENT);
+    const text = item ? styleInline(item.text) : styleInline(raw.trim());
+    // Dòng nối tiếp (không phải mục) và các dòng wrap sau đều thụt về cột nội dung.
+    const hang = item === undefined ? " ".repeat(LIST_INDENT) : " ".repeat(item.marker.length);
+    const marker = item ? fg("listBullet", item.marker) : "";
+    const wrapped = wrapTextWithAnsi(text, Math.max(4, contentWidth - indent.length - hang.length));
+    wrapped.forEach((line, index) => {
+      const prefix = index === 0 && item !== undefined ? marker : hang;
+      out.push(clipMarkdownLine(`${indent}${prefix}${line}`, contentWidth));
+    });
+  }
+  return out;
 }
 
 /** Tách một dòng bảng thành các ô (bỏ dấu | hai đầu). */
@@ -164,19 +259,13 @@ function styleInline(line: string): string {
   return out;
 }
 
-/** Áp kiểu theo loại dòng. */
-function styleLine(line: string, index: number): string {
+/** Áp kiểu theo loại dòng. Danh sách do `renderListBlock` lo (một nơi quyết marker). */
+function styleLine(line: string): string {
   const trimmed = line.trimStart();
   switch (classifyMarkdownLine(trimmed)) {
     case "heading": {
       const text = trimmed.replace(/^#{1,6}\s/, "");
       return `${theme.bold(fg("heading", text))}`;
-    }
-    case "bullet":
-      return `${fg("listBullet", "• ")}${styleInline(trimmed.replace(/^[-*+]\s/, ""))}`;
-    case "ordered": {
-      const m = /^(\d+)\.\s(.*)$/.exec(trimmed);
-      return `${fg("listBullet", `${m?.[1] ?? index + 1}. `)}${styleInline(m?.[2] ?? "")}`;
     }
     case "quote":
       return `${fg("quote", "│ ")}${styleInline(trimmed.replace(/^>\s?/, ""))}`;
@@ -209,9 +298,13 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, wid
         }
         return;
       }
+      if (block.list) {
+        out.push(...renderListBlock(block.lines, contentWidth));
+        return;
+      }
       const sourceLines = transform ? transform(block.lines.join("\n"), contentWidth).split("\n") : block.lines;
       sourceLines.forEach((line, i) => {
-        const styled = styleLine(line, i);
+        const styled = styleLine(line);
         out.push(clipMarkdownLine(italic ? italicize(styled) : styled, contentWidth));
       });
     });
@@ -224,7 +317,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, wid
   return (
     <Box flexDirection="column">
       {rendered.map((line, i) => (
-        <Text key={`md-${i}`}>{`${left}${color ? fg(color, line) : line}`}</Text>
+        // Ink bỏ hoàn toàn <Text></Text> nên dòng trống phải là một dấu cách,
+        // nếu không mọi đoạn văn liền mạch không có phân cách.
+        <Text key={`md-${i}`}>{line === "" ? " " : `${left}${color ? fg(color, line) : line}`}</Text>
       ))}
     </Box>
   );

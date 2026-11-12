@@ -14,7 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage:each": "bash scripts/test-coverage-each.sh",
-    "test:coverage:single": "vitest run --coverage --reporter=json"
+    "test:coverage:single": "vitest run --coverage --reporter=json",
+    "audit:jsx": "node scripts/check-jsx-string-children.cjs"
   },
   "keywords": [
     "picro",
