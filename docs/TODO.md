@@ -420,3 +420,40 @@
 - [ ] B29 Markdown: list lồng nhau, ordered marker, HTML comment, strikethrough nghiêm ngặt
 - [ ] B33 isKeyRelease cho editor; B34 keybindings từ settings
 - [ ] B26 Fullscreen alt-screen (chuột, chọn text, scrollbar, tìm kiếm Ctrl+Shift+F)
+
+## GIAI ĐOẠN 6 — NÂNG CẤP INTERACTIVE MODE + TUI CHO ĐẦY ĐỦ (đã làm)
+
+- [x] **Transcript thật** (`components/Transcript.tsx`): mỗi loại (user/assistant+thinking/tool/bash/custom/skill/compaction/branch/system) render qua component đã port; cuộn theo **dòng hiển thị** (transcriptLineCount + sliceTranscript), follow-end, PageUp/PageDown, đánh dấu "dòng nữa / đã cuộn qua"
+- [x] **Controller `getTranscript()`**: tách thinking khỏi text (streaming), tool call/bash thành item riêng, lấy lại transcript sau chuyển phiên/fork/nén
+- [x] **Lệnh slash đầy đủ**: /tree /fork /trust /login /logout /name /session /hotkeys /changelog /debug /export /import /compact /reload (+ các lệnh cũ đã có)
+- [x] **Overlay thật**: ModelSelector, SessionSelector, SettingsSelector, ThemeSelector, ThinkingSelector, TreeSelector, UserMessageSelector, TrustSelector, HelpBody — render thay cho ô nhập (mô hình showSelector của pi-mono)
+- [x] **Thoát an toàn**: /quit đi qua onShutdown → unmount Ink + dispose rồi mới exit (không để raw mode/con trỏ ẩn)
+- [x] **Hàng đợi steer/follow-up**: getQueue + queueFollowUp + hiển thị trong dock; Shift+Enter xếp hàng (Alt+Enter không phân biệt được qua Ink)
+- [x] **Autocomplete trong editor**: provider + menu (lọc mờ, Tab áp dụng, Esc đóng, Enter chọn+submit), React ref để không bị stale closure
+- [x] **getWarnings()** đọc disabledWarnings thật
+- [x] **Test**: transcript.test, messageinput-queue.test, editor-autocomplete.test, md-tables.test, path-utils.extras.test, model-resolver.cli.test (Tổng 2854 test pass)
+
+## GIAI ĐOẠN 7 — AUDIT CÁC MODULE CÒN LẠI (đã fix)
+
+- [x] `--no-tools`/`--no-builtin-tools` bị parse rồi bỏ → nay forward tới session creation
+- [x] `grep`/`find` chưa từng được đăng ký (free-function signature ≠ factory) → thêm createGrepToolDefinition/createFindToolDefinition và đăng ký
+- [x] bash-truncate giữ ĐẦU thay vì ĐUỐI → giữ tail + cắt theo bytes
+- [x] `validatePathWithinBase` sai trên Windows/base=gốc → path.relative
+- [x] `sanitizeBinaryOutput` không lọc DEL/C1
+- [x] `--port` nhận NaN/out-of-range
+- [x] main.ts dùng `modelRegistry.find` trần → `resolveCliModel` (provider/id:thinking, alias)
+- [x] `SessionManager.importSession` chỉ nhận JSON object → mọi import .jsonl fail; nay nhận JSONL
+- [x] `_hashPassword` treo với password rỗng
+- [x] memory scorer so chuỗi lowercase với query gốc
+- [x] tool events hardcode round 0
+- [x] `--list-models`/parse nghi vấn khác đã kiểm tra (không phải bug)
+
+## CÒN LẠI (ưu tiên giảm dần)
+
+- [ ] B6 Ctrl+T mở rộng/thu gọn tool output toàn cục (component đã có prop `expanded`; App đã có state `toolsExpanded` nhưng chưa có phím)
+- [ ] B7 Toggle thinking block (Ctrl+?), B8 Ctrl+G external editor, B9 Ctrl+V clipboard
+- [ ] B10/B11 Cycling model (Ctrl+P) và thinking level qua phím
+- [ ] B25 Truy vấn màu terminal (OSC 10/11/4) + system theme auto-sync (theme-controller đã port)
+- [ ] B27 Footer đầy đủ: ↑↓ R/W cache, CH%, cost, git branch, routed model
+- [ ] B29 Markdown: list lồng nhau, ordered marker, HTML comment, strikethrough nghiêm ngặt
+- [ ] B26 Fullscreen alt-screen (chuột, chọn text, scrollbar, tìm kiếm Ctrl+Shift+F) — Ink không hỗ trợ cần lớp terminal riêng
