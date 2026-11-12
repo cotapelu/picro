@@ -76,8 +76,21 @@ export class InteractiveController {
   }
 
   private subscribeToRuntime(): void {
+    const unsub = this.subscribeToSession();
+    (this as any)._unsub = unsub;
+  }
+
+  /**
+   * Subscribe to the CURRENT session's events and return the unsubscribe fn.
+   *
+   * AgentSessionRuntime.switchSession()/newSession() replace the AgentSession
+   * object, so a listener registered once in the constructor kept listening to
+   * the dead session: after any session switch the controller stopped receiving
+   * message/agent events (streaming output froze, isProcessing stayed stuck).
+   */
+  private subscribeToSession(): (() => void) | undefined {
     const session = this.runtime.session as any;
-    if (!session?.subscribe) return;
+    if (!session?.subscribe) return undefined;
 
     const unsub = session.subscribe((event: any) => {
       switch (event.type) {
@@ -106,8 +119,17 @@ export class InteractiveController {
         }
       }
     });
-    // Store unsubscribe if needed later
     (this as any)._unsub = unsub;
+    return unsub;
+  }
+
+  /** Detach from the old session and attach to the current one. */
+  private resubscribeToRuntime(): void {
+    const previous = (this as any)._unsub as (() => void) | undefined;
+    if (typeof previous === 'function') {
+      previous();
+    }
+    this.subscribeToSession();
   }
 
   private setIsProcessing(processing: boolean): void {
@@ -227,6 +249,8 @@ export class InteractiveController {
         } else {
           this.messages = [];
           this.onMessageCallback?.(this.messages);
+          // The runtime swapped the AgentSession: re-attach to the new one.
+          this.resubscribeToRuntime();
           this.addToast('New session created', 'success');
         }
         return;
@@ -248,15 +272,11 @@ export class InteractiveController {
       }
 
       case 'model': {
-        const modelRegistry = this.runtime.services?.modelRegistry || {};
-        const providers = modelRegistry.getProviders?.() || [];
-        const models: Array<{ id: string; provider: string }> = [];
-        for (const p of providers) {
-          const pm = modelRegistry.getModels?.(p) || [];
-          for (const m of pm) {
-            models.push({ id: m.id, provider: p });
-          }
-        }
+        // ModelRegistry exposes getAll(); there is no getModels(provider), so the
+        // previous loop always built an empty list.
+        const modelRegistry = this.runtime.services?.modelRegistry as any;
+        const all: any[] = modelRegistry?.getAll?.() || [];
+        const models = all.map((m: any) => ({ id: m.id, provider: m.provider }));
         this.setModal({
           type: 'model-selector',
           props: { current: (this.runtime.session as any)?.model?.id || 'none', models },
@@ -298,17 +318,18 @@ export class InteractiveController {
         }
 
         const targetId = args.trim();
-        const entry = entries.find((e: any) => e.id === targetId || e.id.startsWith(targetId));
-        if (!entry) {
+        // SessionEntry has no `path`; the switchable list comes from the runtime,
+        // which resolves session files across projects.
+        const sessions = typeof this.runtime.listSessions === 'function'
+          ? await this.runtime.listSessions()
+          : [];
+        const target = sessions.find((s: any) => s.id === targetId || s.id.startsWith(targetId));
+        if (!target) {
           this.addToast(`Session not found: ${targetId}`, 'error');
           return;
         }
-        if (entry.id === currentId) {
-          this.addToast('Already on this session', 'info');
-          return;
-        }
 
-        const sessionFile = entry.path || entry.sessionFile;
+        const sessionFile = target.path;
         if (sessionFile && this.runtime.switchSession) {
           const result = await this.runtime.switchSession(sessionFile);
           if (result.cancelled) {
@@ -316,7 +337,8 @@ export class InteractiveController {
           } else {
             this.messages = [];
             this.onMessageCallback?.(this.messages);
-            this.addToast(`Switched to session: ${entry.id}`, 'success');
+            this.resubscribeToRuntime();
+            this.addToast(`Switched to session: ${target.id}`, 'success');
           }
         } else {
           this.addToast('Session switch not supported', 'error');
@@ -461,6 +483,10 @@ export class InteractiveController {
   // ============================================================================
 
   dispose(): void {
-    // No-op for now; runtime.dispose() is handled by caller
+    const unsub = (this as any)._unsub as (() => void) | undefined;
+    if (typeof unsub === 'function') {
+      unsub();
+    }
+    (this as any)._unsub = undefined;
   }
 }

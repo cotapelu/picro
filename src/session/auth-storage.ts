@@ -133,16 +133,14 @@ export class AuthStorage {
 
   /**
    * Set API key for a provider and persist to storage.
+   *
+   * The on-disk file is the source of truth: the previous implementation wrote
+   * back the in-memory snapshot and, when that snapshot was empty (unreadable
+   * file, load error), wiped every other provider's credential. The
+   * `instanceof ... ? undefined : undefined` branch it guarded was dead code.
    */
   setApiKey(provider: string, apiKey: string): void {
-    this.storage.withLock<void>(() => {
-      // Ensure data is loaded
-      if (Object.keys(this.data).length === 0) {
-        this.data = this.parseStorageData(this.storage instanceof FileAuthStorageBackend ? undefined : undefined);
-      }
-      this.data[provider] = { type: "api_key", key: apiKey };
-      return { result: undefined, next: JSON.stringify(this.data, null, 2) };
-    });
+    this.persistProviderChange(provider, { type: "api_key", key: apiKey });
   }
 
   /**
