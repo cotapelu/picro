@@ -39,13 +39,16 @@ function blend(a: Color, b: Color, amount: number): Color {
   const cb = colorToHex(b);
   const from = parseColor(ca);
   const to = parseColor(cb);
-  const mix = {
-    r: Math.round((from as { r: number }).r * (1 - amount) + (to as { r: number }).r * amount),
-    g: Math.round((from as { g: number }).g * (1 - amount) + (to as { g: number }).g * amount),
-    b: Math.round((from as { b: number }).b * (1 - amount) + (to as { b: number }).b * amount),
-  };
-  void mix;
-  return { kind: "rgb", r: 0, g: 0, b: 0 };
+  const clamped = Math.max(0, Math.min(1, amount));
+  const channel = (x: number, y: number) => Math.round(x * (1 - clamped) + y * clamped);
+  // colourToHex always yields an rgb colour for hex input, but stay defensive.
+  const fr = (from as { r: number }).r ?? 0;
+  const fg = (from as { g: number }).g ?? 0;
+  const fb = (from as { b: number }).b ?? 0;
+  const tr = (to as { r: number }).r ?? 0;
+  const tg = (to as { g: number }).g ?? 0;
+  const tb = (to as { b: number }).b ?? 0;
+  return { kind: "rgb", r: channel(fr, tr), g: channel(fg, tg), b: channel(fb, tb) };
 }
 
 /** Độ tương phản WCAG giữa hai màu. */
@@ -76,6 +79,12 @@ function pickFromPalette(palette: RgbColor[] | undefined, base: Color, backgroun
  *   - Dùng màu terminal cho chữ/nền mặc định
  *   - Sinh màu nhấn/trạng thái từ bảng 16 màu
  *   - Nền mục chọn/nền thông báo là màu nền pha nhẹ
+ *
+ * Every token gets a real value. This used to compute accent/success/warning/
+ * error/selectedBg/... and then discard all of them ("void x") while returning
+ * an empty string for every token, so the system theme rendered every token with
+ * the same guessed foreground colour: no colour differentiation anywhere, and
+ * background tokens drew with the foreground colour.
  */
 export function generateSystemThemeColors(colors: TerminalColors = {}): Record<string, ThemeColorValue> {
   const appearance = terminalAppearance(colors);
@@ -101,32 +110,90 @@ export function generateSystemThemeColors(colors: TerminalColors = {}): Record<s
   const userMessageBg = blend(background, accent, mixAmount);
   const customMessageBg = blend(background, accent, mixAmount * 1.4);
 
+  // Các mức mờ của chữ: pha nền vào chữ.
+  const muted = blend(foreground, background, appearance === "dark" ? 0.35 : 0.3);
+  const dim = blend(foreground, background, appearance === "dark" ? 0.55 : 0.5);
+  // A lighter mix than `dim` so ordinary borders and very-dim text stay distinct.
+  const border = blend(foreground, background, appearance === "dark" ? 0.45 : 0.4);
+  const borderAccent = blend(accent, background, 0.25);
+  const borderMuted = dim;
+
+  // Hộp công cụ: nền pha rất nhẹ, chữ giữ màu chữ/thông tin.
+  const toolBg = blend(background, foreground, appearance === "dark" ? 0.07 : 0.05);
+  const thinkingText = blend(foreground, background, 0.25);
+
   const out: Record<string, ThemeColorValue> = {};
   for (const token of Object.keys(THEME_TOKENS)) {
     out[token] = "";
   }
-  out.text = "";
-  out.muted = "";
-  out.dim = "";
-  out.accent = "";
-  out.border = "";
-  out.borderAccent = "";
-  out.borderMuted = "";
-  out.success = "";
-  out.error = "";
-  out.warning = "";
-  out.selectedBg = "";
-  out.userMessageBg = "";
-  out.customMessageBg = "";
-  void accent;
-  void success;
-  void warning;
-  void error;
-  void selectedBg;
-  void userMessageBg;
-  void customMessageBg;
 
-  // Ở môi trường không đọc được màu, chuỗi rỗng nghĩa là "mặc định terminal".
+  // foreground slots
+  out.text = colorToHex(foreground);
+  out.muted = colorToHex(muted);
+  out.dim = colorToHex(dim);
+  out.accent = colorToHex(accent);
+  out.border = colorToHex(border);
+  out.borderAccent = colorToHex(borderAccent);
+  out.borderMuted = colorToHex(borderMuted);
+  out.success = colorToHex(success);
+  out.error = colorToHex(error);
+  out.warning = colorToHex(warning);
+  out.thinkingText = colorToHex(thinkingText);
+  out.toolTitle = colorToHex(foreground);
+  out.toolOutput = colorToHex(foreground);
+  out.userMessageText = colorToHex(foreground);
+  out.customMessageText = colorToHex(foreground);
+  out.customMessageLabel = colorToHex(accent);
+  out.bashMode = colorToHex(accent);
+  out.mdHeading = colorToHex(accent);
+  out.mdLink = colorToHex(accent);
+  out.mdLinkUrl = colorToHex(dim);
+  out.mdCode = colorToHex(foreground);
+  out.mdCodeBlock = colorToHex(foreground);
+  out.mdCodeBlockBorder = colorToHex(border);
+  out.mdQuote = colorToHex(muted);
+  out.mdQuoteBorder = colorToHex(border);
+  out.mdHr = colorToHex(border);
+  out.mdListBullet = colorToHex(accent);
+  out.toolDiffAdded = colorToHex(success);
+  out.toolDiffRemoved = colorToHex(error);
+  out.toolDiffContext = colorToHex(muted);
+  out.searchMatchText = colorToHex(foreground);
+
+  // Tô sáng cú pháp: lấy từ bảng màu nếu có, không thì theo vai trò.
+  const palette = colors.palette ?? [];
+  const paletteAt = (i: number, fallback: Color): Color =>
+    palette[i] ? ({ kind: "rgb", ...palette[i] } as Color) : fallback;
+  out.syntaxComment = colorToHex(dim);
+  out.syntaxKeyword = colorToHex(paletteAt(4, accent));
+  out.syntaxFunction = colorToHex(paletteAt(5, accent));
+  out.syntaxVariable = colorToHex(foreground);
+  out.syntaxString = colorToHex(paletteAt(2, success));
+  out.syntaxNumber = colorToHex(paletteAt(3, warning));
+  out.syntaxType = colorToHex(paletteAt(6, accent));
+  out.syntaxOperator = colorToHex(muted);
+  out.syntaxPunctuation = colorToHex(muted);
+
+  // Viền cấp độ suy nghĩ: nhấn dần theo mức.
+  const thinkingRamp: TerminalTheme extends never ? never : Color[] = [dim, muted, accent, accent, success, warning, error];
+  const thinkingTokens: Array<[string, Color]> = [
+    ["thinkingOff", thinkingRamp[0]!],
+    ["thinkingMinimal", thinkingRamp[1]!],
+    ["thinkingLow", thinkingRamp[2]!],
+    ["thinkingMedium", thinkingRamp[3]!],
+    ["thinkingHigh", thinkingRamp[4]!],
+    ["thinkingXhigh", thinkingRamp[5]!],
+  ];
+  for (const [token, color] of thinkingTokens) out[token] = colorToHex(color);
+
+  // background slots
+  out.selectedBg = colorToHex(selectedBg);
+  out.userMessageBg = colorToHex(userMessageBg);
+  out.customMessageBg = colorToHex(customMessageBg);
+  out.toolPendingBg = colorToHex(toolBg);
+  out.toolSuccessBg = colorToHex(toolBg);
+  out.toolErrorBg = colorToHex(blend(toolBg, error, 0.2));
+
   return out;
 }
 
