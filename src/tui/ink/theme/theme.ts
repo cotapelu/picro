@@ -9,7 +9,8 @@
 // Port sang TSX riêng, khong copy code truc iep.
 
 import { readFileSync } from "node:fs";
-import { resolve, dirname, join } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   backgroundAnsi,
   type Color,
@@ -264,6 +265,18 @@ export class Theme {
   }
 }
 
+/**
+ * Directory of this module, so the built-in themes resolve next to it.
+ *
+ * The previous implementation derived the path from process.cwd() and the
+ * SOURCE layout ("<cwd>/src/modes/interactive/../theme"), which resolved to
+ * "src/theme/dark.json" - a directory that does not exist - so
+ * loadBuiltinTheme() threw ENOENT and getTheme() crashed on its first call
+ * whenever no theme had been set. Deriving it from import.meta.url works both
+ * from the TypeScript sources and from the compiled dist/ output.
+ */
+const THEME_DIR = dirname(fileURLToPath(import.meta.url));
+
 /** Nạp theme từ file JSON. */
 export function loadThemeFromFile(path: string): Theme {
   const json = JSON.parse(readFileSync(path, "utf8")) as ThemeJson;
@@ -272,9 +285,8 @@ export function loadThemeFromFile(path: string): Theme {
 
 /** Nạp theme có sẵn theo tên (dark/light). */
 export function loadBuiltinTheme(name: string): Theme {
-  const base = dirname(dirname(join(process.cwd(), "src", "modes", "interactive")));
   const file = name === "light" ? "light.json" : "dark.json";
-  return loadThemeFromFile(resolve(base, "theme", file));
+  return loadThemeFromFile(resolve(THEME_DIR, file));
 }
 
 // ============================================================================

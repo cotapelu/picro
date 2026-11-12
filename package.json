@@ -8,7 +8,7 @@
     "picro": "./dist/cli.js"
   },
   "scripts": {
-    "build": "tsc && chmod +x dist/cli.js",
+    "build": "tsc && node scripts/copy-assets.mjs && chmod +x dist/cli.js",
     "dev": "npm run build && VERBOSE=1 npm start",
     "start": "node dist/cli.js",
     "test": "vitest run",

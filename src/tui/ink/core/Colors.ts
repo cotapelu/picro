@@ -76,7 +76,7 @@ const OKLCH_PATTERN = new RegExp(
   `^oklch\\(\\s*(${NUMBER_PATTERN})(%)?\\s+(${NUMBER_PATTERN})\\s+(${NUMBER_PATTERN})(?:deg)?\\s*\\)$`, "i",
 );
 const OKHSL_PATTERN = new RegExp(
-  `^okhsl\\(\\s*(${NUMBER_PATTERN})(%)?\\s+(${NUMBER_PATTERN})\\s+(${NUMBER_PATTERN})(?:deg)?\\s*\\)$`, "i",
+  `^okhsl\\(\\s*(${NUMBER_PATTERN})(%)?\\s+(${NUMBER_PATTERN})(%)?\\s+(${NUMBER_PATTERN})(%)?\\s*\\)$`, "i",
 );
 
 export function parseColor(value: string | number): Color {
@@ -98,9 +98,18 @@ export function parseColor(value: string | number): Color {
   }
   const okhsl = OKHSL_PATTERN.exec(value);
   if (okhsl) {
-    const saturation = Number.parseFloat(okhsl[2]!) / (okhsl[3] ? 100 : 1);
-    const lightness = Number.parseFloat(okhsl[4]!) / (okhsl[5] ? 100 : 1);
-    return okhslColor(Number.parseFloat(okhsl[1]!), saturation, lightness);
+    // Groups: 1=hue 2=hue% 3=saturation 4=sat% 5=lightness 6=light%.
+    //
+    // The pattern only allowed a "%" after the hue and the branch read the
+    // groups as if one existed, so "okhsl(295 50% 67%)" (the syntax every
+    // built-in theme uses) failed to match at all and parseColor threw, while
+    // the unitless form read the saturation group as a percent flag and the
+    // lightness group as the saturation - silently collapsing saturation to
+    // NaN (rendered as 0, i.e. a grey) for every colour.
+    const hue = Number.parseFloat(okhsl[1]!);
+    const saturation = Number.parseFloat(okhsl[3]!) / (okhsl[4] ? 100 : 1);
+    const lightness = Number.parseFloat(okhsl[5]!) / (okhsl[6] ? 100 : 1);
+    return okhslColor(hue, saturation, lightness);
   }
   throw new Error(`Giá trị màu không hợp lệ: ${value}`);
 }
