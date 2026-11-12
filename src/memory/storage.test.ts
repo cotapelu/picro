@@ -374,11 +374,24 @@ describe('MemoryStorage.getRecent', () => {
 });
 
 describe('MemoryStorage.load corruption guard', () => {
+  let dir: string;
+  let file: string;
+
+  beforeEach(() => {
+    dir = join(tmpdir(), `picro-memstorage-corrupt-${Date.now()}`);
+    mkdirSync(dir, { recursive: true });
+    file = join(dir, 'memory.json');
+  });
+
+  afterEach(() => {
+    if (existsSync(dir)) rmSync(dir, { recursive: true, force: true });
+  });
+
   it('treats a non-array store as empty', async () => {
     // Loading is triggered on init; a corrupt (non-array) file must not leave a
     // non-array behind for consumers that call .filter/.find.
-    const storage = new MemoryStorage({ store: new MemoryStore(dbPath) });
-    writeFileSync(dbPath, JSON.stringify({ not: 'an array' }), 'utf8');
+    writeFileSync(file, JSON.stringify({ not: 'an array' }), 'utf8');
+    const storage = new MemoryStorage({ store: new MemoryStore(file) });
     await (storage.getStore() as any).init();
     expect(storage.count()).toBe(0);
   });
