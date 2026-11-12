@@ -72,18 +72,27 @@ function randomId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
-/** Tuần tự hóa nhánh hiện tại ra JSONL kèm entry trailing. */
+/**
+ * Tuần tự hóa nhánh hiện tại ra JSONL kèm entry trailing.
+ *
+ * The output must stay a valid tree: every entry's parentId has to name an id
+ * that exists in the same file. This used to replace each entry's id with a
+ * fresh random one while leaving parentId pointing at the ORIGINAL id, so all
+ * three links dangled and a share viewer could not rebuild the branch at all.
+ * The original ids are preserved instead.
+ */
 export function serializeSessionBranch(session: ShareableSession): string {
   const entries = session.sessionManager.getEntries();
   const leafId = session.sessionManager.getLeafId();
   const lines: string[] = [];
-  let parentId: string | null = null;
   const timestamp = new Date().toISOString();
   for (const entry of entries) {
-    lines.push(JSON.stringify({ ...(entry as object), parentId, id: randomId() }));
-    parentId = (entry as { id?: string }).id ?? parentId;
+    lines.push(JSON.stringify(entry as object));
   }
-  for (const trailing of createShareTrailingEntries(session, parentId ?? leafId, timestamp)) {
+  // The trailing entry must hang off the id that is actually present in the
+  // file: the last serialised entry, falling back to the session leaf.
+  const lastId = (entries[entries.length - 1] as { id?: string } | undefined)?.id ?? leafId;
+  for (const trailing of createShareTrailingEntries(session, lastId, timestamp)) {
     lines.push(JSON.stringify(trailing));
   }
   return lines.join("\n");
