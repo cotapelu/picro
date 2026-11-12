@@ -23,25 +23,91 @@ export interface Skill {
 const MAX_NAME_LENGTH = 64;
 const MAX_DESCRIPTION_LENGTH = 1024;
 
-function parseFrontmatter<T>(content: string): { frontmatter: T; content: string } {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!match) {
-    return { frontmatter: {} as T, content };
+/** Drop a leading UTF-8 BOM so the opening fence is recognised. */
+function stripBom(content: string): string {
+  return content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
+}
+
+/** CRLF/CR (Windows editors) must not hide the "---" fences. */
+function normalizeNewlines(value: string): string {
+  return value.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+}
+
+/** Coerce a YAML scalar to the type callers expect (booleans, numbers, plain text). */
+function parseScalar(raw: string): string | number | boolean {
+  const value = raw.trim();
+  if (value === "" || value === "~" || value === "null") return "";
+  if (value === "true") return true;
+  if (value === "false") return false;
+  if (/^-?\d+$/.test(value)) return Number(value);
+  if (/^-?\d*\.\d+$/.test(value)) return Number(value);
+  if ((value.startsWith('"') && value.endsWith('"') && value.length >= 2) ||
+      (value.startsWith("'") && value.endsWith("'") && value.length >= 2)) {
+    return value.slice(1, -1);
+  }
+  return value;
+}
+
+/**
+ * Parse YAML frontmatter delimited by "---" fences.
+ *
+ * Mirrors pi-mono's utils/frontmatter.ts semantics (without pulling in a YAML
+ * dependency): the closing fence is located with indexOf so it may sit at EOF
+ * with no trailing newline, BOM and CRLF/CR are normalised away, and a value can
+ * span several indented lines. The previous regex required "\n---\n", so a file
+ * saved without a trailing newline, written on Windows, or starting with a BOM
+ * lost its whole frontmatter - the skill was then dropped for having no
+ * description.
+ */
+function parseFrontmatter<T>(content: string): { frontmatter: T; body: string } {
+  const normalized = normalizeNewlines(stripBom(content));
+
+  if (!normalized.startsWith("---")) {
+    return { frontmatter: {} as T, body: normalized };
   }
 
-  const frontmatterBlock = match[1];
-  const body = match[2];
-  const frontmatter: Record<string, any> = {};
-
-  for (const line of frontmatterBlock.split("\n")) {
-    const colonIndex = line.indexOf(":");
-    if (colonIndex === -1) continue;
-    const key = line.slice(0, colonIndex).trim();
-    const value = line.slice(colonIndex + 1).trim();
-    frontmatter[key] = value;
+  const endIndex = normalized.indexOf("\n---", 3);
+  if (endIndex === -1) {
+    return { frontmatter: {} as T, body: normalized };
   }
 
-  return { frontmatter: frontmatter as T, content: body };
+  const yamlBlock = normalized.slice(4, endIndex);
+  const body = normalized.slice(endIndex + 4).trim();
+  const frontmatter: Record<string, string | number | boolean> = {};
+
+  let currentKey: string | null = null;
+  for (const line of yamlBlock.split("\n")) {
+    if (line.trim() === "") continue;
+
+    const indent = line.length - line.trimStart().length;
+    const trimmed = line.trim();
+
+    // Continuation of a multi-line scalar (deeper indentation, no new key).
+    if (indent > 0 && currentKey !== null && !/^[-\w\"']+:/.test(trimmed)) {
+      const previous = String(frontmatter[currentKey] ?? "");
+      frontmatter[currentKey] = previous === "" ? trimmed : `${previous}\n${trimmed}`;
+      continue;
+    }
+
+    const colonIndex = trimmed.indexOf(":");
+    if (colonIndex === -1) {
+      currentKey = null;
+      continue;
+    }
+
+    const key = trimmed.slice(0, colonIndex).trim();
+    const rawValue = trimmed.slice(colonIndex + 1).trim();
+    // Block scalar markers ("|", "|-", ">") introduce indented lines.
+    if (rawValue === "|" || rawValue === "|-" || rawValue === ">" || rawValue === ">-") {
+      frontmatter[key] = "";
+      currentKey = key;
+      continue;
+    }
+    frontmatter[key] = parseScalar(rawValue);
+    currentKey = key;
+  }
+
+  return { frontmatter: frontmatter as T, body };
 }
 
 export function loadSkillFromFile(filePath: string): Skill | null {
@@ -61,15 +127,29 @@ export function loadSkillFromFile(filePath: string): Skill | null {
     const rawFlag = frontmatter["disable-model-invocation"];
     const disableModelInvocation = rawFlag === true || String(rawFlag).toLowerCase() === 'true';
 
-    // Validate name
-    if (!/^[a-z0-9-]+$/.test(name) || name.length > MAX_NAME_LENGTH) {
+    // Validate name (Agent Skills spec: lowercase a-z, 0-9, hyphens; no
+    // leading/trailing hyphen and no consecutive hyphens).
+    if (
+      !/^[a-z0-9-]+$/.test(name) ||
+      name.length > MAX_NAME_LENGTH ||
+      name.startsWith("-") ||
+      name.endsWith("-") ||
+      name.includes("--")
+    ) {
       console.warn(`Invalid skill name: ${name}`);
       return null;
     }
 
-    // Require description
+    // Require description (and honour the documented length limit, which was
+    // declared but never enforced).
     if (!description || description.trim() === "") {
       console.warn(`Skill missing description: ${filePath}`);
+      return null;
+    }
+    if (description.length > MAX_DESCRIPTION_LENGTH) {
+      console.warn(
+        `Skill description exceeds ${MAX_DESCRIPTION_LENGTH} characters (${description.length}): ${filePath}`
+      );
       return null;
     }
 
