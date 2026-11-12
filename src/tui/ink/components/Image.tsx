@@ -22,6 +22,7 @@ import {
   type ImageDimensions,
   truncateToWidthCompat,
 } from "../core/TerminalImage.js";
+import { layoutImageBlock } from "./image-layout.js";
 
 export interface ImageProps {
   /** Dữ liệu ảnh đã base64. */
@@ -79,12 +80,20 @@ export const Image: React.FC<ImageProps> = ({
     return <Text>{truncateToWidthCompat(theme.muted(fallback), 80)}</Text>;
   }
 
+  // Layout is protocol-specific (see image-layout.ts): Kitty puts the escape on
+  // the first row and pads after it; iTerm2 pads first and draws on the last row
+  // after moving the cursor back up. The old code always put the escape first,
+  // which drew the iTerm2 image one row too high.
+  const block = layoutImageBlock({
+    protocol: content.iterm2 ? "iterm2" : "kitty",
+    sequence: content.sequence,
+    rows: content.blankRows + 1,
+  });
+
   return (
     <>
-      {content.iterm2 ? null : <Text>{content.sequence}</Text>}
-      {content.iterm2 ? <Text>{content.sequence}</Text> : null}
-      {Array.from({ length: content.blankRows }).map((_, i) => (
-        <Text key={`img-blank-${i}`}> </Text>
+      {block.map((line, i) => (
+        <Text key={`img-line-${i}`}>{line.text}</Text>
       ))}
     </>
   );
