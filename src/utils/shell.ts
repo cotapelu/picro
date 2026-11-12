@@ -121,6 +121,10 @@ export function sanitizeBinaryOutput(str: string): string {
       if (code === 0x09 || code === 0x0a || code === 0x0d) return true;
       // Filter out control characters (0x00-0x1F, except allowed)
       if (code <= 0x1f) return false;
+      // DEL (0x7F) and the C1 control range (0x80-0x9F) are control characters
+      // too: they reach the terminal as 7-bit equivalents and can move the
+      // cursor or clear the line mid-output.
+      if (code === 0x7f || (code >= 0x80 && code <= 0x9f)) return false;
       // Filter out Unicode format characters
       if (code >= 0xfff9 && code <= 0xfffb) return false;
       return true;

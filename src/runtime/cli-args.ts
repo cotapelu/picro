@@ -117,7 +117,15 @@ export function parseArgs(args: string[]): Args {
         result.diagnostics.push({ type: "warning", message: `Invalid thinking level: ${level}. Valid levels: ${VALID_THINKING_LEVELS.join(', ')}` });
       }
     } else if (arg === "--port" && i + 1 < args.length) {
-      result.port = parseInt(args[++i], 10);
+      const port = Number.parseInt(args[++i], 10);
+      if (Number.isInteger(port) && port > 0 && port <= 65535) {
+        result.port = port;
+      } else {
+        // parseInt("abc") is NaN and reach the server as listen(NaN); an
+        // out-of-range port is equally unusable.
+        result.diagnostics.push({ type: "warning", message: `Invalid port: ${args[i]}. Using 3000.` });
+        result.port = 3000;
+      }
     } else if (arg === "--host" && i + 1 < args.length) {
       result.host = args[++i];
     } else if (arg === "--mode" && i + 1 < args.length) {

@@ -14,6 +14,7 @@ import { buildInitialMessage, type InitialMessageResult } from "./cli/initial-me
 import { listModels } from "./cli/list-models.js";
 import { selectSession, type SessionsLoader } from "./cli/session-picker.js";
 import { getMissingSessionCwdIssue } from "./session/session-cwd.js";
+import { resolveCliModel } from "./session/model-resolver.js";
 import { createAgentSessionServices } from "./session/agent-session-services.js";
 import { createAgentSessionFromServices, type SessionStartEvent } from "./session/agent-session-services.js";
 import { SessionManager } from "./session/session-manager.js";
@@ -291,26 +292,27 @@ async function main(): Promise<void> {
   }
   time("createSessionManager");
 
-  // Resolve model
+  // Resolve model through the model resolver: it understands "provider/id",
+  // "provider/id:thinking" patterns and -latest aliases, and reports a clear
+  // error. Calling registry.find() directly skipped all of that, so a documented
+  // pattern like "openai/gpt-5.4:high" only ever produced "Model not found".
   let resolvedModel: Model | undefined;
+  let resolvedThinkingLevel = parsed.thinking;
   if (parsed.model) {
-    const providerHint = parsed.provider || services.settingsManager.getDefaultProvider();
-    if (providerHint) {
-      resolvedModel = services.modelRegistry.find(providerHint, parsed.model);
-    }
-    if (!resolvedModel) {
-      const allProviders = services.modelRegistry.getProviders();
-      for (const p of allProviders) {
-        const m = services.modelRegistry.find(p, parsed.model);
-        if (m) {
-          resolvedModel = m;
-          break;
-        }
-      }
-    }
-    if (!resolvedModel) {
-      console.error(`Model not found: ${parsed.model}`);
+    const resolved = await resolveCliModel({
+      initialModel: parsed.model,
+      registry: services.modelRegistry,
+    });
+    if (resolved.error || !resolved.model) {
+      console.error(resolved.error || `Model not found: ${parsed.model}`);
       process.exit(1);
+    }
+    resolvedModel = resolved.model as unknown as Model;
+    if (resolved.thinkingLevel && !parsed.thinking) {
+      resolvedThinkingLevel = resolved.thinkingLevel as typeof resolvedThinkingLevel;
+    }
+    if (resolved.warning) {
+      console.error(`Warning: ${resolved.warning}`);
     }
   }
 
@@ -320,7 +322,7 @@ async function main(): Promise<void> {
     sessionManager,
     sessionStartEvent,
     model: resolvedModel,
-    thinkingLevel: parsed.thinking,
+    thinkingLevel: resolvedThinkingLevel,
   });
   time("createAgentSession");
 
