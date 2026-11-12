@@ -21,6 +21,7 @@ export * from "./NativeModifiers.js";
 export * from "./NativeModulePath.js";
 export * from "./RenderBus.js";
 export * from "./ModelSearch.js";
+export * from "./select-window.js";
 export * from "./ExternalEditor.js";
 export * from "./ModelCatalogRefresh.js";
 export * from "./ProgramStatusReporter.js";

@@ -5,11 +5,12 @@
 //   - Tìm kiếm theo id/tên, hiển thị thư mục và tên phiên
 // Port sang Ink TSX, khong copy code truc iep.
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { theme, fg, bg } from "../theme/index.js";
 import { DynamicBorder } from "./DynamicBorder.js";
 import { TextInput } from "./TextInput.js";
+import { selectWindow } from "../core/select-window.js";
 
 export interface SessionInfo {
   id: string;
@@ -70,7 +71,13 @@ export const SessionSelector: React.FC<SessionSelectorProps> = ({
   }, [sorted, query]);
 
   const list = filtered;
-  const clamped = Math.max(0, Math.min(selected, list.length - 1));
+  const window = selectWindow(selected, list.length, MAX_VISIBLE);
+  const clamped = window.clamped;
+
+  // Keep the stored index inside the current list (see ModelSelector).
+  useEffect(() => {
+    if (clamped >= 0 && clamped !== selected) setSelected(clamped);
+  }, [clamped, selected]);
 
   useInput((input, key) => {
     if (key.upArrow) {
@@ -103,8 +110,7 @@ export const SessionSelector: React.FC<SessionSelectorProps> = ({
     }
   });
 
-  const start = Math.max(0, Math.min(clamped - Math.floor(MAX_VISIBLE / 2), list.length - MAX_VISIBLE));
-  const end = Math.min(start + MAX_VISIBLE, list.length);
+  const { start, end } = window;
   const visible = list.slice(start, end);
   const scopeLabel = scopeAll ? "mọi phiên" : "thư mục này";
 

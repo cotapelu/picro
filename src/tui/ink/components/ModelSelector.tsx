@@ -5,11 +5,12 @@
 //   - Lọc mờ theo id/tên/nhà cung cấp
 // Port sang Ink TSX, khong copy code truc iep.
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { theme, fg, bg } from "../theme/index.js";
 import { DynamicBorder } from "./DynamicBorder.js";
 import { TextInput } from "./TextInput.js";
+import { selectWindow } from "../core/select-window.js";
 
 export interface ModelItem {
   id: string;
@@ -62,12 +63,23 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
     [models, query],
   );
 
-  const list = filtered.length > 0 ? filtered : models;
-  const clamped = Math.min(selected, list.length - 1);
+  // A query that matched nothing used to fall back to the full list, so the
+  // "Không có mô hình" message was unreachable and Enter picked an arbitrary
+  // model. An empty result now stays empty.
+  const list = filtered;
+  const window = selectWindow(selected, list.length, MAX_VISIBLE);
+  const clamped = window.clamped;
+
+  // Keep the stored index inside the current list: the arrow keys bound-check
+  // the raw index, so after filtering the highlight otherwise sat still while
+  // Up had to be pressed repeatedly before the index walked back into view.
+  useEffect(() => {
+    if (clamped >= 0 && clamped !== selected) setSelected(clamped);
+  }, [clamped, selected]);
 
   useInput((input, key) => {
     if (key.upArrow) {
-      setSelected((i) => (i <= 0 ? list.length - 1 : i - 1));
+      setSelected((i) => (i <= 0 ? Math.max(0, list.length - 1) : i - 1));
       return;
     }
     if (key.downArrow) {
@@ -93,8 +105,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
     }
   });
 
-  const start = Math.max(0, Math.min(clamped - Math.floor(MAX_VISIBLE / 2), list.length - MAX_VISIBLE));
-  const end = Math.min(start + MAX_VISIBLE, list.length);
+  const { start, end } = window;
   const visible = list.slice(start, end);
   const active = list[clamped];
 
