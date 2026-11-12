@@ -10,6 +10,7 @@ import { Box, Text, useWindowSize } from "ink";
 import { formatTokens } from "./FormatTokens.js";
 import { theme, fg, bg } from "../theme/index.js";
 import { formatCwdForFooter } from "./FormatCwd.js";
+import { composeStatusBarLine, truncateVisual, visibleTextWidth } from "./status-bar-layout.js";
 
 interface StatusBarProps {
   model?: string;
@@ -19,30 +20,6 @@ interface StatusBarProps {
   sessionName?: string;
   isProcessing?: boolean;
   thinkingLevel?: string;
-}
-
-/** Cắt chuỗi đã tô màu theo số cột hiển thị. */
-function truncateVisual(text: string, width: number): string {
-  if (width <= 0) return "";
-  // ANSI không chiếm cột, nên đo bằng cách lược bỏ chuỗi escape.
-  const plain = text.replace(/\x1b\[[0-9;]*m/g, "");
-  if (plain.length <= width) return text;
-  const keep = width > 1 ? width - 1 : 0;
-  let taken = 0;
-  let out = "";
-  for (let i = 0; i < text.length && taken < keep; i++) {
-    out += text[i];
-    if (text[i] === "\x1b") {
-      // Nuốt phần còn lại của escape sequence.
-      while (i < text.length && text[i] !== "m") {
-        i++;
-        out += text[i] ?? "";
-      }
-      continue;
-    }
-    taken++;
-  }
-  return out + fg("dim", "…");
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -68,19 +45,24 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   const leftParts = [statusText, `↑↓ ${formatTokens(Number(tokenTotal) || 0)}`];
   if (contextInfo) leftParts.push(contextInfo);
 
-  const modelName = model ?? "no-model";
-  const rightParts = [modelName];
+  const modelName = model ?? "no-model";  const rightParts = [modelName];
   if (thinkingLevel && thinkingLevel !== "off") rightParts.push(`think ${thinkingLevel}`);
 
-  const left = leftParts.join("  ");
-  const right = truncateVisual(rightParts.join(" · "), Math.max(0, columns - left.length - 3));
-  const gap = Math.max(2, (columns || 80) - left.replace(/\x1b\[[0-9;]*m/g, "").length - right.replace(/\x1b\[[0-9;]*m/g, "").length);
+  // The right column's budget comes from the VISIBLE width of the left side:
+  // using left.length (escape bytes included) truncated the model/thinking info
+  // about nine columns too early on every render.
+  const { left: leftText, right, gap } = composeStatusBarLine({
+    left: leftParts.join("  "),
+    rightParts,
+    columns: columns || 80,
+  });
+  const pwdLine = truncateVisual(fg("dim", pwd), columns || 80);
 
   return (
     <Box flexDirection="column" flexShrink={0}>
-      <Text>{truncateVisual(fg("dim", pwd), columns || 80)}</Text>
+      <Text>{pwdLine}</Text>
       <Text>
-        {`${left}${" ".repeat(gap)}${right}`}
+        {`${leftText}${" ".repeat(gap)}${right}`}
       </Text>
     </Box>
   );
