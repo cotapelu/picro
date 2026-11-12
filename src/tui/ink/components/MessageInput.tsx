@@ -67,10 +67,18 @@ export const MessageInput = React.forwardRef<EditorHandle, MessageInputProps>(
   // Mũi tên lên/xuống trên ô RỖNG cuộn transcript thay vì duyệt lịch sử:
   // Editor đã tự xử lý lịch sử khi có nội dung, nên ta chỉ cần can thiệp khi rỗng.
   const handleKey = useCallback(
-    (data: string, isUp: boolean, isDown: boolean) => {
+    (
+      data: string,
+      keys: { up: boolean; down: boolean; pageUp: boolean; pageDown: boolean },
+    ) => {
       if (!onScroll) return;
-      if (isUp && valueRef.current.length === 0) onScroll("up", false);
-      if (isDown && valueRef.current.length === 0) onScroll("down", false);
+      const empty = valueRef.current.length === 0;
+      if (!empty) return;
+      // Ô rỗng: mũi tên và PageUp/PageDown cuộn transcript thay vì duyệt lịch sử.
+      if (keys.pageUp) onScroll("up", true);
+      else if (keys.pageDown) onScroll("down", true);
+      else if (keys.up) onScroll("up", false);
+      else if (keys.down) onScroll("down", false);
     },
     [onScroll],
   );
@@ -110,7 +118,7 @@ const MessageEditor = React.forwardRef<
     onChange: (text: string) => void;
     onSubmit: (text: string) => void;
     disabled: boolean;
-    onKey: (data: string, isUp: boolean, isDown: boolean) => void;
+    onKey: (data: string, keys: { up: boolean; down: boolean; pageUp: boolean; pageDown: boolean }) => void;
     width: number;
     history: readonly string[];
     slashCommands: readonly SlashCommand[];

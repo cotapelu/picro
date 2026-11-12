@@ -7,7 +7,7 @@
 //     đang mở, đúng như showSelector() của pi-mono
 //   - Trạng thái (working/compaction/retry) nằm trong dock, ngay trên editor
 //   - Cuộn transcript theo DÒNG HIỂN THỊ (không theo số tin nhắn), có follow-end
-//   - Tool execution hiển thị trong transcript khi controller báo sự kiện
+//   - Tool output mở rộng/thu gọn bằng Ctrl+T (như pi-mono setToolsExpanded)
 // Port sang Ink TSX, khong copy code truc iep.
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -17,7 +17,6 @@ import type { InteractiveControllerLike } from "./controller-bridge.js";
 import { ChatViewport } from "./components/ChatViewport.js";
 import { Header } from "./components/Header.js";
 import { MessageInput } from "./components/MessageInput.js";
-import { MessageList, type ChatMessageLike } from "./components/MessageList.js";
 import { StatusBar } from "./components/StatusBar.js";
 import { Toast } from "./components/Toast.js";
 import { Modal } from "./components/Modal.js";
@@ -28,7 +27,12 @@ import { SessionSelector, type SessionInfo } from "./components/SessionSelector.
 import { SettingsSelector, type SettingRow } from "./components/SettingsSelector.js";
 import { ThemeSelector } from "./components/ThemeSelector.js";
 import { ThinkingSelector } from "./components/ThinkingSelector.js";
-import { ScrollView } from "./components/ScrollView.js";
+import {
+  Transcript,
+  sliceTranscript,
+  transcriptLineCount,
+  type TranscriptItem,
+} from "./components/Transcript.js";
 import { HelpBody } from "./components/HelpBody.js";
 
 export interface AppProps {
@@ -55,7 +59,7 @@ type IndicatorState =
   | { kind: "compaction"; reason?: string }
   | { kind: "retry"; attempt: number; maxAttempts: number; delayMs: number };
 
-/** Overlay đang mở, thay thế ô nhập. */
+/** Cửa sổ phụ đang mở, thay thế ô nhập. */
 export type OverlayKind =
   | "none"
   | "model"
@@ -63,18 +67,14 @@ export type OverlayKind =
   | "settings"
   | "theme"
   | "thinking"
-  | "help"
-  | "login";
+  | "help";
 
-export interface OverlayRequest {
-  kind: OverlayKind;
-  props?: Record<string, unknown>;
-}
-
-/** Số dòng chrome cố định (header + status + input + footer), dùng tính vùng transcript. */
-const CHROME_LINES = 12;
+/** Số dòng chrome ước tính (header + dock nhập + status + footer + keybindings). */
+const CHROME_LINES = 10;
 /** Chiều cao tối thiểu của vùng transcript. */
 const MIN_TRANSCRIPT_LINES = 5;
+/** Bước cuộn khi nhấn PageUp/PageDown. */
+const PAGE_OVERLAP = 2;
 
 export const App: React.FC<AppProps> = ({
   runtime,
@@ -82,51 +82,46 @@ export const App: React.FC<AppProps> = ({
   initialMessage,
   layout = "compact",
 }) => {
-  const [messages, setMessages] = useState<ChatMessageLike[]>(() => controller.getMessages());
-  const [status, setStatus] = useState(() => controller.getStatus());
   const [toasts, setToasts] = useState<ToastItem[]>(() => controller.getToasts());
   /** Số dòng đã cuộn lên so với đáy (0 = theo dõi cuối). */
-  const [scrollTop, setScrollTop] = useState(0);
+  const [scrollLines, setScrollLines] = useState(0);
   const [indicator, setIndicator] = useState<IndicatorState>({ kind: "none" });
   const [overlay, setOverlay] = useState<OverlayKind>("none");
   const [overlayProps, setOverlayProps] = useState<Record<string, unknown>>({});
+  const [toolsExpanded, setToolsExpanded] = useState(false);
+  const [followingEnd, setFollowingEnd] = useState(true);
   const [cwd, setCwd] = useState<string>(runtime.cwd || ".");
+  const editorRef = useRef<{ getText(): string; setText(text: string): void; addToHistory(text: string): void } | null>(null);
 
   const { columns, rows } = useWindowSize();
+  const width = columns || 80;
 
-  // Vùng transcript: chiều cao terminal trừ đi phần chrome nhất định.
-  // Dùng useWindowSize (theo dõi resize) thay vì useMemo([]) một lần — bản cũ
-  // đọc process.stdout.rows đúng MỘT lần nên mọi thay đổi kích thước sau đó bị bỏ qua.
+  const transcript = useMemo(() => controller.getTranscript(), [controller]);
   const viewportHeight = useMemo(
     () => Math.max(MIN_TRANSCRIPT_LINES, (rows || 24) - CHROME_LINES),
     [rows],
   );
 
-  const closeOverlay = useCallback(() => {
-    setOverlay("none");
-    setOverlayProps({});
-  }, []);
+  const status = useMemo(() => controller.getStatus(), [controller]);
+  const totalLines = useMemo(
+    () => transcriptLineCount(transcript, width),
+    [transcript, width],
+  );
+  const maxScroll = Math.max(0, totalLines - viewportHeight);
 
-  // Controller mở/đóng overlay qua nút bấm của view.
-  useEffect(() => {
-    controller.onOverlayRequest((request: OverlayRequest) => {
-      setOverlay(request.kind);
-      setOverlayProps(request.props ?? {});
-    });
-    controller.onOverlayClose(() => closeOverlay());
-  }, [controller, closeOverlay]);
+  const visibleTranscript = useMemo(() => {
+    const skip = followingEnd ? 0 : Math.min(scrollLines, maxScroll);
+    const { items } = sliceTranscript(transcript, width, viewportHeight, skip);
+    return items;
+  }, [transcript, width, viewportHeight, followingEnd, scrollLines, maxScroll]);
 
+  // Dính biên: không cuộn quá nội dung.
   useEffect(() => {
-    if (initialMessage) void controller.sendMessage(initialMessage);
-    setCwd(runtime.cwd || ".");
-  }, [runtime, initialMessage, controller]);
+    if (scrollLines > maxScroll) setScrollLines(maxScroll);
+  }, [scrollLines, maxScroll]);
 
+  // Đăng ký callback của controller (một lần).
   useEffect(() => {
-    controller.onMessage((msgs) => setMessages(msgs as ChatMessageLike[]));
-    controller.onStatusChange((st) => setStatus(st));
-    controller.onIndicator((next) => setIndicator(next as IndicatorState));
-    // `removed` đánh dấu lần phát ra khi toast hết hạn: xóa đúng phần tử thay vì
-    // thêm lại cùng id (bản cũ nhân đôi mỗi toast và danh sách phình vô hạn).
     controller.onToast((toast, removed) =>
       setToasts((prev) =>
         removed
@@ -134,70 +129,74 @@ export const App: React.FC<AppProps> = ({
           : [...prev.filter((t) => t.id !== toast.id), toast],
       ),
     );
-  }, [controller]);
+    controller.onIndicator((next) => setIndicator(next as IndicatorState));
+    controller.onOverlayRequest((request) => {
+      setOverlay(request.kind as OverlayKind);
+      setOverlayProps(request.props ?? {});
+    });
+    controller.onOverlayClose(() => setOverlay("none"));
+    controller.onEditorCallbacks?.({
+      clear: () => editorRef.current?.setText(""),
+      read: () => editorRef.current?.getText() ?? "",
+    });
+    if (initialMessage) void controller.sendMessage(initialMessage);
+    setCwd(runtime.cwd || ".");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleSubmit = useCallback(
-    (text: string) => {
-      void controller.sendMessage(text);
-    },
-    [controller],
-  );
-
-  /**
-   * Cuộn transcript theo DÒNG HIỂN THỊ.
-   *
-   * Bản cũ cuộn theo SỐ TIN NHẮN (mỗi lần 1 message): một tin nhắn dài 50 dòng
-   * bị nhảy qua toàn bộ, không nhìn được nội dung giữa. Cuộn theo dòng là đơn vị
-   * người dùng thực sự nhìn thấy, đúng như ScrollView của pi-mono.
-   */
-  const totalLines = useMemo(
-    () => Math.max(1, Math.ceil(messages.length * 1.6) + messages.reduce((n, m) => n + m.content.split("\n").length, 0)),
-    [messages],
-  );
-
-  const maxScroll = Math.max(0, totalLines - viewportHeight);
-  const safeScrollTop = Math.max(0, Math.min(scrollTop, maxScroll));
+  // Transcript thay đổi khi tin nhắn mới tới; theo dõi cuối nếu đang ở đáy.
+  useEffect(() => {
+    controller.onMessage(() => {
+      if (followingEnd) setScrollLines(0);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controller, followingEnd]);
 
   const handleScroll = useCallback(
     (direction: "up" | "down", page: boolean) => {
-      setScrollTop((prev) => {
-        const step = page ? Math.max(1, viewportHeight - 2) : 1;
+      const step = page ? Math.max(1, viewportHeight - PAGE_OVERLAP) : 1;
+      setFollowingEnd(false);
+      setScrollLines((prev) => {
         const delta = direction === "up" ? step : -step;
-        return Math.max(0, Math.min(maxScroll, prev + delta));
+        const next = Math.max(0, Math.min(maxScroll, prev + delta));
+        if (next === 0) setFollowingEnd(true);
+        return next;
       });
     },
     [maxScroll, viewportHeight],
   );
 
-  // Controller cần đọc/xóa ô nhập cho Ctrl+C (xóa) và Ctrl+D (chỉ thoát khi rỗng).
-  const editorRef = useRef<{ getText(): string; setText(text: string): void; addToHistory(text: string): void } | null>(null);
+  const handleSubmit = useCallback(
+    (text: string) => {
+      void controller.sendMessage(text);
+      setFollowingEnd(true);
+      setScrollLines(0);
+    },
+    [controller],
+  );
 
-  useEffect(() => {
-    controller.onEditorCallbacks?.({
-      clear: () => editorRef.current?.setText(""),
-      read: () => editorRef.current?.getText() ?? "",
-    });
-  }, [controller]);
+  const closeOverlay = useCallback(() => setOverlay("none"), []);
 
-  const overlayNode = renderOverlay({
-    kind: overlay,
-    props: overlayProps,
-    controller,
-    runtime,
-    width: columns || 80,
-    onClose: closeOverlay,
-  });
+  const overlayNode = useMemo(
+    () =>
+      renderOverlay({
+        kind: overlay,
+        props: overlayProps,
+        controller,
+        runtime,
+        width,
+        onClose: closeOverlay,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [overlay, overlayProps, width, closeOverlay],
+  );
 
   return (
     <Box flexDirection="column">
       <Header title="picro" cwd={cwd} expanded={layout === "full"} />
       <ChatViewport
         transcript={
-          <ScrollView
-            lines={messageLines(messages)}
-            viewportHeight={viewportHeight}
-            scrollbar="auto"
-          />
+          <Transcript items={visibleTranscript} width={width} toolsExpanded={toolsExpanded} />
         }
         editor={
           overlay === "none" ? (
@@ -206,11 +205,11 @@ export const App: React.FC<AppProps> = ({
               onSubmit={handleSubmit}
               disabled={status.isProcessing}
               onScroll={handleScroll}
-              width={columns || 80}
+              width={width}
               history={controller.getHistory()}
             />
           ) : (
-            <Box flexDirection="column" width={columns || 80}>
+            <Box flexDirection="column" width={width}>
               {overlayNode ?? <Text>Cửa sổ này chưa khả dụng.</Text>}
             </Box>
           )
@@ -221,12 +220,7 @@ export const App: React.FC<AppProps> = ({
           ) : indicator.kind === "compaction" ? (
             <StatusIndicator kind="compaction" message="" embedded />
           ) : indicator.kind === "retry" ? (
-            <StatusIndicator
-              kind="retry"
-              message=""
-              countdownMs={indicator.delayMs}
-              embedded
-            />
+            <StatusIndicator kind="retry" message="" countdownMs={indicator.delayMs} embedded />
           ) : null
         }
         footer={
@@ -245,20 +239,6 @@ export const App: React.FC<AppProps> = ({
     </Box>
   );
 };
-
-/**
- * Mỗi tin nhắn thành các dòng hiển thị để ScrollView cuộn theo dòng.
- *
- * MessageList nhận mảng tin nhắn, nhưng đơn vị cuộn phải là dòng; lớp này gửi
- * cả hai: danh sách tin nhắn đã lọc theo offset (giữ bounding box) và kích
- * thước từng tin nhắn để tính maxScroll.
- */
-function messageLines(messages: ChatMessageLike[]): string[] {
-  // ScrollView nhận string[]; mỗi ô là MỘT tin nhắn đã được MessageList render.
-  // Xem SCROLL_TRANSCRIPT_LINES: bản thân MessageList tự co giãn, nên số "dòng"
-  // xấp xỉ bằng số tin nhắn — chấp nhận được vì mỗi tin nhắn là một khối trọn vẹn.
-  return messages.map((m) => m.content);
-}
 
 /** Cửa sổ phụ (overlay) đang mở do controller yêu cầu. */
 function renderOverlay(options: {
@@ -282,7 +262,7 @@ function renderOverlay(options: {
       return (
         <ModelSelector
           models={models}
-          currentModel={String((props.current as string) ?? "")}
+          currentModel={String(props.current ?? "")}
           onSelect={(model) => {
             void controller.runCommand("model", `${model.provider}/${model.id}`);
             onClose();

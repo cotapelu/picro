@@ -3,6 +3,8 @@
 
 import type { AgentSessionRuntimeInterface } from '../../runtime/index.js';
 import type { IndicatorState, OverlayRequest } from '../../tui/ink/controller-bridge.js';
+import type { TranscriptItem } from '../../tui/ink/components/Transcript.js';
+import { extractMessageText, extractThinkingText } from '../../tui/ink/components/Transcript.js';
 
 /** Gộp text từ kết quả tool (chuỗi hoặc mảng block). */
 function textOfToolResult(result: any): string {
@@ -360,6 +362,28 @@ export class InteractiveController {
       .join('\n');
   }
 
+  /** Gộp thinking từ một message (mảng block). */
+  private thinkingOfMessage(message: any): string {
+    const content = message?.content;
+    if (!Array.isArray(content)) return "";
+    const parts: string[] = [];
+    for (const block of content) {
+      if (block?.type === "thinking" && typeof block.thinking === "string" && block.thinking.trim()) {
+        parts.push(block.thinking.trim());
+      }
+    }
+    return parts.join("\n\n");
+  }
+
+  /** map id -> thinking để getTranscript() dựng lại đúng khối. */
+  private thinkingById = new Map<string, string>();
+
+  /** Gán thinking cho một message id. */
+  private attachThinking(id: string, thinking: string): void {
+    if (!thinking) return;
+    this.thinkingById.set(id, thinking);
+  }
+
   /** Thêm tin nhắn trợ lý rỗng, trả về id để stream cập nhật. */
   private addAssistantMessage(text: string): string {
     const id = `msg-${Date.now()}-${this.messages.length}`;
@@ -516,6 +540,86 @@ export class InteractiveController {
   /** Lịch sử tin nhắn đã gửi (mới nhất trước) cho editor. */
   getHistory(): readonly string[] {
     return [...this.history];
+  }
+
+  /**
+   * Dựng transcript đầy đủ cho tầng view.
+   *
+   * Mỗi tin nhắn trong controller được biến thành TranscriptItem có kind rõ
+   * ràng (user / assistant+thinking / tool / bash / summary / system), để
+   * Transcript render đúng kiểu từng loại thay vì mọi thứ là một dòng chữ.
+   */
+  getTranscript(): TranscriptItem[] {
+    const items: TranscriptItem[] = [];
+    this.messages.forEach((message, index) => {
+      const base: TranscriptItem = { id: message.id, kind: "system", index, text: message.content };
+      if (message.role === "user") {
+        items.push({ ...base, kind: "user" });
+        return;
+      }
+      if (message.role === "assistant") {
+        // Tool call / kết quả có marker riêng trong nội dung: tách ra khi có thể.
+        const toolInfo = this.parseToolLine(message.content);
+        if (toolInfo) {
+          items.push({ ...base, kind: "tool", toolName: toolInfo.name, toolArgs: {}, toolPartial: false });
+          return;
+        }
+        const thinking = extractThinkingText([{ type: "text", text: message.content }]);
+        // Message đã stream sẽ mang dấu phân cách thinking.
+        const split = message.content.split("\u0001");
+        if (split.length === 2) {
+          items.push({ ...base, kind: "assistant", thinking: split[0], text: split[1] });
+          return;
+        }
+        void thinking;
+        const stored = this.thinkingById.get(message.id);
+        items.push({
+          ...base,
+          kind: "assistant",
+          thinking: stored,
+          text: message.content,
+        });
+        return;
+      }
+      if (message.role === "tool") {
+        const toolInfo = this.parseToolLine(message.content);
+        if (toolInfo) {
+          items.push({
+            ...base,
+            kind: "tool",
+            toolName: toolInfo.name,
+            toolArgs: {},
+            toolResult: {
+              content: [{ type: "text", text: toolInfo.detail }],
+              isError: toolInfo.isError,
+              durationMs: toolInfo.durationMs,
+            },
+            toolPartial: false,
+          });
+          return;
+        }
+        items.push(base);
+        return;
+      }
+      items.push(base);
+    });
+    return items;
+  }
+
+  /** Tách một dòng tool "⚙ name: detail" / "✓ …" / "✗ …" thành struct. */
+  private parseToolLine(content: string): { name: string; detail: string; isError: boolean; durationMs?: number } | undefined {
+    if (!content.startsWith("⚙") && !content.startsWith("✓") && !content.startsWith("✗")) return undefined;
+    const isError = content.startsWith("✗");
+    let text = content.slice(1).trim();
+    let durationMs: number | undefined;
+    const durationMatch = /\((\d+)ms\)\s*$/.exec(text);
+    if (durationMatch) {
+      durationMs = Number.parseInt(durationMatch[1]!, 10);
+      text = text.slice(0, durationMatch.index).trim();
+    }
+    const colon = text.indexOf(":");
+    if (colon === -1) return { name: text || "tool", detail: "", isError, durationMs };
+    return { name: text.slice(0, colon).trim(), detail: text.slice(colon + 1).trim(), isError, durationMs };
   }
 
   /** Cập nhật một cài đặt (bảng settings của view). */

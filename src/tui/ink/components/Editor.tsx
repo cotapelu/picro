@@ -28,11 +28,10 @@ export interface EditorProps {
   /** Chiều rộng khung nhìn để wrap; mặc định 80. */
   width?: number;
   /**
-   * Nhận phím điều hướng (mũi tên lên/xuống) để lớp ngoài can thiệp — ví dụ cuộn
-   * transcript khi ô nhập rỗng thay vì duyệt lịch sử. Editor vẫn xử lý lịch sử
-   * khi có nội dung, nên callback chỉ nên dùng khi cha kiểm soát được vùng đó.
+   * Nhận phím điều hướng (mũi tên lên/xuống, PageUp/PageDown) để lớp ngoài can
+   * thiệp — ví dụ cuộn transcript khi ô nhập rỗng thay vì duyệt lịch sử.
    */
-  onKey?: (data: string, isUp: boolean, isDown: boolean) => void;
+  onKey?: (data: string, keys: { up: boolean; down: boolean; pageUp: boolean; pageDown: boolean }) => void;
 }
 
 interface EditorState {
@@ -1003,7 +1002,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       // Ô rỗng: ủy quyền mũi tên lên cho cha (cuộn transcript), như pi-mono cho
       // CustomEditor. Có nội dung thì vào lịch sử như bình thường.
       if (lines.length === 1 && lines[0] === "" && onKey) {
-        onKey(data, true, false);
+        onKey(data, { up: true, down: false, pageUp: false, pageDown: false });
         return;
       }
       const isFirstVisual = buildVisualLineMap(lastWidth.current).length > 0 && findVisualLineAt(buildVisualLineMap(lastWidth.current), cursorLine, cursorCol) === 0;
@@ -1019,7 +1018,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
     if (kb.matches(data, "tui.editor.cursorDown")) {
       const { cursorLine, cursorCol } = stateRef.current;
       if (onKey && stateRef.current.lines.length === 1 && stateRef.current.lines[0] === "") {
-        onKey(data, false, true);
+        onKey(data, { up: false, down: true, pageUp: false, pageDown: false });
         return;
       }
       const map = buildVisualLineMap(lastWidth.current);
@@ -1040,10 +1039,20 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       return;
     }
     if (kb.matches(data, "tui.editor.pageUp")) {
+      // Ô rỗng: ủy quyền cho cha cuộn transcript (pi-mono: editor rỗng nhả phím
+      // trang cho vùng xem). Có nội dung thì cuộn chính editor.
+      if (onKey && stateRef.current.lines.length === 1 && stateRef.current.lines[0] === "") {
+        onKey(data, { up: false, down: false, pageUp: true, pageDown: false });
+        return;
+      }
       pageScroll(-1);
       return;
     }
     if (kb.matches(data, "tui.editor.pageDown")) {
+      if (onKey && stateRef.current.lines.length === 1 && stateRef.current.lines[0] === "") {
+        onKey(data, { up: false, down: false, pageUp: false, pageDown: true });
+        return;
+      }
       pageScroll(1);
       return;
     }

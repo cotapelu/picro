@@ -108,3 +108,38 @@ export const BranchSummary: React.FC<BranchSummaryProps> = ({
     </Box>
   );
 };
+
+/**
+ * Wrapper thống nhất cho hai loại summary (compaction / branch), để Transcript
+ * gọi bằng một prop duy nhất.
+ */
+export const SummaryMessages: React.FC<
+  | ({ kind: "compaction" } & CompactionSummaryProps)
+  | ({ kind: "branch" } & BranchSummaryProps)
+> = (props) => {
+  if (props.kind === "branch") {
+    return (
+      <BranchSummary
+        summary={props.summary}
+        outputPad={props.outputPad}
+        markdownTransformers={props.markdownTransformers}
+        messageId={props.messageId}
+        timestamp={props.timestamp}
+        width={props.width}
+      />
+    );
+  }
+  return (
+    <CompactionSummary
+      summary={props.summary}
+      tokensBefore={props.tokensBefore}
+      outputPad={props.outputPad}
+      markdownTransformers={props.markdownTransformers}
+      messageId={props.messageId}
+      timestamp={props.timestamp}
+      width={props.width}
+    />
+  );
+};
+
+export default SummaryMessages;

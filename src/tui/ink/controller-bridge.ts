@@ -6,6 +6,7 @@
 
 import type { ChatMessageLike } from "./components/MessageList.js";
 import type { ToastLike } from "./components/Toast.js";
+import type { TranscriptItem } from "./components/Transcript.js";
 
 /** Trạng thái hiển thị tối thiểu mà view cần. */
 export interface ControllerStatus {
@@ -48,6 +49,11 @@ export interface InteractiveControllerLike {
    *  xoá đúng phần tử thay vì chỉ biết cách thêm. */
   onToast(callback: (toast: ToastLike, removed?: boolean) => void): void;
 
+  /**
+   * Transcript đầy đủ cho tầng view: mỗi tin nhắn kèm kind (user / assistant +
+   * thinking / tool / bash / summary) để render đúng kiểu.
+   */
+  getTranscript(): TranscriptItem[];
   /** Gửi tin nhắn của người dùng. */
   sendMessage(text: string): Promise<void>;
   /** Chạy một lệnh slash theo id (vd "model", "thinking", "quit"). */
