@@ -180,6 +180,11 @@ export function createConsoleLogger(verbose: boolean = true): EventEmitter {
     emitter.onAny((event) => {
       const time = formatTimestamp(event.timestamp);
       const roundPrefix = `[Round ${event.round}]`;
+      // message:start/message:end carry `turn` on the non-streaming path and
+      // `message` on the streaming path; reading only `turn` threw a TypeError
+      // for every streamed message (swallowed by emit(), so nothing was logged).
+      const anyEvent = event as any;
+      const messageRole = (payload: any): string => (payload?.role ?? "unknown");
 
       switch (event.type) {
         case 'agent:start':
@@ -196,12 +201,14 @@ export function createConsoleLogger(verbose: boolean = true): EventEmitter {
           console.log(`${time} ${roundPrefix} ⏹️ Turn finished (${toolCount} tools)`);
           break;
         case 'message:start':
-          const role = (event as any).turn.role;
-          console.log(`${time} ${roundPrefix} 📝 Message start: ${role}`);
+          console.log(
+            `${time} ${roundPrefix} 📝 Message start: ${messageRole(anyEvent.turn ?? anyEvent.message)}`,
+          );
           break;
         case 'message:end':
-          const endRole = (event as any).turn.role;
-          console.log(`${time} ${roundPrefix} ✅ Message end: ${endRole}`);
+          console.log(
+            `${time} ${roundPrefix} ✅ Message end: ${messageRole(anyEvent.turn ?? anyEvent.message)}`,
+          );
           break;
         case 'tool:call:start':
           console.log(`${time} ${roundPrefix} 🔧 Tool call: ${(event as any).toolName}`);
