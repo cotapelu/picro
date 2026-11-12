@@ -27,6 +27,9 @@ import { SessionSelector, type SessionInfo } from "./components/SessionSelector.
 import { SettingsSelector, type SettingRow } from "./components/SettingsSelector.js";
 import { ThemeSelector } from "./components/ThemeSelector.js";
 import { ThinkingSelector } from "./components/ThinkingSelector.js";
+import { TreeSelector } from "./components/TreeSelector.js";
+import { UserMessageSelector } from "./components/UserMessageSelector.js";
+import { TrustSelector } from "./components/TrustSelector.js";
 import {
   Transcript,
   sliceTranscript,
@@ -67,7 +70,10 @@ export type OverlayKind =
   | "settings"
   | "theme"
   | "thinking"
-  | "help";
+  | "help"
+  | "tree"
+  | "fork"
+  | "trust";
 
 /** Số dòng chrome ước tính (header + dock nhập + status + footer + keybindings). */
 const CHROME_LINES = 10;
@@ -96,13 +102,18 @@ export const App: React.FC<AppProps> = ({
   const { columns, rows } = useWindowSize();
   const width = columns || 80;
 
-  const transcript = useMemo(() => controller.getTranscript(), [controller]);
+  const [transcript, setTranscript] = useState<TranscriptItem[]>(() => controller.getTranscript());
+  const [status, setStatus] = useState(() => controller.getStatus());
   const viewportHeight = useMemo(
     () => Math.max(MIN_TRANSCRIPT_LINES, (rows || 24) - CHROME_LINES),
     [rows],
   );
 
-  const status = useMemo(() => controller.getStatus(), [controller]);
+  /** Đọc lại transcript + status từ controller. */
+  const refresh = useCallback(() => {
+    setTranscript(controller.getTranscript());
+    setStatus(controller.getStatus());
+  }, [controller]);
   const totalLines = useMemo(
     () => transcriptLineCount(transcript, width),
     [transcript, width],
@@ -122,6 +133,14 @@ export const App: React.FC<AppProps> = ({
 
   // Đăng ký callback của controller (một lần).
   useEffect(() => {
+    controller.onMessage(() => {
+      refresh();
+      // Tin nhắn mới: giữ ở đáy nếu đang theo dõi.
+      setScrollLines(0);
+      setFollowingEnd(true);
+    });
+    controller.onStatusChange((next) => setStatus(next));
+    controller.onIndicator((next) => setIndicator(next as IndicatorState));
     controller.onToast((toast, removed) =>
       setToasts((prev) =>
         removed
@@ -129,12 +148,15 @@ export const App: React.FC<AppProps> = ({
           : [...prev.filter((t) => t.id !== toast.id), toast],
       ),
     );
-    controller.onIndicator((next) => setIndicator(next as IndicatorState));
     controller.onOverlayRequest((request) => {
       setOverlay(request.kind as OverlayKind);
       setOverlayProps(request.props ?? {});
+      refresh();
     });
-    controller.onOverlayClose(() => setOverlay("none"));
+    controller.onOverlayClose(() => {
+      setOverlay("none");
+      refresh();
+    });
     controller.onEditorCallbacks?.({
       clear: () => editorRef.current?.setText(""),
       read: () => editorRef.current?.getText() ?? "",
@@ -143,14 +165,6 @@ export const App: React.FC<AppProps> = ({
     setCwd(runtime.cwd || ".");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Transcript thay đổi khi tin nhắn mới tới; theo dõi cuối nếu đang ở đáy.
-  useEffect(() => {
-    controller.onMessage(() => {
-      if (followingEnd) setScrollLines(0);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [controller, followingEnd]);
 
   const handleScroll = useCallback(
     (direction: "up" | "down", page: boolean) => {
@@ -188,7 +202,7 @@ export const App: React.FC<AppProps> = ({
         onClose: closeOverlay,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [overlay, overlayProps, width, closeOverlay],
+    [overlay, overlayProps, width, closeOverlay, refresh],
   );
 
   return (
@@ -332,6 +346,58 @@ function renderOverlay(options: {
         <Box flexDirection="column" width={width}>
           <HelpBody />
         </Box>
+      );
+    case "tree": {
+      const tree = (props.tree as never[]) ?? [];
+      return (
+        <TreeSelector
+          tree={tree}
+          currentLeafId={(props.currentLeafId as string | null) ?? null}
+          onSelect={(entryId) => {
+            const rt = runtime as unknown as {
+              navigateTree(id: string): Promise<{ cancelled: boolean }>;
+            };
+            void rt.navigateTree(entryId).then((result: { cancelled: boolean }) => {
+              if (!result.cancelled) {
+                controller.loadTranscript?.();
+                onClose();
+              }
+            });
+          }}
+          onCancel={onClose}
+          width={width}
+        />
+      );
+    }
+    case "fork": {
+      const messages = (props.messages as Array<{ entryId: string; text: string }> | undefined) ?? [];
+      return (
+        <UserMessageSelector
+          messages={messages.map((m) => ({ id: m.entryId, text: m.text }))}
+          initialSelectedId={props.initialSelectedId as string | undefined}
+          onSelect={async (id) => {
+            const result = await runtime.fork(id);
+            if (!result.cancelled) {
+              controller.loadTranscript?.();
+              onClose();
+            }
+          }}
+          onCancel={onClose}
+          width={width}
+        />
+      );
+    }
+    case "trust":
+      return (
+        <TrustSelector
+          cwd={String(props.cwd ?? runtime.cwd ?? ".")}
+          savedDecision={(props.savedDecision as null | undefined) ?? null}
+          projectTrusted={props.projectTrusted === true}
+          trustOptions={(props.trustOptions as never[]) ?? []}
+          onSelect={() => onClose()}
+          onCancel={onClose}
+          width={width}
+        />
       );
     default:
       return null;

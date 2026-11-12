@@ -25,9 +25,20 @@ export type IndicatorState =
   | { kind: "compaction"; reason?: string }
   | { kind: "retry"; attempt: number; maxAttempts: number; delayMs: number };
 
-/** Cửa sổ phụ yêu cầu mở (model/session/settings/theme/thinking/help/login). */
+/** Cửa sổ phụ yêu cầu mở (model/session/settings/theme/thinking/help/login/tree/fork/trust). */
 export interface OverlayRequest {
-  kind: "none" | "model" | "session" | "settings" | "theme" | "thinking" | "help" | "login";
+  kind:
+    | "none"
+    | "model"
+    | "session"
+    | "settings"
+    | "theme"
+    | "thinking"
+    | "help"
+    | "login"
+    | "tree"
+    | "fork"
+    | "trust";
   props?: Record<string, unknown>;
 }
 
@@ -54,6 +65,8 @@ export interface InteractiveControllerLike {
    * thinking / tool / bash / summary) để render đúng kiểu.
    */
   getTranscript(): TranscriptItem[];
+  /** Báo cho view rằng transcript đã thay đổi (chuyển phiên, fork, nén…). */
+  loadTranscript?(): void;
   /** Gửi tin nhắn của người dùng. */
   sendMessage(text: string): Promise<void>;
   /** Chạy một lệnh slash theo id (vd "model", "thinking", "quit"). */
@@ -67,6 +80,8 @@ export interface InteractiveControllerLike {
   onOverlayRequest(callback: (request: OverlayRequest) => void): void;
   /** Yêu cầu view đóng cửa sổ phụ đang mở. */
   onOverlayClose(callback: () => void): void;
+  /** Đăng ký hook thoát để /quit khôi phục terminal trước khi exit. */
+  onShutdown(callback: () => void): void;
   /** Báo trạng thái đang chạy để dock hiển thị chỉ báo. */
   onIndicator(callback: (state: IndicatorState) => void): void;
   /** Đăng ký nghe sự kiện phiên (cho orchestrator). */

@@ -110,6 +110,7 @@ export class InteractiveController {
   private onStatusChangeCallback: ((status: RuntimeStatus) => void) | null = null;
   private onToastCallback: ((toast: ToastItem, removed?: boolean) => void) | null = null;
   private onModalCallback: ((modal: ModalState) => void) | null = null;
+  private onShutdownCallback: (() => void) | undefined;
   private onOverlayRequestCallback: ((request: OverlayRequest) => void) | null = null;
   private onOverlayCloseCallback: (() => void) | null = null;
   private onIndicatorCallback: ((state: IndicatorState) => void) | null = null;
@@ -699,6 +700,11 @@ export class InteractiveController {
     this.onOverlayRequestCallback = callback;
   }
 
+  /** Chủ app (InteractiveMode) đăng ký hook thoát để khôi phục terminal. */
+  onShutdown(callback: () => void): void {
+    this.onShutdownCallback = callback;
+  }
+
   onOverlayClose(callback: () => void): void {
     this.onOverlayCloseCallback = callback;
   }
@@ -790,8 +796,91 @@ export class InteractiveController {
     switch (commandId) {
       case 'quit':
       case 'exit':
-        process.exit(0);
+        // Thoát an toàn: dừng phiên rồi mới exit (pi-mono dùng
+        // shutdownHandler thay vì process.exit trần để session file được flush).
+        void this.shutdown();
         return;
+
+      case 'tree': {
+        const tree = (this.runtime as any).getTree?.() ?? [];
+        if (!tree || tree.length === 0) {
+          this.addToast('Phiên chưa có mục nào.', 'info');
+          return;
+        }
+        this.requestOverlay({
+          kind: 'tree',
+          props: { tree, currentLeafId: (this.runtime as any).getLeafId?.() ?? null },
+        });
+        return;
+      }
+
+      case 'fork': {
+        const userMessages = (this.runtime as any).getUserMessagesForForking?.() ?? [];
+        if (userMessages.length === 0) {
+          this.addToast('Không có tin nhắn người dùng để fork.', 'info');
+          return;
+        }
+        this.requestOverlay({
+          kind: 'fork',
+          props: {
+            messages: userMessages,
+            initialSelectedId: userMessages[userMessages.length - 1]?.entryId,
+          },
+        });
+        return;
+      }
+
+      case 'trust': {
+        this.requestOverlay({ kind: 'trust', props: {} });
+        return;
+      }
+
+      case 'login':
+      case 'logout': {
+        this.requestOverlay({ kind: 'login', props: { mode: commandId } });
+        return;
+      }
+
+      case 'name':
+      case 'session': {
+        await this.handleNameCommand(args);
+        return;
+      }
+
+      case 'hotkeys': {
+        this.showHotkeys();
+        return;
+      }
+
+      case 'changelog': {
+        this.addToast('Chưa có changelog trong bản build này.', 'info');
+        return;
+      }
+
+      case 'debug': {
+        this.showDebugInfo();
+        return;
+      }
+
+      case 'export': {
+        await this.handleExportCommand(args);
+        return;
+      }
+
+      case 'import': {
+        await this.handleImportCommand(args);
+        return;
+      }
+
+      case 'compact': {
+        await this.handleCompactCommand(args);
+        return;
+      }
+
+      case 'reload': {
+        await this.handleReloadCommand();
+        return;
+      }
 
       case 'thinking': {
         const valid = ['off', 'minimal', 'low', 'medium', 'high', 'xhigh'];
@@ -1040,6 +1129,157 @@ export class InteractiveController {
       this.toasts = this.toasts.filter((t) => t.id !== toast.id);
       this.onToastCallback?.(toast, true);
     }, toast.duration || 3000);
+  }
+
+  /** Thoát an toàn: nhờ chủ app dừng terminal rồi mới exit.
+   *
+   * pi-mono dùng shutdownHandler của session thay vì process.exit trần, để
+   * terminal được khôi phục (raw mode tắt, con trỏ hiện lại) trước khi tiến
+   * trình kết thúc. Nếu không có ai đăng ký (ví dụ test), dispose rồi exit.
+   */
+  private async shutdown(): Promise<void> {
+    if (this.onShutdownCallback) {
+      this.onShutdownCallback();
+      return;
+    }
+    try {
+      this.dispose();
+    } catch {
+      // dispose là best-effort.
+    }
+    process.exit(0);
+  }
+
+  /** /name <tên> — đặt tên phiên. */
+  private async handleNameCommand(args?: string): Promise<void> {
+    const name = (args ?? '').trim();
+    const sessionManager = this.runtime.sessionManager as any;
+    if (!name) {
+      const current = sessionManager?.getSessionName?.();
+      this.addToast(current ? `Tên phiên: ${current}` : 'Phiên chưa có tên. Dùng /name <tên>.', 'info');
+      return;
+    }
+    if (typeof sessionManager?.setSessionName === 'function') {
+      sessionManager.setSessionName(name);
+      this.addToast(`Đã đặt tên phiên: ${name}`, 'success');
+    } else if (typeof (this.runtime.session as any)?.setSessionName === 'function') {
+      (this.runtime.session as any).setSessionName(name);
+      this.addToast(`Đã đặt tên phiên: ${name}`, 'success');
+    } else {
+      this.addToast('Phiên hiện tại không hỗ trợ đặt tên.', 'error');
+    }
+  }
+
+  /** /hotkeys — liệt kê phím tắt và lệnh. */
+  private showHotkeys(): void {
+    const lines: string[] = [
+      'Phím tắt:',
+      '  Enter            gửi tin nhắn',
+      '  Shift+Enter      xuống dòng',
+      '  Ctrl+C           xóa ô nhập (2 lần: thoát)',
+      '  Ctrl+D           thoát khi ô nhập rỗng',
+      '  Ctrl+Z           tạm dừng ra nền',
+      '  PageUp/PageDown  cuộn transcript',
+      '  /                lệnh slash',
+      '  ! / !!           chạy bash (!! loại khỏi ngữ cảnh)',
+      '  @                đính kèm file',
+      '',
+      'Lệnh:',
+      '  /help /model /thinking /settings /theme /compact /sessions',
+      '  /new /resume /tree /fork /trust /login /logout /name /hotkeys',
+      '  /export /import /reload /debug /quit',
+    ];
+    this.addToast(lines.join('\n'), 'info');
+  }
+
+  /** /debug — thông tin chẩn đoán. */
+  private showDebugInfo(): void {
+    const usage = (this.runtime as any).getContextUsage?.();
+    const lines: string[] = [
+      `cwd: ${this.runtime.cwd}`,
+      `model: ${this.status.model}`,
+      `context: ${usage ? `${usage.tokens}/${usage.contextWindow} (${Math.round(usage.percent)}%)` : 'n/a'}`,
+      `processing: ${this.status.isProcessing}`,
+      `transcript items: ${this.messages.length}`,
+    ];
+    this.addToast(lines.join('\n'), 'info');
+  }
+
+  /** /export <path> — xuất phiên ra JSONL. */
+  private async handleExportCommand(args?: string): Promise<void> {
+    const path = (args ?? '').trim();
+    if (!path) {
+      this.addToast('Cách dùng: /export <file.jsonl>', 'info');
+      return;
+    }
+    try {
+      const fs = await import('node:fs');
+      const entries = (this.runtime.sessionManager as any).getEntries?.() ?? [];
+      const header = (this.runtime.sessionManager as any).getHeader?.() ?? {
+        type: 'session',
+        id: (this.runtime.sessionManager as any).getSessionId?.(),
+        timestamp: new Date().toISOString(),
+        cwd: this.runtime.cwd,
+      };
+      const lines = [JSON.stringify(header), ...entries.map((e: unknown) => JSON.stringify(e))];
+      fs.writeFileSync(path, `${lines.join('\n')}\n`, 'utf8');
+      this.addToast(`Đã xuất phiên ra: ${path}`, 'success');
+    } catch (error) {
+      this.addToast(`Xuất phiên thất bại: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    }
+  }
+
+  /** /import <path> — nhập phiên từ JSONL. */
+  private async handleImportCommand(args?: string): Promise<void> {
+    const path = (args ?? '').trim();
+    if (!path) {
+      this.addToast('Cách dùng: /import <file.jsonl>', 'info');
+      return;
+    }
+    if (typeof (this.runtime as any).importFromJsonl !== 'function') {
+      this.addToast('Runtime không hỗ trợ nhập phiên.', 'error');
+      return;
+    }
+    const result = await (this.runtime as any).importFromJsonl(path);
+    if (result.cancelled) {
+      this.addToast('Nhập phiên bị hủy.', 'info');
+      return;
+    }
+    this.loadTranscriptFromSession();
+    this.resubscribeToRuntime();
+    this.addToast(`Đã nhập phiên từ: ${path}`, 'success');
+  }
+
+  /** /compact [ngữ cảnh] — nén ngữ cảnh ngay. */
+  private async handleCompactCommand(args?: string): Promise<void> {
+    const session = this.runtime.session as any;
+    if (typeof session?.compact !== 'function') {
+      this.addToast('Phiên hiện tại không hỗ trợ nén ngữ cảnh.', 'error');
+      return;
+    }
+    try {
+      await session.compact(args ? { customInstructions: args } : undefined);
+      this.loadTranscriptFromSession();
+      this.addToast('Compaction completed', 'success');
+    } catch (error) {
+      this.addToast(`Nén ngữ cảnh thất bại: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    }
+  }
+
+  /** /reload — nạp lại tài nguyên (skills, extensions, themes…). */
+  private async handleReloadCommand(): Promise<void> {
+    const session = this.runtime.session as any;
+    if (typeof session?.reload === 'function') {
+      try {
+        await session.reload();
+        this.addToast('Đã nạp lại tài nguyên.', 'success');
+        return;
+      } catch (error) {
+        this.addToast(`Nạp lại thất bại: ${error instanceof Error ? error.message : String(error)}`, 'error');
+        return;
+      }
+    }
+    this.addToast('Phiên hiện tại không hỗ trợ nạp lại.', 'error');
   }
 
   /**

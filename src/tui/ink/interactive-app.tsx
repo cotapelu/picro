@@ -99,6 +99,22 @@ export function startInteractiveApp(props: InteractiveAppProps): void {
       }
     );
 
+    // /quit (và mọi đường thoát nội bộ) đi qua hook này: controller gọi nó
+    // thay vì process.exit trần, để terminal được khôi phục trước khi kết thúc.
+    props.controller.onShutdown?.(() => {
+      try {
+        instance.unmount();
+      } catch {
+        // unmount có thể throw nếu render đã hỏng.
+      }
+      try {
+        props.controller.dispose?.();
+      } catch {
+        // dispose là best-effort.
+      }
+      process.exit(0);
+    });
+
     // Bản cũ không bao giờ dọn dẹp: Ink unmount không stop terminal nên raw mode,
     // bracketed paste và con trỏ ẩn còn nguyên khi tiến trình kết thúc.
     const stop = () => {
