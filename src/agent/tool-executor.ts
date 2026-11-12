@@ -293,7 +293,7 @@ export class ToolExecutor {
 
      try {
        // Emit tool call start
-       await this.emitToolCallStart(metadata);
+       await this.emitToolCallStart(metadata, context.round);
 
        // Execute with retry, timeout, and signal (use prepared args)
        const rawResult = await this._callWithRetry(
@@ -397,7 +397,7 @@ export class ToolExecutor {
          this.cache.set(cacheKey, result);
        }
 
-       await this.emitToolCallEnd(metadata, result, false);
+       await this.emitToolCallEnd(metadata, result, false, context.round);
        return result;
      } catch (error: any) {
        const errorMessage = error?.message ?? String(error);
@@ -430,7 +430,7 @@ export class ToolExecutor {
          }
        }
 
-       await this.emitToolError(metadata, errorMessage);
+       await this.emitToolError(metadata, errorMessage, context.round);
        return result;
      }
    }
@@ -569,11 +569,16 @@ export class ToolExecutor {
     });
   }
 
-  private async emitToolCallStart(metadata: ToolExecutionMetadata): Promise<void> {
+  private async emitToolCallStart(
+    metadata: ToolExecutionMetadata,
+    round?: number,
+  ): Promise<void> {
     await this.emitter?.emit({
       type: 'tool:call:start',
       timestamp: Date.now(),
-      round: 0,
+      // round was hardcoded to 0, so every tool event claimed to come from the
+      // first round even mid-run.
+      round: round ?? 0,
       toolName: metadata.toolName,
       toolCallId: metadata.toolCallId,
       arguments: metadata.arguments,
@@ -583,12 +588,13 @@ export class ToolExecutor {
   private async emitToolCallEnd(
     metadata: ToolExecutionMetadata,
     result: ToolResult,
-    isError: boolean
+    isError: boolean,
+    round?: number,
   ): Promise<void> {
     await this.emitter?.emit({
       type: 'tool:call:end',
       timestamp: Date.now(),
-      round: 0,
+      round: round ?? 0,
       toolName: metadata.toolName,
       toolCallId: metadata.toolCallId,
       result,
@@ -610,11 +616,15 @@ export class ToolExecutor {
     } as any);
   }
 
-  private async emitToolError(metadata: ToolExecutionMetadata, errorMessage: string): Promise<void> {
+  private async emitToolError(
+    metadata: ToolExecutionMetadata,
+    errorMessage: string,
+    round?: number,
+  ): Promise<void> {
     await this.emitter?.emit({
       type: 'tool:error',
       timestamp: Date.now(),
-      round: 0,
+      round: round ?? 0,
       toolName: metadata.toolName,
       toolCallId: metadata.toolCallId,
       errorMessage,
