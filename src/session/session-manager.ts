@@ -909,8 +909,19 @@ export class SessionManager {
     let wrapper: any;
     try {
       wrapper = JSON.parse(json);
-    } catch (e) {
-      throw new Error('Invalid JSON');
+    } catch {
+      // Không phải một object JSON. Chỉ rẽ sang JSONL khi nội dung THỰC SỰ nhìn
+      // như file phiên (ít nhất một dòng parse được, dòng đầu là header session),
+      // nếu không vẫn ném 'Invalid JSON' để lỗi rõ ràng như trước.
+      const looksLikeJsonl = json
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .every((line) => line.startsWith("{") && line.endsWith("}"));
+      if (!looksLikeJsonl) {
+        throw new Error('Invalid JSON');
+      }
+      return SessionManager.importFromJsonlText(cwd, sessionDir, json);
     }
 
     let sessionData: any;
@@ -970,6 +981,31 @@ export class SessionManager {
   }
 
   /**
+   * Dựng SessionManager từ nội dung JSONL của file phiên.
+   * Header là dòng đầu có type === "session"; các dòng sau là entry.
+   */
+  static importFromJsonlText(
+    cwd: string,
+    sessionDir: string,
+    jsonl: string
+  ): SessionManager {
+    const entries = parseSessionEntries(jsonl);
+    const header = entries.find((e) => e.type === 'session') as SessionHeader | undefined;
+    if (!header) {
+      throw new Error('Invalid session file: missing session header');
+    }
+
+    const manager = new SessionManager(cwd, sessionDir, undefined, true);
+    manager.fileEntries = entries;
+    manager._buildIndex();
+    manager.sessionId = header.id;
+    manager.flushed = true;
+    // Ghi lại file để import trở thành phiên bản lưu được (không chỉ đọc).
+    manager._rewriteFile();
+    return manager;
+  }
+
+  /**
    * XOR-based encryption (simple). Use WebCrypto in production.
    */
   private _encrypt(text: string, password: string): string {
@@ -996,6 +1032,10 @@ export class SessionManager {
     for (let i = 0; i < password.length; i++) {
       key.push(password.charCodeAt(i));
     }
+    // Vòng lặp cũ dùng `key.slice(0, min(32-len, len))` — với key RỖNG (password
+    // rỗng) `min(32,0)` là 0 nên không bao giờ đẩy thêm ký tự vào: treo vô hạn.
+    // Nhân bản cả mảng khóa cho tới khi đủ 32 ký tự.
+    if (key.length === 0) key.push(0);
     while (key.length < 32) {
       key.push(...key.slice(0, Math.min(32 - key.length, key.length)));
     }
