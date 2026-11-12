@@ -90,11 +90,18 @@ export async function loadExtension(
   let extensionDir = resolvedPath;
   
   if (stats.isDirectory()) {
-    // Look for index.js or package.json
-    const indexPath = join(resolvedPath, "index.js");
-    if (existsSync(indexPath)) {
-      extensionPath = indexPath;
+    // Resolve the real entry point (package.json "pi.extensions", index.ts,
+    // index.js). Without this, a directory was imported verbatim, which either
+    // failed with "Cannot find module '<dir>'" or - for the documented dev
+    // layout that ships only index.ts - silently could not be loaded at all.
+    const entries = resolveExtensionEntries(resolvedPath);
+    if (!entries || entries.length === 0) {
+      throw new Error(
+        `No extension entry point found in ${resolvedPath} ` +
+        `(expected index.ts, index.js or package.json "pi.extensions")`
+      );
     }
+    extensionPath = entries[0]!;
   } else if (resolvedPath.endsWith(".js")) {
     extensionDir = resolve(resolvedPath, "..");
   }
@@ -179,8 +186,10 @@ function createExtensionAPI(runtime: ExtensionRuntime): any {
  * 2. index.ts or index.js -> returns the index file
  *
  * Returns resolved absolute paths or null if no entry points found.
+ * Exported because loadExtension() depends on it: discovery and loading must
+ * agree on what a directory extension's entry point is.
  */
-function resolveExtensionEntries(dir: string): string[] | null {
+export function resolveExtensionEntries(dir: string): string[] | null {
   // Check for package.json with pi field first
   const packageJsonPath = join(dir, "package.json");
   if (existsSync(packageJsonPath)) {

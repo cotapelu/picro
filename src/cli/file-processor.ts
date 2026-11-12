@@ -21,13 +21,16 @@ export interface ProcessFileOptions {
   autoResizeImages?: boolean;
 }
 
-/** Magic number signatures for common image formats */
+/** Magic number signatures for common image formats.
+ *  WebP is NOT matched by its bare "RIFF" prefix here: every RIFF container
+ *  (WAV audio, AVI video, ...) shares those four bytes, so a .wav file was
+ *  reported as an image and shipped to the model as one. WebP is identified by
+ *  the explicit "WEBP" check at offset 8 in detectByMagic(). */
 const IMAGE_SIGNATURES: Array<{ mime: string; signature: number[]; minLength: number }> = [
   { mime: "image/jpeg", signature: [0xff, 0xd8, 0xff], minLength: 3 },
   { mime: "image/png", signature: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], minLength: 8 },
   { mime: "image/gif", signature: [0x47, 0x49, 0x46, 0x38, 0x37, 0x61], minLength: 6 }, // GIF87a
   { mime: "image/gif", signature: [0x47, 0x49, 0x46, 0x38, 0x39, 0x61], minLength: 6 }, // GIF89a
-  { mime: "image/webp", signature: [0x52, 0x49, 0x46, 0x46], minLength: 4 }, // "RIFF", then "WEBP" at offset 8
 ];
 
 const IMAGE_EXTENSIONS: Map<string, string> = new Map([
