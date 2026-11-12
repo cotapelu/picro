@@ -3,72 +3,37 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Đọc lại FULL mọi dòng code backend, không bỏ sót",
+      "name": "Fix giai đoạn 1b - Core Keys/Latex/TerminalText",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Đọc lại src/main.ts từng dòng",
+          "content": "A69: Terminal.forwardInput chuyển vô điều kiện \\r thành shift+enter trên Apple Terminal",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Đọc lại src/runtime/cli-args.ts từng dòng",
+          "content": "A47: Keys.ts thiếu isKeyRelease/isKeyRepeat/decodePrintableKey/Key.* đầy đủ",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Đọc lại src/runtime/settings-manager.ts từng dòng",
+          "content": "A53: Latex.ts dùng soft-hyphen (U+00AD) làm layout marker — phải dùng private-use",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Đọc lại src/session/session-manager.ts từng dòng",
+          "content": "A51/A52: TerminalText wrapTextWithAnsi không tracking SGR/hyperlink xuyên dòng; truncateToWidth không đóng OSC8",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Đọc lại src/session/agent-session.ts từng dòng",
-          "status": "pending"
-        },
-        {
-          "id": "task-6",
-          "content": "Đọc lại src/agent/agent.ts từng dòng",
-          "status": "pending"
-        },
-        {
-          "id": "task-7",
-          "content": "Đọc lại src/agent/agent-loop.ts từng dòng",
-          "status": "pending"
-        },
-        {
-          "id": "task-8",
-          "content": "Đọc lại src/agent/tool-executor.ts từng dòng",
-          "status": "pending"
-        },
-        {
-          "id": "task-9",
-          "content": "Đọc lại src/llm/providers/openai-compatible.ts từng dòng",
-          "status": "pending"
-        },
-        {
-          "id": "task-10",
-          "content": "Đọc lại src/tools/* từng dòng",
-          "status": "pending"
-        },
-        {
-          "id": "task-11",
-          "content": "Đọc lại các file còn lại từng dòng",
-          "status": "pending"
-        },
-        {
-          "id": "task-12",
-          "content": "Tổng hợp tất cả bug tìm được",
+          "content": "A49/A50: visibleWidth fast-path ASCII + East Asian Width đầy đủ",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 13,
+  "nextTaskId": 6,
   "nextPhaseId": 2,
-  "updatedAt": "2026-11-11T07:33:08.649Z"
+  "updatedAt": "2026-11-12T07:03:41.939Z"
 }

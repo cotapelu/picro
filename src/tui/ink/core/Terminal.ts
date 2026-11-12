@@ -11,6 +11,7 @@ import * as fs from "node:fs";
 import { StdinBuffer } from "./StdinBuffer.js";
 import { setKittyProtocolActive } from "./Keys.js";
 import { parseKeyboardProtocolFlags } from "./TerminalProtocol.js";
+import { isNativeModifierPressed } from "./NativeModifiers.js";
 import { formatProgramStatus, isProgramStatusReply, PROGRAM_STATUS_QUERY, type ProgramStatus } from "./ProgramStatus.js";
 
 const TERMINAL_PROGRESS_ACTIVE = "\x1b]9;4;3\x07";
@@ -43,6 +44,15 @@ export interface Terminal {
 
 function isAppleTerminal(): boolean {
   return process.platform === "darwin" && process.env.TERM_PROGRAM === "Apple_Terminal";
+}
+
+/** Terminal mà bàn phím gửi ESC+CR cho Shift+Enter thay vì CSI-u (Apple Terminal, Windows console). */
+function isNativeShiftEnterTerminal(): boolean {
+  return (
+    isAppleTerminal() ||
+    Boolean(process.env.WT_SESSION) ||
+    process.platform === "win32"
+  );
 }
 
 /** Làm mới kíchh thước terminal bằng cách gửi SIGWINCH cho chính mình. */
@@ -171,12 +181,17 @@ export class ProcessTerminal implements Terminal {
 
   private forwardInput(sequence: string): void {
     if (!this.inputHandler) return;
-    let input = sequence;
-    if ((sequence === "\r" || sequence === "\x1b\r") && isAppleTerminal()) {
-      // Apple Terminal gửi ESC+CR cho Shift+Enter.
-      input = NATIVE_SHIFT_ENTER;
-    }
-    this.inputHandler(input);
+    // Chỉ coi \r / ESC CR là Shift+Enter khi terminal thực sự báo Shift đang nhấn.
+    // Trước đây điều kiện chỉ kiểm tra "có phải Apple Terminal", nên mọi lần nhấn
+    // Enter thường trên Apple Terminal đều bị biến thành Shift+Enter và không bao
+    // giờ gửi được tin nhắn. Native modifier chỉ đọc được khi có helper nền tảng;
+    // không có helper thì giữ nguyên \r (Enter) để không phá vỡ luồng gửi.
+    const isShiftEnterCandidate = sequence === "\r" || sequence === "\x1b\r";
+    const shouldTreatAsShiftEnter =
+      isShiftEnterCandidate &&
+      (this.kittyActive || isNativeModifierPressed("shift")) &&
+      isNativeShiftEnterTerminal();
+    this.inputHandler(shouldTreatAsShiftEnter ? NATIVE_SHIFT_ENTER : sequence);
   }
 
   private enableModifyOtherKeys(): void {

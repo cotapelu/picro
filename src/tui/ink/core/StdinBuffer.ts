@@ -76,8 +76,15 @@ function isCompleteOsc(data: string): "complete" | "incomplete" {
 }
 
 function parseUnmodifiedKittyPrintable(sequence: string): number | undefined {
-  const match = /^\x1b\[(\d+)(?::\d*)?(?::\d+)?u$/.exec(sequence);
+  // Group 4 là modifier (1-indexed). Thiếu nó khiến mọi CSI-u có modifier — kể cả
+  // Shift+<letter> mà terminal báo đầy đủ — không khớp, nên ký tự in được bị nuốt
+  // và sau đó lại được chèn một lần nữa bởi nhánh "printable char" (double input).
+  const match = /^\x1b\[(\d+)(?::(\d*))?(?::(\d+))?(?:;(\d+))?(?::(\d+))?u$/.exec(sequence);
   if (!match) return undefined;
+  const modifier = match[4] === undefined ? 1 : Number.parseInt(match[4], 10);
+  // Chỉ chấp nhận "unmodified": modifier 1 (không phím bổ trợ) hoặc lock mask 65/129.
+  // Kitty báo caps/num lock trong bit 64/128.
+  if (!Number.isFinite(modifier) || (modifier - 1) & ~(64 + 128)) return undefined;
   const cp = Number.parseInt(match[1]!, 10);
   return cp >= 32 ? cp : undefined;
 }

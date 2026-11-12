@@ -183,7 +183,9 @@ function formatRoot(value: string, symbol = "√"): string {
 function normalizeOutput(value: string): string {
   return value
     .split("\n")
-    .map((line) => line.replace(/[ \t]+/g, " ").trim())
+    // Chỉ gộp khoảng trắng THẬNG: PROTECTED_SPACE là ký tự PUA nên regex \s
+    // không khớp, nên padding bố cục đi qua bước này mà không bị cắt.
+    .map((line) => line.replace(/[\t ]+/g, " ").trim())
     .filter((line, i, all) => line.length > 0 || (i > 0 && i < all.length - 1))
     .join("\n")
     .trim();
@@ -206,13 +208,26 @@ interface Layout {
   baseline: number;
 }
 
-const MARKER_START = "\u00ad0";
-const MARKER_END = "\u00ad1";
+/**
+ * Marker đánh dấu node bố cục 2D (phân số, chỉ số trên/dưới, matrix).
+ *
+ * Dùng Private Use Area (U+F0000/U+F0001) như pi-mono: các ký tự này không bao giờ
+ * do người dùng gõ vào và không terminal nào hiển thị chúng, nên chắc chắn không
+ * va vào nội dung thật. Bản cũ dùng soft hyphen U+00AD + chữ số — U+00AD là ký tự
+ * Unicode bình thường, có thể xuất hiện trong công thức thật, và khi thì parser
+ * hiểu nhầm là layout node index, phá toàn bộ bố cục của công thức.
+ */
+const MARKER_START = "\u{f0000}";
+const MARKER_END = "\u{f0001}";
+/** Khoảng trắng được bảo vệ (không bị trim) trong layout matrix/cases. */
+const PROTECTED_SPACE = "\u{f0002}";
 
 function padLayoutLine(line: string, width: number, centered = false): string {
   const padding = Math.max(0, width - visibleWidth(line));
   const left = centered ? Math.floor(padding / 2) : 0;
-  return `${" ".repeat(left)}${line}${" ".repeat(padding - left)}`;
+  // Khoảng đệm dùng PROTECTED_SPACE để các bước normalize/trim ở sau không xóa
+  // nó; renderLatex đổi trở lại thành space thường ở cuối.
+  return `${PROTECTED_SPACE.repeat(left)}${line}${PROTECTED_SPACE.repeat(padding - left)}`;
 }
 
 function joinLayouts(layouts: readonly Layout[]): Layout {
@@ -227,7 +242,7 @@ function joinLayouts(layouts: readonly Layout[]): Layout {
       line +=
         sourceRow >= 0 && sourceRow < layout.lines.length
           ? padLayoutLine(layout.lines[sourceRow] ?? "", layout.width)
-          : " ".repeat(layout.width);
+          : PROTECTED_SPACE.repeat(layout.width);
     }
     lines.push(line.trimEnd());
   }
@@ -284,7 +299,7 @@ function renderLayout(source: string, nodes: readonly LayoutNode[]): Layout {
         layouts.push({
           lines: [
             ...(upper?.lines.map((l) => padLayoutLine(l, width)) ?? []),
-            " ".repeat(width),
+            PROTECTED_SPACE.repeat(width),
             ...(lower?.lines.map((l) => padLayoutLine(l, width)) ?? []),
           ],
           width,
@@ -579,7 +594,7 @@ class LatexParser {
     const formatted = rows.map((row) =>
       Array.from({ length: colCount }, (_, c) => {
         const cell = row[c] ?? "";
-        return `${cell}${" ".repeat(Math.max(0, (colWidths[c] ?? 0) - visibleWidth(cell)))}`;
+        return `${cell}${PROTECTED_SPACE.repeat(Math.max(0, (colWidths[c] ?? 0) - visibleWidth(cell)))}`;
       }).join(" │ "),
     );
 
@@ -622,7 +637,7 @@ class LatexParser {
       const condition = row[1] ?? "";
       if (!condition) return value;
       const prefix = /^(?:if|when|for|otherwise)\b/i.test(condition) ? " " : " nếu ";
-      return `${value}${" ".repeat(Math.max(0, valueWidth - visibleWidth(value)))}${prefix}${condition}`;
+      return `${value}${PROTECTED_SPACE.repeat(Math.max(0, valueWidth - visibleWidth(value)))}${prefix}${condition}`;
     });
     if (contents.length <= 1) return `⎧ ${contents[0]}`;
     const middle = Math.floor(contents.length / 2);
@@ -661,5 +676,10 @@ export function renderLatex(source: string, options: RenderLatexOptions = {}): s
   const indentation = Math.min(
     ...lines.filter((l) => l.trim()).map((l) => l.length - l.trimStart().length),
   );
-  return lines.map((l) => l.slice(indentation).trimEnd()).join("\n").trimEnd();
+  return lines
+    .map((l) => l.slice(indentation).trimEnd())
+    .join("\n")
+    .trimEnd()
+    // PROTECTED_SPACE chỉ là ký tự giữ chỗ trong lúc dựng bố cục.
+    .replaceAll(PROTECTED_SPACE, " ");
 }

@@ -12,6 +12,7 @@ const SYMBOL_KEYS = new Set([
   "+", "|", "~", "{", "}", ":", "<", ">", "?",
 ]);
 
+/** Phím symbol cần Shift để tạo ra trên bàn phím Mỹ (dùng cho logical shift matching). */
 const SHIFTED_SYMBOL_KEYS = new Set("~!@#$%^&*()_+|{}:<>?");
 
 const MODIFIERS = { shift: 1, alt: 2, ctrl: 4, super: 8 } as const;
@@ -106,6 +107,9 @@ const LEGACY_SEQUENCE_KEY_IDS: Record<string, string> = {
 
 let kittyProtocolActive = false;
 
+/** Kiểu sự kiện bàn phím (Kitty protocol flag 2). */
+export type KeyEventType = "press" | "repeat" | "release";
+
 export function setKittyProtocolActive(active: boolean): void {
   kittyProtocolActive = active;
 }
@@ -114,7 +118,24 @@ export function isKittyProtocolActive(): boolean {
   return kittyProtocolActive;
 }
 
-export type KeyEventType = "press" | "repeat" | "release";
+/**
+ * Sự kiện vừa phân tích có phải nhả phím không.
+ * Chỉ hữu ích khi Kitty flag 2 (report event types) đang bật.
+ * Nội dung bracketed paste không bao giờ bị coi là release, dù bên trong có
+ * chuỗi giống ":3F" (ví dụ địa chỉ MAC "90:62:3F:A5").
+ */
+export function isKeyRelease(data: string): boolean {
+  if (data.includes("\x1b[200~")) return false;
+  const releaseSuffixes = [":3u", ":3~", ":3A", ":3B", ":3C", ":3D", ":3H", ":3F", ":3P", ":3Q", ":3S"];
+  return releaseSuffixes.some((suffix) => data.includes(suffix));
+}
+
+/** Sự kiện vừa phân tích có phải lặp phím không (giữ phím). */
+export function isKeyRepeat(data: string): boolean {
+  if (data.includes("\x1b[200~")) return false;
+  const repeatSuffixes = [":2u", ":2~", ":2A", ":2B", ":2C", ":2D", ":2H", ":2F", ":2P", ":2Q", ":2S"];
+  return repeatSuffixes.some((suffix) => data.includes(suffix));
+}
 
 function normalizeKittyCodepoint(codepoint: number): number {
   return KITTY_FUNCTIONAL_KEY_EQUIVALENTS.get(codepoint) ?? codepoint;
@@ -238,6 +259,17 @@ function matchesKitty(data: string, expectedCode: number, expectedMod: number): 
   const normCode = normalizeShiftedLetter(normalizeKittyCodepoint(parsed.codepoint), parsed.modifier);
   const normWanted = normalizeShiftedLetter(normalizeKittyCodepoint(expectedCode), expectedMod);
   if (actualMod === wantedMod && normCode === normWanted) return true;
+
+  // Logical match: Kitty báo symbol (ví dụ "+") là Shift + phím vật lý ("=").
+  // Binding đặt theo symbol cần tiêu thụ Shift ẩn đó, giữ nguyên Ctrl/Alt/Super.
+  const shifted = logicalShiftedSymbol(parsed.shiftedKey, actualMod, SYMBOL_KEYS);
+  if (
+    shifted &&
+    (shifted.modifier & ~LOCK_MASK) === wantedMod &&
+    shifted.codepoint === normalizeKittyCodepoint(expectedCode)
+  ) {
+    return true;
+  }
 
   if (parsed.baseLayoutKey !== undefined && parsed.baseLayoutKey === expectedCode && actualMod === wantedMod) {
     const isLatin = normCode >= 97 && normCode <= 122;
@@ -449,7 +481,15 @@ function formatParsedKey(codepoint: number, modifier: number, baseLayoutKey?: nu
 
 export function parseKey(data: string): string | undefined {
   const kitty = parseKittySequence(data);
-  if (kitty) return formatParsedKey(kitty.codepoint, kitty.modifier, kitty.baseLayoutKey);
+  if (kitty) {
+    // Ưu tiên symbol thật ("+") hơn phím vật lý ("=" + Shift) để nhãn khớp binding.
+    const shifted = logicalShiftedSymbol(kitty.shiftedKey, kitty.modifier, SYMBOL_KEYS);
+    return formatParsedKey(
+      shifted?.codepoint ?? kitty.codepoint,
+      shifted?.modifier ?? kitty.modifier,
+      kitty.baseLayoutKey,
+    );
+  }
   const mok = parseModifyOtherKeys(data);
   if (mok) return formatParsedKey(mok.codepoint, mok.modifier);
 
@@ -491,6 +531,49 @@ export function parseKey(data: string): string | undefined {
   return undefined;
 }
 
+/** Đọc chuỗi modifyOtherKeys (CSI 27 ; mod ; keycode ~) thành ký tự in được. */
+function decodeModifyOtherKeysPrintable(data: string): string | undefined {
+  const m = /^\x1b\[27;(\d+);(\d+)~$/.exec(data);
+  if (!m) return undefined;
+  const modifier = (Number.parseInt(m[1]!, 10) - 1) & ~LOCK_MASK;
+  if ((modifier & ~MODIFIERS.shift) !== 0) return undefined;
+  const codepoint = Number.parseInt(m[2]!, 10);
+  if (!Number.isFinite(codepoint) || codepoint < 32) return undefined;
+  try {
+    return String.fromCodePoint(codepoint);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Giải mã một sequence bàn phím thành ký tự in được, nếu đó là ký tự người dùng gõ.
+ *
+ * Khi Kitty protocol flag 1 (disambiguate) bật, terminal gửi CSI-u cho MỌI phím,
+ * kể cả ký tự thuần. Khi không bật Kitty, xterm modifyOtherKeys là đường dự phòng.
+ * Chỉ nhận phím thuần hoặc có Shift; từ chối Ctrl/Alt/Super để không chèn nhầm
+ * ký tự từ sự kiện chỉ mang modifier.
+ */
+export function decodePrintableKey(data: string): string | undefined {
+  return decodeKittyPrintable(data) ?? decodeModifyOtherKeysPrintable(data);
+}
+
+/**
+ * Ký tự do một symbol key tạo ra khi Shift được nhấn, cùng modifier đã bỏ Shift.
+ * Kitty báo "+" là Shift + phím vật lý "=", nên binding đặt theo symbol cần khớp
+ * bằng cách "tiêu thụ" Shift ẩn đó.
+ */
+function logicalShiftedSymbol(
+  codepoint: number | undefined,
+  modifier: number,
+  allowedSymbols: ReadonlySet<string>,
+): { codepoint: number; modifier: number } | undefined {
+  if (codepoint === undefined || (modifier & MODIFIERS.shift) === 0) return undefined;
+  const normalized = normalizeKittyCodepoint(codepoint);
+  if (!allowedSymbols.has(String.fromCharCode(normalized))) return undefined;
+  return { codepoint: normalized, modifier: modifier & ~MODIFIERS.shift };
+}
+
 /** Giải mã chuỗi CSI-u printable Kitty. */
 export function decodeKittyPrintable(data: string): string | undefined {
   const m = /^\x1b\[(\d+)(?::(\d*))?(?::(\d+))?(?:;(\d+))?(?::(\d+))?u$/.exec(data);
@@ -515,6 +598,13 @@ export function decodeKittyPrintable(data: string): string | undefined {
   }
 }
 
+type CombinedModifier<K extends string> =
+  | `ctrl+${K}` | `shift+${K}` | `alt+${K}` | `super+${K}`
+  | `ctrl+shift+${K}` | `ctrl+alt+${K}` | `ctrl+super+${K}`
+  | `shift+alt+${K}` | `alt+super+${K}` | `super+shift+${K}`
+  | `ctrl+shift+alt+${K}` | `ctrl+shift+super+${K}` | `ctrl+alt+super+${K}`
+  | `shift+alt+super+${K}` | `ctrl+shift+alt+super+${K}`;
+
 export const Key = {
   escape: "escape",
   enter: "enter",
@@ -523,9 +613,28 @@ export const Key = {
   space: "space",
   up: "up", down: "down", left: "left", right: "right",
   home: "home", end: "end", pageUp: "pageUp", pageDown: "pageDown",
-  delete: "delete",
+  delete: "delete", insert: "insert", clear: "clear",
+  f1: "f1", f2: "f2", f3: "f3", f4: "f4", f5: "f5", f6: "f6",
+  f7: "f7", f8: "f8", f9: "f9", f10: "f10", f11: "f11", f12: "f12",
+  backtick: "`", hyphen: "-", equals: "=", leftbracket: "[", rightbracket: "]",
+  backslash: "\\", semicolon: ";", quote: "'", comma: ",", period: ".", slash: "/",
+  exclamation: "!", at: "@", hash: "#", dollar: "$", percent: "%", caret: "^",
+  ampersand: "&", asterisk: "*", leftparen: "(", rightparen: ")", underscore: "_",
+  plus: "+", pipe: "|", tilde: "~", leftbrace: "{", rightbrace: "}", colon: ":",
+  lessthan: "<", greaterthan: ">", question: "?",
   ctrl: <K extends string>(key: K): `ctrl+${K}` => `ctrl+${key}` as `ctrl+${K}`,
   shift: <K extends string>(key: K): `shift+${K}` => `shift+${key}` as `shift+${K}`,
   alt: <K extends string>(key: K): `alt+${K}` => `alt+${key}` as `alt+${K}`,
-  ctrlShift: <K extends string>(key: K): `ctrl+shift+${K}` => `ctrl+shift+${key}` as `ctrl+shift+${K}`,
+  super: <K extends string>(key: K): `super+${K}` => `super+${key}` as `super+${K}`,
+  ctrlShift: <K extends string>(key: K): CombinedModifier<K> => `ctrl+shift+${key}` as CombinedModifier<K>,
+  ctrlAlt: <K extends string>(key: K): CombinedModifier<K> => `ctrl+alt+${key}` as CombinedModifier<K>,
+  ctrlSuper: <K extends string>(key: K): CombinedModifier<K> => `ctrl+super+${key}` as CombinedModifier<K>,
+  shiftAlt: <K extends string>(key: K): CombinedModifier<K> => `shift+alt+${key}` as CombinedModifier<K>,
+  altSuper: <K extends string>(key: K): CombinedModifier<K> => `alt+super+${key}` as CombinedModifier<K>,
+  superShift: <K extends string>(key: K): CombinedModifier<K> => `super+shift+${key}` as CombinedModifier<K>,
+  ctrlShiftAlt: <K extends string>(key: K): CombinedModifier<K> => `ctrl+shift+alt+${key}` as CombinedModifier<K>,
+  ctrlShiftSuper: <K extends string>(key: K): CombinedModifier<K> => `ctrl+shift+super+${key}` as CombinedModifier<K>,
+  ctrlAltSuper: <K extends string>(key: K): CombinedModifier<K> => `ctrl+alt+super+${key}` as CombinedModifier<K>,
+  shiftAltSuper: <K extends string>(key: K): CombinedModifier<K> => `shift+alt+super+${key}` as CombinedModifier<K>,
+  ctrlShiftAltSuper: <K extends string>(key: K): CombinedModifier<K> => `ctrl+shift+alt+super+${key}` as CombinedModifier<K>,
 };

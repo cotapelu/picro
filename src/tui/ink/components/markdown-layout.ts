@@ -26,6 +26,31 @@ const ORDERED_RE = /^(\d+)\.\s(.*)$/;
 const QUOTE_RE = /^>\s?/;
 const HR_RE = /^(-{3,}|\*{3,})$/;
 
+/**
+ * Độ dài (theo ký tự) của escape sequence bắt đầu tại `pos`, hoặc -1 nếu không
+ * phải escape. Nhận cả SGR (ESC[..m), OSC (ESC]..BEL/ST) và APC (ESC_..ST),
+ * vì một dòng markdown đã tô màu có thể chứa hyperlink OSC 8.
+ */
+function escapeLengthAt(line: string, pos: number): number {
+  if (line[pos] !== "\x1b") return -1;
+  const next = line[pos + 1];
+  if (next === "[") {
+    for (let j = pos + 2; j < line.length; j++) {
+      const c = line[j];
+      if (c === "m" || c === "G" || c === "K" || c === "H" || c === "J") return j + 1 - pos;
+    }
+    return -1;
+  }
+  if (next === "]" || next === "_") {
+    for (let j = pos + 2; j < line.length; j++) {
+      if (line[j] === "\x07") return j + 1 - pos;
+      if (line[j] === "\x1b" && line[j + 1] === "\\") return j + 2 - pos;
+    }
+    return -1;
+  }
+  return -1;
+}
+
 /** Phân loại một dòng markdown (đã bỏ khoảng trắng đầu). */
 export function classifyMarkdownLine(line: string): MarkdownLineKind {
   const trimmed = line.trimStart();
@@ -59,13 +84,14 @@ export function clipMarkdownLine(line: string, maxWidth: number, ellipsis = "…
   let taken = "";
   let i = 0;
   while (i < line.length) {
-    if (line[i] === "\x1b") {
-      // Swallow the whole escape sequence: it costs no columns.
-      let j = i;
-      while (j < line.length && line[j] !== "m") j++;
-      j = Math.min(line.length, j + 1);
-      taken += line.slice(i, j);
-      i = j;
+    const escapeLen = escapeLengthAt(line, i);
+    if (escapeLen > 0) {
+      // Swallow the whole escape sequence (SGR/OSC/APC): it costs no columns.
+      // The old loop hunted for "m" only, so an OSC 8 hyperlink had no "m" terminator
+      // and the scan consumed the rest of the line as "escape", truncating far too
+      // early and dropping visible text.
+      taken += line.slice(i, i + escapeLen);
+      i += escapeLen;
       continue;
     }
     const grapheme = graphemes(line.slice(i))[0] ?? line[i]!;
