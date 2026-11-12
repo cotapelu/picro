@@ -44,7 +44,13 @@ export class MemoryStore {
       } else {
         jsonStr = fileBuffer.toString('utf-8');
       }
-      this.data = JSON.parse(jsonStr);
+      const parsed: unknown = JSON.parse(jsonStr);
+      if (!Array.isArray(parsed)) {
+        // A corrupted/hand-edited store must not leave a non-array in place: every
+        // consumer calls .filter/.find on it.
+        throw new Error('memory store is not an array');
+      }
+      this.data = parsed;
       if (!isGzipped && this.data.length > 0) {
         await this.save();
       }
@@ -240,6 +246,9 @@ export class MemoryStorage {
   }
 
   getRecent(limit: number = 10): any[] {
-    return this._store.getAllMemories().slice(-limit);
+    const all = this._store.getAllMemories();
+    // slice(-0) is slice(0), which returns the whole array; clamp instead.
+    if (limit <= 0) return [];
+    return all.slice(-limit);
   }
 }

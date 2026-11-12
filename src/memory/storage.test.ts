@@ -356,3 +356,30 @@ describe('generateId', () => {
     expect(id).toMatch(/^[a-f0-9]+$/);
   });
 });
+
+describe('MemoryStorage.getRecent', () => {
+  function storage(): MemoryStorage {
+    return new MemoryStorage({ store: new MemoryStore() });
+  }
+
+  it('returns an empty list for limit 0', () => {
+    // slice(-0) is slice(0), which returns everything; the guard returns nothing.
+    expect(storage().getRecent(0)).toEqual([]);
+  });
+
+  it('returns the requested tail', () => {
+    const seen = storage().getRecent(3);
+    expect(Array.isArray(seen)).toBe(true);
+  });
+});
+
+describe('MemoryStorage.load corruption guard', () => {
+  it('treats a non-array store as empty', async () => {
+    // Loading is triggered on init; a corrupt (non-array) file must not leave a
+    // non-array behind for consumers that call .filter/.find.
+    const storage = new MemoryStorage({ store: new MemoryStore(dbPath) });
+    writeFileSync(dbPath, JSON.stringify({ not: 'an array' }), 'utf8');
+    await (storage.getStore() as any).init();
+    expect(storage.count()).toBe(0);
+  });
+});
