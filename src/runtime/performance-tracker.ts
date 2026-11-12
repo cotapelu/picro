@@ -42,6 +42,8 @@ export interface PerformanceTrackerOptions {
 export class PerformanceTracker {
   private samples: PerformanceSample[] = [];
   private intervalId: any = null;
+  /** Previous cumulative CPU reading, used to compute per-interval deltas. */
+  private lastCpuUsage: NodeJS.CpuUsage | undefined;
   private _options: Required<Omit<PerformanceTrackerOptions, 'autoStart'>>;
 
   constructor(options: PerformanceTrackerOptions = {}) {
@@ -49,6 +51,9 @@ export class PerformanceTracker {
       maxSamples: options.maxSamples ?? 1000,
       interval: options.interval ?? 5000,
     };
+    // Baseline for delta accounting, so the first sample measures the interval
+    // the tracker was alive for instead of the process' entire lifetime.
+    this.lastCpuUsage = process.cpuUsage();
     if (options.autoStart) {
       this.start();
     }
@@ -73,10 +78,18 @@ export class PerformanceTracker {
   }
 
   /**
-   * Record a single sample immediately
+   * Record a single sample immediately.
+   *
+   * process.cpuUsage() returns the CUMULATIVE totals for the whole process, so
+   * storing them directly made every sample grow monotonically and the reported
+   * averages meaningless (they converged on the process lifetime total, e.g.
+   * "avg cpu 826ms" for an idle interval). Passing the previous reading in makes
+   * Node return the delta for this interval.
    */
   record(): void {
-    const usage = process.cpuUsage();
+    const previous = this.lastCpuUsage;
+    const usage = process.cpuUsage(previous);
+    this.lastCpuUsage = process.cpuUsage();
     const mem = process.memoryUsage();
     const sample: PerformanceSample = {
       timestamp: Date.now(),
@@ -106,10 +119,15 @@ export class PerformanceTracker {
   }
 
   /**
-   * Clear all samples
+   * Clear all samples.
+   *
+   * Re-baselines against the current cumulative reading rather than dropping
+   * the baseline: leaving it undefined would make the next sample fall back to
+   * process.cpuUsage() with no argument, i.e. the process lifetime total.
    */
   clear(): void {
     this.samples = [];
+    this.lastCpuUsage = process.cpuUsage();
   }
 
   /**

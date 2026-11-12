@@ -6,10 +6,26 @@ describe('PerformanceTracker', () => {
   let cpuUsageSpy: any;
   let memoryUsageSpy: any;
 
+  // Each cpuUsage() call advances a cumulative counter; when a previous reading
+  // is passed in, Node returns the difference. The previous mock ignored the
+  // argument entirely, which hid the cumulative-vs-delta bug this suite now pins.
+  let cumulativeUser = 0;
+  let cumulativeSystem = 0;
+
   beforeEach(() => {
     vi.useFakeTimers();
-    // Mock process.cpuUsage and process.memoryUsage
-    cpuUsageSpy = vi.spyOn(process, 'cpuUsage').mockReturnValue({ user: 123456, system: 654321 } as any);
+    cumulativeUser = 0;
+    cumulativeSystem = 0;
+    cpuUsageSpy = vi.spyOn(process, 'cpuUsage').mockImplementation((previous?: any) => {
+      cumulativeUser += 1000;
+      cumulativeSystem += 500;
+      const current = { user: cumulativeUser, system: cumulativeSystem };
+      if (!previous) return current as any;
+      return {
+        user: current.user - previous.user,
+        system: current.system - previous.system,
+      } as any;
+    });
     memoryUsageSpy = vi.spyOn(process, 'memoryUsage').mockReturnValue({ rss: 10_000_000, heapUsed: 5_000_000, heapTotal: 8_000_000, external: 0 } as any);
     tracker = new PerformanceTracker();
   });
@@ -27,8 +43,9 @@ describe('PerformanceTracker', () => {
     const s = samples[0];
     expect(s).toHaveProperty('timestamp');
     expect(typeof s.timestamp).toBe('number');
-    expect(s.cpuUserMS).toBe(123456 / 1000); // µs to ms
-    expect(s.cpuSystemMS).toBe(654321 / 1000);
+    // Per-interval delta, not the cumulative total.
+    expect(s.cpuUserMS).toBe(1); // 1000µs -> 1ms since the constructor baseline
+    expect(s.cpuSystemMS).toBe(0.5);
     expect(s.rss).toBe(10_000_000);
     expect(s.heapUsed).toBe(5_000_000);
   });
@@ -75,10 +92,6 @@ describe('PerformanceTracker', () => {
   });
 
   it('getStats calculates correct averages', () => {
-    // Override mocks to return specific values for two recordings
-    cpuUsageSpy
-      .mockReturnValueOnce({ user: 2000, system: 1000 })
-      .mockReturnValueOnce({ user: 4000, system: 2000 });
     memoryUsageSpy
       .mockReturnValueOnce({ rss: 2_000_000, heapUsed: 1_000_000, heapTotal: 2_000_000, external: 0 })
       .mockReturnValueOnce({ rss: 4_000_000, heapUsed: 2_000_000, heapTotal: 4_000_000, external: 0 });
@@ -89,9 +102,10 @@ describe('PerformanceTracker', () => {
     expect(stats!.sampleCount).toBe(2);
     // timeSpan could be 0 if timestamps are equal
     expect(typeof stats!.timeSpanMS).toBe('number');
-    // cpuUserMS: convert µs to ms
-    expect(stats!.avgCpuUserMS).toBeCloseTo((2 + 4) / 2, 0); // (2000/1000=2, 4000/1000=4)
-    expect(stats!.avgCpuSystemMS).toBeCloseTo((1 + 2) / 2, 0);
+    // Every sample is a 1000µs delta, so the average is 1ms / 0.5ms - not the
+    // cumulative process total the old assertions expected.
+    expect(stats!.avgCpuUserMS).toBeCloseTo(1, 5);
+    expect(stats!.avgCpuSystemMS).toBeCloseTo(0.5, 5);
     expect(stats!.avgRSSMB).toBeCloseTo(((2_000_000 + 4_000_000) / 2) / 1024 / 1024, 0);
     expect(stats!.avgHeapUsedMB).toBeCloseTo(((1_000_000 + 2_000_000) / 2) / 1024 / 1024, 0);
     expect(stats!.peakRSSMB).toBeCloseTo(4_000_000 / 1024 / 1024, 0);
