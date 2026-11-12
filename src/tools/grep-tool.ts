@@ -114,3 +114,39 @@ export const grepToolDefinition = {
     required: ["pattern"],
   },
 };
+/**
+ * Create the grep tool definition bound to a working directory.
+ *
+ * grepTool/findTool used to only exist as free functions taking (input, cwd),
+ * while every other built-in tool is exposed as createXToolDefinition(cwd) for
+ * the agent. Because of that mismatch grep and find were never registered, even
+ * though the CLI help and the tool list advertised them.
+ */
+export function createGrepToolDefinition(cwd: string) {
+  return {
+    name: "grep",
+    description: "Search file contents for a pattern. Returns matching lines with file paths and line numbers.",
+    promptSnippet: 'Search file contents. Example: grep({ pattern: "TODO", glob: "*.ts" })',
+    promptGuides: [
+      "pattern is a regex by default; set literal: true to match the text exactly",
+      "Use glob to restrict the files searched",
+      "Use context to include surrounding lines",
+    ],
+    schema: {
+      type: "object",
+      properties: {
+        pattern: { type: "string", description: "Pattern to search for (regex by default)" },
+        path: { type: "string", description: "Directory or file to search (default: cwd)" },
+        glob: { type: "string", description: "Glob filter for file names" },
+        ignoreCase: { type: "boolean", description: "Case-insensitive search" },
+        literal: { type: "boolean", description: "Treat pattern as a literal string" },
+        context: { type: "number", description: "Lines of context around each match" },
+        limit: { type: "number", description: "Maximum matches to return" },
+      },
+      required: ["pattern"],
+    },
+    async execute(input: GrepToolInput): Promise<any> {
+      return grepTool(input, cwd);
+    },
+  };
+}

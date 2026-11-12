@@ -323,6 +323,10 @@ async function main(): Promise<void> {
     sessionStartEvent,
     model: resolvedModel,
     thinkingLevel: resolvedThinkingLevel,
+    // --no-tools / --no-builtin-tools were parsed but never forwarded, so both
+    // flags silently did nothing.
+    noTools: parsed.noTools ? "all" : undefined,
+    noBuiltinTools: parsed.noBuiltinTools,
   });
   time("createAgentSession");
 

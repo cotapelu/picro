@@ -93,3 +93,32 @@ export const findToolDefinition = {
     required: ["pattern"],
   },
 };
+/**
+ * Create the find tool definition bound to a working directory.
+ *
+ * See createGrepToolDefinition: without this factory the agent had no way to
+ * register the tool, so `find` was advertised but never available.
+ */
+export function createFindToolDefinition(cwd: string) {
+  return {
+    name: "find",
+    description: "Find files by glob pattern. Returns matching paths.",
+    promptSnippet: 'Find files. Example: find({ pattern: "*.ts" })',
+    promptGuides: [
+      "pattern is a glob, matched against the whole path",
+      "Use path to search a specific directory",
+    ],
+    schema: {
+      type: "object",
+      properties: {
+        pattern: { type: "string", description: "Glob pattern to match (e.g. \"*.ts\")" },
+        path: { type: "string", description: "Directory to search (default: cwd)" },
+        limit: { type: "number", description: "Maximum results to return" },
+      },
+      required: ["pattern"],
+    },
+    async execute(input: FindToolInput): Promise<any> {
+      return findTool(input, cwd);
+    },
+  };
+}

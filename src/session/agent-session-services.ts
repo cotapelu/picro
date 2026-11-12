@@ -28,6 +28,8 @@ import { createReadToolDefinition } from "../tools/read.js";
 import { createWriteToolDefinition } from "../tools/write.js";
 import { createEditToolDefinition } from "../tools/edit.js";
 import { createLsToolDefinition } from "../tools/ls.js";
+import { createGrepToolDefinition } from "../tools/grep-tool.js";
+import { createFindToolDefinition } from "../tools/find-tool.js";
 
 import type { Model } from "../llm/index.js";
 
@@ -86,6 +88,8 @@ export interface CreateAgentSessionFromServicesOptions {
   scopedModels?: Array<{ model: Model; thinkingLevel?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" }>;
   tools?: string[];
   noTools?: "all" | "builtin";
+  /** Exclude only the built-in tools, keeping extension-provided ones. */
+  noBuiltinTools?: boolean;
   customTools?: ToolDefinition[];
 }
 
@@ -264,7 +268,7 @@ function wrapBuiltinTool(tool: any): ToolDefinition {
 export async function createAgentSessionFromServices(
   options: CreateAgentSessionFromServicesOptions
 ): Promise<AgentSession> {
-  const { services, sessionManager, sessionStartEvent, model, thinkingLevel, scopedModels, tools, noTools, customTools } = options;
+  const { services, sessionManager, sessionStartEvent, model, thinkingLevel, scopedModels, tools, noTools, noBuiltinTools, customTools } = options;
   const cwd = sessionManager.getCwd();
 
   // Determine model to use (can be undefined for interactive mode)
@@ -285,7 +289,10 @@ export async function createAgentSessionFromServices(
   }
 
   // Build tool definitions - convert built-in tools to ToolDefinition format
-  const builtInTools: ToolDefinition[] = noTools === "all"
+  // "--no-builtin-tools" used to be parsed and then ignored, so the flag looked
+  // like it worked while the agent still ran with every built-in tool enabled.
+  const skipBuiltins = noTools === "all" || noBuiltinTools === true;
+  const builtInTools: ToolDefinition[] = skipBuiltins
     ? []
     : [
         wrapBuiltinTool(createBashToolDefinition(cwd)),
@@ -293,6 +300,11 @@ export async function createAgentSessionFromServices(
         wrapBuiltinTool(createWriteToolDefinition(cwd)),
         wrapBuiltinTool(createEditToolDefinition(cwd)),
         wrapBuiltinTool(createLsToolDefinition(cwd)),
+        // grep/find were ported but never registered (their functions take
+        // (input, cwd) while the agent expects createXToolDefinition(cwd)), so
+        // the built-in tool list advertised two tools the model could not call.
+        wrapBuiltinTool(createGrepToolDefinition(cwd)),
+        wrapBuiltinTool(createFindToolDefinition(cwd)),
       ];
 
   // Create Agent with built-in tools only (model can be undefined)
