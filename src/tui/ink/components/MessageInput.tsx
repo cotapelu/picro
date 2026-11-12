@@ -23,6 +23,8 @@ export interface MessageInputProps {
   onScroll?: (direction: "up" | "down", page: boolean) => void;
   /** Alt+Enter: xếp hàng thay vì gửi ngay (pi-mono handleFollowUp). */
   onQueue?: (text: string) => void;
+  /** Ctrl+T: mở rộng/thu gọn tool output toàn cục. */
+  onToggleExpand?: () => void;
   width?: number;
   /** Lịch sử tin nhắn đã gửi (duyệt bằng mũi tên lên/xuống). */
   history?: readonly string[];
@@ -124,12 +126,13 @@ const MessageEditor = React.forwardRef<
     disabled: boolean;
     onKey: (data: string, keys: { up: boolean; down: boolean; pageUp: boolean; pageDown: boolean }) => void;
     onQueue?: (text: string) => void;
+    onToggleExpand?: () => void;
     width: number;
     history: readonly string[];
     slashCommands: readonly SlashCommand[];
     enablePathCompletion: boolean;
   }
->(({ value, onChange, onSubmit, onQueue, disabled, onKey, width, slashCommands, enablePathCompletion }, ref) => {
+>(({ value, onChange, onSubmit, onQueue, onToggleExpand, disabled, onKey, width, slashCommands, enablePathCompletion }, ref) => {
   // Shift+Enter (byte \n) xếp hàng thay vì xuống dòng: giống pi-mono
   // app.message.followUp (Ink không phân biệt được Alt+Enter).
   const handleQueue = React.useCallback(
@@ -154,6 +157,7 @@ const MessageEditor = React.forwardRef<
       width={width}
       onKey={onKey}
       onQueue={handleQueue}
+      {...(onToggleExpand ? { onToggleExpand } : {})}
       {...(provider ? { autocompleteProvider: provider } : {})}
     />
   );

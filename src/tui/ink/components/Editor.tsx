@@ -48,6 +48,8 @@ export interface EditorProps {
    * cho hành động này.
    */
   onQueue?: (text: string) => void;
+  /** Ctrl+T: mở rộng/thu gọn tool output (pi-mono app.tools.expand). */
+  onToggleExpand?: () => void;
 }
 
 interface EditorState {
@@ -227,6 +229,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       width = 80,
       onKey,
       onQueue,
+      onToggleExpand,
       autocompleteProvider,
       autocompleteMaxVisible = 5,
     },
@@ -1120,6 +1123,12 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
         return;
       }
     }
+    // Ctrl+T: mở rộng/thu gọn tool output toàn cục.
+    if (key.ctrl && data === "t" && onToggleExpand) {
+      onToggleExpand();
+      return;
+    }
+
     // Ink không thể phân biệt Alt+Enter (nó nuốt ESC của "\x1b\r" và chỉ trả
     // "\r"), nên hành động "xếp hàng" của pi-mono (app.message.followUp) được
     // gán cho Shift+Enter/Ctrl+J — tức byte "\n" mà Ink báo riêng biệt. Khi

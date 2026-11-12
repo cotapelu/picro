@@ -273,6 +273,7 @@ export const App: React.FC<AppProps> = ({
               ref={editorRef}
               onSubmit={handleSubmit}
               onQueue={handleQueue}
+              onToggleExpand={() => setToolsExpanded((v) => !v)}
               disabled={status.isProcessing}
               onScroll={handleScroll}
               width={width}
@@ -301,6 +302,7 @@ export const App: React.FC<AppProps> = ({
             cwd={status.cwd}
             contextPercent={status.contextPercent}
             isProcessing={status.isProcessing}
+            toolsExpanded={toolsExpanded}
           />
         }
       />

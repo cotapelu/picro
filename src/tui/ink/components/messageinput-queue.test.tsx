@@ -35,3 +35,32 @@ describe('Editor onQueue', () => {
     expect(Key.alt('enter')).toBe('alt+enter');
   });
 });
+
+describe('Editor onToggleExpand', () => {
+  it('forwards Ctrl+T to onToggleExpand instead of typing a "t"', () => {
+    const onToggleExpand = vi.fn();
+    const { stdin } = render(<Editor value="" onToggleExpand={onToggleExpand} width={40} />);
+    stdin.write("\x14"); // Ctrl+T
+    expect(onToggleExpand).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not toggle for a plain t', () => {
+    const onToggleExpand = vi.fn();
+    const { stdin } = render(<Editor value="" onToggleExpand={onToggleExpand} width={40} />);
+    stdin.write("t");
+    expect(onToggleExpand).not.toHaveBeenCalled();
+  });
+});
+
+describe('Editor onQueue combos', () => {
+  it('routes Ctrl+T even with a non-empty buffer', () => {
+    const onToggleExpand = vi.fn();
+    const onQueue = vi.fn();
+    const { stdin } = render(
+      <Editor value="hello" onToggleExpand={onToggleExpand} onQueue={onQueue} width={40} />,
+    );
+    stdin.write("\x14");
+    expect(onToggleExpand).toHaveBeenCalledTimes(1);
+    expect(onQueue).not.toHaveBeenCalled();
+  });
+});

@@ -20,6 +20,8 @@ interface StatusBarProps {
   sessionName?: string;
   isProcessing?: boolean;
   thinkingLevel?: string;
+  /** Tool output đang mở rộng (Ctrl+T). */
+  toolsExpanded?: boolean;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -30,6 +32,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   sessionName,
   isProcessing,
   thinkingLevel,
+  toolsExpanded = false,
 }) => {
   const { columns } = useWindowSize();
 
@@ -50,6 +53,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
   const modelName = model ?? "no-model";
   const rightParts = [modelName];
+  if (toolsExpanded) rightParts.push("tools:expanded");
   if (thinkingLevel && thinkingLevel !== "off") rightParts.push(`think ${thinkingLevel}`);
 
   // The right column's budget comes from the VISIBLE width of the left side:
