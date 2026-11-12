@@ -5,7 +5,7 @@
  */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { getAgentDir } from "./config.js";
 
 /**
@@ -101,8 +101,11 @@ export function migrateSessionsFromAgentRoot(): number {
         mkdirSync(correctDir, { recursive: true });
       }
 
-      const fileName = file.split("/").pop() || file.split("\\").pop();
-      const newPath = join(correctDir, fileName!);
+      // basename() instead of splitting on "/": path.join() produces backslashes on
+      // Windows, so the manual split kept the whole path and produced a bogus
+      // destination inside the session directory.
+      const fileName = basename(file);
+      const newPath = join(correctDir, fileName);
 
       if (existsSync(newPath)) continue;
 
