@@ -10,8 +10,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text } from "ink";
 import { getTheme } from "../theme/index.js";
-import { matchesKey } from "../core/Keys.js";
-import { Editor, type EditorHandle } from "./Editor.js";
+import { Editor, type EditorHandle, type AppAction as EditorAppAction } from "./Editor.js";
 import { CombinedAutocompleteProvider, type SlashCommand } from "../core/Autocomplete.js";
 
 export interface MessageInputProps {
@@ -25,6 +24,10 @@ export interface MessageInputProps {
   onQueue?: (text: string) => void;
   /** Ctrl+T: mở rộng/thu gọn tool output toàn cục. */
   onToggleExpand?: () => void;
+  /** Hành động ứng dụng theo phím (Ctrl+C/D/Z, Esc, Ctrl+G/V/P/N). */
+  onAppAction?: (action: EditorAppAction) => void;
+  /** Ô nhập đang ở chế độ bash ("!" đầu dòng) → viền đổi màu. */
+  bashMode?: boolean;
   width?: number;
   /** Lịch sử tin nhắn đã gửi (duyệt bằng mũi tên lên/xuống). */
   history?: readonly string[];
@@ -47,6 +50,9 @@ export const MessageInput = React.forwardRef<EditorHandle, MessageInputProps>(
       disabled = false,
       onScroll,
       onQueue,
+      onToggleExpand,
+      onAppAction,
+      bashMode = false,
       width = 80,
       history = [],
       slashCommands = [],
@@ -102,6 +108,7 @@ export const MessageInput = React.forwardRef<EditorHandle, MessageInputProps>(
         disabled={disabled}
         onKey={handleKey}
         width={width}
+        bashMode={bashMode}
         history={history}
         slashCommands={slashCommands}
         enablePathCompletion={enablePathCompletion}
@@ -127,12 +134,14 @@ const MessageEditor = React.forwardRef<
     onKey: (data: string, keys: { up: boolean; down: boolean; pageUp: boolean; pageDown: boolean }) => void;
     onQueue?: (text: string) => void;
     onToggleExpand?: () => void;
+    onAppAction?: (action: EditorAppAction) => void;
+    bashMode?: boolean;
     width: number;
     history: readonly string[];
     slashCommands: readonly SlashCommand[];
     enablePathCompletion: boolean;
   }
->(({ value, onChange, onSubmit, onQueue, onToggleExpand, disabled, onKey, width, slashCommands, enablePathCompletion }, ref) => {
+>(({ value, onChange, onSubmit, onQueue, onToggleExpand, onAppAction, bashMode = false, disabled, onKey, width, slashCommands, enablePathCompletion }, ref) => {
   // Shift+Enter (byte \n) xếp hàng thay vì xuống dòng: giống pi-mono
   // app.message.followUp (Ink không phân biệt được Alt+Enter).
   const handleQueue = React.useCallback(
@@ -157,7 +166,8 @@ const MessageEditor = React.forwardRef<
       width={width}
       onKey={onKey}
       onQueue={handleQueue}
-      {...(onToggleExpand ? { onToggleExpand } : {})}
+      onToggleExpand={onToggleExpand}
+      onAppAction={onAppAction}
       {...(provider ? { autocompleteProvider: provider } : {})}
     />
   );
@@ -166,5 +176,3 @@ const MessageEditor = React.forwardRef<
 MessageEditor.displayName = "MessageEditor";
 
 MessageInput.displayName = "MessageInput";
-
-export { matchesKey };

@@ -129,13 +129,27 @@ export const App: React.FC<AppProps> = ({
   const [indicator, setIndicator] = useState<IndicatorState>({ kind: "none" });
   const [overlay, setOverlay] = useState<OverlayKind>("none");
   const [overlayProps, setOverlayProps] = useState<Record<string, unknown>>({});
-  const [toolsExpanded, setToolsExpanded] = useState(false);
+  const [toolsExpanded, setToolsExpanded] = useState(() => controller.getToolsExpanded?.() ?? false);
+  /** Ô nhập đang ở chế độ bash ("!" đầu dòng) → viền đổi màu (pi-mono). */
+  const [bashMode, setBashMode] = useState(false);
   const [queue, setQueue] = useState<{ steering: string[]; followUp: string[] }>(() =>
     controller.getQueue ? controller.getQueue() : { steering: [], followUp: [] },
   );
   const [followingEnd, setFollowingEnd] = useState(true);
   const [cwd, setCwd] = useState<string>(runtime.cwd || ".");
-  const editorRef = useRef<{ getText(): string; setText(text: string): void; addToHistory(text: string): void } | null>(null);
+  /**
+   * Ctrl+V: đọc clipboard rồi giao cho controller quyết định chèn gì.
+   *
+   * Clipboard có file (ảnh chụm/toàn cửa sổ tệp) thì dán đường dẫn; không thì
+   * dán text. Lỗi clipboard không được làm sập app.
+   */
+  const editorRef = useRef<{
+    getText(): string;
+    setText(text: string): void;
+    insert(text: string): void;
+    getCursor(): number;
+    addToHistory(text: string): void;
+  } | null>(null);
 
   const { columns, rows } = useWindowSize();
   const width = columns || 80;
@@ -196,9 +210,19 @@ export const App: React.FC<AppProps> = ({
       setOverlay("none");
       refresh();
     });
+    // Hàng đợi (steering/follow-up) thay đổi → cập nhật dock. Controller giữ
+    // các hook này dạng thuộc tính nên view GÁN vào (không phải gọi hàm đăng ký).
+    controller.onQueueChange = (next) => setQueue(next);
+    controller.onBashModeChange = (bash) => setBashMode(bash);
+    controller.onSuspend = () => setBashMode(false);
+    controller.onResume = () => refresh();
+
     controller.onEditorCallbacks?.({
       clear: () => editorRef.current?.setText(""),
       read: () => editorRef.current?.getText() ?? "",
+      setText: (text: string) => editorRef.current?.setText(text),
+      insert: (text: string) => editorRef.current?.insert(text),
+      cursor: () => editorRef.current?.getCursor() ?? 0,
     });
     if (initialMessage) void controller.sendMessage(initialMessage);
     setCwd(runtime.cwd || ".");
@@ -229,12 +253,59 @@ export const App: React.FC<AppProps> = ({
     [controller],
   );
 
-  /** Alt+Enter: xếp hàng thay vì gửi ngay. */
+  /** Alt/Shift+Enter: xếp hàng thay vì gửi ngay. */
   const handleQueue = useCallback(
     (text: string) => {
       const queue = controller.queueFollowUp;
       if (!queue) return;
       void queue(text).then(() => refresh());
+    },
+    [controller, refresh],
+  );
+
+  /**
+   * Hành động ứng dụng theo phím (pi-mono onAction("app.*")).
+   *
+   * Ctrl+C/D/Z/Esc trước đây chết vì controller không có phương thức này và
+   * Ink lại tự exit ở Ctrl+C; Ctrl+G/Ctrl+V/Ctrl+P/N chưa từng được gắn.
+   */
+  const handleAppAction = useCallback(
+    (action: string) => {
+      switch (action) {
+        case "clear":
+          controller.handleCtrlC?.();
+          break;
+        case "exit":
+          controller.handleCtrlD?.();
+          break;
+        case "suspend":
+          controller.handleCtrlZ?.();
+          break;
+        case "escape":
+          controller.handleEscape?.();
+          break;
+        case "externalEditor":
+          void controller.openExternalEditor?.();
+          break;
+        case "clipboardPaste":
+          void readClipboardForPaste(controller);
+          break;
+        case "modelCycleForward":
+          void controller.cycleModel?.("forward");
+          break;
+        case "modelCycleBackward":
+          void controller.cycleModel?.("backward");
+          break;
+        case "dequeue":
+          controller.restoreQueue?.();
+          break;
+        case "copyMessage":
+          void controller.runCommand?.("copy");
+          break;
+        default:
+          break;
+      }
+      refresh();
     },
     [controller, refresh],
   );
@@ -273,10 +344,12 @@ export const App: React.FC<AppProps> = ({
               ref={editorRef}
               onSubmit={handleSubmit}
               onQueue={handleQueue}
-              onToggleExpand={() => setToolsExpanded((v) => !v)}
+              onAppAction={handleAppAction}
+              onToggleExpand={() => controller.toggleToolExpansion?.()}
               disabled={status.isProcessing}
               onScroll={handleScroll}
               width={width}
+              bashMode={bashMode}
               history={controller.getHistory()}
               slashCommands={SLASH_COMMANDS}
             />
@@ -337,6 +410,29 @@ function truncateLine(text: string, width: number): string {
   const plain = text.replace(/\x1b\[[0-9;]*m/g, "");
   if (plain.length <= width) return text;
   return text.slice(0, Math.max(0, width - 1)) + "…";
+}
+
+/**
+ * Đọc clipboard để dán (Ctrl+V).
+ *
+ * Trả về { files, text }: file paths khi clipboard chứa danh sách tệp (mỗi
+ * dòng một đường dẫn tồn tại), ngược lại là text. Mọi lỗi đều im lặng để một
+ * máy không có clipboard helper không làm hỏng luồng gõ phím.
+ */
+async function readClipboardForPaste(controller: InteractiveControllerLike): Promise<void> {
+  let text = "";
+  try {
+    const { readClipboardText } = await import("../../utils/clipboard.js");
+    text = (await readClipboardText()) ?? "";
+  } catch {
+    return; // Không đọc được clipboard: bỏ qua như pi-mono (silent).
+  }
+  if (!text) return;
+  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+  const lookLikePaths =
+    lines.length > 0 && lines.every((line) => !/\s/.test(line) && (line.startsWith("/") || line.startsWith("./") || line.startsWith("~/") || /^[A-Za-z]:[\\/]/.test(line)));
+  const files = lookLikePaths ? lines : [];
+  controller.pasteFromClipboard?.(files, lookLikePaths ? "" : text);
 }
 
 /** Cửa sổ phụ (overlay) đang mở do controller yêu cầu. */

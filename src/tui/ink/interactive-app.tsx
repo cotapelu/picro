@@ -128,6 +128,10 @@ export function startInteractiveApp(props: InteractiveAppProps): void {
 
   try {
     const controller = withOptionalMethods(props.controller);
+    // exitOnCtrlC=false: Ink (build/components/App.js) would call handleExit()
+    // on the FIRST Ctrl+C, so the pi-mono semantics "first press clears the
+    // editor, second press within 500ms quits" could never be reached. The key
+    // is routed to the controller instead (App.tsx -> InteractiveControllerLike).
     const instance = render(
       <App
         runtime={props.runtime}
@@ -135,7 +139,7 @@ export function startInteractiveApp(props: InteractiveAppProps): void {
         initialMessage={props.initialMessage}
       />,
       {
-        exitOnCtrlC: true,
+        exitOnCtrlC: false,
         stdout: process.stdout,
       }
     );

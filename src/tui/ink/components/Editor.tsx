@@ -50,7 +50,27 @@ export interface EditorProps {
   onQueue?: (text: string) => void;
   /** Ctrl+T: mở rộng/thu gọn tool output (pi-mono app.tools.expand). */
   onToggleExpand?: () => void;
+  /** Hành động ứng dụng theo phím (pi-mono `onAction("app.*")`).
+   * Editor là component duy nhất nhận useInput nên mọi phím toàn cục phải đi
+   * qua đây: Ctrl+C/D/Z, Esc, Ctrl+G, Ctrl+V, Ctrl+P/N.
+   */
+  onAppAction?: (action: AppAction) => void;
+  /** Ô nhập đang ở chế độ bash ("!" đầu dòng) → viền đổi màu. */
+  bashMode?: boolean;
 }
+
+/** Hành động ứng dụng editor gửi lên lớp controller. */
+export type AppAction =
+  | "clear" // Ctrl+C (app.clear)
+  | "exit" // Ctrl+D (app.exit)
+  | "suspend" // Ctrl+Z (app.suspend)
+  | "escape" // Esc
+  | "externalEditor" // Ctrl+G (app.editor.external)
+  | "clipboardPaste" // Ctrl+V
+  | "modelCycleForward" // Ctrl+P (app.model.cycleForward)
+  | "modelCycleBackward" // Ctrl+N (app.model.cycleBackward)
+  | "dequeue" // Ctrl+O (app.message.dequeue)
+  | "copyMessage"; // Ctrl+Y (app.message.copy)
 
 interface EditorState {
   lines: string[];
@@ -204,6 +224,10 @@ export interface EditorHandle {
   getText(): string;
   /** Đặt lại nội dung (ví dụ sau khi gửi, hoặc khôi phục tin nhắn đã queue). */
   setText(text: string): void;
+  /** Chèn văn bản tại con trỏ (clipboard paste, khôi phục hàng đợi). */
+  insert(text: string): void;
+  /** Vị trí con trỏ (0-based) trong chuỗi nhiều dòng. */
+  getCursor(): number;
   /** Thêm vào lịch sử duyệt bằng mũi tên lên/xuống. */
   addToHistory(text: string): void;
 }
@@ -230,6 +254,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       onKey,
       onQueue,
       onToggleExpand,
+      onAppAction,
       autocompleteProvider,
       autocompleteMaxVisible = 5,
     },
@@ -905,6 +930,24 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
         setState(stateRef.current);
         notifyChange(stateRef.current);
       },
+      insert: (text: string) => {
+        // Không có nội dung thì thay toàn bộ (tránh dấu xuống dòng đầu).
+        const current = stateRef.current;
+        if (current.lines.length === 1 && current.lines[0] === "") {
+          stateRef.current = { lines: text.split("\n"), cursorLine: 0, cursorCol: 0 };
+          setState(stateRef.current);
+          notifyChange(stateRef.current);
+          return;
+        }
+        pushUndo(current);
+        insertTextAtomic(text);
+      },
+      getCursor: () => {
+        const current = stateRef.current;
+        let offset = 0;
+        for (let i = 0; i < current.cursorLine; i++) offset += (current.lines[i] ?? "").length + 1;
+        return offset + current.cursorCol;
+      },
       addToHistory: (text: string) => {
         const trimmed = text.trim();
         if (!trimmed) return;
@@ -912,7 +955,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
         setHistory((prev) => [trimmed, ...prev].slice(0, MAX_HISTORY));
       },
     }),
-    [notifyChange],
+    [notifyChange, pushUndo, insertTextAtomic],
   );
 
   const submit = useCallback(() => {
@@ -1080,7 +1123,44 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
   const kb = getKeybindings();
 
   useInput((data, key) => {
-    if (key.ctrl && data === "\u0003") return;
+    // Phím toàn cục của ứng dụng. Ink không còn exitOnCtrlC nên Ctrl+C phải được
+    // route về controller: lần đầu xóa ô nhập, lần hai trong 500ms mới thoát.
+    if (key.ctrl && data === "\u0003") {
+      onAppAction?.("clear");
+      return;
+    }
+    if (key.ctrl && data === "\u0004") {
+      onAppAction?.("exit");
+      return;
+    }
+    if (key.ctrl && data === "\u001a") {
+      onAppAction?.("suspend");
+      return;
+    }
+    if (key.ctrl && data === "g") {
+      onAppAction?.("externalEditor");
+      return;
+    }
+    if (key.ctrl && data === "v") {
+      onAppAction?.("clipboardPaste");
+      return;
+    }
+    if (key.ctrl && data === "p") {
+      onAppAction?.("modelCycleForward");
+      return;
+    }
+    if (key.ctrl && data === "n") {
+      onAppAction?.("modelCycleBackward");
+      return;
+    }
+    if (key.ctrl && data === "o") {
+      onAppAction?.("dequeue");
+      return;
+    }
+    if (key.ctrl && data === "y") {
+      onAppAction?.("copyMessage");
+      return;
+    }
 
     // --- Gợi ý đang mở: điều hướng + chọn ---
     if (autocompleteRef.current) {
@@ -1123,6 +1203,13 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
         return;
       }
     }
+    // Esc khi KHÔNG có autocomplete: huỷ stream / thoát bash mode / mở tree
+    // (pi-mono defaultEditor.onEscape).
+    if (matchesKey(data, "escape")) {
+      onAppAction?.("escape");
+      return;
+    }
+
     // Ctrl+T: mở rộng/thu gọn tool output toàn cục.
     if (key.ctrl && data === "t" && onToggleExpand) {
       onToggleExpand();

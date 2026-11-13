@@ -12,7 +12,8 @@ import { theme, fg, bg } from "../theme/index.js";
 
 export interface ChatMessageLike {
   id: string;
-  role: "user" | "assistant" | "system" | "tool";
+  /** "bash" là lệnh chạy trực tiếp từ chế độ tương tác ("!ls"). */
+  role: "user" | "assistant" | "system" | "tool" | "bash";
   content: string;
   timestamp: number;
 }

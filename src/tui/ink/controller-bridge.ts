@@ -98,8 +98,47 @@ export interface InteractiveControllerLike {
   clearEditor?(): void;
   /** Đọc nội dung ô nhập (Ctrl+D chỉ thoát khi rỗng). */
   getEditorText?(): string;
-  /** View đăng ký hook để controller xóa/đọc ô nhập. */
-  onEditorCallbacks?(hooks: { clear: () => void; read: () => string }): void;
+  /** View đăng ký hook để controller xóa/đọc/đặt/chèn ô nhập. */
+  onEditorCallbacks?(hooks: {
+    clear: () => void;
+    read: () => string;
+    setText?: (text: string) => void;
+    insert?: (text: string) => void;
+    cursor?: () => number;
+  }): void;
+  /** Ctrl+T đang bật hay tắt (view đọc lần đầu). */
+  getToolsExpanded?(): boolean;
+  /** Hàng đợi thay đổi (view cập nhật dock). */
+  onQueueChange?:(queue: { steering: string[]; followUp: string[] }) => void;
+  /** Ô nhập vào/ra chế độ bash (view đổi màu viền). */
+  onBashModeChange?:(bash: boolean) => void;
+  /** Ctrl+Z: view tạm dừng/khôi phục đường vào terminal. */
+  onSuspend?:() => void;
+  onResume?:() => void;
+
+  // --- Hành động ứng dụng (pi-mono `onAction("app.*")`) -------------------
+  /** Ctrl+C: lần đầu xóa ô nhập, hai lần liên tiếp thì thoát. */
+  handleCtrlC?(): void;
+  /** Ctrl+D: chỉ thoát khi ô nhập rỗng. */
+  handleCtrlD?(): void;
+  /** Ctrl+Z: tạm dừng ra nền, khôi phục khi tiếp tục. */
+  handleCtrlZ?(): void;
+  /** Esc: huỷ đang chạy / thoát bash mode / mở tree hoặc fork khi ô rỗng. */
+  handleEscape?(): void;
+  /** Ctrl+G: mở editor ngoài. */
+  openExternalEditor?(): Promise<void>;
+  /** Ctrl+V: dán từ clipboard (file / ảnh / text). */
+  pasteFromClipboard?(files: string[], text: string): void;
+  /** Ctrl+P/Ctrl+N: đổi model. */
+  cycleModel?(direction: "forward" | "backward"): Promise<void>;
+  /** Đổi cấp độ suy nghĩ. */
+  cycleThinkingLevel?(): void;
+  /** Ctrl+T: mở rộng/thu gọn toàn bộ đầu ra tool. */
+  toggleToolExpansion?(): void;
+  /** Đang có tin nhắn nào trong hàng đợi không (dùng cho trạng thái phím). */
+  hasQueuedMessages?(): boolean;
+  /** Thoát qua hook của view (khôi phục terminal trước khi exit). */
+  shutdownViaHook?(): Promise<void>;
 }
 
 export type { ChatMessageLike, ToastLike };
