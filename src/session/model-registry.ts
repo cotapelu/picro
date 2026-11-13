@@ -197,7 +197,7 @@ export class DefaultModelRegistry implements ModelRegistry {
   }
 
   /**
-   * Get display name for a provider (stub)
+   * Get display name for a provider
    */
   getProviderDisplayName(provider: string): string {
     // Return capitalized provider name by default

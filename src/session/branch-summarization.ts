@@ -7,6 +7,7 @@
 import type { AgentMessage } from "./agent-types.js";
 import type { SessionEntry, SessionManager } from "../session/session-manager.js";
 import { complete } from "../llm/index.js";
+import { estimateTokens as estimateTokensFromCompaction } from "./compaction.js";
 
 // ============================================================================
 // Types
@@ -105,7 +106,7 @@ export function formatFileOperations(readFiles: string[], modifiedFiles: string[
 // ============================================================================
 
 export function estimateTokens(message: AgentMessage): number {
-  return 0; // stub - would use from compaction module
+  return estimateTokensFromCompaction(message);
 }
 
 /**

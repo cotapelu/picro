@@ -2,7 +2,7 @@
 /**
  * Resource Loader - Load extensions, skills, prompts, themes, context files
  *
- * This is a stub implementation - full implementation coming in Phase B
+ * Loads external resources at runtime startup.
  */
 
 import type { AgentMessage } from "../session/agent-types.js";

@@ -136,13 +136,13 @@ describe('branch-summarization', () => {
         {
           id: '1',
           type: 'message',
-          message: { role: 'user', content: 'Hello' },
+          message: { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
           timestamp: Date.now(),
         },
         {
           id: '2',
           type: 'message',
-          message: { role: 'assistant', content: 'Hi there' },
+          message: { role: 'assistant', content: [{ type: 'text', text: 'Hi there' }] },
           timestamp: Date.now(),
         },
       ];
@@ -151,7 +151,7 @@ describe('branch-summarization', () => {
       // Entries reversed: first in array becomes oldest, so after walking from newest to oldest, order should be [user, assistant]
       expect(result.messages[0].role).toBe('user');
       expect(result.messages[1].role).toBe('assistant');
-      expect(result.totalTokens).toBe(0); // estimateTokens stub returns 0
+      expect(result.totalTokens).toBeGreaterThan(0); // estimateTokens now uses real implementation
     });
 
     it('handles empty entries', () => {

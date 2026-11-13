@@ -2008,7 +2008,7 @@ export class AgentSession {
         return;
       }
 
-      // Call compact (stub for now)
+      // Call compact (calls LLM via performCompaction)
       const compactResult = await performCompaction(
         preparation,
         model,

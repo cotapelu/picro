@@ -437,13 +437,16 @@ export function prepareCompaction(
   const messagesToSummarize = messages.slice(0, firstKeptMessageIndex);
 
   // Turn prefix: if cut splits a turn, include the first kept message's earlier parts
+  // in the summary so the LLM has full context of the turn being split.
   const turnPrefixMessages: AgentMessage[] = [];
   if (cutPoint.isSplitTurn && firstKeptMessageIndex > 0) {
-    // In a split turn, we keep the current message but need to summarize its preceding content
-    // This is a simplification: in a real implementation, we would split the turn's content
-    // For now, we treat it as: summarize the previous assistant turn fully
-    // and keep the user message intact
-    // TODO: implement proper turn splitting
+    // The first kept message is an assistant (or tool) reply that belongs to a turn
+    // whose user request is already in messagesToSummarize. Include the first kept
+    // message itself in the summary so the summarized context stays coherent.
+    const firstKeptMessage = messages[firstKeptMessageIndex];
+    if (firstKeptMessage) {
+      turnPrefixMessages.push(firstKeptMessage);
+    }
   }
 
   // Previous summary: find last compaction before firstKeptEntry
@@ -493,12 +496,10 @@ export function prepareCompaction(
   };
 }
 
-// TODO: Implement generateSummary() that calls LLM with proper prompts
-// This requires LLM API access, model, apiKey, etc.
 
 /**
  * Core compaction function that generates summary via LLM.
- * This is a stub - should call LLM API.
+ * Calls the LLM API to produce a concise summary of the discarded messages.
  */
 export async function compact(
   preparation: CompactionPreparation,

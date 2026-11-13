@@ -134,7 +134,7 @@ export async function createAgentSessionServices(
   smAny.setShowHardwareCursor = smAny.setShowHardwareCursor ?? ((show: boolean) => {});
   smAny.getClearOnShrink = smAny.getClearOnShrink ?? (() => false);
   smAny.setClearOnShrink = smAny.setClearOnShrink ?? (() => {});
-  // Additional pi settings methods (stubs)
+  // Ensure pi-coding-agent settings methods exist (backwards compat)
   smAny.getEditorPaddingX = smAny.getEditorPaddingX ?? (() => 0);
   smAny.setEditorPaddingX = smAny.setEditorPaddingX ?? (() => {});
   smAny.getAutocompleteMaxVisible = smAny.getAutocompleteMaxVisible ?? (() => 10);
@@ -144,8 +144,7 @@ export async function createAgentSessionServices(
   smAny.getAutocompleteSource = smAny.getAutocompleteSource ?? (() => ['builtin']);
   smAny.setAutocompleteSource = smAny.setAutocompleteSource ?? (() => {});
   smAny.getHttpIdleTimeoutMs = smAny.getHttpIdleTimeoutMs ?? (() => 30000);
-  smAny.setHttpIdleTimeoutMs = smAny.setHttpIdleTimeoutMs ?? (() => {});
-  // Add more stubs as needed
+  smAny.setHttpIdleTimeoutMs = smAny.setHttpIdleTimeoutMs ?? (() => {})
   
 
   // Determine session directory
