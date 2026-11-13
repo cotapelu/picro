@@ -1,44 +1,7 @@
 {
   "version": 1,
-  "phases": [
-    {
-      "id": "phase-1",
-      "name": "Phase A: read pi-mono tui/src (all files)",
-      "tasks": [
-        {
-          "id": "task-1",
-          "content": "Read tui/src/keys.ts (1511) - key parsing spec",
-          "status": "in_progress"
-        },
-        {
-          "id": "task-2",
-          "content": "Read tui/src/terminal.ts (639) + stdin-buffer.ts (480) + wheel-scroll + native-* + terminal-colors",
-          "status": "pending"
-        },
-        {
-          "id": "task-3",
-          "content": "Read tui/src/latex.ts (1506) + colors.ts + oklab.ts + utils.ts (1469)",
-          "status": "pending"
-        },
-        {
-          "id": "task-4",
-          "content": "Read tui/src/autocomplete.ts (858) + fuzzy + undo/kill/word-nav + editor-component + keybindings + layout",
-          "status": "pending"
-        },
-        {
-          "id": "task-5",
-          "content": "Read tui/src/components/* (19 files)",
-          "status": "pending"
-        },
-        {
-          "id": "task-6",
-          "content": "Read tui/src/tui.ts (1551) + tui-main-screen (660) + tui-alt-screen (1798) + alt-screen-search + terminal-image (786)",
-          "status": "pending"
-        }
-      ]
-    }
-  ],
-  "nextTaskId": 7,
-  "nextPhaseId": 2,
-  "updatedAt": "2026-11-12T23:44:49.065Z"
+  "phases": [],
+  "nextTaskId": 1,
+  "nextPhaseId": 1,
+  "updatedAt": "2026-11-12T23:55:28.478Z"
 }

@@ -471,3 +471,83 @@
 - [ ] `pi-mono/packages/tui/src`: terminal.ts, stdin-buffer.ts, wheel-scroll.ts, native-modifiers.ts, native-module-path.ts, native-platform.ts, terminal-colors.ts, terminal-image.ts, colors.ts, oklab.ts, latex.ts, fuzzy.ts, undo-stack.ts, kill-ring.ts, word-navigation.ts, autocomplete.ts, editor-component.ts, keybindings.ts, utils.ts, layout.ts, layout-node.ts, index.ts, tui.ts, tui-main-screen.ts, tui-alt-screen.ts, alt-screen-search.ts, program-status.ts, components/* (19 file)
 - [ ] `pi-mono/packages/coding-agent/src/modes/interactive`: interactive-mode.ts (7302 dòng), chat-viewport.ts, tui-renderer.ts, model-search.ts, model-catalog-refresh.ts, program-status-reporter.ts, session-share.ts, external-editor.ts, bug-report.ts, components/* (64 file), theme/* (5 file + 2 json)
 - [ ] `src/tui/ink` toàn bộ (core/ components/ theme/) + `src/modes/interactive` + App.tsx + interactive-app.tsx + controller-bridge.ts
+
+## AUDIT VÒNG 2 — ĐÃ ĐỌC VÀ ĐỐ SOÁT TỪNG DÒNG (pi-mono ↔ picro)
+
+### Nguồn đã đọc đầy đủ
+- `pi-mono/packages/tui/src/keys.ts` (1511), `terminal.ts` (639), `stdin-buffer.ts` (480) — đã đối chiếu xong
+- `pi-mono/packages/coding-agent/src/modes/interactive/interactive-mode.ts`: đã đọc hết phần
+  setupKeyHandlers, setupEditorSubmitHandler, subscribeToAgent, handleEvent, key handlers
+  (Ctrl+C/D/Z, followUp, dequeue, cycleModel, cycleThinkingLevel, toggle tools/thinking,
+  external editor), shutdown/signal/crash, getAllQueuedMessages/clearAllQueues/
+  updatePendingMessagesDisplay/restoreQueuedMessagesToEditor, queueCompactionMessage
+- `pi-mono/.../components/footer.ts` (302), `chat-viewport.ts` (62) — đã đọc hết
+
+### BUG ĐÃ XÁC MINH (đủ chứng cứ, cần fix)
+
+#### A. Phím tắt cốt lõi KHÔNG hoạt động (do InteractiveMode không bao giờ được khởi tạo)
+- [ ] **A-1 Ctrl+C không xóa ô nhập mà thoát luôn.** `interactive-app.tsx` render với
+  `exitOnCtrlC: true`; Ink (`build/components/App.js:151`) tự `handleExit()` khi nhận `\x03`
+  → app tắt ngay ở lần nhấn ĐẦU. Logic Ctrl+C 2 lần trong `interactive-mode.ts` là code chết
+  vì `startInteractiveApp` chỉ tạo controller, không tạo InteractiveMode. Fix: `exitOnCtrlC:false`
+  + route Ctrl+C vào controller (lần 1 clearEditor, lần 2 trong 500ms → onShutdown).
+- [ ] **A-2 Ctrl+D / Ctrl+Z / Esc không làm gì.** Editor `useInput` trả về sớm với
+  `key.ctrl && data === "\u0003"`; không có nhánh Ctrl+D (\x04), Ctrl+Z (\x1a), Esc
+  (\x1b) ngoài "đóng autocomplete". pi-mono: Esc khi streaming → abort + khôi phục hàng đợi,
+  Esc khi bash mode → xóa, Esc 2 lần ô rỗng → /tree hoặc /fork.
+- [ ] **A-3 Ctrl+Z không khôi phục được sau `fg`.** `handleCtrlZ` gọi `stop()` (gỡ listener
+  stdin, tắt raw mode) rồi SIGTSTP; nhánh SIGCONT chỉ `requestRenderBus.publish()` — không
+  start lại terminal → sau khi fg app đơ hoàn toàn.
+
+#### B. Hàng đợi (steering/follow-up) không tồn tại
+- [ ] **B-1 controller thiếu `getQueue`/`queueFollowUp`/`restoreQueue`/`loadTranscript`** →
+  `withOptionalMethods` lắp stub no-op → Shift+Enter "xếp hàng" không làm gì, dock không bao
+  giờ hiện tin nhắn đang chờ, không khôi phục được về ô nhập. (Session đã có sẵn
+  `getSteeringMessages/getFollowUpMessages/clearQueue` và `prompt(..., {streamingBehavior}).`)
+- [ ] **B-2 sau `/resume`, `/fork`, `/tree` transcript không nạp lại** (cùng nguyên nhân
+  `loadTranscript` thiếu) → người dùng thấy transcript rỗng/sai sau khi chuyển.
+
+#### C. Lệnh slash bị hỏng
+- [ ] **C-1 chọn model trong overlay thì selector MỞ LẠI VÔ HẠN**: `runCommand('model', 'provider/id')`
+  bỏ qua `args`, luôn `requestOverlay({kind:'model'})`. Chưa từng đổi model.
+- [ ] **C-2 `/theme <tên>` luôn báo lỗi**: `applyTheme` dùng `require()` trong module ESM →
+  ReferenceError, rơi vào catch và hiện toast "Không đổi được chủ đề".
+- [ ] **C-3 `runCommand` có case trùng** (`compact` ×2, `login` ×2) — case sau là code chết.
+- [ ] **C-4 `/settings` chỉ có 2 dòng** (theme, defaultThinkingLevel); pi-mono có ~40 settings.
+- [ ] **C-5 `/changelog`, `/clone`, `/share`, `/bug`, `/copy`, `/scoped-models` chưa có.**
+- [ ] **C-6 `/sessions` đổi phiên nhưng không `resubscribeToRuntime`/nạp transcript** trong nhánh
+  `case 'sessions'` (có gọi resubscribe nhưng thiếu nạp transcript + thiếu `loadTranscriptFromSession`).
+
+#### D. Transcript sai nội dung
+- [ ] **D-1 mọi tool item có `toolArgs: {}`** → tên tool hiện nhưng tham số (command, path,
+  pattern) không bao giờ hiện. pi-mono hiện call/renderers của từng tool.
+- [ ] **D-2 sau khi tool xong, nội dung bị thay bằng "✓ output" rồi `parseToolLine` tách sai**
+  → `toolName` thành dòng ĐẦU CỦA OUTPUT (vì không còn dấu ":"), tên tool thật bị mất.
+- [ ] **D-3 thinking không bao giờ hiện**: `attachThinking()` không được gọi ở đâu; map
+  `thinkingById` luôn rỗng; `getTranscript` có `extractThinkingText` + `void thinking` là code chết.
+- [ ] **D-4 assistant message có tool call bị gộp vào text** → transcript không tách khối tool
+  ra khỏi văn bản trợ lý (pi-mono giữ ToolExecutionComponent riêng).
+
+#### E. Thiếu tính năng pi-mono đã có (viết thêm, không bỏ)
+- [ ] E-1 Footer đầy đủ: ↑input ↓output R cache-read W cache-write CH% cost, model →
+  routed model, git branch, session name, context %/window (pi-mono footer.ts:render).
+- [ ] E-2 Ctrl+G external editor (`src/tui/ink/core/ExternalEditor.ts` đã port, chưa gắn phím)
+- [ ] E-3 Ctrl+V dán clipboard (file paths / image / text)
+- [ ] E-4 Ctrl+P / Ctrl+N cycle model + Ctrl+? cycle thinking + status "Switched to X"
+- [ ] E-5 Esc abort đang stream, Esc 2 lần → /tree hoặc /fork (settings doubleEscapeAction)
+- [ ] E-6 Ctrl+T (đã có) + status "Tool output: expanded/collapsed"
+- [ ] E-7 Bỏ/thêm khỏi hàng đợi khi đang chạy: hiển thị + khôi phục (restoreQueue)
+- [ ] E-8 Bash mode: đổi màu viền khi dòng bắt đầu bằng "!", Esc để thoát bash mode
+- [ ] E-9 Header động: logo + version + key hint + onboarding (pi-mono BuiltInHeader)
+- [ ] E-10 Markdown: bảng, LaTeX, link URL, list lồng nhau (đã làm), strikethrough nghiêm ngặt,
+  HTML comment
+- [ ] E-11 Terminal color query OSC 10/11/4 + system theme auto-sync (`theme-controller` đã port)
+- [ ] E-12 Fullscreen alt-screen (chuột, chọn text, scrollbar, tìm kiếm) — cần lớp terminal riêng
+- [ ] E-13 SettingsList ~40 mục (đã port, chưa gắn đủ)
+- [ ] E-14 Status line khi retry/compaction + countdown thật
+
+### Ghi chú kỹ thuật đã xác minh
+- Ink `exitOnCtrlC` (build/components/App.js:148-157) chặn Ctrl+C TRƯỚC `useInput` của ta.
+- Ink bỏ hoàn toàn dòng `<Text>{''}</Text>` (đã test) → dòng trống phải là `" "`.
+- Ink không cho Alt+Enter khác biệt với Enter; Shift+Enter đến là byte `\n` (đã test).
+- Ink gộp `\x1b\r` thành `\r` (nuốt ESC) nên `shift+enter` qua `kb.matches` không bao giờ khớp.
