@@ -44,21 +44,15 @@ readline fallback khi stdin không phải TTY.
 - Typecheck: ✅ `npx tsc --noEmit` clean
 - Complexity: core modules được tách; component render mỗi cái <20 dòng JSX body
 
-- `ink` + `ink-testing-library` (TUI)
-- `openai`, Anthropic, Google providers
-- `readline` chỉ cho fallback non-TTY
-
 ---
 
 ## Next Steps (Prioritized)
 
 1. ✅ Ink TUI + interactive mode hoàn chỉnh
-2. Hoàn thiện footer (cache R/W, CH%, cost, git branch, routed model)
-3. Gắn phím tắt còn thiếu (Ctrl+G editor, Ctrl+V clipboard, Ctrl+P/N cycling)
-4. Truy vấn màu terminal OSC 10/11/4 và auto-sync system theme
-5. Xem xét lớp terminal riêng cho alt-screen (B26)
+2. ✅ Hoàn thiện footer (cache R/W, CH%, cost, git branch, routed model) qua FooterDataProvider
+3. ✅ Compaction gọi LLM thật (thay stub) + branch summarization gọi LLM thật
+4. Gắn phím tắt còn thiếu (Ctrl+G editor, Ctrl+V clipboard, Ctrl+P/N cycling)
 
 ---
 
-*Last updated: 2025-07-05 – audit round 8: transcript render bugs fixed (user text,
-tool result, bash output), VisualLinePreview API, full interactive upgrade recorded.*
+*Last updated: 2025-11-13 – compaction & branch summarization gọi LLM thật thay stub; footer nối FooterDataProvider; 2941 test pass.

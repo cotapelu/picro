@@ -4,9 +4,9 @@
  *
  * Generates summaries of abandoned branches when navigating session tree.
  */
-
 import type { AgentMessage } from "./agent-types.js";
 import type { SessionEntry, SessionManager } from "../session/session-manager.js";
+import { complete } from "../llm/index.js";
 
 // ============================================================================
 // Types
@@ -106,6 +106,26 @@ export function formatFileOperations(readFiles: string[], modifiedFiles: string[
 
 export function estimateTokens(message: AgentMessage): number {
   return 0; // stub - would use from compaction module
+}
+
+/**
+ * Serialize branch messages into a prompt-friendly transcript.
+ */
+export function serializeBranchMessages(messages: AgentMessage[]): string {
+  return messages.map((msg) => {
+    const role = msg.role.toUpperCase();
+    const content = msg.content as any[];
+    const parts = content.map((block) => {
+      if (block.type === 'text') return block.text;
+      if (block.type === 'thinking') return `[Thinking: ${block.thinking}]`;
+      if (block.type === 'toolCall')
+        return `[Tool Call: ${block.name}(${JSON.stringify(block.arguments ?? {})})]`;
+      if (block.type === 'toolResult')
+        return `[Tool Result: ${block.isError ? 'error' : 'ok'}] ${block.text ?? ''}`;
+      return '';
+    });
+    return `[${role}]: ${parts.join(' ')}`;
+  }).join('\n\n');
 }
 
 // ============================================================================
@@ -244,12 +264,8 @@ Use this EXACT format:
 
 Keep each section concise. Preserve exact file paths, function names, error messages.`;
 
-/**
- * Generate branch summary (stub implementation).
- * In production, this would call the LLM API.
- */
 export async function generateBranchSummary(
-  _entries: SessionEntry[],
+  entries: SessionEntry[],
   options: GenerateBranchSummaryOptions
 ): Promise<BranchSummaryResult> {
   const { signal, customInstructions, replaceInstructions, reserveTokens = 16384 } = options;
@@ -258,31 +274,90 @@ export async function generateBranchSummary(
     return { aborted: true };
   }
 
-  // Prepare entries
-  const { fileOps } = prepareBranchEntries(_entries, reserveTokens);
+  // Prepare entries (file ops + messages)
+  const { fileOps, messages } = prepareBranchEntries(entries, reserveTokens);
 
-  // Build stub summary
-  const msgCount = _entries.filter((e: any) => e.type === "message" || e.type === "custom_message").length;
-  const summaryParts: string[] = [
-    BRANCH_SUMMARY_PREAMBLE.trim(),
-    `\n## Goal\nUser explored ${msgCount} messages in this branch.`,
-    `\n## Constraints & Preferences\n(none)`,
-    `\n## Progress\n### In Progress\n- [ ] Branch exploration (incomplete)`,
-    `\n## Key Decisions\n- [None recorded]`,
-  ];
-
+  // Build system prompt for the LLM summarization
+  let systemPrompt = BRANCH_SUMMARY_PROMPT;
   if (customInstructions && !replaceInstructions) {
-    summaryParts.push(`\n\nAdditional focus: ${customInstructions}`);
+    systemPrompt += `\n\nAdditional focus: ${customInstructions}`;
   }
 
-  let summary = summaryParts.join("");
+  const readFiles = [...fileOps.read].sort();
+  const modifiedFiles = [...new Set([...fileOps.edited, ...fileOps.written])].sort();
+  const fileOpsText = formatFileOperations(readFiles, modifiedFiles);
+  if (fileOpsText) {
+    systemPrompt += `\n\nFiles accessed during this branch:\n${fileOpsText}`;
+  }
 
-  // File lists
-  const { readFiles, modifiedFiles } = computeFileLists(fileOps);
-  summary += formatFileOperations(readFiles, modifiedFiles);
+  const userPrompt = `Summarize this abandoned conversation branch:\n\n${serializeBranchMessages(messages)}`;
 
-  return {
-    summary,
-    details: { readFiles, modifiedFiles },
-  };
+  try {
+    const context = {
+      systemPrompt,
+      messages: [
+        { role: 'user' as const, content: userPrompt, timestamp: Date.now() },
+      ],
+    };
+
+    const llmResult = await complete(options.model, context, {
+      maxTokens: 2000,
+      temperature: 0.3,
+      signal: options.signal,
+      apiKey: options.apiKey,
+      headers: options.headers,
+    });
+
+    const content = llmResult.content;
+    let summary: string;
+    if (Array.isArray(content)) {
+      summary = content.map((c: any) => c.text || '').join('').trim();
+    } else if (typeof content === 'string') {
+      summary = content.trim();
+    } else {
+      summary = '';
+    }
+
+    if (!summary) {
+      throw new Error('LLM returned empty summary');
+    }
+
+    // Prepend preamble so readers know this is a branch exploration summary
+    const fullSummary = `${BRANCH_SUMMARY_PREAMBLE.trim()}\n\n${summary}`;
+
+    // Append file operations list (matches stub format used by tests)
+    const finalFileOpsText = formatFileOperations(readFiles, modifiedFiles);
+    const finalSummary = finalFileOpsText ? `${fullSummary}${finalFileOpsText}` : fullSummary;
+
+    return {
+      summary: finalSummary,
+      details: { readFiles, modifiedFiles },
+    };
+  } catch (err) {
+    if (options.signal.aborted) {
+      return { aborted: true };
+    }
+    // Fallback to structured stub summary on failure
+    const msgCount = entries.filter(
+      (e) => e.type === "message" || e.type === "custom_message"
+    ).length;
+    const summaryParts: string[] = [
+      BRANCH_SUMMARY_PREAMBLE.trim(),
+      `\n## Goal\nUser explored ${msgCount} messages in this branch.`,
+      `\n## Constraints & Preferences\n(none)`,
+      `\n## Progress\n### In Progress\n- [ ] Branch exploration (incomplete)`,
+      `\n## Key Decisions\n- [None recorded]`,
+    ];
+    if (customInstructions && !replaceInstructions) {
+      summaryParts.push(`\n\nAdditional focus: ${customInstructions}`);
+    }
+    const summary = summaryParts.join("");
+    const finalFileOpsText = formatFileOperations(readFiles, modifiedFiles);
+    const finalSummary = finalFileOpsText ? `${summary}${finalFileOpsText}` : summary;
+    return {
+      summary: finalSummary,
+      details: { readFiles, modifiedFiles },
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
 }
