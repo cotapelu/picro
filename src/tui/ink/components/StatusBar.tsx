@@ -9,7 +9,10 @@ import { formatTokens } from "./FormatTokens.js";
 import { fg } from "../theme/index.js";
 import { formatCwdForFooter } from "./FormatCwd.js";
 import { composeStatusBarLine, truncateVisual } from "./status-bar-layout.js";
-
+import type { FooterData } from "../../../runtime/footer-data-provider.js";
+/**
+ * Thống kê phiên cho footer đầy đủ.
+ */
 export interface StatusBarUsage {
   input: number;
   output: number;
@@ -35,6 +38,8 @@ interface StatusBarProps {
   usage?: StatusBarUsage;
   /** Tool output đang mở rộng (Ctrl+T). */
   toolsExpanded?: boolean;
+  /** Dữ liệu footer từ FooterDataProvider (git, extensions, session, custom). */
+  footer?: FooterData;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -49,6 +54,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   routedModel,
   usage,
   toolsExpanded = false,
+  footer,
 }) => {
   const { columns } = useWindowSize();
   const width = columns || 80;
@@ -56,9 +62,10 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   // --- Dòng 1: pwd, nhánh git, tên phiên -------------------------------------
   const home = process.env.HOME || process.env.USERPROFILE;
   let pwd = cwd ? formatCwdForFooter(cwd, home) : ".";
-  if (gitBranch) pwd = `${pwd} (${gitBranch})`;
-  if (sessionName) pwd = `${pwd} • ${sessionName}`;
-
+  const footerGitBranch = footer?.git?.branch ?? gitBranch;
+  if (footerGitBranch) pwd = `${pwd} (${footerGitBranch})`;
+  const footerSessionName = footer?.session ? `${footer.session.id} • ${footer.session.model}` : sessionName;
+  if (footerSessionName) pwd = `${pwd} • ${footerSessionName}`;
   // --- Dòng 2: thống kê bên trái, model bên phải -----------------------------
   const statusText = isProcessing ? fg("warning", "⏳ Working") : fg("success", "● Ready");
   const leftParts: string[] = [statusText];

@@ -12,6 +12,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text, useWindowSize } from "ink";
+import { createFooterDataProvider, type FooterData } from "../../runtime/footer-data-provider.js";
 import { getTheme } from "./theme/index.js";
 import type { AgentSessionRuntimeInterface } from "../../runtime/index.js";
 import type { InteractiveControllerLike } from "./controller-bridge.js";
@@ -138,6 +139,8 @@ export const App: React.FC<AppProps> = ({
   const [followingEnd, setFollowingEnd] = useState(true);
   /** Nhánh git của thư mục làm việc (dòng 1 của footer). */
   const [gitBranch, setGitBranch] = useState<string | undefined>(undefined);
+  /** Dữ liệu footer từ FooterDataProvider (git, extension, session, custom). */
+  const [footerData, setFooterData] = useState<FooterData>({ extensions: [], custom: {} });
   const [cwd, setCwd] = useState<string>(runtime.cwd || ".");
   /**
    * Ctrl+V: đọc clipboard rồi giao cho controller quyết định chèn gì.
@@ -229,12 +232,17 @@ export const App: React.FC<AppProps> = ({
     if (initialMessage) void controller.sendMessage(initialMessage);
     setCwd(runtime.cwd || ".");
 
-    // Nhánh git (pi-mono: footerDataProvider.getGitBranch, watcher riêng).
+    const footerProvider = createFooterDataProvider();
+    const stopListening = footerProvider.onChange((data) => {
+      setGitBranch(data.git?.branch);
+      setFooterData(data);
+    });
     void (async () => {
       try {
-        const { getGitInfo } = await import("../../runtime/footer-data-provider.js");
-        const info = await getGitInfo(runtime.cwd || process.cwd());
-        setGitBranch(info?.branch);
+        const info = await import("../../runtime/footer-data-provider.js").then((m) =>
+          m.getGitInfo(runtime.cwd || process.cwd()),
+        );
+        footerProvider.setGitInfo(info ?? undefined);
       } catch {
         // Không có git hoặc git lỗi: bỏ qua, footer không hiện nhánh.
       }
@@ -255,7 +263,6 @@ export const App: React.FC<AppProps> = ({
     },
     [maxScroll, viewportHeight],
   );
-
   const handleSubmit = useCallback(
     (text: string) => {
       void controller.sendMessage(text);
@@ -266,12 +273,16 @@ export const App: React.FC<AppProps> = ({
     [controller],
   );
 
-  /** Alt/Shift+Enter: xếp hàng thay vì gửi ngay. */
+  /**
+   * Alt/Shift+Enter: xếp hàng thay vì gửi ngay.
+   *
+   * Gọi qua `controller.queueFollowUp(text)`: tách method ra biến cục bộ làm mất
+   * `this` (strict mode của ESM) và mọi lần nhấn đều ném TypeError.
+   */
   const handleQueue = useCallback(
     (text: string) => {
-      const queue = controller.queueFollowUp;
-      if (!queue) return;
-      void queue(text).then(() => refresh());
+      if (!controller.queueFollowUp) return;
+      void controller.queueFollowUp(text).then(() => refresh());
     },
     [controller, refresh],
   );
@@ -342,6 +353,13 @@ export const App: React.FC<AppProps> = ({
   return (
     <Box flexDirection="column">
       <Header title="picro" cwd={cwd} expanded={layout === "full"} />
+      {/**
+       * Toast nằm TRÊN vùng hội thoại chứ không phải dưới footer: pi-mono đặt
+       * lỗi/cảnh báo (showError/showWarning) vào chatContainer nên người dùng
+       * thấy chúng ngay trên ô nhập. Để sau footer thì chúng nằm dưới hàng phím
+       * tắt và không ai chú ý.
+       */}
+      <Toast toasts={toasts} />
       <ChatViewport
         transcript={
           <Transcript items={visibleTranscript} width={width} toolsExpanded={toolsExpanded} />
@@ -385,7 +403,7 @@ export const App: React.FC<AppProps> = ({
           <StatusBar
             model={status.model}
             tokens={status.tokens}
-            cwd={status.cwd}
+            footer={footerData}
             sessionName={status.sessionName}
             gitBranch={gitBranch}
             contextPercent={status.contextPercent}
@@ -397,7 +415,6 @@ export const App: React.FC<AppProps> = ({
           />
         }
       />
-      <Toast toasts={toasts} />
       <Keybindings />
       <Modal modal={{ type: "none" }} />
     </Box>

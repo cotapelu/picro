@@ -37,17 +37,12 @@ readline fallback khi stdin không phải TTY.
 1. ✅ `src/tty-mode` đã thay bằng Ink TUI (`src/tui/ink`) + `src/modes/interactive`
 2. ✅ Interactive mode + controller đã nâng cấp đầy đủ (transcript, overlay, queue, slash)
 3. ✅ Coverage: 2870 test pass, ~210 file test
-4. Còn lại: B8 Ctrl+G external editor, B9 Ctrl+V clipboard, B10/B11 cycling phím,
-   B25 OSC color query, B27 footer đầy đủ, B26 fullscreen alt-screen
-
 ### Metrics (post-evolution round 8)
 
 - Build: ✅ Pass (`npm run build` = tsc + copy-assets)
-- Tests: ✅ 2870 pass / 2 skip (210 file)
+- Tests: ✅ 2941 pass / 2 skip (218 file)
 - Typecheck: ✅ `npx tsc --noEmit` clean
 - Complexity: core modules được tách; component render mỗi cái <20 dòng JSX body
-
-### Dependencies
 
 - `ink` + `ink-testing-library` (TUI)
 - `openai`, Anthropic, Google providers
