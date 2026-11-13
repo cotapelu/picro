@@ -29,7 +29,7 @@ const createMockRuntime = (): AgentSessionRuntimeInterface => {
       getFollowUpMessages: () => [],
       clearQueue: () => ({ steering: [], followUp: [] }),
       abort: () => {},
-      model: { id: 'gemini-pro' },
+      model: { id: 'gemini-pro', provider: 'google' },
     },
     authStorage: {
       getProviders: () => ['google'],
@@ -75,10 +75,12 @@ describe('InteractiveController', () => {
       expect(controller.getMessages()).toEqual([]);
     });
 
-    it('initializes with default status', () => {
+    // Footer phải hiện model CỦA PHIÊN ngay từ đầu (pi-mono: footer đọc
+    // session.model khi render). Bản cũ để "unknown" cho tới hết lượt đầu tiên.
+    it('initializes with the session model in the status', () => {
       const state = controller.getStatus();
-      expect(state.model).toBe('unknown');
-      expect(state.tokens).toBe('0/0');
+      expect(state.model).toBe('google/gemini-pro');
+      expect(state.tokens).toBe('0/100000');
       expect(state.cwd).toBe('/test/cwd');
       expect(state.isProcessing).toBe(false);
     });

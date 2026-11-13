@@ -70,6 +70,10 @@ export const MessageInput = React.forwardRef<EditorHandle, MessageInputProps>(
     (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || disabled) return;
+      // Xóa ô nhập NGAY khi gửi (pi-mono: onSubmit xong editor.setText("")).
+      // Bản cũ chỉ gọi onSubmit nên chữ người dùng vừa gửi vẫn nằm trong ô nhập
+      // và lần gửi sau bị dính thêm — người dùng tưởng app không nhận lệnh.
+      setValue("");
       onSubmit(trimmed);
     },
     [disabled, onSubmit],
@@ -105,6 +109,8 @@ export const MessageInput = React.forwardRef<EditorHandle, MessageInputProps>(
         onChange={setValue}
         onSubmit={submit}
         onQueue={onQueue}
+        onToggleExpand={onToggleExpand}
+        onAppAction={onAppAction}
         disabled={disabled}
         onKey={handleKey}
         width={width}

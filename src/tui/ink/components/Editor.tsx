@@ -16,7 +16,8 @@ import { UndoStack } from "../core/UndoStack.js";
 import { findWordBackward, findWordForward } from "../core/WordNavigation.js";
 import { visibleWidth, wrapTextWithAnsi } from "../core/TerminalText.js";
 import { isWhitespaceChar } from "../core/TextPredicates.js";
-import { matchesKey, decodePrintableKey } from "../core/Keys.js";
+import { matchesKey, decodePrintableKey, matchesKeyId } from "../core/Keys.js";
+import { inkKeyId } from "../core/InkKeys.js";
 import { fuzzyFilter } from "../core/Fuzzy.js";
 import type {
   AutocompleteItem,
@@ -58,6 +59,25 @@ export interface EditorProps {
   /** Ô nhập đang ở chế độ bash ("!" đầu dòng) → viền đổi màu. */
   bashMode?: boolean;
 }
+
+/**
+ * Danh tính phím -> hành động ứng dụng (pi-mono `onAction("app.*")`).
+ *
+ * So bằng DANH TÍNH phím, không phải byte: Ink giao Ctrl+C như ("c", ctrl) nên
+ * so byte `data === "\x03"` không bao giờ đúng (xem core/InkKeys.ts).
+ */
+const APP_ACTION_KEYS: Record<string, AppAction> = {
+  "ctrl+c": "clear",
+  "ctrl+d": "exit",
+  "ctrl+z": "suspend",
+  escape: "escape",
+  "ctrl+g": "externalEditor",
+  "ctrl+v": "clipboardPaste",
+  "ctrl+p": "modelCycleForward",
+  "ctrl+n": "modelCycleBackward",
+  "ctrl+o": "dequeue",
+  "ctrl+y": "copyMessage",
+};
 
 /** Hành động ứng dụng editor gửi lên lớp controller. */
 export type AppAction =
@@ -1123,52 +1143,26 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
   const kb = getKeybindings();
 
   useInput((data, key) => {
-    // Phím toàn cục của ứng dụng. Ink không còn exitOnCtrlC nên Ctrl+C phải được
-    // route về controller: lần đầu xóa ô nhập, lần hai trong 500ms mới thoát.
-    if (key.ctrl && data === "\u0003") {
-      onAppAction?.("clear");
+    // Ink KHÔNG giao byte thô: Ctrl+C đến là ("c", key.ctrl) chứ không phải
+    // "\x03"; Esc đến là data rỗng + key.escape. Nên mọi so khớp dưới đây đi
+    // qua danh tính phím (inkKeyId) thay vì so byte — xem core/InkKeys.ts.
+    const keyId = inkKeyId(data, key);
+    const appAction = APP_ACTION_KEYS[keyId ?? ""];
+    if (appAction) {
+      onAppAction?.(appAction);
       return;
     }
-    if (key.ctrl && data === "\u0004") {
-      onAppAction?.("exit");
-      return;
-    }
-    if (key.ctrl && data === "\u001a") {
-      onAppAction?.("suspend");
-      return;
-    }
-    if (key.ctrl && data === "g") {
-      onAppAction?.("externalEditor");
-      return;
-    }
-    if (key.ctrl && data === "v") {
-      onAppAction?.("clipboardPaste");
-      return;
-    }
-    if (key.ctrl && data === "p") {
-      onAppAction?.("modelCycleForward");
-      return;
-    }
-    if (key.ctrl && data === "n") {
-      onAppAction?.("modelCycleBackward");
-      return;
-    }
-    if (key.ctrl && data === "o") {
-      onAppAction?.("dequeue");
-      return;
-    }
-    if (key.ctrl && data === "y") {
-      onAppAction?.("copyMessage");
-      return;
-    }
+    /** Khớp một hành động theo cả hai đường: byte thô (test/terminal thuần) và danh tính Ink. */
+    const hit = (action: string): boolean =>
+      kb.matches(data, action) || (keyId !== undefined && matchesKeyId(keyId, action));
 
     // --- Gợi ý đang mở: điều hướng + chọn ---
     if (autocompleteRef.current) {
-      if (matchesKey(data, "escape")) {
+      if (hit("escape")) {
         closeAutocomplete();
         return;
       }
-      if (matchesKey(data, "up")) {
+      if (hit("up")) {
         setAutocomplete({
           ...autocompleteRef.current,
           selected:
@@ -1178,7 +1172,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
         });
         return;
       }
-      if (matchesKey(data, "down")) {
+      if (hit("down")) {
         setAutocomplete({
           ...autocompleteRef.current,
           selected:
@@ -1189,11 +1183,11 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
         return;
       }
       // Ink báo Tab là chuỗi rỗng + key.tab (không phải "\t").
-      if (data === "\t" || key.tab) {
+      if (keyId === "tab") {
         applyAutocomplete();
         return;
       }
-      if (matchesKey(data, "enter")) {
+      if (hit("enter")) {
         const wasSlash = autocompleteRef.current.prefix.length > 0 && (stateRef.current.lines[stateRef.current.cursorLine] ?? "").trimStart().startsWith("/");
         if (applyAutocomplete() && wasSlash) {
           // Chọn lệnh slash xong thì gửi luôn (pi-mono: Tab chọn, Enter gửi).
@@ -1205,7 +1199,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
     }
     // Esc khi KHÔNG có autocomplete: huỷ stream / thoát bash mode / mở tree
     // (pi-mono defaultEditor.onEscape).
-    if (matchesKey(data, "escape")) {
+    if (hit("escape")) {
       onAppAction?.("escape");
       return;
     }
@@ -1220,7 +1214,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
     // "\r"), nên hành động "xếp hàng" của pi-mono (app.message.followUp) được
     // gán cho Shift+Enter/Ctrl+J — tức byte "\n" mà Ink báo riêng biệt. Khi
     // không có onQueue, cùng phím đó giữ nhiệm vụ xuống dòng.
-    if (data === "\n" || kb.matches(data, "shift+enter")) {
+    if (data === "\n" || hit("shift+enter")) {
       if (onQueue) {
         const text = stateRef.current.lines.join("\n");
         if (text.trim()) {
@@ -1236,7 +1230,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
 
     // Chờ ký tự đích của lệnh nhảy (Ctrl+]).
     if (jumpMode.current !== null) {
-      if (kb.matches(data, "tui.editor.jumpForward") || kb.matches(data, "tui.editor.jumpBackward")) {
+      if (hit("tui.editor.jumpForward") || hit("tui.editor.jumpBackward")) {
         jumpMode.current = null;
         return;
       }
@@ -1250,7 +1244,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       jumpMode.current = null;
     }
 
-    if (kb.matches(data, "tui.input.submit")) {
+    if (hit("tui.input.submit")) {
       const line = stateRef.current.lines[stateRef.current.cursorLine] ?? "";
       // Dấu "\" ở cuối dòng => xuống dòng thay vì gửi (terminal không có Shift+Enter).
       if (stateRef.current.cursorCol > 0 && line[stateRef.current.cursorCol - 1] === "\\") {
@@ -1261,51 +1255,51 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       submit();
       return;
     }
-    if (kb.matches(data, "tui.editor.deleteCharBackward") || matchesKey(data, "shift+backspace")) {
+    if (hit("tui.editor.deleteCharBackward") || hit("shift+backspace")) {
       handleBackspace();
       return;
     }
-    if (kb.matches(data, "tui.editor.deleteCharForward") || matchesKey(data, "shift+delete")) {
+    if (hit("tui.editor.deleteCharForward") || hit("shift+delete")) {
       handleForwardDelete();
       return;
     }
-    if (kb.matches(data, "tui.editor.deleteToLineStart")) {
+    if (hit("tui.editor.deleteToLineStart")) {
       deleteToLineStart();
       return;
     }
-    if (kb.matches(data, "tui.editor.deleteToLineEnd")) {
+    if (hit("tui.editor.deleteToLineEnd")) {
       deleteToLineEnd();
       return;
     }
-    if (kb.matches(data, "tui.editor.deleteWordBackward")) {
+    if (hit("tui.editor.deleteWordBackward")) {
       deleteWordBackwards();
       return;
     }
-    if (kb.matches(data, "tui.editor.deleteWordForward")) {
+    if (hit("tui.editor.deleteWordForward")) {
       deleteWordForward();
       return;
     }
-    if (kb.matches(data, "tui.editor.yank")) {
+    if (hit("tui.editor.yank")) {
       yank();
       return;
     }
-    if (kb.matches(data, "tui.editor.yankPop")) {
+    if (hit("tui.editor.yankPop")) {
       yankPop();
       return;
     }
-    if (kb.matches(data, "tui.editor.undo")) {
+    if (hit("tui.editor.undo")) {
       undo();
       return;
     }
-    if (kb.matches(data, "tui.editor.historyPrevious")) {
+    if (hit("tui.editor.historyPrevious")) {
       navigateHistory(-1);
       return;
     }
-    if (kb.matches(data, "tui.editor.historyNext")) {
+    if (hit("tui.editor.historyNext")) {
       navigateHistory(1);
       return;
     }
-    if (kb.matches(data, "tui.editor.cursorUp")) {
+    if (hit("tui.editor.cursorUp")) {
       const { lines, cursorLine, cursorCol } = stateRef.current;
       // Ô rỗng: ủy quyền mũi tên lên cho cha (cuộn transcript), như pi-mono cho
       // CustomEditor. Có nội dung thì vào lịch sử như bình thường.
@@ -1323,7 +1317,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       moveCursorVertical(-1);
       return;
     }
-    if (kb.matches(data, "tui.editor.cursorDown")) {
+    if (hit("tui.editor.cursorDown")) {
       const { cursorLine, cursorCol } = stateRef.current;
       if (onKey && stateRef.current.lines.length === 1 && stateRef.current.lines[0] === "") {
         onKey(data, { up: false, down: true, pageUp: false, pageDown: false });
@@ -1338,15 +1332,15 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       moveCursorVertical(1);
       return;
     }
-    if (kb.matches(data, "tui.editor.cursorWordLeft")) {
+    if (hit("tui.editor.cursorWordLeft")) {
       moveWordBackwards();
       return;
     }
-    if (kb.matches(data, "tui.editor.cursorWordRight")) {
+    if (hit("tui.editor.cursorWordRight")) {
       moveWordForwards();
       return;
     }
-    if (kb.matches(data, "tui.editor.pageUp")) {
+    if (hit("tui.editor.pageUp")) {
       // Ô rỗng: ủy quyền cho cha cuộn transcript (pi-mono: editor rỗng nhả phím
       // trang cho vùng xem). Có nội dung thì cuộn chính editor.
       if (onKey && stateRef.current.lines.length === 1 && stateRef.current.lines[0] === "") {
@@ -1356,7 +1350,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       pageScroll(-1);
       return;
     }
-    if (kb.matches(data, "tui.editor.pageDown")) {
+    if (hit("tui.editor.pageDown")) {
       if (onKey && stateRef.current.lines.length === 1 && stateRef.current.lines[0] === "") {
         onKey(data, { up: false, down: false, pageUp: false, pageDown: true });
         return;
@@ -1364,15 +1358,15 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       pageScroll(1);
       return;
     }
-    if (kb.matches(data, "tui.editor.jumpForward")) {
+    if (hit("tui.editor.jumpForward")) {
       jumpMode.current = "forward";
       return;
     }
-    if (kb.matches(data, "tui.editor.jumpBackward")) {
+    if (hit("tui.editor.jumpBackward")) {
       jumpMode.current = "backward";
       return;
     }
-    if (kb.matches(data, "tui.editor.cursorLeft")) {
+    if (hit("tui.editor.cursorLeft")) {
       const current = stateRef.current;
       if (current.cursorCol > 0) {
         const line = current.lines[current.cursorLine] ?? "";
@@ -1385,7 +1379,7 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       preferredVisualCol.current = null;
       return;
     }
-    if (kb.matches(data, "tui.editor.cursorRight")) {
+    if (hit("tui.editor.cursorRight")) {
       const current = stateRef.current;
       const line = current.lines[current.cursorLine] ?? "";
       if (current.cursorCol < line.length) {
@@ -1397,13 +1391,13 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       preferredVisualCol.current = null;
       return;
     }
-    if (kb.matches(data, "tui.editor.cursorLineStart")) {
+    if (hit("tui.editor.cursorLineStart")) {
       const current = stateRef.current;
       setLines({ ...current, cursorCol: 0 });
       preferredVisualCol.current = null;
       return;
     }
-    if (kb.matches(data, "tui.editor.cursorLineEnd")) {
+    if (hit("tui.editor.cursorLineEnd")) {
       const current = stateRef.current;
       setLines({ ...current, cursorCol: (current.lines[current.cursorLine] ?? "").length });
       preferredVisualCol.current = null;

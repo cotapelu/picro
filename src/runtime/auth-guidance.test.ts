@@ -11,7 +11,10 @@ describe('Auth Guidance Messages', () => {
     it('should include provider name', () => {
       const msg = formatNoApiKeyFoundMessage('openai');
       expect(msg).toContain('No API key found for openai');
-      expect(msg).toContain('pi login openai');
+      // Tên lệnh trong hướng dẫn phải là tên app thật (picro), không phải tên
+      // của bản tham chiếu — người dùng gõ "pi login" sẽ không có lệnh đó.
+      expect(msg).toContain('picro login openai');
+      expect(msg).not.toContain('pi login');
       expect(msg).toContain('~/.pi/agent/auth.json');
     });
   });
@@ -20,9 +23,10 @@ describe('Auth Guidance Messages', () => {
     it('should provide instructions to select a model', () => {
       const msg = formatNoModelSelectedMessage();
       expect(msg).toContain('No model selected');
-      expect(msg).toContain('pi --model');
-      expect(msg).toContain('pi config set defaultProvider');
-      expect(msg).toContain('pi --list-models');
+      expect(msg).toContain('picro --model');
+      expect(msg).not.toContain('pi --model');
+      expect(msg).toContain('picro --provider');
+      expect(msg).toContain('picro --list-models');
     });
   });
 
@@ -30,9 +34,9 @@ describe('Auth Guidance Messages', () => {
     it('should explain why no models are available', () => {
       const msg = formatNoModelsAvailableMessage();
       expect(msg).toContain('No models available');
-      expect(msg).toContain('pi login');
+      expect(msg).toContain('picro login');
       expect(msg).toContain('models.json');
-      expect(msg).toContain('pi --list-models');
+      expect(msg).toContain('picro --list-models');
     });
   });
 

@@ -329,6 +329,20 @@ function parseKeyId(keyId: string): { key: string; ctrl: boolean; shift: boolean
   return { key, ctrl: mods.has("ctrl"), shift: mods.has("shift"), alt: mods.has("alt"), super: mods.has("super") };
 }
 
+/**
+ * So hai DANH TÍNH phím (không qua byte terminal).
+ *
+ * Ink giao sự kiện đã chuẩn hóa (Ctrl+C = "c" + cờ ctrl), nên không thể dùng
+ * matchesKey với dữ liệu thô. Hàm này so trực tiếp hai danh tính đã parse,\ * nhận cả biến thể thứ tự modifier và symbol cần Shift.
+ */
+export function matchesKeyId(actual: string, expected: string): boolean {
+  const a = parseKeyId(actual);
+  const b = parseKeyId(expected);
+  if (!a || !b) return false;
+  if (a.key !== b.key) return false;
+  return a.ctrl === b.ctrl && a.shift === b.shift && a.alt === b.alt && a.super === b.super;
+}
+
 /** Khớp dữ liệu đầu vào với danh tính phím. */
 export function matchesKey(data: string, keyId: string): boolean {
   const parsed = parseKeyId(keyId);

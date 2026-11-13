@@ -146,17 +146,21 @@ export function startInteractiveApp(props: InteractiveAppProps): void {
 
     // /quit (và mọi đường thoát nội bộ) đi qua hook này: controller gọi nó
     // thay vì process.exit trần, để terminal được khôi phục trước khi kết thúc.
-    const onShutdown = controller.onShutdown;
-    if (onShutdown) {
-      onShutdown(() => {
+    //
+    // PHẢI gọi qua `controller.onShutdown(...)`: tách method ra thành biến cục
+    // bộ (`const onShutdown = controller.onShutdown`) làm mất `this`, và trong
+    // ESM (strict mode) `this` là undefined -> "Cannot set properties of
+    // undefined (setting 'onShutdownCallback')" và Ink UI KHÔNG BAO GIỜ khởi
+    // động được (luôn rơi về readline).
+    if (controller.onShutdown) {
+      controller.onShutdown(() => {
         try {
           instance.unmount();
         } catch {
           // unmount có thể throw nếu render đã hỏng.
         }
         try {
-          const dispose = controller.dispose;
-          if (dispose) dispose();
+          controller.dispose?.();
         } catch {
           // dispose là best-effort.
         }
@@ -173,8 +177,7 @@ export function startInteractiveApp(props: InteractiveAppProps): void {
         // unmount có thể throw nếu render đã hỏng.
       }
       try {
-        const dispose = controller.dispose;
-        if (dispose) dispose();
+        controller.dispose?.();
       } catch {
         // dispose là best-effort.
       }

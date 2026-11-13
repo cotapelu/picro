@@ -177,6 +177,11 @@ export class InteractiveController {
       isProcessing: false,
     };
 
+    // Đọc model/context NGAY từ phiên: bản cũ chỉ cập nhật ở agent_end nên cho
+    // tới khi xong lượt đầu tiên footer luôn hiện "unknown" (pi-mono: footer
+    // đọc this.session.model mỗi lần render).
+    this.refreshStatusFromSession();
+
     this.subscribeToRuntime();
     // Nạp lại hội thoại của phiên hiện tại: nếu không, phiên được resume sẽ hiện
     // transcript RỖNG dù session đã có message (pi-mono: renderInitialMessages).
@@ -539,7 +544,8 @@ export class InteractiveController {
     this.status.sessionName =
       (this.runtime.sessionManager as { getSessionName?: () => string } | undefined)?.getSessionName?.() ??
       this.status.sessionName;
-    const usage = (this.runtime as any).getContextUsage?.();
+    const usage =
+      (this.runtime as any).getContextUsage?.() ?? (this.runtime.session as any)?.getContextUsage?.();
     if (usage) {
       this.status.contextPercent = `${Math.round(usage.percent)}%`;
       this.status.tokens = `${usage.tokens}/${usage.contextWindow}`;
@@ -1772,7 +1778,8 @@ export class InteractiveController {
 
   /** /debug — thông tin chẩn đoán. */
   private showDebugInfo(): void {
-    const usage = (this.runtime as any).getContextUsage?.();
+    const usage =
+      (this.runtime as any).getContextUsage?.() ?? (this.runtime.session as any)?.getContextUsage?.();
     const lines: string[] = [
       `cwd: ${this.runtime.cwd}`,
       `model: ${this.status.model}`,
