@@ -14,6 +14,8 @@ import { DynamicBorder } from "./DynamicBorder.js";
 import { MarkdownRenderer } from "./MarkdownRenderer.js";
 import { VisualLinePreview } from "./visual-truncate.js";
 import { truncateToWidth } from "../core/index.js";
+import { getToolRenderers } from "./tool-renderers.js";
+import { formatToolCallWithArgs } from "./tool-call-format.js";
 import { Image } from "./Image.js";
 
 const FALLBACK_PREVIEW_LINES = 10;
@@ -61,16 +63,27 @@ export interface ToolExecutionProps {
   width?: number;
 }
 
-/** Bản dự phòng cho lời gọi: tên tool + args JSON. */
+/** Bản dự phòng cho lời gọi: tên tool + args (thu gọn như pi-mono). */
 function fallbackCall(name: string, args: unknown): string {
-  let text = name;
   try {
-    const content = JSON.stringify(args, null, 2);
-    if (content) text += `\n\n${content}`;
+    return formatToolCallWithArgs(name, args, { fg: (token, text) => themeishFg(token, text), bold: (text) => textishBold(text) }, false);
   } catch {
     // args không tuần tự hóa được: chỉ hiện tên.
+    return name;
   }
-  return text;
+}
+
+/** Tô màu theo theme hiện tại (mô phỏng ToolRenderContext theme). */
+function themeishFg(token: string, text: string): string {
+  const t = getTheme();
+  if (token === "toolTitle") return t.bold(t.fg("accent", text));
+  if (token === "muted") return t.fg("muted", text);
+  if (token === "toolOutput") return t.fg("muted", text);
+  return t.fg("dim", text);
+}
+
+function textishBold(text: string): string {
+  return getTheme().bold(text);
 }
 
 /** Lấy phần text thuần từ kết quả. */
@@ -138,9 +151,40 @@ export const ToolExecution: React.FC<ToolExecutionProps> = ({
   const callBody = (() => {
     if (renderers?.renderCall) {
       try {
-        return renderers.renderCall(args, t, context);
+        return renderers.renderCall(args, undefined, {
+          args,
+          toolCallId,
+          executionStarted: executionStarted ?? false,
+          argsComplete: argsComplete ?? false,
+          isPartial: isPartial,
+          expanded,
+          showImages: showImages ?? true,
+          isError: result?.isError ?? false,
+          durationMs: result?.durationMs,
+          outputPad: outputPad ?? 1,
+        });
       } catch {
         return fallbackCall(toolName, args);
+      }
+    }
+    // Không có renderer riêng: dùng fallback theo TỪNG TOOL nếu biết, không thì chung.
+    const specific = getToolRenderers(toolName);
+    if (specific?.renderCall) {
+      try {
+        return specific.renderCall(args, undefined, {
+          args,
+          toolCallId,
+          executionStarted: executionStarted ?? false,
+          argsComplete: argsComplete ?? false,
+          isPartial: isPartial,
+          expanded,
+          showImages: showImages ?? true,
+          isError: result?.isError ?? false,
+          durationMs: result?.durationMs,
+          outputPad: outputPad ?? 1,
+        });
+      } catch {
+        // Rơi về fallback chung.
       }
     }
     return fallbackCall(toolName, args);
