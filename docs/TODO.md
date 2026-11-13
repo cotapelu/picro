@@ -551,3 +551,33 @@
 - Ink bỏ hoàn toàn dòng `<Text>{''}</Text>` (đã test) → dòng trống phải là `" "`.
 - Ink không cho Alt+Enter khác biệt với Enter; Shift+Enter đến là byte `\n` (đã test).
 - Ink gộp `\x1b\r` thành `\r` (nuốt ESC) nên `shift+enter` qua `kb.matches` không bao giờ khớp.
+
+## AUDIT VÒNG 2 — TIẾP (đã fix)
+
+- [x] A-1 Ctrl+C: `exitOnCtrlC:false` + route Ctrl+C/D/Z/Esc/Ctrl+G/V/P/N vào controller (Editor `onAppAction`), interactive-mode.ts không còn là code chết
+- [x] A-3 Ctrl+Z sau `fg`: SIGCONT gọi `onResume` (view start lại đường vào terminal)
+- [x] B-1/B-2 hàng đợi: controller có getQueue/queueFollowUp/restoreQueue/clearQueue/hasQueuedMessages/loadTranscript; dock hiển thị steering+follow-up và hint khôi phục
+- [x] C-1 `/model provider/id` đổi model thật (trước đó mở lại selector vô hạn)
+- [x] C-2 `/theme` bỏ `require()` trong ESM → import tĩnh async
+- [x] C-3 bỏ case trùng `compact`/`login` (code chết)
+- [x] C-4/C-5 `/settings` 23 dòng đọc từ SettingsManager thật; thêm `/clone /share /bug /scoped-models /changelog`; `/copy` qua clipboard helper mới
+- [x] C-6 `/sessions` sau khi đổi phiên NẠP LẠI transcript + resubscribe (trước trắng); sửa crash khi thiếu sessionManager
+- [x] D-1/D-2 tool giữ struct `{name,args,output,isError,durationMs,partial}` → transcript render đúng tên+tham số+kết quả
+- [x] D-3 thinking attach vào message assistant cả khi stream lẫn kết thúc
+- [x] E-2 Ctrl+G external editor (`ExternalEditor` đã port) ; E-3 Ctrl+V clipboard (files/text, bash-mode quote, space quanh con trỏ)
+- [x] E-4 Ctrl+P/Ctrl+N cycle model + cycle thinking level + status toast
+- [x] E-6 Ctrl+T toggle tool expansion (toàn cục) + status
+- [x] E-8 bash mode: controller `setBashMode`, Esc thoát bash mode, `!!` màu dim
+- [x] Tool renderers theo từng tool (read/write/edit/bash/grep/glob/ls) + `formatToolCallWithArgs` (collapsed `key=value` 100 ký tự / expanded mỗi dòng một tham số)
+- [x] `src/utils/clipboard.ts` mới (clipboardy → pbcopy/wl-paste/xclip/xsel/powershell/clip) + 7 test
+
+## VÒNG 2 — CÒN LẠI
+
+- [ ] Footer đầy đủ (↑↓ R/W cache, CH%, cost, git branch, session name, model → routed) — E-1
+- [ ] Header động (logo + version + key hint compact/expanded + onboarding) — E-9
+- [ ] Markdown: strikethrough nghiêm ngặt, HTML comment, list marker giữ nguyên khi cần — E-10
+- [ ] OSC 10/11/4 terminal color query + system theme auto-sync — E-11
+- [ ] SettingsList đầy đủ (~40 mục như pi-mono: cache warming, mermaid, trust, scrollbar…) — E-13
+- [ ] Status retry/compaction + countdown thật — E-14
+- [ ] Fullscreen alt-screen (chuột, chọn text, scrollbar, tìm kiếm) — E-12
+- [ ] Live streaming bash output (`!` khi đang chạy) qua `bash_execution_update`
