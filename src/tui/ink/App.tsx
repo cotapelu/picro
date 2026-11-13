@@ -136,6 +136,8 @@ export const App: React.FC<AppProps> = ({
     controller.getQueue ? controller.getQueue() : { steering: [], followUp: [] },
   );
   const [followingEnd, setFollowingEnd] = useState(true);
+  /** Nhánh git của thư mục làm việc (dòng 1 của footer). */
+  const [gitBranch, setGitBranch] = useState<string | undefined>(undefined);
   const [cwd, setCwd] = useState<string>(runtime.cwd || ".");
   /**
    * Ctrl+V: đọc clipboard rồi giao cho controller quyết định chèn gì.
@@ -226,6 +228,17 @@ export const App: React.FC<AppProps> = ({
     });
     if (initialMessage) void controller.sendMessage(initialMessage);
     setCwd(runtime.cwd || ".");
+
+    // Nhánh git (pi-mono: footerDataProvider.getGitBranch, watcher riêng).
+    void (async () => {
+      try {
+        const { getGitInfo } = await import("../../runtime/footer-data-provider.js");
+        const info = await getGitInfo(runtime.cwd || process.cwd());
+        setGitBranch(info?.branch);
+      } catch {
+        // Không có git hoặc git lỗi: bỏ qua, footer không hiện nhánh.
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -373,8 +386,13 @@ export const App: React.FC<AppProps> = ({
             model={status.model}
             tokens={status.tokens}
             cwd={status.cwd}
+            sessionName={status.sessionName}
+            gitBranch={gitBranch}
             contextPercent={status.contextPercent}
             isProcessing={status.isProcessing}
+            thinkingLevel={status.thinkingLevel}
+            routedModel={status.routedModel}
+            usage={status.usage}
             toolsExpanded={toolsExpanded}
           />
         }

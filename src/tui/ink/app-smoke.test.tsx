@@ -6,10 +6,12 @@ import { App } from './App.js';
 
 /** ink-testing-library publishes frames asynchronously; wait for a settled one. */
 async function settledFrame(instance: { lastFrame: () => string | undefined }): Promise<string> {
-  for (let i = 0; i < 10; i++) {
-    await new Promise((r) => setTimeout(r, 20));
+  let previous: string | undefined;
+  for (let i = 0; i < 20; i++) {
+    await new Promise((r) => setTimeout(r, 25));
     const value = instance.lastFrame();
-    if (value && value.trim().length > 0) return value;
+    if (value && value === previous) return value;
+    previous = value;
   }
   return instance.lastFrame() ?? '';
 }

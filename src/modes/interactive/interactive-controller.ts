@@ -103,6 +103,26 @@ export interface RuntimeStatus {
   cwd: string;
   isProcessing: boolean;
   contextPercent?: string;
+  /** Cấp độ suy nghĩ đang dùng (footer hiện "• thinking off/high"). */
+  thinkingLevel?: string;
+  /** Model thực sự được route tới (virtual model). */
+  routedModel?: string;
+  /**
+   * Thống kê phiên cho footer đầy đủ (pi-mono FooterComponent):
+   * ↑input ↓output R cache-read W cache-write CH% cost.
+   */
+  usage?: {
+    input: number;
+    output: number;
+    cacheRead: number;
+    cacheWrite: number;
+    cost: number;
+    cacheHitPercent?: number;
+  };
+  /** Nhánh git của thư mục làm việc (footer dòng 1). */
+  gitBranch?: string;
+  /** Tên phiên (footer dòng 1). */
+  sessionName?: string;
 }
 
 export interface ToastItem {
@@ -513,10 +533,31 @@ export class InteractiveController {
     // Bản cũ hiển thị model mặc định của SETTINGS; phải là model của PHIÊN đang
     // chạy (có thể đã đổi bằng /model hoặc Ctrl+P).
     this.status.model = model ? `${model.provider}/${model.id}` : this.status.model;
+    this.status.thinkingLevel = session?.thinkingLevel ?? this.status.thinkingLevel ?? 'off';
+    const routed = (this.runtime.session as any)?.routedModel;
+    this.status.routedModel = routed?.model ? `${routed.model.provider}/${routed.model.id}` : undefined;
+    this.status.sessionName =
+      (this.runtime.sessionManager as { getSessionName?: () => string } | undefined)?.getSessionName?.() ??
+      this.status.sessionName;
     const usage = (this.runtime as any).getContextUsage?.();
     if (usage) {
       this.status.contextPercent = `${Math.round(usage.percent)}%`;
       this.status.tokens = `${usage.tokens}/${usage.contextWindow}`;
+    }
+    // Thống kê phiên: input/output/cache/cost cho footer (pi-mono tính một lần
+    // rồi cache; ở đây đọc lại mỗi lần đổi trạng thái nên không đắt).
+    const stats = (this.runtime as any).getSessionStats?.();
+    if (stats) {
+      const tokens = stats.tokens ?? {};
+      const latest = tokens.cacheRead + tokens.cacheWrite;
+      this.status.usage = {
+        input: tokens.input ?? 0,
+        output: tokens.output ?? 0,
+        cacheRead: tokens.cacheRead ?? 0,
+        cacheWrite: tokens.cacheWrite ?? 0,
+        cost: stats.cost ?? 0,
+        cacheHitPercent: latest > 0 ? ((tokens.cacheRead ?? 0) / latest) * 100 : undefined,
+      };
     }
     this.onStatusChangeCallback?.(this.status);
   }

@@ -1,25 +1,38 @@
-// StatusBar - thanh trạng thái dưới cùng
-// Bắt chước nguyên tắc pi-mono FooterComponent:
-//   - Bên trái: thư mục làm việc (mờ) + tên phiên
-//   - Bên phải: model, token, phần trăm context, trạng thái xử lý
-//   - Dòng quá dài bị cắt theo đúng chiều rộng terminal
-// Viet lai bang Ink TSX, khong copy code truc tiep.
+// StatusBar - thanh trạng thái dưới cùng (mô phỏng pi-mono FooterComponent):
+//   - Dòng 1: thư mục làm việc (~) - nhánh git - tên phiên
+//   - Dòng 2: thống kê token/cache/cost bên trái, model + thinking + routed bên phải
+// Viết lại bằng TSX riêng, không copy code.
 
 import React from "react";
 import { Box, Text, useWindowSize } from "ink";
 import { formatTokens } from "./FormatTokens.js";
-import { theme, fg, bg } from "../theme/index.js";
+import { fg } from "../theme/index.js";
 import { formatCwdForFooter } from "./FormatCwd.js";
-import { composeStatusBarLine, truncateVisual, visibleTextWidth } from "./status-bar-layout.js";
+import { composeStatusBarLine, truncateVisual } from "./status-bar-layout.js";
+
+export interface StatusBarUsage {
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheWrite: number;
+  cost: number;
+  cacheHitPercent?: number;
+}
 
 interface StatusBarProps {
   model?: string;
+  /** "<dùng>/<cửa sổ>" hoặc một số token ngữ cảnh. */
   tokens?: string;
   contextPercent?: string;
   cwd?: string;
   sessionName?: string;
+  gitBranch?: string;
   isProcessing?: boolean;
   thinkingLevel?: string;
+  /** Model thực sự được route tới (virtual model) — "provider/id". */
+  routedModel?: string;
+  /** Thống kê phiên cho footer đầy đủ. */
+  usage?: StatusBarUsage;
   /** Tool output đang mở rộng (Ctrl+T). */
   toolsExpanded?: boolean;
 }
@@ -30,48 +43,65 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   contextPercent,
   cwd,
   sessionName,
+  gitBranch,
   isProcessing,
   thinkingLevel,
+  routedModel,
+  usage,
   toolsExpanded = false,
 }) => {
   const { columns } = useWindowSize();
+  const width = columns || 80;
 
-  // Dòng 1: pwd (+ nhánh/phiên nếu có)
+  // --- Dòng 1: pwd, nhánh git, tên phiên -------------------------------------
   const home = process.env.HOME || process.env.USERPROFILE;
   let pwd = cwd ? formatCwdForFooter(cwd, home) : ".";
+  if (gitBranch) pwd = `${pwd} (${gitBranch})`;
   if (sessionName) pwd = `${pwd} • ${sessionName}`;
 
-  // Dòng 2: bên trái token + context, bên phải model + thinking
+  // --- Dòng 2: thống kê bên trái, model bên phải -----------------------------
   const statusText = isProcessing ? fg("warning", "⏳ Working") : fg("success", "● Ready");
-  // `tokens` có thể là "12345" (số token ngữ cảnh) — bản cũ luôn gọi
-  // formatTokens(Number("0/0")) = formatTokens(NaN) = 0 nên footer hiển thị
-  // "↑↓ 0" dù ngữ cảnh đang có 40k token. Chấp nhận cả dạng "a/b" để tương thích.
-  const contextTokens = Number.parseInt(String(tokens ?? "0").split("/")[0] ?? "0", 10);
-  const contextInfo = contextPercent && contextPercent !== "0%" ? contextPercent : "";
-  const leftParts = [statusText, `↑↓ ${formatTokens(Number.isFinite(contextTokens) ? contextTokens : 0)}`];
-  if (contextInfo) leftParts.push(contextInfo);
+  const leftParts: string[] = [statusText];
+  if (usage) {
+    if (usage.input) leftParts.push(`↑${formatTokens(usage.input)}`);
+    if (usage.output) leftParts.push(`↓${formatTokens(usage.output)}`);
+    if (usage.cacheRead) leftParts.push(`R${formatTokens(usage.cacheRead)}`);
+    if (usage.cacheWrite) leftParts.push(`W${formatTokens(usage.cacheWrite)}`);
+    if ((usage.cacheRead > 0 || usage.cacheWrite > 0) && usage.cacheHitPercent !== undefined) {
+      leftParts.push(`CH${usage.cacheHitPercent.toFixed(1)}%`);
+    }
+    if (usage.cost > 0) leftParts.push(`$${usage.cost.toFixed(3)}`);
+  }
 
-  const modelName = model ?? "no-model";
-  const rightParts = [modelName];
-  if (toolsExpanded) rightParts.push("tools:expanded");
+  // `tokens` có thể là "12345/8000" hoặc một số. Bản cũ parse cả chuỗi nên
+  // hiện "↑↓ 0" dù ngữ cảnh đang có hàng chục nghìn token.
+  const [usedRaw, windowRaw] = String(tokens ?? "0").split("/");
+  const used = Number.parseInt(usedRaw ?? "0", 10);
+  if (Number.isFinite(used) && used > 0) leftParts.push(formatTokens(used));
+  if (contextPercent && contextPercent !== "0%") leftParts.push(contextPercent);
+
+  const rightParts: string[] = [];
+  if (model) rightParts.push(model);
   if (thinkingLevel && thinkingLevel !== "off") rightParts.push(`think ${thinkingLevel}`);
+  if (routedModel && routedModel !== model) rightParts.push(`→ ${routedModel}`);
+  if (toolsExpanded) rightParts.push("tools:expanded");
 
-  // The right column's budget comes from the VISIBLE width of the left side:
-  // using left.length (escape bytes included) truncated the model/thinking info
-  // about nine columns too early on every render.
-  const { left: leftText, right, gap } = composeStatusBarLine({
+  // Cột phải tính theo CHIỀU RỘNG KHẢ DỨNG của cột trái (visibleWidth), không
+  // dùng độ dài chuỗi có escape — bản cũ cắt sớm ~9 cột mỗi lần render.
+  const { left, right, gap } = composeStatusBarLine({
     left: leftParts.join("  "),
     rightParts,
-    columns: columns || 80,
+    columns: width,
   });
-  const pwdLine = truncateVisual(fg("dim", pwd), columns || 80);
+
+  const pwdLine = truncateVisual(fg("dim", pwd), width);
 
   return (
     <Box flexDirection="column" flexShrink={0}>
       <Text>{pwdLine}</Text>
-      <Text>
-        {`${leftText}${" ".repeat(gap)}${right}`}
-      </Text>
+      <Text>{`${left}${" ".repeat(gap)}${right}`}</Text>
     </Box>
   );
 };
+
+export default StatusBar;

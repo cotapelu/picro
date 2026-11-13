@@ -16,6 +16,21 @@ export interface ControllerStatus {
   isProcessing: boolean;
   /** Phần trăm ngữ cảnh đã dùng, ví dụ "42%". */
   contextPercent?: string;
+  /** Cấp độ suy nghĩ đang dùng. */
+  thinkingLevel?: string;
+  /** Model thực sự được route tới (virtual model). */
+  routedModel?: string;
+  /** Tên phiên. */
+  sessionName?: string;
+  /** Thống kê token/cache/cost cho footer đầy đủ. */
+  usage?: {
+    input: number;
+    output: number;
+    cacheRead: number;
+    cacheWrite: number;
+    cost: number;
+    cacheHitPercent?: number;
+  };
 }
 
 /** Chỉ báo trạng thái cho dock nhập liệu (working / compaction / retry). */
