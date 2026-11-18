@@ -266,7 +266,7 @@ export const App: React.FC<AppProps> = ({
 
   // Đăng ký callback của controller (một lần).
   useEffect(() => {
-    controller.onMessage(() => {
+    controller.onMessage((messages) => {
       refresh();
       // Tin nhắn mới: giữ ở đáy nếu đang theo dõi.
       setScrollLines(0);
@@ -304,7 +304,6 @@ export const App: React.FC<AppProps> = ({
       insert: (text: string) => editorRef.current?.insert(text),
       cursor: () => editorRef.current?.getCursor() ?? 0,
     });
-    if (initialMessage) void controller.sendMessage(initialMessage);
     setCwd(runtime.cwd || ".");
 
     const footerProvider = createFooterDataProvider();

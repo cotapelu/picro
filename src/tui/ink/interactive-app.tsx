@@ -132,12 +132,6 @@ function startFallbackRepl(props: InteractiveAppProps): void {
     void controller.dispose?.();
     process.exit(0);
   });
-
-  if (initialMessage) {
-    void controller.sendMessage(initialMessage).catch(() => {
-      // Lỗi đã hiển thị qua toast/callback.
-    });
-  }
 }
 
 export function startInteractiveApp(props: InteractiveAppProps): void {

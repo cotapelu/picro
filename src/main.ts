@@ -383,15 +383,15 @@ async function main(): Promise<void> {
     stdinContent: undefined, // No stdin pre-read in TTY
   });
 
-  // Send initial and any additional CLI messages
+  const controller = new InteractiveController({ runtime });
+
+  // Send initial and any additional CLI messages via controller (so UI updates)
   if (initialResult.initialMessage) {
-    await runtime.session.prompt(initialResult.initialMessage, { images: initialResult.initialImages });
+    await controller.sendMessage(initialResult.initialMessage);
   }
   for (const msg of parsed.messages) {
-    await runtime.session.prompt(msg);
+    await controller.sendMessage(msg);
   }
-
-  const controller = new InteractiveController({ runtime });
 
   // Chọn mode: TTY (Ink) hoặc HTTP API
   if (parsed.mode === "http" || parsed.mode === "rpc") {
