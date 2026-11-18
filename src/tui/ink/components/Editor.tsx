@@ -25,6 +25,8 @@ import type {
   SlashCommand,
 } from "../core/Autocomplete.js";
 import { getKeybindings } from "../core/Keybindings.js";
+import { editInExternalEditor } from "../core/ExternalEditor.js";
+import { readClipboardText, readClipboardImage } from "../../../utils/clipboard.js";
 
 export interface EditorProps {
   value?: string;
@@ -58,6 +60,16 @@ export interface EditorProps {
   onAppAction?: (action: AppAction) => void;
   /** Ô nhập đang ở chế độ bash ("!" đầu dòng) → viền đổi màu. */
   bashMode?: boolean;
+  /** Có hộp tìm kiếm đang mở không? (để route phím). */
+  searchActive?: boolean;
+  /** Callback thay đổi truy vấn tìm kiếm. */
+  onSearchChange?: (query: string) => void;
+  /** Callback nhấn Enter trong hộp tìm kiếm (chuyển kết quả tiếp). */
+  onSearchSubmit?: () => void;
+  /** Callback nhấn Esc trong hộp tìm kiếm (đóng hộp). */
+  onSearchCancel?: () => void;
+  /** Trạng thái working/compaction/retry để hiển thị trong border. */
+  workingStatus?: string;
 }
 
 /**
@@ -77,6 +89,10 @@ const APP_ACTION_KEYS: Record<string, AppAction> = {
   "ctrl+n": "modelCycleBackward",
   "ctrl+o": "dequeue",
   "ctrl+y": "copyMessage",
+  "ctrl+shift+p": "thinkingCycleForward",
+  "ctrl+shift+n": "thinkingCycleBackward",
+  "ctrl+shift+t": "toggleThinkingBlock",
+  "ctrl+shift+f": "transcriptSearch",
 };
 
 /** Hành động ứng dụng editor gửi lên lớp controller. */
@@ -90,7 +106,11 @@ export type AppAction =
   | "modelCycleForward" // Ctrl+P (app.model.cycleForward)
   | "modelCycleBackward" // Ctrl+N (app.model.cycleBackward)
   | "dequeue" // Ctrl+O (app.message.dequeue)
-  | "copyMessage"; // Ctrl+Y (app.message.copy)
+  | "copyMessage" // Ctrl+Y (app.message.copy)
+  | "thinkingCycleForward" // Ctrl+Shift+P
+  | "thinkingCycleBackward" // Ctrl+Shift+N
+  | "toggleThinkingBlock" // Ctrl+Shift+T
+  | "transcriptSearch"; // Ctrl+Shift+F (tìm trong transcript)
 
 interface EditorState {
   lines: string[];
@@ -277,6 +297,11 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
       onAppAction,
       autocompleteProvider,
       autocompleteMaxVisible = 5,
+      workingStatus,
+      searchActive = false,
+      onSearchChange,
+      onSearchSubmit,
+      onSearchCancel,
     },
     ref,
   ) => {
@@ -339,6 +364,16 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
   const lastWidth = useRef(width > 2 ? width - 1 : width);
   /** Hướng nhảy ký tự đang chờ ký tự đích, hoặc null. */
   const jumpMode = useRef<"forward" | "backward" | null>(null);
+/** Ref cho searchActive để useInput callback luôn đọc giá trị mới nhất. */
+  const searchActiveRef = useRef(searchActive);
+  useEffect(() => {
+    searchActiveRef.current = searchActive;
+  }, [searchActive]);
+  /** Truy vấn tìm kiếm hiện tại, giữ qua ref để handler đọc được giá trị mới nhất. */
+  const searchQueryRef = useRef<string>("");
+  useEffect(() => {
+    if (!searchActive) searchQueryRef.current = "";
+  }, [searchActive]);
 
   const notifyChange = useCallback(
     (next: EditorState) => {
@@ -1142,11 +1177,39 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
 
   const kb = getKeybindings();
 
-  useInput((data, key) => {
+  useInput(async (data, key) => {
     // Ink KHÔNG giao byte thô: Ctrl+C đến là ("c", key.ctrl) chứ không phải
     // "\x03"; Esc đến là data rỗng + key.escape. Nên mọi so khớp dưới đây đi
     // qua danh tính phím (inkKeyId) thay vì so byte — xem core/InkKeys.ts.
     const keyId = inkKeyId(data, key);
+
+    // Hộp tìm kiếm đang mở: mọi phím (trừ tổ hợp app ở trên) thuộc về tìm kiếm.
+    // Quan trọng: kiểm tra searchActive TRƯỚC appAction để Esc đóng hộp tìm.
+    const currentSearchActive = searchActiveRef.current;
+    if (currentSearchActive) {
+      if (key.escape) {
+        onSearchCancel?.();
+        return;
+      }
+      if (key.return) {
+        onSearchSubmit?.();
+        return;
+      }
+      if (key.backspace || key.delete) {
+        const next = searchQueryRef.current.slice(0, -1);
+        searchQueryRef.current = next;
+        onSearchChange?.(next);
+        return;
+      }
+      if (data.length >= 1 && !key.ctrl && !key.meta && data.charCodeAt(0) >= 32) {
+        const next = searchQueryRef.current + data;
+        searchQueryRef.current = next;
+        onSearchChange?.(next);
+        return;
+      }
+      return;
+    }
+
     const appAction = APP_ACTION_KEYS[keyId ?? ""];
     if (appAction) {
       onAppAction?.(appAction);
@@ -1207,6 +1270,39 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
     // Ctrl+T: mở rộng/thu gọn tool output toàn cục.
     if (key.ctrl && data === "t" && onToggleExpand) {
       onToggleExpand();
+      return;
+    }
+
+    // Ctrl+G: mở editor ngoài (External Editor).
+    if (hit("tui.editor.externalEditor") || (key.ctrl && data === "g")) {
+      const editorCmd = process.env.EDITOR || process.env.VISUAL || (process.platform === "win32" ? "notepad" : "vim");
+      const content = stateRef.current.lines.join("\n");
+      if (content.trim()) {
+        const result = await editInExternalEditor({ command: editorCmd, content });
+        if (result.status === "complete") {
+          pushUndo(stateRef.current);
+          const lines = result.content.split("\n");
+          setLines({ lines, cursorLine: lines.length - 1, cursorCol: lines.at(-1)?.length ?? 0 });
+        } else if (result.status === "failed") {
+          console.error(result.message);
+        }
+      }
+      return;
+    }
+
+    // Ctrl+V: dán từ clipboard (text, hình ảnh).
+    if (hit("tui.editor.clipboardPaste") || (key.ctrl && data === "v")) {
+      const text = await readClipboardText();
+      if (text && text.trim()) {
+        handlePaste(text);
+        return;
+      }
+      const image = await readClipboardImage();
+      if (image) {
+        const marker = `[image: ${image.mimeType}, ${image.data.length} bytes]`;
+        handlePaste(marker);
+        return;
+      }
       return;
     }
 
@@ -1447,6 +1543,9 @@ export const Editor = React.forwardRef<EditorHandle, EditorProps>(
 
   return (
     <Box flexDirection="column">
+      {workingStatus ? (
+        <Text color="yellow">⏳ {workingStatus}</Text>
+      ) : null}
       {hiddenAbove > 0 ? (
         <Text>{fg("dim", `─ ↑ ${hiddenAbove} more `)}</Text>
       ) : null}

@@ -8,8 +8,10 @@
 //   - follow end + scrollbar cho transcript
 // Port sang Ink TSX, khon copy code truc iep.
 
-import React from "react";
+import React, { useCallback } from "react";
 import { Box, Box as InkBox } from "ink";
+import { ScrollView } from "./ScrollView.js";
+import type { ScrollViewOptions } from "./ScrollView.js";
 
 export interface ChatViewportProps {
   /** Vùng nội dung hội thoại (đã cuộn). */
@@ -22,6 +24,10 @@ export interface ChatViewportProps {
   editor: React.ReactNode;
   widgetsBelow?: React.ReactNode;
   footer?: React.ReactNode;
+  /** ScrollView options for transcript area */
+  scrollViewOptions?: ScrollViewOptions;
+  /** Callback when transcript scroll position changes */
+  onScrollChange?: (scrollTop: number, followingEnd: boolean) => void;
 }
 
 /**
@@ -38,12 +44,29 @@ export const ChatViewport: React.FC<ChatViewportProps> = ({
   editor,
   widgetsBelow,
   footer,
+  scrollViewOptions = {},
+  onScrollChange,
 }) => {
+  const handleRender = useCallback(() => {
+    // This would be called when ScrollView needs a re-render
+  }, []);
+
+  // Default ScrollView options matching pi-mono: follow=end, primary=true, overscroll=chain
+  const mergedOptions: ScrollViewOptions = {
+    follow: "end",
+    primary: true,
+    overscroll: "chain",
+    scrollbar: "auto",
+    ...scrollViewOptions,
+  };
+
   return (
     <Box flexDirection="column">
       {/* Transcript: basis 0, grow 1, shrink 1, minSize 1 */}
       <Box flexDirection="column" flexGrow={1} flexShrink={1} minHeight={1}>
-        {transcript}
+        <ScrollView options={mergedOptions} onRender={handleRender}>
+          {transcript}
+        </ScrollView>
       </Box>
 
       {/* Dock: basis auto, grow 0, shrink 1, minSize 1 */}
@@ -61,3 +84,5 @@ export const ChatViewport: React.FC<ChatViewportProps> = ({
     </Box>
   );
 };
+
+export default ChatViewport;

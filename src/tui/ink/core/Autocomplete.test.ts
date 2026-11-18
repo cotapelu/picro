@@ -154,3 +154,109 @@ describe('path completion', () => {
     expect(values.every((v) => v.startsWith('docs/'))).toBe(true);
   });
 });
+
+describe('prompt template completion', () => {
+  it('suggests prompt templates matching the typed prefix', async () => {
+    const p = new CombinedAutocompleteProvider(COMMANDS, basePath, [
+      { name: 'review', description: 'Review code' },
+      { name: 'reflect', description: 'Reflect on session' },
+    ]);
+    const result = await p.getSuggestions(['/re'], 0, 3, { signal: never });
+    const values = result?.items.map((i) => i.value) ?? [];
+    expect(values).toContain('review');
+    expect(values).toContain('reflect');
+  });
+
+  it('merges prompt templates with built-in commands', async () => {
+    const p = new CombinedAutocompleteProvider(COMMANDS, basePath, [
+      { name: 'review', description: 'Review code' },
+    ]);
+    const result = await p.getSuggestions(['/'], 0, 1, { signal: never });
+    const values = result?.items.map((i) => i.value) ?? [];
+    expect(values).toContain('help');
+    expect(values).toContain('review');
+  });
+
+  it('applies a template completion like a slash command', () => {
+    const p = new CombinedAutocompleteProvider(COMMANDS, basePath, [
+      { name: 'review', description: 'Review code' },
+    ]);
+    const result = p.applyCompletion(['/rev'], 0, 4, { value: 'review', label: 'review' }, '/rev');
+    expect(result.lines[0]).toBe('/review ');
+  });
+});
+
+describe('extension command completion', () => {
+  it('suggests extension commands matching the typed prefix', async () => {
+    const p = new CombinedAutocompleteProvider(COMMANDS, basePath, [], [
+      { name: 'deploy', description: 'Deploy app' },
+      { name: 'debug', description: 'Open debugger' },
+    ]);
+    const result = await p.getSuggestions(['/de'], 0, 3, { signal: never });
+    const values = result?.items.map((i) => i.value) ?? [];
+    expect(values).toContain('deploy');
+    expect(values).toContain('debug');
+  });
+
+  it('merges extension commands with built-ins and templates', async () => {
+    const p = new CombinedAutocompleteProvider(
+      COMMANDS,
+      basePath,
+      [{ name: 'review', description: 'Review code' }],
+      [{ name: 'deploy', description: 'Deploy app' }],
+    );
+    const result = await p.getSuggestions(['/'], 0, 1, { signal: never });
+    const values = result?.items.map((i) => i.value) ?? [];
+    expect(values).toContain('help');
+    expect(values).toContain('review');
+    expect(values).toContain('deploy');
+  });
+
+  it('applies an extension command completion like a slash command', () => {
+    const p = new CombinedAutocompleteProvider(COMMANDS, basePath, [], [
+      { name: 'deploy', description: 'Deploy app' },
+    ]);
+    const result = p.applyCompletion(['/dep'], 0, 4, { value: 'deploy', label: 'deploy' }, '/dep');
+    expect(result.lines[0]).toBe('/deploy ');
+  });
+
+  it('runs getArgumentCompletions for a command with arguments', async () => {
+    const calls: string[] = [];
+    const p = new CombinedAutocompleteProvider(COMMANDS, basePath, [], [
+      {
+        name: 'deploy',
+        description: 'Deploy app',
+        getArgumentCompletions: (prefix: string) => {
+          calls.push(prefix);
+          return [{ value: 'prod', label: 'prod' }];
+        },
+      },
+    ]);
+    // "/deploy pro" — command name recognised, argPrefix = "pro"
+    const result = await p.getSuggestions(['/deploy pro'], 0, 11, { signal: never });
+    expect(result?.items.map((i) => i.value)).toEqual(['prod']);
+    expect(calls).toEqual(['pro']);
+  });
+});
+
+describe('skill command completion', () => {
+  it('suggests skill commands matching the typed prefix', async () => {
+    const p = new CombinedAutocompleteProvider(COMMANDS, basePath, [], [
+      { name: 'skill:review', description: 'Review code' },
+      { name: 'skill:test', description: 'Run tests' },
+    ]);
+    const result = await p.getSuggestions(['/skill:'], 0, 7, { signal: never });
+    const values = result?.items.map((i) => i.value) ?? [];
+    expect(values).toContain('skill:review');
+    expect(values).toContain('skill:test');
+  });
+
+  it('applies a skill command completion like a slash command', () => {
+    const p = new CombinedAutocompleteProvider(COMMANDS, basePath, [], [
+      { name: 'skill:review', description: 'Review code' },
+    ]);
+    // The prefix must include the "skill:" part already typed.
+    const result = p.applyCompletion(['/skill:re'], 0, 9, { value: 'skill:review', label: 'skill:review' }, 'skill:re');
+    expect(result.lines[0]).toBe('/skill:review ');
+  });
+});

@@ -21,6 +21,7 @@ import { SkillInvocation } from "./SkillInvocation.js";
 import { SummaryMessages } from "./SummaryMessages.js";
 import { MarkdownRenderer } from "./MarkdownRenderer.js";
 import { wrapTextWithAnsi } from "../core/TerminalText.js";
+import type { MarkdownTransformer } from "./markdown-transform.js";
 
 /** Một mục trong transcript. */
 export interface TranscriptItem {
@@ -79,6 +80,12 @@ export interface TranscriptProps {
   skipLines?: number;
   /** Tool output đang mở rộng (Ctrl+T). */
   toolsExpanded?: boolean;
+  /** Ẩn khối thinking của assistant. */
+  hideThinkingBlock?: boolean;
+  /** Nhãn thay thế khi thinking bị ẩn. */
+  hiddenThinkingLabel?: string;
+  /** Markdown transformers for rendering (mermaid, extensions). */
+  markdownTransformers?: readonly MarkdownTransformer[];
 }
 
 /** Một tin nhắn thành mảng dòng (ước lượng cho việc cuộn theo dòng). */
@@ -122,17 +129,20 @@ function itemToLines(item: TranscriptItem, width: number): string[] {
 }
 
 /** Render một mục transcript. */
-const TranscriptRow: React.FC<{ item: TranscriptItem; width: number; toolsExpanded: boolean }> = ({
+const TranscriptRow: React.FC<{ item: TranscriptItem; width: number; toolsExpanded: boolean; hideThinkingBlock?: boolean; hiddenThinkingLabel?: string; markdownTransformers?: readonly MarkdownTransformer[] }> = ({
   item,
   width,
   toolsExpanded,
+  hideThinkingBlock,
+  hiddenThinkingLabel,
+  markdownTransformers = [],
 }) => {
   const t = getTheme();
   const pad = 1;
 
   switch (item.kind) {
     case "user":
-      return <UserMessage text={item.text ?? ""} outputPad={pad} width={width} />;
+      return <UserMessage text={item.text ?? ""} outputPad={pad} width={width} markdownTransformers={markdownTransformers} />;
 
     case "assistant":
       return (
@@ -147,6 +157,9 @@ const TranscriptRow: React.FC<{ item: TranscriptItem; width: number; toolsExpand
           }}
           outputPad={pad}
           width={width}
+          hideThinkingBlock={hideThinkingBlock}
+          hiddenThinkingLabel={hiddenThinkingLabel}
+          markdownTransformers={markdownTransformers}
         />
       );
 
@@ -184,6 +197,7 @@ const TranscriptRow: React.FC<{ item: TranscriptItem; width: number; toolsExpand
           message={{ customType: item.customType ?? "custom", content: item.text ?? "" }}
           outputPad={pad}
           width={width}
+          markdownTransformers={markdownTransformers}
         />
       );
 
@@ -193,14 +207,15 @@ const TranscriptRow: React.FC<{ item: TranscriptItem; width: number; toolsExpand
           skillBlock={{ name: item.label ?? "skill", content: item.summary, userMessage: item.text }}
           outputPad={pad}
           width={width}
+          markdownTransformers={markdownTransformers}
         />
       ) : null;
 
     case "compaction":
-      return <SummaryMessages kind="compaction" summary={item.summary ?? ""} tokensBefore={item.tokensBefore ?? 0} outputPad={pad} width={width} />;
+      return <SummaryMessages kind="compaction" summary={item.summary ?? ""} tokensBefore={item.tokensBefore ?? 0} outputPad={pad} width={width} markdownTransformers={markdownTransformers} />;
 
     case "branch":
-      return <SummaryMessages kind="branch" summary={item.summary ?? ""} outputPad={pad} width={width} />;
+      return <SummaryMessages kind="branch" summary={item.summary ?? ""} outputPad={pad} width={width} markdownTransformers={markdownTransformers} />;
 
     default:
       return (
@@ -222,11 +237,22 @@ export const Transcript: React.FC<TranscriptProps> = ({
   items,
   width = 80,
   toolsExpanded = false,
+  hideThinkingBlock = false,
+  hiddenThinkingLabel = "Thinking...",
+  markdownTransformers = [],
 }) => {
   return (
     <Box flexDirection="column">
       {items.map((item) => (
-        <TranscriptRow key={item.id} item={item} width={width} toolsExpanded={toolsExpanded} />
+        <TranscriptRow
+          key={item.id}
+          item={item}
+          width={width}
+          toolsExpanded={toolsExpanded}
+          hideThinkingBlock={hideThinkingBlock}
+          hiddenThinkingLabel={hiddenThinkingLabel}
+          markdownTransformers={markdownTransformers}
+        />
       ))}
     </Box>
   );

@@ -43,3 +43,54 @@ describe('MarkdownRenderer', () => {
     expect(out).toContain('const x = 1;');
   });
 });
+
+describe('MarkdownRenderer - code block syntax highlighting', () => {
+  /** Lấy frame thô (giữ mã ANSI) để kiểm tra tô màu. */
+  const rawFrame = (f: () => string | undefined) => f() ?? '';
+
+  it('colors a keyword differently from a plain identifier', () => {
+    const md = '```ts\nconst x = 1;\n```';
+    const { lastFrame } = render(<MarkdownRenderer content={md} width={40} />);
+    const out = rawFrame(lastFrame);
+    // Nội dung vẫn giữ nguyên khi bỏ mã màu.
+    expect(strip(out)).toContain('const x = 1;');
+    // Khối code có sinh mã ANSI tô màu (không chỉ một màu codeBlock).
+    expect(/\x1b\[/.test(out)).toBe(true);
+    // Từ khóa `const` nhận mã màu riêng (SGR ngay trước nó).
+    const keywordSeq = out.match(/\x1b\[[0-9;]*mconst/);
+    expect(keywordSeq).not.toBeNull();
+  });
+
+  it('colors strings in a json block', () => {
+    const md = '```json\n{"a": "b"}\n```';
+    const { lastFrame } = render(<MarkdownRenderer content={md} width={40} />);
+    const out = rawFrame(lastFrame);
+    expect(strip(out)).toContain('{"a": "b"}');
+    // Chuỗi được tô bằng token màu riêng (SGR xuất hiện ngay trước giá trị chuỗi).
+    expect(out).toMatch(/\x1b\[[0-9;]*m"b"/);
+  });
+
+  it('colors comments in a python block', () => {
+    const md = '```python\nx = 1  # note\n```';
+    const { lastFrame } = render(<MarkdownRenderer content={md} width={40} />);
+    const out = rawFrame(lastFrame);
+    expect(strip(out)).toContain('x = 1  # note');
+    expect(out).toMatch(/\x1b\[[0-9;]*m# note/);
+  });
+
+  it('leaves a text fence with a single colour', () => {
+    const md = '```text\njust words\n```';
+    const { lastFrame } = render(<MarkdownRenderer content={md} width={40} />);
+    const out = rawFrame(lastFrame);
+    expect(strip(out)).toContain('just words');
+    // Ngôn ngữ text: chỉ có mã màu của codeBlock, không có token syntax.
+    expect(strip(out)).toContain('just words');
+  });
+
+  it('keeps every character of the code after highlighting', () => {
+    const md = '```ts\nconst f = (a: number) => a * 2;\n```';
+    const { lastFrame } = render(<MarkdownRenderer content={md} width={60} />);
+    const out = strip(lastFrame());
+    expect(out).toContain('const f = (a: number) => a * 2;');
+  });
+});

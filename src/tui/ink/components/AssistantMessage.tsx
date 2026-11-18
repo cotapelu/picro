@@ -5,6 +5,7 @@
 //   - Slot markdown tái sửng cho cùng loại nội dung nên stream không nháy
 //   - Spacer chỉ xuất hiện ngay trước khối hiển thị tiếp theo
 //   - stopReason: length -> thông báo cắt; aborted/error -> dòng lỗi
+//   - OSC133 zones cho tích hợp shell (như pi-mono)
 // Port sang Ink TSX, khon copy code truc iep.
 
 import React, { useMemo } from "react";
@@ -12,6 +13,10 @@ import { Box, Text } from "ink";
 import { theme, fg } from "../theme/index.js";
 import { MarkdownRenderer } from "./MarkdownRenderer.js";
 import { createMarkdownTransform, type MarkdownTransformer } from "./markdown-transform.js";
+
+const OSC133_ZONE_START = "\x1b]133;A\x07";
+const OSC133_ZONE_END = "\x1b]133;B\x07";
+const OSC133_ZONE_FINAL = "\x1b]133;C\x07";
 
 export interface AssistantContent {
   type: string;
@@ -142,6 +147,7 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
 
   return (
     <Box flexDirection="column">
+      <Text>{OSC133_ZONE_START}</Text>
       {blocks}
       {stop ? (
         <>
@@ -149,6 +155,9 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
           {stop}
         </>
       ) : null}
+      <Text>{OSC133_ZONE_END}{OSC133_ZONE_FINAL}</Text>
     </Box>
   );
 };
+
+export default AssistantMessage;

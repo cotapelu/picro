@@ -582,10 +582,17 @@ export async function compact(
       throw new Error('LLM returned empty summary');
     }
   } catch (err) {
+    // Abort là hủy chủ đích: ném lại để session báo aborted, KHÔNG rơi về stub
+    // (người dùng nhấn hủy thì compaction phải dừng, không âm thầm tóm tắt).
+    if (_signal?.aborted) {
+      throw err;
+    }
+    // Lỗi thật (mạng, 5xx, hết quota): giữ stub nhưng kèm lý do để người dùng
+    // biết vì sao transcript bị thay bằng bản tóm tắt nghèo nàn.
+    const reason = err instanceof Error ? err.message : String(err);
     console.warn('Compaction LLM call failed, using stub summary:', err);
-    // Fallback to a simple stub summary
     if (messagesToSummarize.length > 0) {
-      summary = `[Stub] Summarized ${messagesToSummarize.length} messages`;
+      summary = `[Stub] Summarized ${messagesToSummarize.length} messages (LLM failed: ${reason})`;
     } else {
       summary = '[No messages to summarize]';
     }

@@ -141,3 +141,24 @@ describe('SettingsManager (extra)', () => {
     });
   });
 });
+
+describe('compaction summarize default', () => {
+  it('defaults to true so compaction calls the real LLM', () => {
+    const mgr = createManager();
+    expect(mgr.getCompactionSettings().summarize).toBe(true);
+    expect(mgr.getCompactionSummarize()).toBe(true);
+  });
+
+  it('persists an explicit false across a restart', async () => {
+    const storage = new InMemoryStorage();
+    const mgr = createManager(storage);
+    mgr.setCompactionSummarize(false);
+    // Write queue is async: flush before re-opening, else the reopen reads
+    // the pre-write content and the choice appears to be lost.
+    await mgr.flush();
+    expect(storage.data.get('global')).toContain('"summarize"');
+    const reopened = createManager(storage);
+    expect(reopened.getCompactionSummarize()).toBe(false);
+    expect(reopened.getCompactionSettings().summarize).toBe(false);
+  });
+});

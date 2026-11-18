@@ -12,6 +12,8 @@ import { fuzzyFilter } from "./Fuzzy.js";
 import { autocompleteSeparatorRegex } from "./TextPredicates.js";
 import type { AutocompleteItem, AutocompleteProvider, AutocompleteSuggestions, SlashCommand } from "./EditorComponent.js";
 
+type Awaitable<T> = T | Promise<T>;
+
 const PATH_DELIMITERS = new Set([" ", "\t", '"', "'", "="]);
 
 export type { AutocompleteItem, AutocompleteProvider, AutocompleteSuggestions, SlashCommand };
@@ -106,14 +108,23 @@ function stripWrappers(token: string): string {
   return result;
 }
 
-/** Nhà cung cấp gợi ý gộp: slash command và đường dẫn. */
+/** Nhà cung cấp gợi ý gộp: slash command, prompt templates, extension commands và đường dẫn. */
 export class CombinedAutocompleteProvider implements AutocompleteProvider {
   private commands: SlashCommand[];
+  private promptTemplates: Array<{ name: string; description?: string; argumentHint?: string }>;
+  private extensionCommands: Array<{ name: string; description?: string; argumentHint?: string; getArgumentCompletions?: (prefix: string) => Awaitable<AutocompleteItem[] | null> }>;
   private basePath: string;
 
-  constructor(commands: SlashCommand[] = [], basePath: string) {
+  constructor(
+    commands: SlashCommand[],
+    basePath: string,
+    promptTemplates: Array<{ name: string; description?: string; argumentHint?: string }> = [],
+    extensionCommands: Array<{ name: string; description?: string; argumentHint?: string; getArgumentCompletions?: (prefix: string) => Awaitable<AutocompleteItem[] | null> }> = [],
+  ) {
     this.commands = commands;
     this.basePath = basePath;
+    this.promptTemplates = promptTemplates;
+    this.extensionCommands = extensionCommands;
   }
 
   async getSuggestions(
@@ -127,18 +138,49 @@ export class CombinedAutocompleteProvider implements AutocompleteProvider {
     const beforeCursor = currentLine.slice(0, cursorCol);
     const trimmed = beforeCursor.trimStart();
 
-    // Lệnh slash
+    // Lệnh slash (built-in + prompt templates + extension commands)
     if (trimmed.startsWith("/")) {
       const spaceIndex = trimmed.indexOf(" ");
       if (spaceIndex === -1) {
         const prefix = trimmed.slice(1);
-        const items: AutocompleteItem[] = this.commands.map((cmd) => ({
+        const builtInItems: AutocompleteItem[] = this.commands.map((cmd) => ({
           value: cmd.name,
           label: cmd.name,
           description: cmd.description ?? (cmd.argumentHint ?? undefined),
         }));
-        const filtered = fuzzyFilter(items, prefix, itemText);
+        const templateItems: AutocompleteItem[] = this.promptTemplates.map((tmpl) => ({
+          value: tmpl.name,
+          label: tmpl.name,
+          description: tmpl.description ?? tmpl.argumentHint,
+        }));
+        const extensionItems: AutocompleteItem[] = this.extensionCommands.map((cmd) => ({
+          value: cmd.name,
+          label: cmd.name,
+          description: cmd.description ?? cmd.argumentHint,
+        }));
+        
+        const allItems = [...builtInItems, ...templateItems, ...extensionItems];
+        const filtered = fuzzyFilter(allItems, prefix, itemText);
         return filtered.length > 0 ? { items: filtered, prefix: trimmed } : null;
+      }
+      
+      // Argument completion for slash commands
+      const spaceIdx = trimmed.indexOf(" ");
+      const commandName = trimmed.slice(1, spaceIdx);
+      const argPrefix = trimmed.slice(spaceIdx + 1);
+      
+      // Check built-in commands
+      const builtInCmd = this.commands.find(cmd => cmd.name === commandName);
+      if (builtInCmd?.getArgumentCompletions) {
+        const items = await builtInCmd.getArgumentCompletions(argPrefix);
+        if (items) return { items, prefix: argPrefix };
+      }
+      
+      // Check extension commands
+      const extCmd = this.extensionCommands.find(cmd => cmd.name === commandName);
+      if (extCmd?.getArgumentCompletions) {
+        const items = await extCmd.getArgumentCompletions(argPrefix);
+        if (items) return { items, prefix: argPrefix };
       }
     }
 

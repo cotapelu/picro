@@ -10,6 +10,7 @@ import { render } from "ink";
 import { App } from "./App.js";
 import type { AgentSessionRuntimeInterface } from "../../runtime/index.js";
 import type { InteractiveControllerLike } from "./controller-bridge.js";
+import { formatProgramStatus } from "./core/ProgramStatus.js";
 
 export interface InteractiveAppProps {
   runtime: AgentSessionRuntimeInterface;
@@ -36,6 +37,7 @@ function withOptionalMethods(controller: InteractiveControllerLike): Interactive
     onEditorCallbacks?: (hooks: { clear: () => void; read: () => string }) => void;
     onMessage?: (cb: (m: unknown[]) => void) => void;
     onStatusChange?: (cb: (s: unknown) => void) => void;
+    setTerminal?: (terminal: unknown) => void;
     dispose?: () => void;
   };
   const noop = () => {};
@@ -54,8 +56,28 @@ function withOptionalMethods(controller: InteractiveControllerLike): Interactive
   c.onEditorCallbacks = c.onEditorCallbacks ?? noop;
   c.onMessage = c.onMessage ?? noop;
   c.onStatusChange = c.onStatusChange ?? noop;
+  c.setTerminal = c.setTerminal ?? noop;
   c.dispose = c.dispose ?? noop;
   return controller;
+}
+
+/**
+ * Adapter terminal tối thiểu cho báo cáo trạng thái OSC 7501.
+ *
+ * Ink tự lo phần render nên không có ProcessTerminal; reporter chỉ cần đúng một
+ * method `setProgramStatus`, và `formatProgramStatus` trả về chuỗi escape để
+ * ghi thẳng ra stdout. Terminal không hỗ trợ thì bỏ qua êm (không crash).
+ */
+function createStatusTerminal(): { setProgramStatus: (status: unknown) => void } {
+  return {
+    setProgramStatus: (status: unknown) => {
+      try {
+        process.stdout.write(formatProgramStatus(status as Parameters<typeof formatProgramStatus>[0]));
+      } catch {
+        // Terminal đã đóng hoặc không nhận escape: bỏ qua.
+      }
+    },
+  };
 }
 
 /**
@@ -128,6 +150,9 @@ export function startInteractiveApp(props: InteractiveAppProps): void {
 
   try {
     const controller = withOptionalMethods(props.controller);
+    // Gắn terminal để báo cáo trạng thái OSC 7501 (working/done/error/blocked).
+    // Terminal không hỗ trợ thì reporter ghi bị bỏ qua êm.
+    controller.setTerminal?.(createStatusTerminal());
     // exitOnCtrlC=false: Ink (build/components/App.js) would call handleExit()
     // on the FIRST Ctrl+C, so the pi-mono semantics "first press clears the
     // editor, second press within 500ms quits" could never be reached. The key

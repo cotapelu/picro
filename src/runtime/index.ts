@@ -105,3 +105,15 @@ export { loadPromptTemplates, type PromptTemplate, type LoadPromptTemplatesOptio
 
 // Shell utilities
 export { getShellConfig } from '../utils/shell.js';
+
+// Clipboard utilities
+export {
+  readClipboardText,
+  writeClipboardText,
+  readClipboardImage,
+  detectImageMimeType,
+  extensionForImageMimeType,
+  type ClipboardImageResult,
+} from '../utils/clipboard.js';
+
+export { ensurePngTranscoder, isPngTranscoderAvailable, convertToPng, convertBufferToPng } from '../utils/image-convert.js';

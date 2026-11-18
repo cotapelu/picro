@@ -695,6 +695,23 @@ export class SettingsManager {
     this.save();
   }
 
+  /**
+   * Có dùng LLM thật để tóm tắt khi nén ngữ cảnh không.
+   * Mặc định bật (pi-mono); tắt thì dùng bản tóm tắt stub tiết kiệm token.
+   */
+  getCompactionSummarize(): boolean {
+    return this.settings.compaction?.summarize ?? true;
+  }
+
+  setCompactionSummarize(summarize: boolean): void {
+    if (!this.globalSettings.compaction) {
+      this.globalSettings.compaction = {};
+    }
+    this.globalSettings.compaction.summarize = summarize;
+    this.markModified("compaction", "summarize");
+    this.save();
+  }
+
   getCompactionReserveTokens(): number {
     return this.settings.compaction?.reserveTokens ?? 16384;
   }
@@ -708,7 +725,9 @@ export class SettingsManager {
       enabled: this.getCompactionEnabled(),
       reserveTokens: this.getCompactionReserveTokens(),
       keepRecentTokens: this.getCompactionKeepRecentTokens(),
-      summarize: this.settings.compaction?.summarize ?? false,
+      // Mặc định BẬT: compaction gọi LLM thật để tóm tắt (pi-mono), chỉ tắt
+      // khi người dùng chủ động tắt hoặc không có model/API key.
+      summarize: this.settings.compaction?.summarize ?? true,
       summaryModelId: this.settings.compaction?.summaryModelId,
     };
   }

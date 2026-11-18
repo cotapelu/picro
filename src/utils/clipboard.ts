@@ -3,6 +3,7 @@
 // thì dùng lệnh gốc của hệ điều hành. Port riêng, không copy code.
 
 import { execSync } from "node:child_process";
+import { readClipboardImage, detectImageMimeType, extensionForImageMimeType, type ClipboardImageResult } from "./clipboard-image.js";
 
 /** Lệnh đọc clipboard theo từng nền tảng (thử lần lượt đến khi thành công). */
 function readCommands(): Array<{ command: string; args: string[] }> {
@@ -85,3 +86,5 @@ export async function writeClipboardText(text: string): Promise<boolean> {
   }
   return false;
 }
+
+export { readClipboardImage, detectImageMimeType, extensionForImageMimeType, type ClipboardImageResult } from "./clipboard-image.js";

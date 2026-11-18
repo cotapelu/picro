@@ -57,6 +57,7 @@ export * from "./provider-brand.js";
 export * from "./AssistantMessage.js";
 export * from "./UserMessage.js";
 export * from "./CustomMessage.js";
+export * from "./CustomEntry.js";
 export * from "./SummaryMessages.js";
 export * from "./SkillInvocation.js";
 export * from "./BashExecution.js";

@@ -40,6 +40,10 @@ interface StatusBarProps {
   toolsExpanded?: boolean;
   /** Dữ liệu footer từ FooterDataProvider (git, extensions, session, custom). */
   footer?: FooterData;
+  /** Có tính năng thử nghiệm được bật không. */
+  experimentalFeatures?: boolean;
+  /** Số lượng provider khả dụng. */
+  availableProviderCount?: number;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -55,6 +59,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   usage,
   toolsExpanded = false,
   footer,
+  experimentalFeatures = false,
+  availableProviderCount = 0,
 }) => {
   const { columns } = useWindowSize();
   const width = columns || 80;
@@ -85,13 +91,42 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   const [usedRaw, windowRaw] = String(tokens ?? "0").split("/");
   const used = Number.parseInt(usedRaw ?? "0", 10);
   if (Number.isFinite(used) && used > 0) leftParts.push(formatTokens(used));
-  if (contextPercent && contextPercent !== "0%") leftParts.push(contextPercent);
+  
+  // Color-coded context percentage (pi-mono: error > 90%, warning > 70%)
+  let contextPercentStr = "";
+  if (contextPercent && contextPercent !== "0%") {
+    const contextPercentValue = parseFloat(contextPercent.replace("%", ""));
+    if (contextPercentValue > 90) {
+      contextPercentStr = fg("error", contextPercent);
+    } else if (contextPercentValue > 70) {
+      contextPercentStr = fg("warning", contextPercent);
+    } else {
+      contextPercentStr = contextPercent;
+    }
+    leftParts.push(contextPercentStr);
+  }
 
   const rightParts: string[] = [];
   if (model) rightParts.push(model);
   if (thinkingLevel && thinkingLevel !== "off") rightParts.push(`think ${thinkingLevel}`);
   if (routedModel && routedModel !== model) rightParts.push(`→ ${routedModel}`);
   if (toolsExpanded) rightParts.push("tools:expanded");
+  
+  // Provider count in parentheses when multiple providers (pi-mono)
+  if (availableProviderCount > 1 && model) {
+    rightParts.unshift(`(${model.split("/")[0]}) ${model.split("/")[1]}`);
+  }
+
+  // Experimental features badge (pi-mono: xp)
+  if (experimentalFeatures) {
+    rightParts.push(fg("dim", "•") + fg("warning", "xp"));
+  }
+
+  // Extension statuses on right side (pi-mono)
+  const extensionStatuses = footer?.extensions?.filter(e => e.active).map(e => e.status ?? e.name) ?? [];
+  if (extensionStatuses.length > 0) {
+    rightParts.push(extensionStatuses.join(" "));
+  }
 
   // Cột phải tính theo CHIỀU RỘNG KHẢ DỨNG của cột trái (visibleWidth), không
   // dùng độ dài chuỗi có escape — bản cũ cắt sớm ~9 cột mỗi lần render.

@@ -32,6 +32,7 @@ export interface InkKeyFlags {
   home?: boolean;
   end?: boolean;
   insert?: boolean;
+  super?: boolean;
 }
 
 /** Ký tự in được (chữ, số, symbol) theo sau không có modifier đặc biệt. */
@@ -48,10 +49,12 @@ function printable(data: string): string | undefined {
  * `delete`, `up`, `ctrl+u`, `shift+tab`, `alt+backspace`, `ctrl+left`...).
  */
 export function inkKeyId(data: string, key: InkKeyFlags): string | undefined {
+  // Modifier order: ctrl, shift, alt, super (standard keybinding order)
   const mods: string[] = [];
-  if (key.shift) mods.push("shift");
   if (key.ctrl) mods.push("ctrl");
+  if (key.shift) mods.push("shift");
   if (key.meta) mods.push("alt");
+  if (key.super) mods.push("super");
 
   // Phím chức năng trước: chúng đến với data rỗng.
   if (key.upArrow) return withMods(mods, "up");
@@ -76,8 +79,8 @@ export function inkKeyId(data: string, key: InkKeyFlags): string | undefined {
   // Ctrl/Alt + ký tự in được: Ink giao ký tự thường kèm cờ.
   const char = printable(data);
   if (char !== undefined) {
-    if (key.ctrl && !key.meta) return `ctrl+${char.toLowerCase()}`;
-    if (key.meta && !key.ctrl) return `alt+${char}`;
+    if (key.ctrl && !key.meta) return withMods(mods.filter(m => m !== 'alt'), char.toLowerCase());
+    if (key.meta && !key.ctrl) return withMods(mods.filter(m => m !== 'ctrl'), char);
     if (mods.length === 0) return char;
   }
   return undefined;

@@ -39,6 +39,8 @@ import {
   type TranscriptItem,
 } from "./components/Transcript.js";
 import { HelpBody } from "./components/HelpBody.js";
+import { AltScreenSearch } from "./components/AltScreenSearch.js";
+import { searchCorpus, buildCorpus } from "./components/AltScreenSearch.js";
 
 export interface AppProps {
   runtime: AgentSessionRuntimeInterface;
@@ -131,6 +133,28 @@ export const App: React.FC<AppProps> = ({
   const [overlay, setOverlay] = useState<OverlayKind>("none");
   const [overlayProps, setOverlayProps] = useState<Record<string, unknown>>({});
   const [toolsExpanded, setToolsExpanded] = useState(() => controller.getToolsExpanded?.() ?? false);
+
+  // Sync toolsExpanded from controller
+  useEffect(() => {
+    controller.onToolsExpandedChange = (expanded: boolean) => setToolsExpanded(expanded);
+    return () => { controller.onToolsExpandedChange = undefined; };
+  }, [controller]);
+
+  const [hideThinkingBlock, setHideThinkingBlock] = useState(() => controller.getThinkingBlockHidden?.() ?? false);
+
+  // Sync hideThinkingBlock from controller
+  useEffect(() => {
+    controller.onThinkingBlockChange = (hidden: boolean) => setHideThinkingBlock(hidden);
+    return () => { controller.onThinkingBlockChange = undefined; };
+  }, [controller]);
+
+  /** Tìm kiếm trong transcript (Ctrl+Shift+F), kiểu alt-screen search của pi-mono. */
+  const [search, setSearch] = useState<{ query: string; active: boolean }>({ query: "", active: false });
+  /** Chỉ số kết quả đang chọn (-1 = chưa chọn). */
+  const [searchIndex, setSearchIndex] = useState(-1);
+  /** Số kết quả của truy vấn hiện tại. */
+  const [searchCount, setSearchCount] = useState(0);
+
   /** Ô nhập đang ở chế độ bash ("!" đầu dòng) → viền đổi màu (pi-mono). */
   const [bashMode, setBashMode] = useState(false);
   const [queue, setQueue] = useState<{ steering: string[]; followUp: string[] }>(() =>
@@ -183,6 +207,57 @@ export const App: React.FC<AppProps> = ({
     const { items } = sliceTranscript(transcript, width, viewportHeight, skip);
     return items;
   }, [transcript, width, viewportHeight, followingEnd, scrollLines, maxScroll]);
+
+  /**
+   * Các dòng văn bản thuần của transcript để tìm kiếm.
+   * Làm phẳng mọi loại item thành text; AltScreenSearch dựng corpus + match.
+   */
+  const searchableLines = useMemo(() => {
+    const lines: string[] = [];
+    for (const item of transcript) {
+      const parts: string[] = [];
+      if (item.text) parts.push(item.text);
+      if (item.thinking) parts.push(item.thinking);
+      if (item.summary) parts.push(item.summary);
+      if (item.label) parts.push(item.label);
+      if (item.toolName) parts.push(item.toolName);
+      if (item.command) parts.push(item.command);
+      if (item.output) parts.push(item.output);
+      const toolText = item.toolResult?.content
+        ?.filter((c) => c.type === "text" && c.text)
+        .map((c) => c.text)
+        .join("\n");
+      if (toolText) parts.push(toolText);
+      const text = parts.filter(Boolean).join("\n");
+      for (const line of text.split("\n")) lines.push(line);
+    }
+    return lines;
+  }, [transcript]);
+
+  /** Tổng số kết quả của truy vấn hiện tại (cho nhãn "i/n"). */
+  const searchMatches = useMemo(() => {
+    if (!search.query.trim()) return [];
+    return searchCorpus(buildCorpus(searchableLines), search.query);
+  }, [search.query, searchableLines]);
+  useEffect(() => {
+    setSearchCount(searchMatches.length);
+  }, [searchMatches]);
+
+  /**
+   * Nhảy tới kết quả đang chọn: cuộn transcript tới dòng khớp.
+   * Khớp thứ i nằm ở dòng `segments[0].row` của `searchableLines`; đổi sang
+   * toạ độ cuộn bằng cách đặt `scrollLines` và tắt follow-end.
+   */
+  useEffect(() => {
+    if (!search.active || searchIndex < 0) return;
+    const match = searchMatches[searchIndex];
+    const row = match?.segments[0]?.row;
+    if (row === undefined) return;
+    // Đặt vị trí cuộn để dòng khớp nằm trong khung nhìn (cách mép trên 1/3).
+    const target = Math.max(0, row - Math.floor(viewportHeight / 3));
+    setFollowingEnd(false);
+    setScrollLines(Math.min(maxScroll, target));
+  }, [searchIndex, searchMatches, search.active, viewportHeight, maxScroll]);
 
   // Dính biên: không cuộn quá nội dung.
   useEffect(() => {
@@ -326,6 +401,22 @@ export const App: React.FC<AppProps> = ({
         case "copyMessage":
           void controller.runCommand?.("copy");
           break;
+        case "toggleThinkingBlock":
+          void controller.toggleThinkingBlock?.();
+          break;
+        case "thinkingCycleForward":
+          void controller.cycleThinkingLevel?.('forward');
+          break;
+        case "thinkingCycleBackward":
+          void controller.cycleThinkingLevel?.('backward');
+          break;
+        case "transcriptSearch":
+          // Ctrl+Shift+F: mở/tắt tìm kiếm transcript.
+          setSearch((prev) =>
+            prev.active ? { query: "", active: false } : { query: "", active: true },
+          );
+          setSearchIndex(-1);
+          break;
         default:
           break;
       }
@@ -333,6 +424,15 @@ export const App: React.FC<AppProps> = ({
     },
     [controller, refresh],
   );
+
+  /**
+   * Cập nhật truy vấn tìm kiếm. Được gọi từ hộp tìm kiếm; mỗi lần gõ reset
+   * chỉ số về -1 để không nhảy loạn giữa các kết quả.
+   */
+  const handleSearchChange = useCallback((query: string) => {
+    setSearch((prev) => ({ ...prev, query }));
+    setSearchIndex(-1);
+  }, []);
 
   const closeOverlay = useCallback(() => setOverlay("none"), []);
 
@@ -360,9 +460,36 @@ export const App: React.FC<AppProps> = ({
        * tắt và không ai chú ý.
        */}
       <Toast toasts={toasts} />
+      {search.active ? (
+        <Box flexDirection="column" width={width}>
+          <AltScreenSearch
+            lines={searchableLines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""))}
+            query={search.query}
+            resultLabel={
+              search.query.trim()
+                ? `${Math.min(searchIndex + 1, searchCount)}/${searchCount}`
+                : "gõ để tìm"
+            }
+            width={width}
+          />
+          <SearchBox
+            query={search.query}
+            onChange={handleSearchChange}
+            onSubmit={() => setSearchIndex((i) => (i + 1 < searchCount ? i + 1 : i))}
+            onCancel={() => setSearch({ query: "", active: false })}
+            width={width}
+          />
+        </Box>
+      ) : null}
       <ChatViewport
         transcript={
-          <Transcript items={visibleTranscript} width={width} toolsExpanded={toolsExpanded} />
+          <Transcript
+            items={visibleTranscript}
+            width={width}
+            toolsExpanded={toolsExpanded}
+            hideThinkingBlock={hideThinkingBlock}
+            markdownTransformers={controller.getMarkdownTransformers?.() ?? []}
+          />
         }
         pendingMessages={
           queue.steering.length > 0 || queue.followUp.length > 0 ? (
@@ -381,8 +508,26 @@ export const App: React.FC<AppProps> = ({
               onScroll={handleScroll}
               width={width}
               bashMode={bashMode}
+              searchActive={search.active}
+              onSearchChange={handleSearchChange}
+              onSearchSubmit={() =>
+                setSearchIndex((i) => (i + 1 < searchCount ? i + 1 : i))
+              }
+              onSearchCancel={() => setSearch({ query: "", active: false })}
+              workingStatus={
+                indicator.kind === 'working'
+                  ? indicator.message
+                  : indicator.kind === 'compaction'
+                    ? 'Đang nén ngữ cảnh'
+                    : indicator.kind === 'retry'
+                      ? `Thử lại (${indicator.attempt}/${indicator.maxAttempts})`
+                      : undefined
+              }
               history={controller.getHistory()}
               slashCommands={SLASH_COMMANDS}
+              promptTemplates={controller.getPromptTemplates?.() ?? []}
+              extensionCommands={controller.getExtensionCommands?.() ?? []}
+              skillCommands={controller.getSkillCommands?.() ?? []}
             />
           ) : (
             <Box flexDirection="column" width={width}>
@@ -417,6 +562,31 @@ export const App: React.FC<AppProps> = ({
       />
       <Keybindings />
       <Modal modal={{ type: "none" }} />
+    </Box>
+  );
+};
+
+/**
+ * Hộp nhập truy vấn tìm kiếm (Alt-screen search trong Ink).
+ * Đăng ký `useInput` riêng: khi đang tìm, mọi phím thuộc về hộp này chứ không
+ * phải ô soạn tin nhắn — Enter/k tới kết quả tiếp, Esc đóng.
+ */
+const SearchBox: React.FC<{
+  query: string;
+  onChange: (query: string) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  width: number;
+}> = ({ query, onChange, onSubmit, onCancel, width }) => {
+  // Lưu ý: component này KHÔNG gọi useInput vì Ink chỉ cho một component nhận
+  // phím. Phím được route từ MessageInput -> onAppAction -> controller -> App.
+  const t = getTheme();
+  return (
+    <Box flexDirection="row">
+      <Text>{t.fg("accent", "/")}</Text>
+      <Text>{t.fg("text", query)}</Text>
+      <Text>{t.fg("accent", "_")}</Text>
+      <Text>{t.fg("dim", "  Enter: kết quả tiếp · Esc: đóng")}</Text>
     </Box>
   );
 };

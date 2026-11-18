@@ -33,6 +33,22 @@ export interface MessageInputProps {
   history?: readonly string[];
   /** Danh sách lệnh slash cho autocomplete. */
   slashCommands?: readonly SlashCommand[];
+  /** Prompt templates cho autocomplete (từ resource loader). */
+  promptTemplates?: Array<{ name: string; description?: string; argumentHint?: string }>;
+  /** Extension commands cho autocomplete (từ extension runner). */
+  extensionCommands?: Array<{ name: string; description?: string; argumentHint?: string; getArgumentCompletions?: (prefix: string) => any }>;
+  /** Skill commands cho autocomplete (kiểu `skill:<name>`). */
+  skillCommands?: Array<{ name: string; description?: string }>;
+  /** Trạng thái đang chạy nhúng trên editor (working/compaction/retry). */
+  workingStatus?: string;
+  /** Hộp tìm kiếm transcript đang mở (mọi phím thuộc về tìm kiếm). */
+  searchActive?: boolean;
+  /** Gõ/kéo truy vấn tìm kiếm. */
+  onSearchChange?: (query: string) => void;
+  /** Enter: tới kết quả tiếp theo. */
+  onSearchSubmit?: () => void;
+  /** Esc: đóng hộp tìm kiếm. */
+  onSearchCancel?: () => void;
   /** Có bật autocomplete đường dẫn không. */
   enablePathCompletion?: boolean;
 }
@@ -56,6 +72,14 @@ export const MessageInput = React.forwardRef<EditorHandle, MessageInputProps>(
       width = 80,
       history = [],
       slashCommands = [],
+      promptTemplates = [],
+      extensionCommands = [],
+      skillCommands = [],
+      workingStatus,
+      searchActive = false,
+      onSearchChange,
+      onSearchSubmit,
+      onSearchCancel,
       enablePathCompletion = true,
     },
     ref,
@@ -117,6 +141,14 @@ export const MessageInput = React.forwardRef<EditorHandle, MessageInputProps>(
         bashMode={bashMode}
         history={history}
         slashCommands={slashCommands}
+        promptTemplates={promptTemplates}
+        extensionCommands={extensionCommands}
+        skillCommands={skillCommands}
+        workingStatus={workingStatus}
+        searchActive={searchActive}
+        onSearchChange={onSearchChange}
+        onSearchSubmit={onSearchSubmit}
+        onSearchCancel={onSearchCancel}
         enablePathCompletion={enablePathCompletion}
       />
     </Box>
@@ -145,9 +177,17 @@ const MessageEditor = React.forwardRef<
     width: number;
     history: readonly string[];
     slashCommands: readonly SlashCommand[];
+    promptTemplates: Array<{ name: string; description?: string; argumentHint?: string }>;
+    extensionCommands: Array<{ name: string; description?: string; argumentHint?: string; getArgumentCompletions?: (prefix: string) => any }>;
+    skillCommands: Array<{ name: string; description?: string }>;
+    workingStatus?: string;
+    searchActive?: boolean;
+    onSearchChange?: (query: string) => void;
+    onSearchSubmit?: () => void;
+    onSearchCancel?: () => void;
     enablePathCompletion: boolean;
   }
->(({ value, onChange, onSubmit, onQueue, onToggleExpand, onAppAction, bashMode = false, disabled, onKey, width, slashCommands, enablePathCompletion }, ref) => {
+>(({ value, onChange, onSubmit, onQueue, onToggleExpand, onAppAction, bashMode = false, disabled, onKey, width, slashCommands, promptTemplates, extensionCommands, skillCommands, workingStatus, searchActive, onSearchChange, onSearchSubmit, onSearchCancel, enablePathCompletion }, ref) => {
   // Shift+Enter (byte \n) xếp hàng thay vì xuống dòng: giống pi-mono
   // app.message.followUp (Ink không phân biệt được Alt+Enter).
   const handleQueue = React.useCallback(
@@ -157,11 +197,18 @@ const MessageEditor = React.forwardRef<
     [onQueue],
   );
 
-  // Nhà cung gợi ý (lệnh slash + đường dẫn), dựng một lần theo props.
+  // Nhà cung gợi ý (slash + prompt templates + extension commands + skill commands
+  // + đường dẫn), dựng một lần theo props. Skill commands trùng tên thì extension
+  // command thắng (extension có thể ghi đè).
   const provider = React.useMemo(() => {
     if (!enablePathCompletion && slashCommands.length === 0) return undefined;
-    return new CombinedAutocompleteProvider([...slashCommands], process.cwd());
-  }, [slashCommands, enablePathCompletion]);
+    return new CombinedAutocompleteProvider(
+      [...slashCommands],
+      process.cwd(),
+      promptTemplates,
+      [...extensionCommands, ...skillCommands],
+    );
+  }, [slashCommands, enablePathCompletion, promptTemplates, extensionCommands, skillCommands]);
   return (
     <Editor
       ref={ref}
@@ -175,6 +222,12 @@ const MessageEditor = React.forwardRef<
       onToggleExpand={onToggleExpand}
       onAppAction={onAppAction}
       {...(provider ? { autocompleteProvider: provider } : {})}
+      workingStatus={workingStatus}
+      searchActive={searchActive}
+      onSearchChange={onSearchChange}
+      onSearchSubmit={onSearchSubmit}
+      onSearchCancel={onSearchCancel}
+      data-testid="message-input-searchActive"
     />
   );
 });

@@ -6,7 +6,7 @@
 **Tech Stack:** TypeScript, Node.js, Ink TUI (raw-mode TTY only)  
 **Architecture:** Session-based agent runtime với LLM providers, tools, và interactive TUI.
 
-## Current State (as of 2025-07-05, post audit round 8)
+## Current State (as of 2025-07-05, post audit round 15)
 
 ### Components
 
@@ -37,10 +37,10 @@ readline fallback khi stdin không phải TTY.
 1. ✅ `src/tty-mode` đã thay bằng Ink TUI (`src/tui/ink`) + `src/modes/interactive`
 2. ✅ Interactive mode + controller đã nâng cấp đầy đủ (transcript, overlay, queue, slash)
 3. ✅ Coverage: 2870 test pass, ~210 file test
-### Metrics (post-evolution round 8)
+### Metrics (post-evolution round 15)
 
 - Build: ✅ Pass (`npm run build` = tsc + copy-assets)
-- Tests: ✅ 2941 pass / 2 skip (218 file)
+- Tests: ✅ 3087 pass / 2 skip (222 file)
 - Typecheck: ✅ `npx tsc --noEmit` clean
 - Complexity: core modules được tách; component render mỗi cái <20 dòng JSX body
 
@@ -48,11 +48,27 @@ readline fallback khi stdin không phải TTY.
 
 ## Next Steps (Prioritized)
 
-1. ✅ Ink TUI + interactive mode hoàn chỉnh
-2. ✅ Hoàn thiện footer (cache R/W, CH%, cost, git branch, routed model) qua FooterDataProvider
-3. ✅ Compaction gọi LLM thật (thay stub) + branch summarization gọi LLM thật
-4. Gắn phím tắt còn thiếu (Ctrl+G editor, Ctrl+V clipboard, Ctrl+P/N cycling)
+1. ✅ Keyboard Protocol hoàn thiện (Kitty CSI-u flags 1,2,4 + modifyOtherKeys + legacy)
+2. ✅ Terminal Class (`ProcessTerminal`) với Kitty protocol negotiation
+3. ✅ Stdin Buffer cho escape sequence reassembly
+4. ✅ Layout Engine (Component, Container, VStack, HStack, ScrollView)
+5. ✅ Base TUI Classes (TUI, TuiMainScreen, TuiAltScreen)
+6. ✅ Editor component rewrite (visual line map, sticky column, history, kill ring, undo, external editor, clipboard paste)
+7. ✅ SelectList enhancement (keyboard nav, mouse, focusable, pagination)
+8. ✅ SettingsList component (SettingItem, submenu, search, SteppedSubmenu, SelectSubmenu)
+9. ✅ Theme System (tokens, theme class, system theme, loading, controller, TUI helpers)
 
 ---
 
-*Last updated: 2025-11-13 – compaction & branch summarization gọi LLM thật thay stub; footer nối FooterDataProvider; 2941 test pass.
+## Next Steps (Phase 4+)
+
+1. ⏳ Chat Viewport (`ScrollView` transcript với `follow: "end"`)
+2. ⏳ Header component (BuiltInHeader, logo, key hints)
+3. ⏳ Footer component (token stats, git branch, model info)
+4. ⏳ Model Selector, Session Selector, Settings Selector, Theme Selector
+5. ⏳ Tree Selector, Login/Logout, Thinking Selector
+6. ⏳ Tree Selector, Login/Logout, Thinking Selector
+
+---
+
+*Last updated: 2025-07-05 – Theme System hoàn thiện (tokens, theme class, system theme, loading, controller, TUI helpers); 3087 test pass.

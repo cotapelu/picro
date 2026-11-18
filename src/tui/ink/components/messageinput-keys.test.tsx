@@ -80,3 +80,44 @@ describe('MessageInput key path', () => {
     }
   });
 });
+
+describe('MessageInput working status', () => {
+  it('renders a working status line above the editor', async () => {
+    const onSubmit = vi.fn();
+    const instance = render(<MessageInput onSubmit={onSubmit} width={60} workingStatus="Đang làm việc" />);
+    const frame = await settledFrame(instance);
+    expect(frame).toContain('Đang làm việc');
+  });
+
+  it('renders a compaction status', async () => {
+    const onSubmit = vi.fn();
+    const instance = render(<MessageInput onSubmit={onSubmit} width={60} workingStatus="Đang nén ngữ cảnh" />);
+    const frame = await settledFrame(instance);
+    expect(frame).toContain('Đang nén ngữ cảnh');
+  });
+
+  it('renders a retry status with the attempt count', async () => {
+    const onSubmit = vi.fn();
+    const instance = render(<MessageInput onSubmit={onSubmit} width={60} workingStatus="Thử lại (2/3)" />);
+    const frame = await settledFrame(instance);
+    expect(frame).toContain('Thử lại (2/3)');
+  });
+
+  it('renders nothing when there is no working status', async () => {
+    const onSubmit = vi.fn();
+    const instance = render(<MessageInput onSubmit={onSubmit} width={60} />);
+    const frame = await settledFrame(instance);
+    expect(frame).not.toContain('⏳');
+  });
+
+  it('keeps the editor usable while a status is shown', async () => {
+    const onSubmit = vi.fn();
+    const instance = render(<MessageInput onSubmit={onSubmit} width={60} workingStatus="Đang làm việc" />);
+    await settledFrame(instance);
+    instance.stdin.write('hi');
+    await settledFrame(instance);
+    instance.stdin.write('\r');
+    await settledFrame(instance);
+    expect(onSubmit).toHaveBeenCalledWith('hi');
+  });
+});

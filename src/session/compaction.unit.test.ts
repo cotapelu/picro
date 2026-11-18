@@ -446,7 +446,7 @@ describe('Compaction unit', () => {
       expect(result.details?.modifiedFiles).toEqual(['/b', '/c']);
     });
 
-    it('falls back to stub summary when LLM throws', async () => {
+    it('falls back to stub summary with the failure reason when LLM throws', async () => {
       vi.spyOn(llm, 'complete').mockRejectedValue(new Error('LLM error'));
 
       const prep = {
@@ -461,7 +461,50 @@ describe('Compaction unit', () => {
       };
 
       const result = await compact(prep, {}, '');
-      expect(result.summary).toBe('[Stub] Summarized 1 messages');
+      // Stub kèm LÝ DO để người dùng biết vì sao transcript bị tóm tắt nghèo nàn.
+      expect(result.summary).toContain('[Stub] Summarized 1 messages');
+      expect(result.summary).toContain('LLM error');
+    });
+
+    it('does not call the LLM at all when summarize is disabled', async () => {
+      const spy = vi.spyOn(llm, 'complete').mockResolvedValue({ content: 'should not happen' });
+
+      const prep = {
+        firstKeptEntryId: 'entry-3',
+        messagesToSummarize: [{ role: 'user', content: [{ type: 'text', text: 'Test' }] }],
+        turnPrefixMessages: [],
+        isSplitTurn: false,
+        tokensBefore: 100,
+        previousSummary: undefined,
+        fileOps: createFileOps(),
+        settings: { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000, summarize: false } as any,
+      };
+
+      const result = await compact(prep, {}, '');
+      expect(spy).not.toHaveBeenCalled();
+      // Không có lý do lỗi vì không hề gọi LLM.
+      expect(result.summary).toBe('[Compacted 1 messages]');
+    });
+
+    it('rethrows the abort instead of silently falling back to a stub', async () => {
+      const spy = vi.spyOn(llm, 'complete').mockRejectedValue(new Error('aborted'));
+      const controller = new AbortController();
+      controller.abort();
+
+      const prep = {
+        firstKeptEntryId: 'entry-4',
+        messagesToSummarize: [{ role: 'user', content: [{ type: 'text', text: 'Test' }] }],
+        turnPrefixMessages: [],
+        isSplitTurn: false,
+        tokensBefore: 100,
+        previousSummary: undefined,
+        fileOps: createFileOps(),
+        settings: { enabled: true, reserveTokens: 1000, keepRecentTokens: 2000, summarize: true } as any,
+      };
+
+      // Hủy chủ đích: phải ném lại để session báo aborted, không tóm tắt thay thế.
+      await expect(compact(prep, {}, '', undefined, undefined, controller.signal)).rejects.toThrow('aborted');
+      expect(spy).toHaveBeenCalledTimes(1);
     });
 
     it('returns [No messages to summarize] when no messages', async () => {

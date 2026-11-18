@@ -4,7 +4,7 @@
 //   - matchesKey(data, keyId) khớp phím theo danh tính
 //   - parseKey(data) trả về nhãn phím
 //   - Key.* tạo danh tính phím an toàn kiểu
-// Port sang TSX riêng, khong copy code truc iep.
+// Port sang TSX riêng, không copy code trực tiếp.
 
 const SYMBOL_KEYS = new Set([
   "`", "-", "=", "[", "]", "\\", ";", "'", ",", ".", "/",
@@ -16,7 +16,7 @@ const SYMBOL_KEYS = new Set([
 const SHIFTED_SYMBOL_KEYS = new Set("~!@#$%^&*()_+|{}:<>?");
 
 const MODIFIERS = { shift: 1, alt: 2, ctrl: 4, super: 8 } as const;
-const LOCK_MASK = 64 + 128;
+const LOCK_MASK = 64 + 128; // Caps Lock + Num Lock
 const CODEPOINTS = {
   escape: 27, tab: 9, enter: 13, space: 32, backspace: 127, kpEnter: 57414,
 } as const;
@@ -97,13 +97,16 @@ const LEGACY_SEQUENCE_KEY_IDS: Record<string, string> = {
   "\x1b[14~": "f4", "\x1b[[A": "f1", "\x1b[[B": "f2", "\x1b[[C": "f3",
   "\x1b[[D": "f4", "\x1b[[E": "f5", "\x1b[15~": "f5", "\x1b[17~": "f6",
   "\x1b[18~": "f7", "\x1b[19~": "f8", "\x1b[20~": "f9", "\x1b[21~": "f10",
-  "\x1b[23~": "f11", "\x1b[24~": "f12", "\x1bb": "alt+left", "\x1bf": "alt+right",
-  "\x1bp": "alt+up", "\x1bn": "alt+down",
-  // VT100 home/end forms. matchesKey() has always accepted these sequences, so
-  // the reverse label was the only missing piece and parseKey() returned
-  // undefined for them (upstream carries the same gap).
+  "\x1b[23~": "f11", "\x1b[24~": "f12",
+  "\x1bP": "alt+up", "\x1bN": "alt+down",
   "\x1b[1~": "home", "\x1b[4~": "end",
-};
+  // Extended legacy sequences
+  "\x1c": "ctrl+\\", "\x1d": "ctrl+]", "\x1f": "ctrl+-",
+  "\x1b\x1b": "ctrl+alt+[", "\x1b\x1c": "ctrl+alt+\\", "\x1b\x1d": "ctrl+alt+]", "\x1b\x1f": "ctrl+alt+-",
+  "\x1b ": "alt+space", "\x1bB": "alt+left", "\x1bF": "alt+right",
+} as const;
+
+type LegacyModifierKey = keyof typeof LEGACY_SHIFT_SEQUENCES;
 
 let kittyProtocolActive = false;
 
@@ -157,7 +160,23 @@ function parseEventType(raw: string | undefined): KeyEventType {
   return "press";
 }
 
-function parseKittySequence(data: string): { codepoint: number; shiftedKey?: number; baseLayoutKey?: number; modifier: number; eventType: KeyEventType } | null {
+interface ParsedKittySequence {
+  codepoint: number;
+  shiftedKey?: number;
+  baseLayoutKey?: number;
+  modifier: number;
+  eventType: KeyEventType;
+}
+
+function parseKittySequence(data: string): ParsedKittySequence | null {
+  // CSI u format with alternate keys (flag 4):
+  // \x1b[<codepoint>u
+  // \x1b[<codepoint>;<mod>u
+  // \x1b[<codepoint>:<event>u
+  // \x1b[<codepoint>;<mod>:<event>u
+  // \x1b[<codepoint>:<shifted>;<mod>u
+  // \x1b[<codepoint>:<shifted>:<base>;<mod>u
+  // \x1b[<codepoint>::<base>;<mod>u (no shifted key, only base)
   const csi = /^\x1b\[(\d+)(?::(\d*))?(?::(\d+))?(?:;(\d+))?(?::(\d+))?u$/.exec(data);
   if (csi) {
     const codepoint = Number.parseInt(csi[1]!, 10);
@@ -167,18 +186,19 @@ function parseKittySequence(data: string): { codepoint: number; shiftedKey?: num
     return { codepoint, shiftedKey: shifted, baseLayoutKey: base, modifier: mod - 1, eventType: parseEventType(csi[5]) };
   }
 
+  // Arrow keys with modifier: \x1b[1;<mod>A/B/C/D or \x1b[1;<mod>:<event>A/B/C/D
   const arrow = /^\x1b\[1;(\d+)(?::(\d+))?([ABCD])$/.exec(data);
   if (arrow) {
+    const mod = Number.parseInt(arrow[1]!, 10);
     const codes: Record<string, number> = { A: -1, B: -2, C: -3, D: -4 };
-    return {
-      codepoint: codes[arrow[3]!]!,
-      modifier: Number.parseInt(arrow[1]!, 10) - 1,
-      eventType: parseEventType(arrow[2]),
-    };
+    return { codepoint: codes[arrow[3]!]!, modifier: mod - 1, eventType: parseEventType(arrow[2]) };
   }
 
+  // Functional keys: \x1b[<num>~ or \x1b[<num>;<mod>~ or \x1b[<num>;<mod>:<event>~
   const func = /^\x1b\[(\d+)(?:;(\d+))?(?::(\d+))?~$/.exec(data);
   if (func) {
+    const keyNum = Number.parseInt(func[1]!, 10);
+    const mod = func[2] ? Number.parseInt(func[2], 10) : 1;
     const table: Record<number, number> = {
       2: FUNCTIONAL_CODEPOINTS.insert, 3: FUNCTIONAL_CODEPOINTS.delete,
       5: FUNCTIONAL_CODEPOINTS.pageUp, 6: FUNCTIONAL_CODEPOINTS.pageDown,
@@ -188,34 +208,38 @@ function parseKittySequence(data: string): { codepoint: number; shiftedKey?: num
       18: FUNCTIONAL_CODEPOINTS.f7, 19: FUNCTIONAL_CODEPOINTS.f8, 20: FUNCTIONAL_CODEPOINTS.f9,
       21: FUNCTIONAL_CODEPOINTS.f10, 23: FUNCTIONAL_CODEPOINTS.f11, 24: FUNCTIONAL_CODEPOINTS.f12,
     };
-    const cp = table[Number.parseInt(func[1]!, 10)];
+    const cp = table[keyNum];
     if (cp !== undefined) {
-      return { codepoint: cp, modifier: (func[2] ? Number.parseInt(func[2], 10) : 1) - 1, eventType: parseEventType(func[3]) };
+      return { codepoint: cp, modifier: mod - 1, eventType: parseEventType(func[3]) };
     }
   }
 
+  // Home/End with modifier: \x1b[1;<mod>H/F or \x1b[1;<mod>:<event>H/F
   const homeEnd = /^\x1b\[1;(\d+)(?::(\d+))?([HF])$/.exec(data);
   if (homeEnd) {
-    return {
-      codepoint: homeEnd[3] === "H" ? FUNCTIONAL_CODEPOINTS.home : FUNCTIONAL_CODEPOINTS.end,
-      modifier: Number.parseInt(homeEnd[1]!, 10) - 1,
-      eventType: parseEventType(homeEnd[2]),
-    };
+    const mod = Number.parseInt(homeEnd[1]!, 10);
+    const cp = homeEnd[3] === "H" ? FUNCTIONAL_CODEPOINTS.home : FUNCTIONAL_CODEPOINTS.end;
+    return { codepoint: cp, modifier: mod - 1, eventType: parseEventType(homeEnd[2]) };
   }
 
+  // F1, F2, F4: \x1b[P/Q/S or \x1b[1;<mod>P/Q/S or \x1b[1;<mod>:<event>P/Q/S
+  // F3 is sent as \x1b[13~ because \x1b[1;<mod>R collides with cursor position reports.
   const fkey = /^\x1b\[(?:1;(\d+)(?::(\d+))?)?([PQS])$/.exec(data);
   if (fkey) {
+    const mod = fkey[1] ? Number.parseInt(fkey[1], 10) : 1;
     const table: Record<string, number> = { P: FUNCTIONAL_CODEPOINTS.f1, Q: FUNCTIONAL_CODEPOINTS.f2, S: FUNCTIONAL_CODEPOINTS.f4 };
-    return {
-      codepoint: table[fkey[3]!]!,
-      modifier: (fkey[1] ? Number.parseInt(fkey[1], 10) : 1) - 1,
-      eventType: parseEventType(fkey[2]),
-    };
+    return { codepoint: table[fkey[3]!]!, modifier: mod - 1, eventType: parseEventType(fkey[2]) };
   }
+
   return null;
 }
 
-function parseModifyOtherKeys(data: string): { codepoint: number; modifier: number } | null {
+interface ParsedModifyOtherKeys {
+  codepoint: number;
+  modifier: number;
+}
+
+function parseModifyOtherKeys(data: string): ParsedModifyOtherKeys | null {
   const m = /^\x1b\[27;(\d+);(\d+)~$/.exec(data);
   if (!m) return null;
   return { codepoint: Number.parseInt(m[2]!, 10), modifier: Number.parseInt(m[1]!, 10) - 1 };
@@ -225,7 +249,7 @@ function matchesLegacy(data: string, sequences: readonly string[]): boolean {
   return sequences.includes(data);
 }
 
-function matchesLegacyModifier(data: string, key: keyof typeof LEGACY_SHIFT_SEQUENCES, modifier: number): boolean {
+function matchesLegacyModifier(data: string, key: LegacyModifierKey, modifier: number): boolean {
   if (modifier === MODIFIERS.shift) return matchesLegacy(data, LEGACY_SHIFT_SEQUENCES[key]);
   if (modifier === MODIFIERS.ctrl) return matchesLegacy(data, LEGACY_CTRL_SEQUENCES[key]);
   return false;
@@ -245,10 +269,56 @@ function isWindowsTerminal(): boolean {
   return Boolean(process.env.WT_SESSION) && !process.env.SSH_CONNECTION && !process.env.SSH_CLIENT && !process.env.SSH_TTY;
 }
 
+/** Map shifted symbol codepoint to its physical (unshifted) keycode on US keyboard. */
+export function getPhysicalKeyForShiftedSymbol(shiftedCodepoint: number): number | undefined {
+  // US keyboard shifted symbols -> physical key
+  const map: Record<number, number> = {
+    33: 49,   // ! -> 1
+    64: 50,   // @ -> 2
+    35: 51,   // # -> 3
+    36: 52,   // $ -> 4
+    37: 53,   // % -> 5
+    94: 54,   // ^ -> 6
+    38: 55,   // & -> 7
+    42: 56,   // * -> 8
+    40: 57,   // ( -> 9
+    41: 48,   // ) -> 0
+    95: 45,   // _ -> -
+    43: 61,   // + -> =
+    123: 91,  // { -> [
+    125: 93,  // } -> ]
+    124: 92,  // | -> \\
+    58: 59,   // : -> ;
+    34: 39,   // " -> '
+    60: 44,   // < -> ,
+    62: 46,   // > -> .
+    63: 47,   // ? -> /
+    126: 96,  // ~ -> `
+  };
+  return map[shiftedCodepoint];
+}
+
 function matchesRawBackspace(data: string, modifier: number): boolean {
   if (data === "\x7f") return modifier === 0;
   if (data !== "\x08") return false;
   return isWindowsTerminal() ? modifier === MODIFIERS.ctrl : modifier === 0;
+}
+
+/**
+ * Logical shifted symbol matching.
+ * Kitty reports symbols such as "+" as Shift plus the physical "=" key.
+ * Bindings name the produced symbol, so consume that implicit Shift while preserving
+ * Ctrl, Alt, and Super.
+ */
+function logicalShiftedSymbol(
+  codepoint: number | undefined,
+  modifier: number,
+  allowedSymbols: ReadonlySet<string>,
+): { codepoint: number; modifier: number } | undefined {
+  if (codepoint === undefined || (modifier & MODIFIERS.shift) === 0) return undefined;
+  const normalized = normalizeKittyCodepoint(codepoint);
+  if (!allowedSymbols.has(String.fromCharCode(normalized))) return undefined;
+  return { codepoint: normalized, modifier: modifier & ~MODIFIERS.shift };
 }
 
 function matchesKitty(data: string, expectedCode: number, expectedMod: number): boolean {
@@ -256,26 +326,64 @@ function matchesKitty(data: string, expectedCode: number, expectedMod: number): 
   if (!parsed) return false;
   const actualMod = parsed.modifier & ~LOCK_MASK;
   const wantedMod = expectedMod & ~LOCK_MASK;
+
   const normCode = normalizeShiftedLetter(normalizeKittyCodepoint(parsed.codepoint), parsed.modifier);
   const normWanted = normalizeShiftedLetter(normalizeKittyCodepoint(expectedCode), expectedMod);
+
+  // Physical match: primary codepoint and every reported modifier match.
   if (actualMod === wantedMod && normCode === normWanted) return true;
 
-  // Logical match: Kitty báo symbol (ví dụ "+") là Shift + phím vật lý ("=").
-  // Binding đặt theo symbol cần tiêu thụ Shift ẩn đó, giữ nguyên Ctrl/Alt/Super.
+  // Logical match for shifted symbols: terminal sends shifted codepoint (e.g., 43 for '+')
+  // with shift modifier, but binding is for physical key (e.g., 61 for '=') with shift.
+  // Check if the primary codepoint is a shifted symbol and shift is in modifier.
+  const physicalForShifted = getPhysicalKeyForShiftedSymbol(normalizeKittyCodepoint(parsed.codepoint));
+  if (physicalForShifted !== undefined && (actualMod & MODIFIERS.shift) !== 0) {
+    // Terminal sent shifted symbol with shift modifier.
+    // Match if expected codepoint is the physical key and expected modifier includes shift.
+    const expectedCodeNorm = normalizeKittyCodepoint(expectedCode);
+    if (expectedCodeNorm === physicalForShifted && (wantedMod & MODIFIERS.shift) !== 0) {
+      // Also ensure other modifiers (ctrl, alt, super) match
+      const otherMods = MODIFIERS.ctrl | MODIFIERS.alt | MODIFIERS.super;
+      if ((actualMod & otherMods) === (wantedMod & otherMods)) {
+        return true;
+      }
+    }
+  }
+
+  // Logical match using shiftedKey (alternate keys flag 4): terminal reports shifted key separately
   const shifted = logicalShiftedSymbol(parsed.shiftedKey, actualMod, SYMBOL_KEYS);
-  if (
-    shifted &&
-    (shifted.modifier & ~LOCK_MASK) === wantedMod &&
-    shifted.codepoint === normalizeKittyCodepoint(expectedCode)
-  ) {
+  if (shifted && (shifted.modifier & ~LOCK_MASK) === wantedMod && shifted.codepoint === normalizeKittyCodepoint(expectedCode)) {
     return true;
   }
 
-  if (parsed.baseLayoutKey !== undefined && parsed.baseLayoutKey === expectedCode && actualMod === wantedMod) {
-    const isLatin = normCode >= 97 && normCode <= 122;
-    const isSymbol = SYMBOL_KEYS.has(String.fromCharCode(normCode));
-    if (!isLatin && !isSymbol) return true;
+  // Additional logical match: terminal reports shifted symbol with shift modifier
+  // but binding is for the shifted symbol itself (no modifier expected).
+  // e.g., terminal sends \x1b[43:61;2u (primary=43='+', shifted=61='=', modifier=shift)
+  // and binding is for '+' (no modifier).
+  // This matches when the primary codepoint matches the expected codepoint,
+  // shift is the only modifier present, and binding expects no modifier.
+  if (wantedMod === 0 && (actualMod & MODIFIERS.shift) !== 0) {
+    const otherMods = MODIFIERS.ctrl | MODIFIERS.alt | MODIFIERS.super;
+    if ((actualMod & otherMods) === 0) {
+      // Only shift modifier present, primary codepoint matches expected
+      if (normalizeKittyCodepoint(parsed.codepoint) === normalizeKittyCodepoint(expectedCode)) {
+        return true;
+      }
+    }
   }
+
+  if (actualMod !== wantedMod) return false;
+
+  // Alternate match: use base layout key for non-Latin keyboard layouts.
+  // Only fall back to base layout key when the codepoint is NOT already a
+  // recognized Latin letter (a-z) or symbol (e.g., /, -, [, ;, etc.).
+  if (parsed.baseLayoutKey !== undefined && parsed.baseLayoutKey === expectedCode) {
+    const cp = normCode;
+    const isLatinLetter = cp >= 97 && cp <= 122;
+    const isKnownSymbol = SYMBOL_KEYS.has(String.fromCharCode(cp));
+    if (!isLatinLetter && !isKnownSymbol) return true;
+  }
+
   return false;
 }
 
@@ -286,11 +394,7 @@ function matchesModifyOtherKeys(data: string, code: number, modifier: number): b
 }
 
 /**
- * Khớp dạng xterm modifyOtherKeys (CSI 27 ; mod ; keycode ~) với phím in được.
- *
- * Như matchesPrintableModifyOtherKeys của pi-mono: ngoài khớp vật lý còn nhận
- * khớp "symbol thật" (terminal báo "+" là Shift + "="), nên binding đặt theo
- * symbol vẫn hoạt động trên terminal chỉ hỗ trợ modifyOtherKeys (không Kitty).
+ * Match xterm modifyOtherKeys format for printable keys with logical shift.
  */
 function matchesPrintableModifyOtherKeys(data: string, code: number, modifier: number): boolean {
   const parsed = parseModifyOtherKeys(data);
@@ -299,6 +403,19 @@ function matchesPrintableModifyOtherKeys(data: string, code: number, modifier: n
     parsed.modifier === modifier &&
     normalizeShiftedLetter(parsed.codepoint, parsed.modifier) === normalizeShiftedLetter(code, modifier);
   if (physical) return true;
+
+  // Logical match for shifted symbols: terminal sends shifted codepoint (e.g., 43 for '+')
+  // with shift modifier, but binding is for physical key (e.g., 61 for '=') with shift.
+  const physicalForShifted = getPhysicalKeyForShiftedSymbol(normalizeKittyCodepoint(parsed.codepoint));
+  if (physicalForShifted !== undefined && (parsed.modifier & MODIFIERS.shift) !== 0) {
+    if (normalizeKittyCodepoint(code) === physicalForShifted && (modifier & MODIFIERS.shift) !== 0) {
+      const otherMods = MODIFIERS.ctrl | MODIFIERS.alt | MODIFIERS.super;
+      if ((parsed.modifier & otherMods) === (modifier & otherMods)) {
+        return true;
+      }
+    }
+  }
+
   const shifted = logicalShiftedSymbol(parsed.codepoint, parsed.modifier, SHIFTED_SYMBOL_KEYS);
   return shifted?.modifier === modifier && shifted.codepoint === code;
 }
@@ -315,7 +432,7 @@ function formatWithModifiers(keyName: string, modifier: number): string | undefi
   return mods.length > 0 ? `${mods.join("+")}+${keyName}` : keyName;
 }
 
-function parseKeyId(keyId: string): { key: string; ctrl: boolean; shift: boolean; alt: boolean; super: boolean } | null {
+export function parseKeyId(keyId: string): { key: string; ctrl: boolean; shift: boolean; alt: boolean; super: boolean } | null {
   let key = keyId.toLowerCase();
   const mods = new Set<string>();
   while (true) {
@@ -331,9 +448,9 @@ function parseKeyId(keyId: string): { key: string; ctrl: boolean; shift: boolean
 
 /**
  * So hai DANH TÍNH phím (không qua byte terminal).
- *
  * Ink giao sự kiện đã chuẩn hóa (Ctrl+C = "c" + cờ ctrl), nên không thể dùng
- * matchesKey với dữ liệu thô. Hàm này so trực tiếp hai danh tính đã parse,\ * nhận cả biến thể thứ tự modifier và symbol cần Shift.
+ * matchesKey với dữ liệu thô. Hàm này so trực tiếp hai danh tính đã parse,
+ * nhận cả biến thể thứ tự modifier và symbol cần Shift.
  */
 export function matchesKeyId(actual: string, expected: string): boolean {
   const a = parseKeyId(actual);
@@ -360,12 +477,12 @@ export function matchesKey(data: string, keyId: string): boolean {
     case "esc":
       return modifier === 0 && (data === "\x1b" || matchesKitty(data, CODEPOINTS.escape, 0) || matchesModifyOtherKeys(data, CODEPOINTS.escape, 0));
     case "space":
-      // Legacy (không Kitty): \x00 = ctrl+space, ESC+space = alt+space.
       if (!kittyProtocolActive) {
         if (modifier === MODIFIERS.ctrl && data === "\x00") return true;
         if (modifier === MODIFIERS.alt && data === "\x1b ") return true;
       }
       if (modifier === 0) return data === " " || matchesKitty(data, CODEPOINTS.space, 0) || matchesModifyOtherKeys(data, CODEPOINTS.space, 0);
+      if (modifier === MODIFIERS.alt && !kittyProtocolActive && data === "\x1b ") return true;
       return matchesKitty(data, CODEPOINTS.space, modifier) || matchesModifyOtherKeys(data, CODEPOINTS.space, modifier);
     case "tab":
       if (modifier === MODIFIERS.shift) return data === "\x1b[Z" || matchesKitty(data, CODEPOINTS.tab, MODIFIERS.shift) || matchesModifyOtherKeys(data, CODEPOINTS.tab, MODIFIERS.shift);
@@ -408,8 +525,6 @@ export function matchesKey(data: string, keyId: string): boolean {
       if (matchesLegacyModifier(data, "delete", modifier)) return true;
       return matchesKitty(data, FUNCTIONAL_CODEPOINTS.delete, modifier);
     case "clear":
-      // "clear" has no Kitty codepoint of its own; only legacy sequences
-      // (including shift/ctrl variants) identify it.
       if (modifier === 0) return matchesLegacy(data, LEGACY_KEY_SEQUENCES.clear);
       return matchesLegacyModifier(data, "clear", modifier);
     case "home":
@@ -429,34 +544,34 @@ export function matchesKey(data: string, keyId: string): boolean {
       if (matchesLegacyModifier(data, "pageDown", modifier)) return true;
       return matchesKitty(data, FUNCTIONAL_CODEPOINTS.pageDown, modifier);
     case "up":
-      if (modifier === MODIFIERS.alt) return data === "\x1bp" || matchesKitty(data, ARROW_CODEPOINTS.up, MODIFIERS.alt);
+      if (modifier === MODIFIERS.alt) return data === "\x1bP" || matchesKitty(data, ARROW_CODEPOINTS.up, MODIFIERS.alt);
       if (modifier === 0) return matchesLegacy(data, LEGACY_KEY_SEQUENCES.up) || matchesKitty(data, ARROW_CODEPOINTS.up, 0);
       if (matchesLegacyModifier(data, "up", modifier)) return true;
       return matchesKitty(data, ARROW_CODEPOINTS.up, modifier);
     case "down":
-      if (modifier === MODIFIERS.alt) return data === "\x1bn" || matchesKitty(data, ARROW_CODEPOINTS.down, MODIFIERS.alt);
+      if (modifier === MODIFIERS.alt) return data === "\x1bN" || matchesKitty(data, ARROW_CODEPOINTS.down, MODIFIERS.alt);
       if (modifier === 0) return matchesLegacy(data, LEGACY_KEY_SEQUENCES.down) || matchesKitty(data, ARROW_CODEPOINTS.down, 0);
       if (matchesLegacyModifier(data, "down", modifier)) return true;
       return matchesKitty(data, ARROW_CODEPOINTS.down, modifier);
     case "left":
-      if (modifier === MODIFIERS.alt) return data === "\x1b[1;3D" || data === "\x1bb" || matchesKitty(data, ARROW_CODEPOINTS.left, MODIFIERS.alt);
+      if (modifier === MODIFIERS.alt) return data === "\x1b[1;3D" || data === "\x1bB" || matchesKitty(data, ARROW_CODEPOINTS.left, MODIFIERS.alt);
       if (modifier === MODIFIERS.ctrl) return data === "\x1b[1;5D" || matchesLegacyModifier(data, "left", MODIFIERS.ctrl) || matchesKitty(data, ARROW_CODEPOINTS.left, MODIFIERS.ctrl);
       if (modifier === 0) return matchesLegacy(data, LEGACY_KEY_SEQUENCES.left) || matchesKitty(data, ARROW_CODEPOINTS.left, 0);
       if (matchesLegacyModifier(data, "left", modifier)) return true;
       return matchesKitty(data, ARROW_CODEPOINTS.left, modifier);
     case "right":
-      if (modifier === MODIFIERS.alt) return data === "\x1b[1;3C" || data === "\x1bf" || matchesKitty(data, ARROW_CODEPOINTS.right, MODIFIERS.alt);
+      if (modifier === MODIFIERS.alt) return data === "\x1b[1;3C" || data === "\x1bF" || matchesKitty(data, ARROW_CODEPOINTS.right, MODIFIERS.alt);
       if (modifier === MODIFIERS.ctrl) return data === "\x1b[1;5C" || matchesLegacyModifier(data, "right", MODIFIERS.ctrl) || matchesKitty(data, ARROW_CODEPOINTS.right, MODIFIERS.ctrl);
       if (modifier === 0) return matchesLegacy(data, LEGACY_KEY_SEQUENCES.right) || matchesKitty(data, ARROW_CODEPOINTS.right, 0);
       if (matchesLegacyModifier(data, "right", modifier)) return true;
       return matchesKitty(data, ARROW_CODEPOINTS.right, modifier);
-      case "f1": case "f2": case "f3": case "f4": case "f5":
-      case "f6": case "f7": case "f8": case "f9":
-      case "f10": case "f11": case "f12": {
-        const functionKey = key as keyof typeof LEGACY_KEY_SEQUENCES & keyof typeof FUNCTIONAL_CODEPOINTS;
-        if (modifier === 0 && matchesLegacy(data, LEGACY_KEY_SEQUENCES[functionKey])) return true;
-        return matchesKitty(data, FUNCTIONAL_CODEPOINTS[functionKey], modifier);
-      }
+    case "f1": case "f2": case "f3": case "f4": case "f5":
+    case "f6": case "f7": case "f8": case "f9":
+    case "f10": case "f11": case "f12": {
+      const functionKey = key as keyof typeof LEGACY_KEY_SEQUENCES & keyof typeof FUNCTIONAL_CODEPOINTS;
+      if (modifier === 0 && matchesLegacy(data, LEGACY_KEY_SEQUENCES[functionKey])) return true;
+      return matchesKitty(data, FUNCTIONAL_CODEPOINTS[functionKey], modifier);
+    }
   }
 
   // Phím đơn: chữ cái, chữ số, ký hiệu
@@ -470,23 +585,20 @@ export function matchesKey(data: string, keyId: string): boolean {
       return matchesKitty(data, codepoint, MODIFIERS.ctrl) || matchesPrintableModifyOtherKeys(data, codepoint, MODIFIERS.ctrl);
     }
     if (modifier === MODIFIERS.shift + MODIFIERS.ctrl) {
-      return (
-        matchesKitty(data, codepoint, MODIFIERS.shift + MODIFIERS.ctrl) ||
-        matchesPrintableModifyOtherKeys(data, codepoint, MODIFIERS.shift + MODIFIERS.ctrl)
-      );
+      return matchesKitty(data, codepoint, MODIFIERS.shift + MODIFIERS.ctrl) || matchesPrintableModifyOtherKeys(data, codepoint, MODIFIERS.shift + MODIFIERS.ctrl);
     }
     if (modifier === MODIFIERS.shift) {
       const isLower = key >= "a" && key <= "z";
       if (isLower && data === key.toUpperCase()) return true;
       return matchesKitty(data, codepoint, MODIFIERS.shift) || matchesPrintableModifyOtherKeys(data, codepoint, MODIFIERS.shift);
     }
-    if (modifier !== 0) return matchesKitty(data, codepoint, modifier);
-    return data === key || matchesKitty(data, codepoint, 0);
+    if (modifier !== 0) return matchesKitty(data, codepoint, modifier) || matchesPrintableModifyOtherKeys(data, codepoint, modifier);
+    return data === key || matchesKitty(data, codepoint, 0) || matchesPrintableModifyOtherKeys(data, codepoint, 0);
   }
   return false;
 }
 
-function formatParsedKey(codepoint: number, modifier: number, baseLayoutKey?: number): string | undefined {
+export function formatParsedKey(codepoint: number, modifier: number, baseLayoutKey?: number): string | undefined {
   const normalized = normalizeKittyCodepoint(codepoint);
   const identity = normalizeShiftedLetter(normalized, modifier);
   const isLatinLetter = identity >= 97 && identity <= 122;
@@ -522,7 +634,6 @@ function formatParsedKey(codepoint: number, modifier: number, baseLayoutKey?: nu
 export function parseKey(data: string): string | undefined {
   const kitty = parseKittySequence(data);
   if (kitty) {
-    // Ưu tiên symbol thật ("+") hơn phím vật lý ("=" + Shift) để nhãn khớp binding.
     const shifted = logicalShiftedSymbol(kitty.shiftedKey, kitty.modifier, SYMBOL_KEYS);
     return formatParsedKey(
       shifted?.codepoint ?? kitty.codepoint,
@@ -538,8 +649,6 @@ export function parseKey(data: string): string | undefined {
   if (legacy) return legacy;
 
   if (data === "\x1b") return "escape";
-  // Dải điều khiển còn lại mà terminal gửi trực tiếp: \x1c/\x1d/\x1f và dạng
-  // ESC hai lần (Ctrl+Alt+[ \ ] -). Thiếu nhãn thì mọi binding gọi chúng vô nghĩa.
   if (data === "\x1c") return "ctrl+\\";
   if (data === "\x1d") return "ctrl+]";
   if (data === "\x1f") return "ctrl+-";
@@ -554,11 +663,9 @@ export function parseKey(data: string): string | undefined {
   if (data === "\x7f") return "backspace";
   if (data === "\x08") return isWindowsTerminal() ? "ctrl+backspace" : "backspace";
   if (data === "\x1b[Z") return "shift+tab";
-  if (data === "\x1b\x7f" || data === "\x1b\b") return "alt+backspace";
   if (!kittyProtocolActive && data === "\x1b\r") return "alt+enter";
   if (!kittyProtocolActive && data === "\x1b ") return "alt+space";
-  // Alt+Left/Right kiểu cổ điển dùng chữ hoa (ESC B / ESC F); chữ thường đã có
-  // trong LEGACY_SEQUENCE_KEY_IDS (alt+left/alt+right của word navigation).
+  if (data === "\x1b\x7f" || data === "\x1b\b") return "alt+backspace";
   if (!kittyProtocolActive && data === "\x1bB") return "alt+left";
   if (!kittyProtocolActive && data === "\x1bF") return "alt+right";
   if (!kittyProtocolActive && data.length === 2 && data[0] === "\x1b") {
@@ -586,7 +693,7 @@ export function parseKey(data: string): string | undefined {
 }
 
 /** Đọc chuỗi modifyOtherKeys (CSI 27 ; mod ; keycode ~) thành ký tự in được. */
-function decodeModifyOtherKeysPrintable(data: string): string | undefined {
+export function decodeModifyOtherKeysPrintable(data: string): string | undefined {
   const m = /^\x1b\[27;(\d+);(\d+)~$/.exec(data);
   if (!m) return undefined;
   const modifier = (Number.parseInt(m[1]!, 10) - 1) & ~LOCK_MASK;
@@ -612,22 +719,6 @@ export function decodePrintableKey(data: string): string | undefined {
   return decodeKittyPrintable(data) ?? decodeModifyOtherKeysPrintable(data);
 }
 
-/**
- * Ký tự do một symbol key tạo ra khi Shift được nhấn, cùng modifier đã bỏ Shift.
- * Kitty báo "+" là Shift + phím vật lý "=", nên binding đặt theo symbol cần khớp
- * bằng cách "tiêu thụ" Shift ẩn đó.
- */
-function logicalShiftedSymbol(
-  codepoint: number | undefined,
-  modifier: number,
-  allowedSymbols: ReadonlySet<string>,
-): { codepoint: number; modifier: number } | undefined {
-  if (codepoint === undefined || (modifier & MODIFIERS.shift) === 0) return undefined;
-  const normalized = normalizeKittyCodepoint(codepoint);
-  if (!allowedSymbols.has(String.fromCharCode(normalized))) return undefined;
-  return { codepoint: normalized, modifier: modifier & ~MODIFIERS.shift };
-}
-
 /** Giải mã chuỗi CSI-u printable Kitty. */
 export function decodeKittyPrintable(data: string): string | undefined {
   const m = /^\x1b\[(\d+)(?::(\d*))?(?::(\d+))?(?:;(\d+))?(?::(\d+))?u$/.exec(data);
@@ -640,9 +731,10 @@ export function decodeKittyPrintable(data: string): string | undefined {
   const allowed = MODIFIERS.shift | LOCK_MASK;
   if ((modifier & ~allowed) !== 0) return undefined;
   if (modifier & (MODIFIERS.alt | MODIFIERS.ctrl)) return undefined;
-  let effective = codepoint;
-  if (modifier & MODIFIERS.shift && typeof shifted === "number") effective = shifted;
-  effective = normalizeKittyCodepoint(effective);
+  // For printable decoding, use the primary codepoint (the character produced).
+  // The shifted keycode (m[2]) is the physical key, not the character produced.
+  // Do NOT normalize letter case - the primary codepoint IS the character produced.
+  let effective = normalizeKittyCodepoint(codepoint);
   if (!Number.isFinite(effective) || effective < 32) return undefined;
   if (effective >= KITTY_FUNCTIONAL_PUA_START && effective <= KITTY_FUNCTIONAL_PUA_END) return undefined;
   try {

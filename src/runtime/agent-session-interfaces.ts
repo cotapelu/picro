@@ -6,6 +6,7 @@
 
 import type { SessionTreeNode } from "../session/session-manager.js";
 import type { SessionStats } from "../session/agent-session-types.js";
+import type { MarkdownTransformer } from "../tui/ink/components/markdown-transform.js";
 
 /**
  * Agent session interface - full interface for UI to interact with session
@@ -67,6 +68,21 @@ export interface AgentSessionInterface {
     getCwd(): string;
     setSessionName(name: string): void;
   };
+  // Settings manager
+  settingsManager: {
+    getMermaidRenderingMode?: () => "off" | "on" | "streaming";
+    getTerminalCapabilityOverrides?: () => Record<string, any>;
+    getTuiMode?: () => string;
+    getShowHardwareCursor?: () => boolean;
+    getFullscreenCopyOnSelect?: () => boolean;
+    getFullscreenWheelScrollLines?: () => number;
+    getFullscreenScrollbar?: () => boolean;
+    getPromptGuidelines?: () => string[];
+  };
+  // Extension runner
+  extensionRunner: {
+    getMarkdownTransformers?: () => readonly MarkdownTransformer[];
+  } | undefined;
 
   // Reload resources
   reload?(): Promise<void>;

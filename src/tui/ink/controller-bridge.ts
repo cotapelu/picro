@@ -7,6 +7,7 @@
 import type { ChatMessageLike } from "./components/MessageList.js";
 import type { ToastLike } from "./components/Toast.js";
 import type { TranscriptItem } from "./components/Transcript.js";
+import type { MarkdownTransformer } from "./components/markdown-transform.js";
 
 /** Trạng thái hiển thị tối thiểu mà view cần. */
 export interface ControllerStatus {
@@ -150,10 +151,30 @@ export interface InteractiveControllerLike {
   cycleThinkingLevel?(): void;
   /** Ctrl+T: mở rộng/thu gọn toàn bộ đầu ra tool. */
   toggleToolExpansion?(): void;
+  /** Tool expansion state changed (Ctrl+T). */
+  onToolsExpandedChange?: (expanded: boolean) => void;
+  /** Toggle thinking block visibility. */
+  toggleThinkingBlock?(): void;
+  /** Thinking block visibility state changed. */
+  onThinkingBlockChange?: (hidden: boolean) => void;
+  /** Get current thinking block hidden state. */
+  getThinkingBlockHidden?(): boolean;
+  /** Cycle thinking level forward/backward. */
+  cycleThinkingLevel?(direction: 'forward' | 'backward'): void;
   /** Đang có tin nhắn nào trong hàng đợi không (dùng cho trạng thái phím). */
   hasQueuedMessages?(): boolean;
   /** Thoát qua hook của view (khôi phục terminal trước khi exit). */
   shutdownViaHook?(): Promise<void>;
+  /** Lấy danh sách markdown transformers (mermaid + extensions). */
+  getMarkdownTransformers?(): readonly MarkdownTransformer[];
+  /** Lấy prompt templates cho autocomplete. */
+  getPromptTemplates?(): Array<{ name: string; description?: string; argumentHint?: string }>;
+  /** Lấy extension commands cho autocomplete. */
+  getExtensionCommands?(): Array<{ name: string; description?: string; argumentHint?: string; getArgumentCompletions?: (prefix: string) => any }>;
+  /** Lấy skill commands cho autocomplete (kiểu `skill:<name>`). */
+  getSkillCommands?(): Array<{ name: string; description?: string }>;
+  /** Gắn terminal thật để báo cáo trạng thái OSC 7501. */
+  setTerminal?(terminal: unknown): void;
 }
 
 export type { ChatMessageLike, ToastLike };

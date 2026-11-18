@@ -140,3 +140,77 @@ describe('Transcript rendering', () => {
     expect(out).toContain('system note');
   });
 });
+
+describe('Transcript search', () => {
+  it('opens the search box on Ctrl+Shift+F', async () => {
+    const controller = makeController();
+    const instance = render(<App runtime={runtime} controller={controller} />);
+    await settledFrame(instance);
+    instance.stdin.write('\x1b[70;6u'); // Ctrl+Shift+F in kitty encoding (modifiers=6 -> ctrl+shift)
+    await settledFrame(instance);
+    const out = (await settledFrame(instance)).replace(/\x1b\[[0-9;?]*[a-zA-Z]/g, '');
+    expect(out).toContain('/');
+  });
+
+  it('shows the result count for a matching query', async () => {
+    const controller = makeController();
+    const instance = render(<App runtime={runtime} controller={controller} />);
+    await settledFrame(instance);
+    instance.stdin.write('\x1b[70;6u');
+    await settledFrame(instance);
+    // Đợi React xử lý state update (searchActive=true truyền xuống Editor).
+    await new Promise((r) => setTimeout(r, 50));
+    // Gõ "hello" - khớp 1 lần trong transcript.
+    for (const ch of 'hello') {
+      instance.stdin.write(ch);
+      await settledFrame(instance);
+    }
+    const out = (await settledFrame(instance)).replace(/\x1b\[[0-9;?]*[a-zA-Z]/g, '');
+    expect(out).toContain('/1');
+  });
+
+  it('shows zero results for a query that matches nothing', async () => {
+    const controller = makeController();
+    const instance = render(<App runtime={runtime} controller={controller} />);
+    await settledFrame(instance);
+    instance.stdin.write('\x1b[70;6u');
+    await settledFrame(instance);
+    await new Promise((r) => setTimeout(r, 50));
+    for (const ch of 'zzzzz') {
+      instance.stdin.write(ch);
+      await settledFrame(instance);
+    }
+    const out = (await settledFrame(instance)).replace(/\x1b\[[0-9;?]*[a-zA-Z]/g, '');
+    expect(out).toContain('/0');
+  });
+
+  it('closes the search box on Esc', async () => {
+    const controller = makeController();
+    const instance = render(<App runtime={runtime} controller={controller} />);
+    await settledFrame(instance);
+    instance.stdin.write('\x1b[70;6u');
+    await settledFrame(instance);
+    await new Promise((r) => setTimeout(r, 50));
+    expect((await settledFrame(instance))).toContain('Enter: kết quả tiếp');
+    instance.stdin.write('\x1b'); // Esc
+    await settledFrame(instance);
+    expect((await settledFrame(instance))).not.toContain('Enter: kết quả tiếp');
+  });
+
+  it('keeps typing out of the message editor while searching', async () => {
+    const controller = makeController();
+    const instance = render(<App runtime={runtime} controller={controller} />);
+    await settledFrame(instance);
+    instance.stdin.write('\x1b[70;6u');
+    await settledFrame(instance);
+    await new Promise((r) => setTimeout(r, 50));
+    for (const ch of 'hello') {
+      instance.stdin.write(ch);
+      await settledFrame(instance);
+    }
+    // Nhấn Enter KHÔNG được gửi tin nhắn — nó chuyển kết quả tìm kiếm.
+    instance.stdin.write('\r');
+    await settledFrame(instance);
+    expect(controller.sendMessage).not.toHaveBeenCalled();
+  });
+});

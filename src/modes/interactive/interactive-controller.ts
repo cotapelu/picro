@@ -5,7 +5,17 @@ import type { AgentSessionRuntimeInterface } from '../../runtime/index.js';
 import type { IndicatorState, OverlayRequest } from '../../tui/ink/controller-bridge.js';
 import type { TranscriptItem } from '../../tui/ink/components/Transcript.js';
 import type { SettingRow } from '../../tui/ink/components/SettingsSelector.js';
+import type { MarkdownTransformer } from '../../tui/ink/components/markdown-transform.js';
 import { extractMessageText, extractThinkingText } from '../../tui/ink/components/Transcript.js';
+import { createMermaidMarkdownTransformer } from '../../tui/ink/components/mermaid.js';
+import { getTheme } from '../../tui/ink/theme/theme.js';
+import { ProgramStatusReporter, type BlockedStatus } from '../../tui/ink/core/ProgramStatusReporter.js';
+import { buildBugReportBundle, writeBugReportArchive } from '../../session/bug-report.js';
+import { shareSession } from '../../session/session-share.js';
+import { readCrashLog, clearCrashLog } from '../../session/crash-log.js';
+import { serializeSessionBranch } from '../../session/session-export.js';
+import { createShareTrailingEntries } from '../../session/bug-report.js';
+import { resolve } from 'path';
 
 /** Gộp text từ kết quả tool (chuỗi hoặc mảng block). */
 function textOfToolResult(result: any): string {
@@ -143,6 +153,28 @@ export interface InteractiveControllerOptions {
   runtime: AgentSessionRuntimeInterface;
 }
 
+/**
+ * Terminal dự phòng khi chưa có terminal thật (test, mode headless).
+ * Mọi thao tác đều no-op nên báo cáo trạng thái không bao giờ ném lỗi.
+ */
+const fallbackTerminal = {
+  setProgramStatus: () => {},
+} as unknown as import('../../tui/ink/core/Terminal.js').Terminal;
+
+/** Loại hộp thoại ứng với từng overlay, cho báo cáo "blocked" (OSC 7501). */
+const OVERLAY_BLOCKED_STATUS: Partial<Record<OverlayRequest['kind'], BlockedStatus>> = {
+  model: { kind: 'question', message: 'Chọn mô hình' },
+  session: { kind: 'question', message: 'Mở lại phiên' },
+  settings: { kind: 'question', message: 'Cài đặt' },
+  theme: { kind: 'question', message: 'Chọn chủ đề' },
+  thinking: { kind: 'question', message: 'Cấp độ suy nghĩ' },
+  help: { kind: 'question', message: 'Trợ giúp' },
+  login: { kind: 'auth', message: 'Đăng nhập' },
+  tree: { kind: 'question', message: 'Cây phiên' },
+  fork: { kind: 'question', message: 'Fork phiên' },
+  trust: { kind: 'permission', message: 'Tin tưởng dự án' },
+};
+
 export class InteractiveController {
   private runtime: AgentSessionRuntimeInterface;
   private messages: ChatMessage[] = [];
@@ -259,6 +291,13 @@ export class InteractiveController {
     if (!session?.subscribe) return undefined;
 
     const unsub = session.subscribe((event: any) => {
+      // Báo cáo trạng thái OSC 7501 (pi-mono): mọi sự kiện đều được forward,
+      // reporter tự quyết định trạng thái working/done/error/idle.
+      try {
+        this.programStatus.handleEvent(event);
+      } catch {
+        // Báo cáo trạng thái là best-effort, không được phá luồng chính.
+      }
       switch (event.type) {
         case 'agent_start':
           this.setIsProcessing(true);
@@ -610,6 +649,7 @@ export class InteractiveController {
       { id: 'steeringMode', label: 'Chế độ steer', value: pick(settings.getSteeringMode, 'all'), description: 'Đưa tin nhắn vào giữa lượt', values: ['all', 'one-at-a-time'] },
       { id: 'followUpMode', label: 'Chế độ follow-up', value: pick(settings.getFollowUpMode, 'all'), description: 'Tin nhắn xếp hàng sau lượt', values: ['all', 'one-at-a-time'] },
       { id: 'compactionEnabled', label: 'Tự động nén ngữ cảnh', value: pick(settings.getCompactionEnabled, true) === 'true' ? 'bật' : 'tắt', values: ['tắt', 'bật'] },
+      { id: 'compactionSummarize', label: 'Nén ngữ cảnh bằng LLM', value: pick(settings.getCompactionSummarize, true) === 'true' ? 'bật' : 'tắt', description: 'Gọi LLM thật để tóm tắt (tắt = dùng bản tóm tắt stub)', values: ['tắt', 'bật'] },
       { id: 'retryEnabled', label: 'Tự động thử lại', value: pick(settings.getRetryEnabled, true) === 'true' ? 'bật' : 'tắt', values: ['tắt', 'bật'] },
       { id: 'showImages', label: 'Hiện ảnh trong kết quả tool', value: pick(settings.getShowImages, true) === 'true' ? 'bật' : 'tắt', values: ['tắt', 'bật'] },
       { id: 'showTerminalProgress', label: 'Thanh tiến độ terminal', value: pick(settings.getShowTerminalProgress, true) === 'true' ? 'bật' : 'tắt', values: ['tắt', 'bật'] },
@@ -636,6 +676,12 @@ export class InteractiveController {
       previous();
     }
     this.subscribeToSession();
+    try {
+      // Quên trạng thái lượt chạy của phiên trước (pi-mono: reset sau đổi phiên).
+      this.programStatus.reset();
+    } catch {
+      // best-effort
+    }
   }
 
   private setIsProcessing(processing: boolean): void {
@@ -782,6 +828,7 @@ export class InteractiveController {
       steeringMode: () => settings?.setSteeringMode?.(value),
       followUpMode: () => settings?.setFollowUpMode?.(value),
       compactionEnabled: () => settings?.setCompactionEnabled?.(on),
+      compactionSummarize: () => settings?.setCompactionSummarize?.(on),
       retryEnabled: () => settings?.setRetryEnabled?.(on),
       showImages: () => settings?.setShowImages?.(on),
       showTerminalProgress: () => settings?.setShowTerminalProgress?.(on),
@@ -819,6 +866,13 @@ export class InteractiveController {
   requestOverlay(request: OverlayRequest): void {
     this.onOverlayRequestCallback?.(request);
     this.setModal({ type: modalTypeForOverlay(request.kind), props: request.props ?? {} });
+    // Hộp thoại đang chờ người dùng -> báo "blocked" (OSC 7501).
+    const blocked = OVERLAY_BLOCKED_STATUS[request.kind];
+    try {
+      this.programStatus.setBlocked(request.kind, blocked);
+    } catch {
+      // best-effort
+    }
   }
 
   /**
@@ -858,6 +912,11 @@ export class InteractiveController {
   closeOverlay(): void {
     this.onOverlayCloseCallback?.();
     this.setModal({ type: 'none' });
+    try {
+      this.programStatus.setBlocked('overlay', undefined);
+    } catch {
+      // best-effort
+    }
   }
 
   // ============================================================================
@@ -875,6 +934,42 @@ export class InteractiveController {
   private bashMode = false;
   private compactionQueue: Array<{ text: string; mode: 'steer' | 'followUp' }> = [];
 
+  /**
+   * Báo cáo trạng thái lên terminal qua OSC 7501 (pi-mono ProgramStatusReporter).
+   * Terminal không hỗ trợ thì ghi bị bỏ qua, không ảnh hưởng luồng chính.
+   */
+  private readonly programStatus = new ProgramStatusReporter(
+    () => this.terminal,
+    () => (this.runtime.sessionManager as { getSessionName?: () => string | undefined } | undefined)?.getSessionName?.(),
+  );
+
+  /** Terminal mà app (Ink/HTTP) gắn vào; mặc định là no-op fallback. */
+  private terminal: import('../../tui/ink/core/Terminal.js').Terminal = fallbackTerminal;
+
+  /**
+   * Gắn terminal thật để báo cáo trạng thái OSC 7501 hoạt động.
+   * View (interactive-app) gọi một lần sau khi khởi tạo Terminal.
+   */
+  setTerminal(terminal: import('../../tui/ink/core/Terminal.js').Terminal): void {
+    this.terminal = terminal ?? fallbackTerminal;
+    try {
+      this.programStatus.report();
+    } catch {
+      // best-effort
+    }
+  }
+
+  /** Mermaid markdown transformer (pi-mono style). */
+  private readonly mermaidMarkdownTransformer: MarkdownTransformer = createMermaidMarkdownTransformer({
+    getMode: () => (this.runtime.session?.settingsManager?.getMermaidRenderingMode?.() ?? 'off') as "off" | "on" | "streaming",
+    theme: {
+      border: getTheme().fg('border', '│'),
+      text: getTheme().fg('text', 'text'),
+      edge: getTheme().fg('accent', 'edge'),
+      title: getTheme().bold(getTheme().fg('mdHeading', 'title')),
+    },
+  });
+
   /** Hook cho view: tạm dừng / tiếp tục đường vào terminal (Ctrl+Z). */
   onSuspend?: () => void;
   onResume?: () => void;
@@ -886,6 +981,10 @@ export class InteractiveController {
   onBashModeChange?: (bash: boolean) => void;
   /** Hàng đợi đổi → view cập nhật dock. */
   onQueueChange?: (queue: { steering: string[]; followUp: string[] }) => void;
+  /** Tool expansion state changed (Ctrl+T). */
+  onToolsExpandedChange?: (expanded: boolean) => void;
+  /** Thinking block visibility state changed. */
+  onThinkingBlockChange?: (hidden: boolean) => void;
 
   /**
    * Phiên đang stream?
@@ -1047,10 +1146,10 @@ export class InteractiveController {
   }
 
   /** Đổi cấp độ suy nghī (pi-mono cycleThinkingLevel). */
-  cycleThinkingLevel(): void {
+  cycleThinkingLevel(direction: 'forward' | 'backward' = 'forward'): void {
     const session = this.runtime.session as any;
     const next =
-      typeof session?.cycleThinkingLevel === 'function' ? session.cycleThinkingLevel() : undefined;
+      typeof session?.cycleThinkingLevel === 'function' ? session.cycleThinkingLevel(direction) : undefined;
     if (!next) {
       this.addToast('Mô hình hiện tại không hỗ trợ suy nghĩ', 'info');
       return;
@@ -1063,10 +1162,27 @@ export class InteractiveController {
   toggleToolExpansion(): void {
     this.toolsExpanded = !this.toolsExpanded;
     this.addToast(`Đầu ra tool: ${this.toolsExpanded ? 'đã mở rộng' : 'đã thu gọn'}`, 'info');
+    this.onToolsExpandedChange?.(this.toolsExpanded);
   }
 
   getToolsExpanded(): boolean {
     return this.toolsExpanded;
+  }
+
+  /** Toggle thinking block visibility (Ctrl+Shift+T or similar). */
+  toggleThinkingBlock(): void {
+    const settings = this.runtime.settings as any;
+    const current = settings?.getHideThinkingBlock?.() ?? false;
+    const next = !current;
+    settings?.setHideThinkingBlock?.(next);
+    this.addToast(`Khối thinking: ${next ? 'đã ẩn' : 'đã hiện'}`, 'info');
+    this.onThinkingBlockChange?.(next);
+    this.refreshStatusFromSession();
+  }
+
+  getThinkingBlockHidden(): boolean {
+    const settings = this.runtime.settings as any;
+    return settings?.getHideThinkingBlock?.() ?? false;
   }
 
   /** Bật/tắt chế độ bash của ô nhập (đổi màu viền). */
@@ -1429,24 +1545,12 @@ export class InteractiveController {
       }
 
       case 'share': {
-        this.addToast('Chia sẻ phiên chưa khả dụng trong bản build này.', 'info');
+        await this.handleShareCommand();
         return;
       }
 
       case 'bug': {
-        const lines = [
-          `cwd: ${this.runtime.cwd}`,
-          `model: ${this.status.model}`,
-          '---',
-          `hint: ${args ?? '(không có)'}`,
-        ];
-        try {
-          const { writeClipboardText } = await import('../../utils/clipboard.js');
-          await writeClipboardText(lines.join('\n'));
-        } catch {
-          // Bỏ qua: không có clipboard vẫn báo cáo được qua màn hình.
-        }
-        this.addToast(`Báo cáo lỗi (đã copy): ${args ?? 'không có mô tả'}`, 'info');
+        await this.handleBugReportCommand(args);
         return;
       }
 
@@ -1835,6 +1939,61 @@ export class InteractiveController {
     this.addToast(`Đã nhập phiên từ: ${path}`, 'success');
   }
 
+  /** /bug [hint] — báo cáo lỗi. */
+  private async handleBugReportCommand(hint?: string): Promise<void> {
+    const session = this.runtime.session as any;
+    if (typeof session?.prompt !== 'function') {
+      this.addToast('Phiên hiện tại không hỗ trợ báo cáo lỗi.', 'error');
+      return;
+    }
+
+    // Build bug report bundle
+    const options = {
+      hint: hint?.trim(),
+      includeSession: true,
+      includeSummary: true,
+    };
+
+    // Generate summary using the model
+    this.addToast('Đang tạo tóm tắt báo cáo lỗi...', 'info');
+    let summary: string | undefined;
+    try {
+      summary = await session.summarizeForBugReport?.({ hint: options.hint })
+        ?? await session.prompt("Write a concise bug report summary for the current session.", { streamingBehavior: 'followUp' });
+    } catch {
+      // Fallback
+    }
+
+    const bundle = buildBugReportBundle(session, options, summary);
+
+    // Write archive to file
+    const archivePath = resolve(process.cwd(), `pi-bug-report-${bundle.metadata.id}.jsonl`);
+    try {
+      await writeBugReportArchive(bundle, archivePath);
+      this.addToast(`Bug report exported to: ${archivePath}`, 'success');
+    } catch (error) {
+      this.addToast(`Failed to write bug report: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    }
+
+    // Record in session and clear crash log
+    if (bundle.diagnostics.crashes.length > 0) {
+      clearCrashLog();
+    }
+  }
+
+  /** /share — chia sẻ phiên. */
+  private async handleShareCommand(): Promise<void> {
+    const session = this.runtime.session as any;
+    await shareSession(session, { destination: "gist" }, {
+      showStatus: (msg) => this.addToast(msg, 'info'),
+      showError: (msg) => this.addToast(msg, 'error'),
+      copyToClipboard: async (text) => {
+        const { writeClipboardText } = await import('../../utils/clipboard.js');
+        await writeClipboardText(text);
+      },
+    });
+  }
+
   /** /compact [ngữ cảnh] — nén ngữ cảnh ngay. */
   private async handleCompactCommand(args?: string): Promise<void> {
     const session = this.runtime.session as any;
@@ -1902,6 +2061,60 @@ export class InteractiveController {
   // ============================================================================
   // Cleanup
   // ============================================================================
+
+  /**
+   * Lấy danh sách markdown transformers (mermaid + extensions).
+   * Dùng cho UserMessage, AssistantMessage, SummaryMessages, CustomMessage, SkillInvocation.
+   */
+  getMarkdownTransformers(): readonly MarkdownTransformer[] {
+    const extensionTransformers = this.runtime.session?.extensionRunner?.getMarkdownTransformers?.() ?? [];
+    return [this.mermaidMarkdownTransformer, ...extensionTransformers];
+  }
+
+  /**
+   * Lấy prompt templates cho autocomplete.
+   * Đọc từ resource loader của session (templates người dùng định nghĩa).
+   */
+  getPromptTemplates(): Array<{ name: string; description?: string; argumentHint?: string }> {
+    const templates = (this.runtime.session as any)?.promptTemplates ?? [];
+    return templates.map((t: any) => ({
+      name: t.name,
+      description: t.description,
+      ...(t.argumentHint ? { argumentHint: t.argumentHint } : {}),
+    }));
+  }
+
+  /**
+   * Lấy extension commands cho autocomplete.
+   * Đọc từ extension runner (lệnh do extension đăng ký).
+   */
+  getExtensionCommands(): Array<{ name: string; description?: string; argumentHint?: string; getArgumentCompletions?: (prefix: string) => any }> {
+    const runner = (this.runtime.session as any)?.extensionRunner;
+    if (!runner?.getRegisteredCommands) return [];
+    return runner.getRegisteredCommands().map((cmd: any) => ({
+      name: cmd.invocationName ?? cmd.name,
+      description: cmd.description,
+      ...(cmd.argumentHint ? { argumentHint: cmd.argumentHint } : {}),
+      ...(cmd.getArgumentCompletions ? { getArgumentCompletions: cmd.getArgumentCompletions } : {}),
+    }));
+  }
+
+  /**
+   * Lấy skill commands cho autocomplete (kiểu `skill:<name>` như pi-mono).
+   * Chỉ lấy skill cho phép model gọi (không lấy disableModelInvocation).
+   */
+  getSkillCommands(): Array<{ name: string; description?: string }> {
+    const resourceLoader = (this.runtime.session as any)?.resourceLoader;
+    if (typeof resourceLoader?.getSkills !== 'function') return [];
+    const { skills } = resourceLoader.getSkills();
+    const out: Array<{ name: string; description?: string }> = [];
+    for (const skill of skills ?? []) {
+      if (!skill?.name) continue;
+      if (skill.disableModelInvocation === true) continue;
+      out.push({ name: `skill:${skill.name}`, description: skill.description });
+    }
+    return out;
+  }
 
   dispose(): void {
     const unsub = (this as any)._unsub as (() => void) | undefined;

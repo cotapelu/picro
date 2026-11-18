@@ -11,6 +11,7 @@ import { theme, fg, bg } from "../theme/index.js";
 import { classifyMarkdownLine, clipMarkdownLine, padMarkdownLine } from "./markdown-layout.js";
 import { renderLatex } from "../core/Latex.js";
 import { wrapTextWithAnsi } from "../core/TerminalText.js";
+import { highlightSyntax, normalizeLanguage, themeTokenFor, type SyntaxTokenType } from "../core/syntax-highlight.js";
 
 export interface MarkdownRendererProps {
   content: string;
@@ -30,6 +31,8 @@ interface Block {
   lines: string[];
   /** Khối mã có viền trên/dưới. */
   fenced?: boolean;
+  /** Ngôn ngữ khối mã (từ fence info string) để tô sáng. */
+  language?: string;
   /** Khối bảng đã được dựng sẵn (không cần style lại từng dòng). */
   table?: boolean;
   /** Khối danh sách: cần render theo cấp lồng nhau (pi-mono renderList). */
@@ -54,12 +57,20 @@ function parseBlocks(source: string): Block[] {
   const lines = source.split("\n");
   let inFence = false;
   let fenceBuffer: string[] = [];
+  let fenceLanguage = "text";
   let tableBuffer: string[] = [];
 
   const flushTable = () => {
     if (tableBuffer.length === 0) return;
     blocks.push({ lines: renderTableBlock(tableBuffer), table: true });
     tableBuffer = [];
+  };
+
+  const flushFence = () => {
+    if (fenceBuffer.length === 0) return;
+    blocks.push({ lines: fenceBuffer, fenced: true, language: fenceLanguage });
+    fenceBuffer = [];
+    fenceLanguage = "text";
   };
 
   /** Dòng phân cách kiểu GFM: |---|---| hoặc ---|--- */
@@ -81,18 +92,21 @@ function parseBlocks(source: string): Block[] {
     }
     if (/^\s*```/.test(raw)) {
       if (inFence) {
-        blocks.push({ lines: [...fenceBuffer], fenced: true });
-        fenceBuffer = [];
+        flushFence();
         inFence = false;
       } else {
         flush();
         flushTable();
         inFence = true;
+        // Fence info string: "```ts", "```python title=\"x\"" -> lấy từ đầu.
+        const info = raw.replace(/^\s*```/, "").trim();
+        fenceLanguage = normalizeLanguage(info.split(/\s+/)[0] || "text");
       }
       continue;
     }
     if (inFence) {
-      fenceBuffer.push(fg("codeBlock", raw));
+      // Giữ nguyên dòng thô: tô sáng làm lúc render để biết ngôn ngữ + width.
+      fenceBuffer.push(raw);
       continue;
     }
     // Bảng: dòng hiện tại chứa "|" và dòng tiếp theo là dòng phân cách. Bản cũ
@@ -112,7 +126,7 @@ function parseBlocks(source: string): Block[] {
     buffer.push(raw);
   }
   if (inFence && fenceBuffer.length > 0) {
-    blocks.push({ lines: fenceBuffer, fenced: true });
+    flushFence();
   }
   flushTable();
   flush();
@@ -236,7 +250,8 @@ function renderTableBlock(rows: string[]): string[] {
 }
 
 /**
- * Áp kiểu chữ nội tuyến: `code`, **bold**, *italic*, [text](url), $latex$.
+ * Áp kiểu chữ nội tuyến: `code`, **bold**, *italic*, [text](url), $latex$,
+ * ~~strikethrough~~, <!-- HTML comment -->.
  *
  * Hai thay đổi so với bản cũ:
  *  - liên kết GIỮ URL: pi-mono hiện URL trong ngoặc khi chữ khác đích (và bọc
@@ -253,10 +268,35 @@ function styleInline(line: string): string {
   });
   out = out.replace(/\*\*([^*]+)\*\*/g, (_m, text) => theme.bold(text));
   out = out.replace(/(^|[^*])\*([^*]+)\*/g, (_m, pre, text) => `${pre}${theme.italic(text)}`);
+  out = out.replace(/~~([^~]+)~~/g, (_m, text) => `\x1b[9m${text}\x1b[29m`);
+  out = out.replace(/<!--([\s\S]*?)-->/g, (_m, comment) => fg("dim", `<!--${comment}-->`));
   out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, url) =>
     text === url ? fg("link", text) : `${fg("link", text)}${fg("mdLinkUrl", ` (${url})`)}`,
   );
   return out;
+}
+
+/**
+ * Tô sáng một dòng mã theo ngôn ngữ. Trả về chuỗi đã có mã ANSI; ngôn ngữ
+ * không nhận diện thì dùng màu codeBlock như trước.
+ */
+function highlightCodeLine(line: string, language: string): string {
+  if (language === "text" || language === "markdown") {
+    return fg("codeBlock", line);
+  }
+  try {
+    const { tokens } = highlightSyntax(line, language);
+    return tokens
+      .map((token) =>
+        token.type === "plain"
+          ? token.value
+          : fg(themeTokenFor(token.type as SyntaxTokenType), token.value),
+      )
+      .join("");
+  } catch {
+    // Tokenizer lỗi: giữ màu codeBlock để không mất nội dung.
+    return fg("codeBlock", line);
+  }
 }
 
 /** Áp kiểu theo loại dòng. Danh sách do `renderListBlock` lo (một nơi quyết marker). */
@@ -285,8 +325,12 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, wid
     blocks.forEach((block, blockIndex) => {
       if (blockIndex > 0) out.push("");
       if (block.fenced) {
+        const language = block.language ?? "text";
+        // Tô sáng từng dòng bằng tokenizer; dòng không nhận diện ngôn ngữ thì
+        // giữ màu codeBlock như cũ.
+        const styledLines = block.lines.map((line) => highlightCodeLine(line, language));
         out.push(fg("codeBlockBorder", "```"));
-        for (const line of block.lines) {
+        for (const line of styledLines) {
           out.push(padMarkdownLine(`  ${clipMarkdownLine(line, contentWidth - 2)}`, contentWidth));
         }
         out.push(fg("codeBlockBorder", "```"));
