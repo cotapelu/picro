@@ -9,6 +9,7 @@ import { transformMessages } from '../transform-messages.js';
 import { detectCompat, mergeCompat, CompatSettings } from '../compat-detection.js';
 import { apiRegistry } from '../api-registry.js';
 import { calculateCost } from '../models.js';
+import { getThinkingBudgetField, mapEffortToTokens, getSessionAffinityFormat, getOpenRouterRouting } from '../compat-schema.js';
 
 interface OpenAICompatOptions extends StreamOptions {
   toolChoice?: 'auto' | 'none' | 'required' | { type: 'function'; function: { name: string } };
@@ -165,7 +166,27 @@ export function buildParams(
     } else if (compat.thinkingFormat === 'openrouter') {
       params.reasoning = { effort: options.reasoningEffort };
     } else {
-      params.reasoning_effort = options.reasoningEffort;
+      const field = getThinkingBudgetField(model);
+      params[field] = mapEffortToTokens(options.reasoningEffort);
+    }
+  }
+
+  // Session affinity header
+  const affinityFormat = getSessionAffinityFormat(model);
+  if (affinityFormat !== 'openai-nosession') {
+    const headerName = affinityFormat === 'openrouter' ? 'openrouter-session-id' : 'openai-session-id';
+    params.headers = params.headers || {};
+    params.headers[headerName] = 'auto';
+  }
+
+  // OpenRouter routing
+  const routing = getOpenRouterRouting(model);
+  if (routing && model.provider === 'openrouter') {
+    params.headers = params.headers || {};
+    for (const [key, value] of Object.entries(routing)) {
+      if (value !== undefined) {
+        params.headers[`x-openrouter-${key.replace(/_/g, '-')}`] = String(value);
+      }
     }
   }
 

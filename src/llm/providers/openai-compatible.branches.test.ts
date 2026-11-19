@@ -283,10 +283,10 @@ describe('buildParams branch coverage', () => {
       expect(params.reasoning).toEqual({ effort: 'medium' });
     });
 
-    it('sets reasoning_effort when thinkingFormat other', () => {
+    it('sets thinking_budget_tokens when thinkingFormat other', () => {
       const compat = defaultCompat({ supportsReasoningEffort: true, thinkingFormat: 'anthropic' });
       const params = buildParams(modelWithReasoning, defaultContext(), optionsWithEffort, compat);
-      expect(params.reasoning_effort).toBe('medium');
+      expect(params.thinking_budget_tokens).toBe(4096);
     });
 
     it('does not set any reasoning params when reasoning false', () => {

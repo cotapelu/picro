@@ -111,14 +111,16 @@ const DEFAULT_SLASH_COMMANDS: Array<{ name: string; description?: string }> = [
 ];
 
 /**
- * Lệnh slash dùng cho gợi ý trong ô nhập.
- *
- * Lấy từ danh sách built-in của runtime (src/runtime/slash-commands.ts) khi có,
- * để một nơi duy nhất định nghĩa và gợi ý luôn khớp phần thực thi.
+ * Lấy danh sách lệnh slash cho autocomplete.
+ * Đọc từ globalThis.__PICRO_SLASH_COMMANDS__ (được set trong main.ts trước khi render).
+ * Phải là function để đọc giá trị MỚI NHẤT tại render time, không phải module load time.
  */
-const SLASH_COMMANDS: Array<{ name: string; description?: string; argumentHint?: string }> =
-  (globalThis as { __PICRO_SLASH_COMMANDS__?: Array<{ name: string; description?: string }> }).__PICRO_SLASH_COMMANDS__ ??
-  DEFAULT_SLASH_COMMANDS;
+function getSlashCommands(): Array<{ name: string; description?: string; argumentHint?: string }> {
+  return (
+    (globalThis as { __PICRO_SLASH_COMMANDS__?: Array<{ name: string; description?: string; argumentHint?: string }> })
+      .__PICRO_SLASH_COMMANDS__ ?? DEFAULT_SLASH_COMMANDS
+  );
+}
 
 export const App: React.FC<AppProps> = ({
   runtime,
@@ -523,7 +525,7 @@ export const App: React.FC<AppProps> = ({
                       : undefined
               }
               history={controller.getHistory()}
-              slashCommands={SLASH_COMMANDS}
+              slashCommands={getSlashCommands()}
               promptTemplates={controller.getPromptTemplates?.() ?? []}
               extensionCommands={controller.getExtensionCommands?.() ?? []}
               skillCommands={controller.getSkillCommands?.() ?? []}

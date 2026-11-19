@@ -1262,6 +1262,7 @@ export class InteractiveController {
   /** Nạp lại transcript từ phiên hiện tại (sau chuyển phiên / fork / nén). */
   loadTranscript(): void {
     this.loadTranscriptFromSession();
+    this.refreshStatusFromSession();
     this.onQueueChange?.(this.getQueue());
   }
 
@@ -1688,6 +1689,7 @@ export class InteractiveController {
             // xoá danh sách nên người dùng thấy màn hình trống dù phiên có nội dung.
             this.loadTranscriptFromSession();
             this.resubscribeToRuntime();
+            this.refreshStatusFromSession();
             this.addToast(`Switched to session: ${target.id}`, 'success');
           }
         } else {

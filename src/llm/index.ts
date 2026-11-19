@@ -9,11 +9,20 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 // Models and lookup functions
-export { MODELS, getModel, getProviders, getModels } from './models.js';
+export { MODELS, getModel, getProviders, getModels, getModelPromptCacheConfig, getModelPromptCacheRetention, calculateCost } from './models.js';
 
 // Re-export from types
 export type { 
   Model,
+  ModelPromptCache,
+  ModelCostTier,
+  ModelImageResizeOptions,
+  ModelImageInputLimits,
+  ModelInputLimits,
+  ChatTemplateThinkingKwarg,
+  OpenRouterRouting,
+  ThinkingBudgetField,
+  SessionAffinityFormat,
   Context, 
   Message, 
   UserMessage, 
@@ -41,6 +50,21 @@ export { estimateContextTokens, truncateContext, smartTruncate } from './overflo
 // Stream optimization
 export { StreamBuffer, getProviderBufferConfig, createStreamBuffer, providerBufferConfigs } from './utils/stream-buffer.js';
 export type { BufferConfig } from './utils/stream-buffer.js';
+
+// Validation
+export { validateModel, validateAllModels } from './model-schema.js';
+export type { ValidationResult, ValidationError } from './model-schema.js';
+
+// Cache Warming
+export { CacheWarmer, createCacheWarmer } from './cache-warming.js';
+export type { CacheWarmingStatus, CacheWarmingOptions } from './cache-warming.js';
+
+// Compatibility Schema
+export { getThinkingBudgetField, getSessionAffinityFormat, mapEffortToTokens, getChatTemplateThinkingKwargs, getOpenRouterRouting } from './compat-schema.js';
+
+// Model Catalog
+export { ModelCatalog, createModelCatalog } from './model-catalog.js';
+export type { ModelCatalogOptions, ModelsStoreEntry, ModelCatalogEntry, RemoteCatalogConfig } from './model-catalog.js';
 
 // Api type - simple alias for provider API object
 export type Api = "openai" | "anthropic" | "google" | "custom";
