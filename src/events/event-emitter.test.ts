@@ -25,7 +25,7 @@ describe('EventEmitter', () => {
       const event = createEvent('agent:start');
       await emitter.emit(event);
       expect(handler).toHaveBeenCalledTimes(1);
-      expect(handler).toHaveBeenCalledWith(event);
+      expect(handler).toHaveBeenCalledWith(event, expect.any(AbortSignal));
     });
 
     it('supports multiple handlers for same event', async () => {
@@ -90,8 +90,8 @@ describe('EventEmitter', () => {
       const e2 = createEvent('agent:end');
       await emitter.emitAll([e1, e2]);
       expect(globalHandler).toHaveBeenCalledTimes(2);
-      expect(globalHandler).toHaveBeenCalledWith(e1);
-      expect(globalHandler).toHaveBeenCalledWith(e2);
+      expect(globalHandler).toHaveBeenCalledWith(e1, expect.any(AbortSignal));
+      expect(globalHandler).toHaveBeenCalledWith(e2, expect.any(AbortSignal));
     });
 
     it('removes global listener with offAny', async () => {

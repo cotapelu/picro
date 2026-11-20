@@ -258,6 +258,9 @@ export type AgentEvent =
   | DebugRunTimingEvent
   | UserMessageEvent;
 
+/** Callback type for agent event listeners with abort signal support */
+export type AgentEventSink = (event: AgentEvent, signal: AbortSignal) => Promise<void> | void;
+
 // ============================================================================
 // Event Handler Type
 // ============================================================================

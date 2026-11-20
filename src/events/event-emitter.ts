@@ -4,9 +4,9 @@
  * Uses typed event handlers with async emission.
  */
 
-import type { AgentEvent } from './events.js';
+import type { AgentEvent, AgentEventSink } from './events.js';
 
-type EventHandler = (event: AgentEvent) => Promise<void> | void;
+type EventHandler = (event: AgentEvent, signal: AbortSignal) => Promise<void> | void;
 
 /**
  * Central event emitter for agent events.
@@ -16,6 +16,14 @@ export class EventEmitter {
   private typedListeners: Map<string, Set<EventHandler>> = new Map();
   private globalListeners: Set<EventHandler> = new Set();
   private eventMetrics: Map<string, { count: number; totalDurationNs: bigint }> = new Map();
+  private abortController: AbortController | null = null;
+
+  /**
+   * Set the abort controller for the current run.
+   */
+  setAbortController(controller: AbortController): void {
+    this.abortController = controller;
+  }
 
   /**
    * Subscribe to a specific event type.
@@ -23,7 +31,7 @@ export class EventEmitter {
    */
   on<K extends AgentEvent['type']>(
     eventType: K,
-    handler: (event: Extract<AgentEvent, { type: K }>) => Promise<void> | void
+    handler: (event: Extract<AgentEvent, { type: K }>, signal: AbortSignal) => Promise<void> | void
   ): () => void {
     const typedHandler = handler as EventHandler;
     if (!this.typedListeners.has(eventType)) {
@@ -39,7 +47,7 @@ export class EventEmitter {
   /**
    * Subscribe to all events.
    */
-  onAny(handler: (event: AgentEvent) => Promise<void> | void): () => void {
+  onAny(handler: (event: AgentEvent, signal: AbortSignal) => Promise<void> | void): () => void {
     this.globalListeners.add(handler);
     return () => this.globalListeners.delete(handler);
   }
@@ -49,7 +57,7 @@ export class EventEmitter {
    */
   off<K extends AgentEvent['type']>(
     eventType: K,
-    handler: (event: Extract<AgentEvent, { type: K }>) => Promise<void> | void
+    handler: (event: Extract<AgentEvent, { type: K }>, signal: AbortSignal) => Promise<void> | void
   ): void {
     const typedHandler = handler as EventHandler;
     this.typedListeners.get(eventType)?.delete(typedHandler);
@@ -58,7 +66,7 @@ export class EventEmitter {
   /**
    * Unsubscribe from all events.
    */
-  offAny(handler: (event: AgentEvent) => Promise<void> | void): void {
+  offAny(handler: (event: AgentEvent, signal: AbortSignal) => Promise<void> | void): void {
     this.globalListeners.delete(handler);
   }
 
@@ -68,31 +76,29 @@ export class EventEmitter {
    */
   async emit(event: AgentEvent): Promise<void> {
     const start = process.hrtime.bigint();
-    const handlers: Promise<void>[] = [];
-
-    // Wrap handler to catch errors and prevent rejection
-    const safe = (handler: EventHandler) => (async () => {
-      try {
-        await handler(event);
-      } catch {
-        // Swallow errors from individual handlers to isolate them
-      }
-    })();
-
-    // Type-specific listeners
+    
+    const signal = this.abortController?.signal ?? new AbortController().signal;
+    
+    // Type-specific listeners - sequential
     const typeSet = this.typedListeners.get(event.type);
     if (typeSet) {
       for (const handler of typeSet) {
-        handlers.push(safe(handler));
+        try {
+          await handler(event, signal);
+        } catch {
+          // Swallow errors from individual handlers to isolate them
+        }
       }
     }
 
-    // Global listeners
+    // Global listeners - sequential
     for (const handler of this.globalListeners) {
-      handlers.push(safe(handler));
+      try {
+        await handler(event, signal);
+      } catch {
+        // Swallow errors from individual handlers to isolate them
+      }
     }
-
-    await Promise.all(handlers);
 
     const durationNs = process.hrtime.bigint() - start;
     const existing = this.eventMetrics.get(event.type) ?? { count: 0, totalDurationNs: 0n };

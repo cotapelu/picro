@@ -3,52 +3,27 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Systematic Ink vs pi-mono Audit",
+      "name": "Complete pi-agent-core feature parity",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Compare component coverage - missing pi-mono components in Ink",
+          "content": "Add declareToolChanges() to AgentLoop - tool change declaration via system message diff",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Compare interactive-mode.ts key handlers vs Editor/App.tsx",
-          "status": "completed"
+          "content": "Add truncated tool call handling (failToolCallsFromTruncatedMessage)",
+          "status": "in_progress"
         },
         {
           "id": "task-3",
-          "content": "Compare status bar / footer functionality",
-          "status": "completed"
-        },
-        {
-          "id": "task-4",
-          "content": "Compare overlay/selector implementations",
-          "status": "completed"
-        },
-        {
-          "id": "task-5",
-          "content": "Compare transcript/message rendering",
-          "status": "completed"
-        },
-        {
-          "id": "task-6",
-          "content": "Compare keybinding system",
-          "status": "completed"
-        },
-        {
-          "id": "task-7",
-          "content": "Compare session management (tree, fork, sessions)",
-          "status": "completed"
-        },
-        {
-          "id": "task-8",
-          "content": "Compare extension UI integration",
-          "status": "in_progress"
+          "content": "Add sequential event processing with abort signal propagation",
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 9,
+  "nextTaskId": 4,
   "nextPhaseId": 2,
-  "updatedAt": "2026-11-18T08:38:27.595Z"
+  "updatedAt": "2026-11-19T10:11:22.810Z"
 }

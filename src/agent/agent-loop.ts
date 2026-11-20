@@ -21,6 +21,8 @@ import type {
   StopReason,
   ToolTurn,
   AssistantTurn,
+  SystemTurn,
+  AgentContext,
   PrepareNextTurnContext,
   PrepareNextTurnOverride,
   TextBlock,
@@ -33,6 +35,11 @@ import type {
   SessionMetrics,
 } from "./types.js";
 import { createSessionMetrics } from "./types.js";
+import {
+  getCurrentTools,
+  getToolStateChanges,
+  toToolDeclaration,
+} from "@earendil-works/pi-ai";
 import type {
   Context,
   Message as LlmMessage,
@@ -126,6 +133,8 @@ export class AgentLoop {
       toolResults: [],
       history: [],
       metadata: {},
+      streamingMessage: undefined,
+      pendingToolCalls: new Set<string>(),
     };
     // Alias messages to history for backward compatibility
     (state as any).messages = state.history;
@@ -490,9 +499,15 @@ export class AgentLoop {
           }
         }
 
+        // Declare tool changes before building LLM context
+        const messagesWithToolChanges = this.declareToolChanges(
+          { messages: this.state.history, tools: this.tools },
+          this.state.history
+        );
+
         // Build LLM context from current history (includes steering if any)
         const llmContext = await this.buildLlmContext(
-          this.state.history,
+          messagesWithToolChanges,
           combinedSignal,
         );
         // Record token count for this request
@@ -1114,6 +1129,139 @@ export class AgentLoop {
     return toolResults.length > 0 && toolResults.every((r: any) => r.terminate === true);
   }
 
+  /** 
+   * Declare tool loadout changes to the model.
+   * Compares context.tools (runtime executable tools) vs system messages (what model sees)
+   * Injects/updates system message with toolsAdded/toolsRemoved before each LLM request
+   */
+  private declareToolChanges(context: AgentContext, pendingMessages: ConversationTurn[]): ConversationTurn[] {
+    let systemIndex = -1;
+    for (let i = pendingMessages.length - 1; i >= 0; i--) {
+      if (pendingMessages[i].role === "system") {
+        systemIndex = i;
+        break;
+      }
+    }
+
+    const pending = pendingMessages[systemIndex] as SystemTurn | undefined;
+
+    // Get current tools from transcript
+    const baseline = pending
+      ? pendingMessages.map((message, index) =>
+          index === systemIndex ? this.withToolChanges(pending, { toolsAdded: [], toolsRemoved: [] }) : message
+        )
+      : pendingMessages;
+
+    // Compute tool changes between runtime tools and transcript
+    const currentTools = getCurrentTools([...context.messages, ...baseline]);
+    const runtimeTools = Array.isArray(this.tools) ? this.tools.map((tool) => toToolDeclaration(tool as any)) : []
+    const changes = getToolStateChanges(currentTools, runtimeTools);
+    const unchanged = changes.toolsAdded.length === 0 && changes.toolsRemoved.length === 0;
+
+    if (pending) {
+      // Keep the caller's message object when it already declares no tool changes
+      if (unchanged && !pending.toolsAdded?.length && !pending.toolsRemoved?.length) {
+        return pendingMessages;
+      }
+      return baseline.map((message, index) =>
+        index === systemIndex ? this.withToolChanges(pending, changes) : message
+      );
+    }
+    if (unchanged) return pendingMessages;
+
+    // Create new system message with tool changes
+    const update = this.withToolChanges(
+      { role: "system", content: [], timestamp: Date.now() },
+      changes
+    );
+    const insertIndex = pendingMessages.findIndex((m) => m.role !== "system");
+    const index = insertIndex === -1 ? pendingMessages.length : insertIndex;
+    return [...pendingMessages.slice(0, index), update, ...pendingMessages.slice(index)];
+  }
+
+  /** 
+   * Copy a system message with its tool fields replaced by changes.
+   */
+  private withToolChanges(message: SystemTurn, changes: { toolsAdded?: any[]; toolsRemoved?: any[] }): SystemTurn {
+    const { toolsAdded, toolsRemoved, ...rest } = message;
+    return {
+      ...rest,
+      ...((toolsAdded?.length ?? 0) > 0 ? { toolsAdded } : {}),
+      ...((toolsRemoved?.length ?? 0) > 0 ? { toolsRemoved } : {}),
+    };
+  }
+
+  /** 
+   * Fail all tool calls from an assistant message that was truncated by the
+   * output token limit. Streamed tool-call arguments are finalized with a
+   * best-effort JSON salvage parser, so a truncated message can yield tool calls
+   * whose arguments parse and validate but are silently incomplete. None of them
+   * are safe to execute; report each as an error so the model can re-issue them.
+   */
+  private async failToolCallsFromTruncatedMessage(
+    toolCalls: any[],
+    emit: (event: any) => Promise<void>
+  ): Promise<{ messages: any[]; terminate: boolean }> {
+    const messages: any[] = [];
+    for (const toolCall of toolCalls) {
+      await emit({
+        type: "tool_execution_start",
+        toolCallId: toolCall.id,
+        toolName: toolCall.name,
+        args: toolCall.arguments,
+      });
+      const finalized = {
+        toolCall,
+        result: {
+          content: [{ type: "text", text: `Tool call "${toolCall.name}" was not executed: the response hit the output token limit, so its arguments may be truncated. Re-issue the tool call with complete arguments.` }],
+          isError: true,
+        },
+        isError: true,
+      };
+      await this.emitToolExecutionEnd(finalized, emit);
+      const toolResultMessage = this.createToolResultMessage(finalized);
+      await this.emitToolResultMessage(toolResultMessage, emit);
+      messages.push(toolResultMessage);
+    }
+    return { messages, terminate: false };
+  }
+
+  private async emitToolExecutionEnd(
+    finalized: any,
+    emit: (event: any) => Promise<void>
+  ): Promise<void> {
+    await emit({
+      type: "tool_execution_end",
+      toolCallId: finalized.toolCall.id,
+      toolName: finalized.toolCall.name,
+      result: finalized.result,
+      isError: finalized.isError,
+      durationMs: finalized.durationMs,
+    });
+  }
+
+  private createToolResultMessage(finalized: any): any {
+    return {
+      role: "toolResult",
+      toolCallId: finalized.toolCall.id,
+      toolName: finalized.toolCall.name,
+      content: finalized.result.content ?? [],
+      details: finalized.result.details,
+      usage: finalized.result.usage,
+      isError: finalized.isError,
+      durationMs: finalized.durationMs,
+      timestamp: Date.now(),
+    };
+  }
+
+  private async emitToolResultMessage(
+    toolResultMessage: any,
+    emit: (event: any) => Promise<void>
+  ): Promise<void> {
+    await emit({ type: "message_start", message: toolResultMessage });
+    await emit({ type: "message_end", message: toolResultMessage });
+  }
+
   private async _emitDebugRoundTiming(
     roundStartTime: number,
     toolExecutionTime: number,
@@ -1236,6 +1384,19 @@ export class AgentLoop {
     followUpQueue: MessageQueue,
     roundStartTime: number,
   ): Promise<{ needNextTurn: boolean; finalResult?: AgentRunResult; toolExecutionTime: number }> {
+    // Check if the response was truncated (stopReason === "length")
+    // If so, fail all tool calls instead of executing them
+    const stopReason = isStreaming ? finalMessage?.stopReason : response?.stopReason;
+    if (stopReason === "length" && toolCalls.length > 0) {
+      const result = await this.failToolCallsFromTruncatedMessage(toolCalls, this.emitter.emit.bind(this.emitter));
+      // Add failed tool results to state
+      for (const msg of result.messages) {
+        this.state.history.push(msg);
+      }
+      await this._emitDebugRoundTiming(0, 0, isStreaming);
+      return { needNextTurn: true, toolExecutionTime: 0 };
+    }
+
     const toolContext: ToolContext = {
       round: this.state.round,
       runtimeState: this.state,

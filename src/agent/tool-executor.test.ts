@@ -383,7 +383,8 @@ describe('ToolExecutor', () => {
       await executor.execute(buildToolCall('fail'), buildContext());
 
       expect(errorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ toolName: 'fail', errorMessage: 'boom', type: 'tool:error' })
+        expect.objectContaining({ toolName: 'fail', errorMessage: 'boom', type: 'tool:error' }),
+        expect.any(AbortSignal)
       );
     });
   });

@@ -59,6 +59,11 @@ export interface BaseTurn {
 export interface SystemTurn extends BaseTurn {
   role: 'system';
   content: TextBlock[];
+  /** Complete definitions of tools that become available at this point. */
+  toolsAdded?: any[];
+  /** Tools that stop being available at this point. */
+  toolsRemoved?: any[];
+  timestamp: number;
 }
 
 export interface UserTurn extends BaseTurn {
@@ -402,6 +407,9 @@ export type AgentEvent =
   | MemoryRetrievalEvent
   | ErrorEvent;
 
+/** Callback type for agent event listeners with abort signal support */
+export type AgentEventSink = (event: AgentEvent, signal: AbortSignal) => Promise<void> | void;
+
 // ============================================================================
 // Runtime State
 // ============================================================================
@@ -417,6 +425,26 @@ export interface AgentRuntimeState {
   toolResults: ToolResult[];
   history: ConversationTurn[];
   metadata: Record<string, unknown>;
+  /** Partial assistant message being streamed, for streaming UI */
+  streamingMessage?: AssistantTurn;
+  /** Tool call IDs currently being executed */
+  pendingToolCalls: Set<string>;
+}
+
+/** Context snapshot passed into the low-level agent loop. */
+export interface AgentContext {
+  /** Transcript visible to the model. */
+  messages: any[];
+  /** Tools available for execution in this run. */
+  tools?: any[];
+}
+
+/** Context snapshot passed into the low-level agent loop. */
+export interface AgentContext {
+  /** Transcript visible to the model. */
+  messages: any[];
+  /** Tools available for execution in this run. */
+  tools?: any[];
 }
 
 /** Alias for compatibility */

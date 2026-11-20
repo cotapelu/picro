@@ -89,7 +89,7 @@ describe('EventEmitter branch coverage', () => {
       emitter.on('agent:start', handler);
       const event = createEvent('agent:start');
       await emitter.emit(event);
-      expect(handler).toHaveBeenCalledWith(event);
+      expect(handler).toHaveBeenCalledWith(event, expect.any(AbortSignal));
     });
 
     it('calls global listeners', async () => {
@@ -97,7 +97,7 @@ describe('EventEmitter branch coverage', () => {
       emitter.onAny(handler);
       const event = createEvent('turn:end');
       await emitter.emit(event);
-      expect(handler).toHaveBeenCalledWith(event);
+      expect(handler).toHaveBeenCalledWith(event, expect.any(AbortSignal));
     });
 
     it('calls both type-specific and global listeners', async () => {
